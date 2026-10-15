@@ -143,18 +143,38 @@ def create_exam(request):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({"status": "error", "message": msg})
             messages.error(request, msg)
-            return redirect('cbt:create_exam')
+            return redirect('cbt:cbt_create_exam')
 
         from datetime import datetime
 
-        exam_date = request.POST.get('exam_date')
+        # The exam window: start date + time to end date + time (it may span several days).
+        # `exam_date` is the old single-date field, still accepted.
+        start_date = request.POST.get('start_date') or request.POST.get('exam_date')
+        end_date = request.POST.get('end_date') or start_date
         start_time_str = request.POST.get('start_time')  # "HH:MM"
         end_time_str = request.POST.get('end_time')      # "HH:MM"
 
-        # combine date + time → datetime objects
-        start_datetime = datetime.strptime(f"{exam_date} {start_time_str}", "%Y-%m-%d %H:%M")
-        end_datetime = datetime.strptime(f"{exam_date} {end_time_str}", "%Y-%m-%d %H:%M")
+        def _window_error(msg):
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({"status": "error", "message": msg})
+            messages.error(request, msg)
+            return redirect('cbt:cbt_create_exam')
 
+        try:
+            start_datetime = timezone.make_aware(datetime.strptime(f"{start_date} {start_time_str}", "%Y-%m-%d %H:%M"))
+            end_datetime = timezone.make_aware(datetime.strptime(f"{end_date} {end_time_str}", "%Y-%m-%d %H:%M"))
+        except (TypeError, ValueError):
+            return _window_error("Choose the start date and time and the end date and time.")
+        if end_datetime <= start_datetime:
+            return _window_error("The exam must end after it starts — check the end date and time.")
+        try:
+            duration = int(request.POST.get('duration_minutes'))
+        except (TypeError, ValueError):
+            return _window_error("Enter the exam duration in minutes.")
+        window = int((end_datetime - start_datetime).total_seconds() // 60)
+        if duration > window:
+            return _window_error(f"The exam lasts {duration} minutes but the window from start to end is only "
+                                 f"{window} minutes. Move the end later or shorten the exam.")
 
 
         # CREATE EXAM
@@ -183,7 +203,7 @@ def create_exam(request):
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({"status": "error", "message": msg})
             messages.error(request, msg)
-            return redirect('cbt:create_exam')
+            return redirect('cbt:cbt_create_exam')
 
         exam.classes.set(selected_classes)
 

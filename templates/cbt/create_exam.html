@@ -1041,41 +1041,48 @@ input[type="date"].form-control::-webkit-calendar-picker-indicator {
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">
-              Exam Date <span class="required-star">*</span>
-            </label>
-            <input type="date"
-                   name="exam_date"
-                   class="form-control"
-                   min="{{ today }}"
-                   required>
-          </div>
-
-          <div class="input-grid-3">
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Start Date <span class="required-star">*</span>
+              </label>
+              <input type="date" name="start_date" id="startDate" class="form-control" min="{{ today }}" required>
+            </div>
             <div class="form-group">
               <label class="form-label">
                 Start Time <span class="required-star">*</span>
               </label>
-              <select name="start_time" class="form-select" required>
+              <select name="start_time" id="startTime" class="form-select" required>
                 <option value="">— Select —</option>
                 {% for value, display in hours %}
                   <option value="{{ value }}">{{ display }}</option>
                 {% endfor %}
               </select>
             </div>
+          </div>
 
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                End Date <span class="required-star">*</span>
+              </label>
+              <input type="date" name="end_date" id="endDate" class="form-control" min="{{ today }}" required>
+            </div>
             <div class="form-group">
               <label class="form-label">
                 End Time <span class="required-star">*</span>
               </label>
-              <select name="end_time" class="form-select" required>
+              <select name="end_time" id="endTime" class="form-select" required>
                 <option value="">— Select —</option>
                 {% for value, display in hours %}
                   <option value="{{ value }}">{{ display }}</option>
                 {% endfor %}
               </select>
             </div>
+          </div>
+          <div class="form-helper" id="windowHint">
+            <i class="bi bi-info-circle"></i>
+            <span>Students can start the exam any time between the start and the end. For a one-day exam, use the same date.</span>
           </div>
         </div>
 
@@ -1335,10 +1342,42 @@ document.getElementById("examForm").addEventListener("submit", function (e) {
   }
 });
 
-// Min date
-const dateInput = document.querySelector('input[name="exam_date"]');
-if (dateInput && !dateInput.getAttribute("min")) {
-  dateInput.setAttribute("min", new Date().toISOString().split("T")[0]);
-}
+// Exam window: the end date follows the start date and can never be before it
+(function () {
+  const startDate = document.getElementById("startDate"), endDate = document.getElementById("endDate");
+  const startTime = document.getElementById("startTime"), endTime = document.getElementById("endTime");
+  const duration = document.querySelector('input[name="duration_minutes"]');
+  const hint = document.querySelector("#windowHint span");
+  const baseHint = hint ? hint.textContent : "";
+  const today = new Date().toISOString().split("T")[0];
+  [startDate, endDate].forEach(i => { if (i && !i.getAttribute("min")) i.setAttribute("min", today); });
+
+  startDate.addEventListener("change", () => {
+    endDate.min = startDate.value || today;
+    if (!endDate.value || endDate.value < startDate.value) endDate.value = startDate.value;
+    check();
+  });
+  [endDate, startTime, endTime, duration].forEach(el => el && el.addEventListener("change", check));
+  if (duration) duration.addEventListener("input", check);
+
+  function at(d, t) { return d && t ? new Date(`${d}T${t}`) : null; }
+  function check() {
+    const s = at(startDate.value, startTime.value), e = at(endDate.value, endTime.value);
+    endTime.setCustomValidity("");
+    if (!s || !e) { hint.textContent = baseHint; return; }
+    const minutes = Math.round((e - s) / 60000);
+    if (minutes <= 0) {
+      endTime.setCustomValidity("The exam must end after it starts.");
+      hint.textContent = "The end must be after the start.";
+    } else if (duration && Number(duration.value) > minutes) {
+      endTime.setCustomValidity("The window is shorter than the exam duration.");
+      hint.textContent = `The window is only ${minutes} minutes but the exam lasts ${duration.value}. Move the end later.`;
+    } else {
+      const days = Math.floor(minutes / 1440), hrs = Math.floor((minutes % 1440) / 60), mins = minutes % 60;
+      const parts = [days && `${days} day${days > 1 ? "s" : ""}`, hrs && `${hrs} h`, mins && `${mins} min`].filter(Boolean);
+      hint.textContent = `Open for ${parts.join(" ")} — students can start any time in this window.`;
+    }
+  }
+})();
 </script>
 {% endblock %}
