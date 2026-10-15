@@ -1,0 +1,69 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Contact Audit{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.81rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px;}
+.stat{border-radius:10px;padding:14px;text-align:center;}
+.sv{font-size:1.4rem;font-weight:900;margin-top:3px;}
+.sl{font-size:.71rem;font-weight:700;text-transform:uppercase;color:var(--slate2);}
+</style>
+{% include 'partials/compact_ui.html' %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Parent Contact Audit</h2>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+<div class="stat-grid">
+  <div class="stat" style="background:var(--green-dim);"><div class="sl">Complete</div><div class="sv" style="color:var(--green);">{{ complete|length }}</div></div>
+  <div class="stat" style="background:var(--red-dim);"><div class="sl">No Email</div><div class="sv" style="color:var(--red);">{{ no_email|length }}</div></div>
+  <div class="stat" style="background:var(--amber-dim);"><div class="sl">No Phone</div><div class="sv" style="color:var(--amber);">{{ no_phone|length }}</div></div>
+  <div class="stat" style="background:var(--red-dim);"><div class="sl">Both Missing</div><div class="sv" style="color:var(--red);">{{ both_missing|length }}</div></div>
+  <div class="stat" style="background:rgba(255,255,255,.045);"><div class="sl">Total</div><div class="sv">{{ total }}</div></div>
+</div>
+{% if no_email %}
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:12px;color:var(--red);"><i class="bi bi-envelope-x-fill"></i> Missing Parent Email ({{ no_email|length }})</div>
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Admission No.</th><th>Class</th><th>Parent Name</th><th>Phone</th></tr></thead>
+    <tbody>
+      {% for s in no_email %}
+      <tr>
+        <td><strong>{{ s.full_name }}</strong></td>
+        <td>{{ s.admission_number }}</td>
+        <td>{{ s.class_assigned.name|default:"—" }}</td>
+        <td>{{ s.parent_name|default:"—" }}</td>
+        <td>{{ s.parent_phone|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% if no_phone %}
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:12px;color:var(--amber);"><i class="bi bi-phone-vibrate-fill"></i> Missing Parent Phone ({{ no_phone|length }})</div>
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Admission No.</th><th>Class</th><th>Parent Name</th><th>Email</th></tr></thead>
+    <tbody>
+      {% for s in no_phone %}
+      <tr>
+        <td><strong>{{ s.full_name }}</strong></td>
+        <td>{{ s.admission_number }}</td>
+        <td>{{ s.class_assigned.name|default:"—" }}</td>
+        <td>{{ s.parent_name|default:"—" }}</td>
+        <td>{{ s.parent_email|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

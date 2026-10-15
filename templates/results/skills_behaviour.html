@@ -1,0 +1,39 @@
+{% load dict_filters %}
+<td colspan="6" style="padding:0; vertical-align:top;">
+    <table style="width:100%; border-collapse:collapse;">
+        {% for skill in skills %}
+        <tr>
+            <td>{{ skill.name }}</td>
+            {% for rate in ratings %}
+                <td class="center">
+                    <input
+                        type="checkbox"
+                        data-skill="{{ skill.id }}"
+                        value="{{ rate }}"
+                        {% if assessment_map|get_item:skill.id == rate %}checked{% endif %}
+                    >
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</td>
+<td colspan="5" style="padding:0; vertical-align:top;">
+    <table style="width:100%; border-collapse:collapse;">
+        {% for behaviour in behaviours %}
+        <tr>
+            <td>{{ behaviour.name }}</td>
+            {% for rate in ratings|slice:"::-1" %}
+                <td class="center">
+                    <input
+                        type="checkbox"
+                        data-skill="{{ behaviour.id }}"
+                        value="{{ rate }}"
+                        {% if assessment_map|get_item:behaviour.id == rate %}checked{% endif %}
+                    >
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</td>

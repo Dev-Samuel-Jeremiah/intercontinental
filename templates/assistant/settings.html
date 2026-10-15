@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}AI settings{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">AI settings &amp; <em>usage</em></h1>
+  <p class="fin-sub">Choose which AI each tool uses, cap how much the school uses each month, and see who used what.</p>
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Used this month</small><b>{{ used|intcomma }}</b><div class="meter{% if pct >= 90 %} hot{% endif %}"><i style="width:{{ pct }}%"></i></div><span class="hint">{{ pct }}% of {{ cap|intcomma }}</span></div>
+  <div class="fin-stat"><small>AI requests</small><b>{{ calls }}</b></div>
+  <div class="fin-stat"><small>Failed requests</small><b{% if failures %} style="color:var(--amber)"{% endif %}>{{ failures }}</b></div>
+  <div class="fin-stat"><small>Connected</small><b style="font-size:1rem;line-height:1.6">{% for p, l in providers %}{% if p in available %}<span class="chip green">{{ l }}</span> {% endif %}{% empty %}—{% endfor %}{% if not available %}<span class="chip red">none</span>{% endif %}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-sliders"></i> Settings</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="enabled" value="1" style="width:auto" {% if s.enabled %}checked{% endif %}> AI tools are switched on</label>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="second_reviewer" value="1" style="width:auto" {% if s.second_reviewer %}checked{% endif %}> A second person must approve AI messages to parents</label>
+      <div><label>Monthly allowance (tokens) <span class="hint">blank = platform default</span></label><input name="monthly_tokens" inputmode="numeric" value="{{ s.monthly_tokens|default_if_none:'' }}" placeholder="{{ cap }}"></div>
+      <div><label>Main AI</label><select name="default_provider"><option value="">Platform default</option>{% for p, l in providers %}<option value="{{ p }}" {% if s.default_provider == p %}selected{% endif %}>{{ l }}{% if p not in available %} (no key){% endif %}</option>{% endfor %}</select></div>
+      <p class="hint" style="margin:0">If the chosen AI fails or has no key, the next connected one is used.</p>
+      {% for f, label in features %}<div><label>{{ label }}</label><select name="p_{{ f }}"><option value="">Same as main AI</option>{% for p, l in providers %}<option value="{{ p }}" {% for k, v in s.feature_providers.items %}{% if k == f and v == p %}selected{% endif %}{% endfor %}>{{ l }}</option>{% endfor %}</select></div>{% endfor %}
+      <button class="fin-btn fin-btn-gold" type="submit">Save settings</button>
+    </form></div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-pie-chart"></i> This month by tool</h3></div><div class="panel-b">
+      {% for name, n in by_feature %}<div style="display:flex;justify-content:space-between;padding:.3rem 0"><span>{{ name }}</span><b>{{ n|intcomma }}</b></div>{% empty %}<p class="hint" style="margin:0">No AI use yet this month.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> This month by person</h3></div><div class="panel-b">
+      {% for name, n in by_user %}<div style="display:flex;justify-content:space-between;padding:.3rem 0"><span>{{ name }}</span><b>{{ n|intcomma }}</b></div>{% empty %}<p class="hint" style="margin:0">—</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Latest requests</h3></div>
+      {% if recent %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>When</th><th>Tool</th><th>AI</th><th>Tokens</th></tr></thead><tbody>
+      {% for u in recent %}<tr><td>{{ u.created_at|date:"j M H:i" }}<div class="hint">{{ u.user.username|default:"—" }}</div></td><td>{% for k, v in feature_names.items %}{% if k == u.feature %}{{ v }}{% endif %}{% endfor %}</td>
+        <td>{{ u.provider }}{% if not u.ok %} <span class="chip red" title="{{ u.error }}">failed</span>{% endif %}</td><td>{{ u.tokens|intcomma }}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<div class="empty"><p>No requests yet.</p></div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Catalogue{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Catalogue</em></h1>
+  <p class="fin-sub">Every title, its copies and where they are. Type an ISBN and press "Look up" to fill the details from Open Library.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<datalist id="subj">{% for s in subjects %}<option value="{{ s }}">{% endfor %}</datalist>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Titles</h3></div><div class="panel-b">
+    <form method="get" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
+      <input name="q" value="{{ q }}" placeholder="Title, author, ISBN or barcode" style="flex:2;min-width:160px">
+      <select name="subject" style="flex:1"><option value="">All subjects</option>{% for s in subjects %}<option {% if s == subject %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+      <select name="level" style="flex:1"><option value="">All levels</option>{% for k, v in levels %}<option value="{{ k }}" {% if k == level %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+      {% if branches %}<select name="branch" style="flex:1"><option value="">All branches</option>{% for br in branches %}<option value="{{ br.pk }}" {% if br.pk|stringformat:"s" == request.GET.branch %}selected{% endif %}>{{ br }}</option>{% endfor %}</select>{% endif %}
+      <label class="pill"><input type="checkbox" name="textbooks" {% if request.GET.textbooks %}checked{% endif %}> Textbooks</label>
+      <button class="fin-btn" type="submit">Search</button></form>
+    <table class="tbl"><thead><tr><th>Title</th><th>Subject</th><th class="num">On shelf</th></tr></thead><tbody>
+    {% for b in books %}<tr><td class="name"><a href="{% url 'library:book' b.pk %}">{{ b.title }}</a><br><small class="hint">{{ b.authors }}{% if b.isbn %} · {{ b.isbn }}{% endif %}{% if b.is_textbook %} · textbook{% endif %}</small></td><td>{{ b.subject }}<br><small class="hint">{{ b.get_level_display }}</small></td><td class="num">{{ b.available }} / {{ b.total }}</td></tr>
+    {% empty %}<tr><td colspan="3" class="empty">No books found.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add a title</h3>
+    {% include "library/_book_form.html" %}
+    <div class="row2"><div><label>Copies now</label><input name="copies" value="1" inputmode="numeric"></div><div><label>Shelf</label><input name="shelf" maxlength="40"></div></div>
+    <div class="row2">{% if branches %}<div><label>Branch</label><select name="branch">{% for br in branches %}<option value="{{ br.pk }}">{{ br }}</option>{% endfor %}</select></div>{% endif %}
+    <div><label>Donated by</label><select name="donation"><option value="">— bought —</option>{% for d in donations %}<option value="{{ d.pk }}">{{ d }}</option>{% endfor %}</select></div></div>
+    <p class="hint" style="margin:0">Copies get barcodes LIB000001, LIB000002 … — print labels from the book's page.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

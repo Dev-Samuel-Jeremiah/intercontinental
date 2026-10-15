@@ -1,0 +1,541 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Invoice {{ invoice.invoice_no }}{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --muted:#9aa4bf;
+  --green-bg:rgba(34,197,94,.14);
+  --amber-bg:rgba(245,158,11,.14);
+  --red-bg:rgba(239,68,68,.14);
+  --blue-bg:rgba(59,130,246,.14);
+}
+
+*{
+  box-sizing:border-box;
+}
+
+.inv-wrap{
+  max-width:920px;
+  margin:0 auto;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:14px;
+  border:1px solid var(--rim2);
+  background:var(--surface2);
+  color:var(--white);
+  text-decoration:none;
+  font-size:.84rem;
+  font-weight:800;
+  transition:.18s ease;
+  cursor:pointer;
+}
+
+.btn:hover{
+  background:var(--surface3);
+  border-color:var(--rim3);
+  transform:translateY(-1px);
+}
+
+.inv-card{
+  background:linear-gradient(180deg,var(--surface2),var(--surface));
+  border:1px solid var(--rim);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+.inv-hdr{
+  position:relative;
+  overflow:hidden;
+  padding:34px 36px;
+  background:
+    radial-gradient(circle at top right, rgba(59,130,246,.2), transparent 30%),
+    radial-gradient(circle at left, rgba(255,255,255,.04), transparent 30%),
+    linear-gradient(145deg,#1f2435,#12274e);
+  border-bottom:1px solid var(--rim);
+}
+
+.inv-hdr::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(transparent, rgba(255,255,255,.02));
+  pointer-events:none;
+}
+
+.brand{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+  flex-wrap:wrap;
+  position:relative;
+  z-index:2;
+}
+
+.school{
+  font-size:1.45rem;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.4px;
+}
+
+.addr{
+  margin-top:5px;
+  color:#c5cee3;
+  font-size:.83rem;
+}
+
+.invoice-box{
+  text-align:right;
+}
+
+.invoice-label{
+  font-size:.74rem;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  color:#8da2c7;
+  font-weight:800;
+}
+
+.invoice-no{
+  margin-top:5px;
+  font-size:1.15rem;
+  color:#fff;
+  font-weight:900;
+  font-family:monospace;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 14px;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:800;
+  border:1px solid transparent;
+  margin-top:14px;
+}
+
+.bg{
+  background:var(--green-bg);
+  color:#86efac;
+  border-color:rgba(34,197,94,.2);
+}
+
+.ba{
+  background:var(--amber-bg);
+  color:#fcd34d;
+  border-color:rgba(245,158,11,.2);
+}
+
+.br{
+  background:var(--red-bg);
+  color:#fca5a5;
+  border-color:rgba(239,68,68,.2);
+}
+
+.bd{
+  background:var(--blue-bg);
+  color:#93c5fd;
+  border-color:rgba(59,130,246,.2);
+}
+
+.inv-body{
+  padding:34px 36px;
+}
+
+.section-title{
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:#7f8aa3;
+  font-weight:800;
+  margin-bottom:14px;
+}
+
+.info-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+  margin-bottom:28px;
+}
+
+.info-card{
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  border-radius:18px;
+  padding:16px;
+}
+
+.info-label{
+  color:#8b97b2;
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+.info-value{
+  color:var(--white);
+  font-size:.92rem;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.table-wrap{
+  overflow-x:auto;
+  border-radius:20px;
+  border:1px solid var(--rim);
+  background:var(--surface2);
+}
+
+.items-tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:600px;
+}
+
+.items-tbl th{
+  background:rgba(255,255,255,.03);
+  color:#8e9ab3;
+  text-align:left;
+  padding:15px 18px;
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  border-bottom:1px solid var(--rim);
+}
+
+.items-tbl td{
+  padding:15px 18px;
+  border-bottom:1px solid rgba(255,255,255,.05);
+  color:#d8deed;
+  font-size:.88rem;
+}
+
+.items-tbl tbody tr:hover td{
+  background:rgba(255,255,255,.02);
+}
+
+.amount{
+  text-align:right;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.total-row td{
+  background:rgba(34,197,94,.08);
+  color:#86efac;
+  font-weight:900;
+  border-top:1px solid rgba(34,197,94,.16);
+}
+
+.paid-row td{
+  background:rgba(59,130,246,.08);
+  color:#93c5fd;
+  font-weight:800;
+}
+
+.balance-row td{
+  font-weight:900;
+  font-size:1rem;
+}
+
+.balance-positive td{
+  background:rgba(239,68,68,.1);
+  color:#fca5a5;
+}
+
+.balance-clear td{
+  background:rgba(34,197,94,.1);
+  color:#86efac;
+}
+
+.note{
+  margin-top:24px;
+  padding:18px;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+}
+
+.note-title{
+  color:#d6dced;
+  font-weight:800;
+  margin-bottom:6px;
+}
+
+.note p{
+  margin:0;
+  color:#9ca7c0;
+  font-size:.86rem;
+  line-height:1.7;
+}
+
+.footer{
+  margin-top:26px;
+  text-align:center;
+  color:#7d879f;
+  font-size:.78rem;
+  padding-top:20px;
+  border-top:1px solid var(--rim);
+}
+
+@media(max-width:768px){
+
+  .inv-hdr,
+  .inv-body{
+    padding:24px 20px;
+  }
+
+  .school{
+    font-size:1.15rem;
+  }
+
+  .invoice-box{
+    text-align:left;
+  }
+
+  .topbar{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .btn{
+    justify-content:center;
+  }
+}
+
+@media print{
+
+  body{
+    background:#fff !important;
+  }
+
+  .topbar{
+    display:none !important;
+  }
+
+  .inv-card{
+    box-shadow:none;
+    border:none;
+  }
+}
+</style>
+
+<div class="inv-wrap">
+
+  <div class="topbar">
+    <a href="javascript:history.back()" class="btn">
+      <i class="bi bi-arrow-left"></i>
+      Back
+    </a>
+
+    <button onclick="window.print()" class="btn">
+      <i class="bi bi-printer"></i>
+      Print Invoice
+    </button>
+  </div>
+
+  <div class="inv-card">
+
+    <div class="inv-hdr">
+
+      <div class="brand">
+
+        <div>
+          <div class="school">{{ tenant.name|upper }}</div>
+          <div class="addr">
+            {{ tenant.address }}
+          </div>
+        </div>
+
+        <div class="invoice-box">
+          <div class="invoice-label">Invoice</div>
+          <div class="invoice-no">{{ invoice.invoice_no }}</div>
+
+          {% if invoice.status == 'PAID' %}
+            <span class="badge bg">
+              <i class="bi bi-check-circle-fill"></i>
+              PAID
+            </span>
+
+          {% elif invoice.status == 'PARTIAL' %}
+            <span class="badge ba">
+              <i class="bi bi-hourglass-split"></i>
+              PARTIAL
+            </span>
+
+          {% elif invoice.status == 'OVERDUE' %}
+            <span class="badge br">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              OVERDUE
+            </span>
+
+          {% else %}
+            <span class="badge bd">
+              <i class="bi bi-file-earmark"></i>
+              {{ invoice.status }}
+            </span>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="inv-body">
+
+      <div class="section-title">
+        Student Information
+      </div>
+
+      <div class="info-grid">
+
+        <div class="info-card">
+          <div class="info-label">Student</div>
+          <div class="info-value">
+            {{ invoice.student.full_name }}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Admission No.</div>
+          <div class="info-value">
+            {{ invoice.student.admission_number }}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Class</div>
+          <div class="info-value">
+            {{ invoice.student.class_assigned.name|default:"—" }}
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="info-label">Term / Session</div>
+          <div class="info-value">
+            {{ invoice.term|default:"—" }} /
+            {{ invoice.session|default:"—" }}
+          </div>
+        </div>
+
+        {% if invoice.due_date %}
+        <div class="info-card">
+          <div class="info-label">Due Date</div>
+          <div class="info-value">
+            {{ invoice.due_date|date:"d F Y" }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="info-card">
+          <div class="info-label">Date Created</div>
+          <div class="info-value">
+            {{ invoice.created_at|date:"d F Y" }}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="section-title">
+        Invoice Items
+      </div>
+
+      <div class="table-wrap">
+
+        <table class="items-tbl">
+
+          <thead>
+            <tr>
+              <th style="width:70px;">#</th>
+              <th>Description</th>
+              <th style="text-align:right;">Amount</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for item in items %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+
+              <td>
+                {{ item.description }}
+              </td>
+
+              <td class="amount">
+                ₦{{ item.amount|floatformat:2 }}
+              </td>
+            </tr>
+            {% endfor %}
+
+            <tr class="total-row">
+              <td colspan="2">TOTAL</td>
+              <td class="amount">
+                ₦{{ invoice.total|floatformat:2 }}
+              </td>
+            </tr>
+
+            <tr class="paid-row">
+              <td colspan="2">AMOUNT PAID</td>
+              <td class="amount">
+                ₦{{ invoice.amount_paid|floatformat:2 }}
+              </td>
+            </tr>
+
+            <tr class="balance-row {% if invoice.balance_due > 0 %}balance-positive{% else %}balance-clear{% endif %}">
+              <td colspan="2">BALANCE DUE</td>
+              <td class="amount">
+                ₦{{ invoice.balance_due|floatformat:2 }}
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      {% if invoice.note %}
+      <div class="note">
+        <div class="note-title">
+          Note
+        </div>
+
+        <p>
+          {{ invoice.note }}
+        </p>
+      </div>
+      {% endif %}
+
+      <div class="footer">
+        This invoice was generated electronically by the school finance system.
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

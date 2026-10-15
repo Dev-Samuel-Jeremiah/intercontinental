@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Subject streams{% endblock %}
+{% block content %}
+<style>
+  .stl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+  .subs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.3rem 0 .6rem}
+  .roster td{vertical-align:top}
+  .el{display:flex;gap:.3rem .7rem;flex-wrap:wrap}
+  .el label{display:inline-flex;gap:.3rem;align-items:center;font-size:.8rem;color:var(--slate2);cursor:pointer}
+  .el label.off{display:none}
+  .roster select{padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem}
+  .cnt{font-size:.72rem}
+  .cnt.bad{color:var(--red)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Subject <em>streams</em></h1>
+  <p class="fin-sub">Science, Arts, Commercial… Each stream has compulsory subjects and electives. A student's stream and electives become their subject list for score entry and report cards.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="stl">
+  {% for s in streams %}<div class="panel" style="margin:0"><div class="panel-h"><h3><i class="bi bi-signpost-split"></i> {{ s.name }}</h3><span class="hint">{{ s.levels|default:"any class" }}</span></div><div class="panel-b">
+    {% if s.problems %}<div class="chip red" style="white-space:normal;margin-bottom:.6rem">{{ s.problems|join:" " }}</div>{% endif %}
+    <span class="hint">Compulsory ({{ s.compulsory.all|length }})</span><div class="subs">{% for x in s.compulsory.all %}<span class="chip gold">{{ x.name }}</span>{% empty %}<span class="hint">—</span>{% endfor %}</div>
+    <span class="hint">Electives — choose {{ s.min_electives }}{% if s.max_electives != s.min_electives %} to {{ s.max_electives }}{% endif %}</span><div class="subs">{% for x in s.electives.all %}<span class="chip">{{ x.name }}</span>{% empty %}<span class="hint">—</span>{% endfor %}</div>
+    <span class="hint">{{ s.min_subjects }}–{{ s.max_subjects }} subjects in all</span>
+    {% if can_manage %}<details style="margin-top:.8rem"><summary class="hint" style="cursor:pointer">Edit</summary>{% include "curriculum/_stream_form.html" with s=s %}</details>{% endif %}
+  </div></div>
+  {% endfor %}
+  {% if can_manage %}<div class="panel" style="margin:0"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> New stream</h3></div><div class="panel-b">{% include "curriculum/_stream_form.html" with s=None %}</div></div>{% endif %}
+</div>
+
+<div class="panel" style="margin-top:1.4rem"><div class="panel-h"><h3><i class="bi bi-people"></i> Choose streams for a class</h3>
+  <form method="get"><select name="class" onchange="this.form.submit()" class="fin-btn fin-btn-sm"><option value="">Choose a class…</option>{% for c in classes %}<option value="{{ c.id }}" {% if c.id == school_class.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></form></div>
+  {% if school_class %}
+    {% if not class_streams %}<div class="empty"><i class="bi bi-signpost"></i><p>No stream is set up for {{ school_class.name }}. Add the class level to a stream's "levels".</p></div>
+    {% elif not roster %}<div class="empty"><p>No students in {{ school_class.name }}.</p></div>
+    {% else %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="assign"><input type="hidden" name="class_id" value="{{ school_class.id }}">
+    <div style="overflow-x:auto"><table class="tbl roster"><thead><tr><th>Student</th><th>Stream</th><th>Electives</th></tr></thead><tbody>
+      {% for r in roster %}<tr data-row>
+        <td class="name">{{ r.student.full_name }}<div class="hint">{{ r.student.admission_number }}</div></td>
+        <td>{% if can_manage %}<select name="stream_{{ r.student.id }}" data-stream><option value="">—</option>{% for s in class_streams %}<option value="{{ s.id }}" data-min="{{ s.min_electives }}" data-max="{{ s.max_electives }}" {% if s.id == r.stream_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+          {% else %}{% for s in class_streams %}{% if s.id == r.stream_id %}{{ s.name }}{% endif %}{% endfor %}{% endif %}</td>
+        <td><div class="el">{% for s in class_streams %}{% for x in s.electives.all %}<label data-for="{{ s.id }}"><input type="checkbox" name="electives_{{ r.student.id }}" value="{{ x.id }}" {% if s.id == r.stream_id and x.id in r.electives %}checked{% endif %} {% if not can_manage %}disabled{% endif %}> {{ x.name }}</label>{% endfor %}{% endfor %}</div><span class="cnt"></span></td>
+      </tr>{% endfor %}
+    </tbody></table></div>
+    {% if can_manage %}<div class="panel-b"><button class="fin-btn fin-btn-gold" type="submit">Save streams and subjects</button>
+      <span class="hint" style="margin-left:.6rem">Results for dropped subjects are marked "not offering" only if no marks have been entered.</span></div>{% endif %}
+    </form>
+    {% endif %}
+  {% else %}<div class="empty"><i class="bi bi-hand-index"></i><p>Choose a class to set each student's stream and electives.</p></div>{% endif %}
+</div>
+<script>
+document.querySelectorAll('[data-row]').forEach(function(row){
+  var sel=row.querySelector('[data-stream]'),cnt=row.querySelector('.cnt');
+  function sync(){
+    var id=sel?sel.value:'',opt=sel&&sel.selectedOptions[0];
+    row.querySelectorAll('.el label').forEach(function(l){var on=l.dataset.for===id;l.classList.toggle('off',!on);if(!on)l.querySelector('input').checked=false;});
+    if(!id||!opt){cnt.textContent='';return;}
+    var n=row.querySelectorAll('.el label:not(.off) input:checked').length,lo=+opt.dataset.min,hi=+opt.dataset.max;
+    cnt.textContent=n+' chosen · '+(lo===hi?lo:lo+'–'+hi)+' needed';cnt.className='cnt'+(n<lo||n>hi?' bad':' hint');
+  }
+  if(sel)sel.addEventListener('change',sync);row.addEventListener('change',sync);sync();
+});
+</script>
+{% endblock %}

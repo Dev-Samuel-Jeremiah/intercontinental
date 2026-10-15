@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Schemes of work{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Schemes of <em>work</em></h1>
+  <p class="fin-sub">The week-by-week plan of topics for each subject and class.</p>
+</div><form method="get"><select name="term" onchange="this.form.submit()" class="fin-btn">{% for t in terms %}<option value="{{ t.id }}" {% if t.id == term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select></form></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Start a scheme</h3></div><div class="panel-b">
+    {% if pairs and terms %}<form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Subject and class</label><select id="pair" required onchange="var v=this.value.split(':');document.getElementById('sub').value=v[0];document.getElementById('cls').value=v[1]">
+        <option value="">Choose…</option>{% for s, c in pairs %}<option value="{{ s.id }}:{{ c.id }}">{{ c.name }} · {{ s.name }}</option>{% endfor %}</select>
+        <input type="hidden" name="subject" id="sub"><input type="hidden" name="school_class" id="cls"></div>
+      <div class="row2"><div><label>Term</label><select name="term">{% for t in terms %}<option value="{{ t.id }}" {% if t.id == term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select></div>
+      <div><label>Weeks</label><input type="number" name="weeks" value="12" min="1" max="16"></div></div>
+      <div><label>Copy topics from <span class="hint">(optional)</span></label><select name="copy_from"><option value="">— start empty —</option>{% for s in copyable %}<option value="{{ s.id }}">{{ s.subject.name }} · {{ s.school_class.name }} · {{ s.term.session.name }} {{ s.term.name }}</option>{% endfor %}</select>
+        <span class="hint">Reuse last year's scheme, or another arm's.</span></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Create scheme</button>
+    </form>{% elif not terms %}<p class="hint">Create the academic session and terms first.</p>
+    {% else %}<p class="hint" style="margin:0">You aren't assigned to teach any subject yet. An administrator assigns subjects and classes to teachers.</p>{% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-text"></i> {% if term %}{{ term.session.name }} · {{ term.name }}{% else %}All terms{% endif %}</h3></div>
+    {% if schemes %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>Subject</th><th>Topics</th><th>Progress</th><th></th></tr></thead><tbody>
+    {% for r in schemes %}<tr><td class="name">{{ r.scheme.school_class.name }}</td><td>{{ r.scheme.subject.name }}{% if r.scheme.approved_at %} <i class="bi bi-patch-check-fill" style="color:var(--green)" title="Approved"></i>{% endif %}</td>
+      <td>{{ r.taught }} / {{ r.total }}</td><td><div class="bar {{ r.state }}"><i style="width:{{ r.percent }}%"></i><u style="left:{{ r.expected_percent }}%"></u></div></td>
+      <td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:scheme' r.scheme.id %}">Open</a></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-journal-plus"></i><p>No schemes for this term yet.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

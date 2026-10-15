@@ -1,0 +1,18 @@
+{% include "family/_top.html" %}
+  {% include "family/_back.html" %}
+  <h1>Today at <em>school</em></h1>
+  <p class="sub">{{ d.day|date:"l j F Y" }}{% if d.wallet is not None %} · family wallet ₦{{ d.wallet|floatformat:"2g" }}{% endif %}</p>
+  {% for i in d.items %}
+  <div class="card">
+    <h2><i class="bi bi-person" style="color:var(--champagne-lt)"></i> {{ i.student.full_name }}</h2>
+    <p style="margin:.2rem 0"><b>Attendance:</b> {{ i.attendance|default:"Not marked yet" }}</p>
+    {% for h in i.homework %}<p style="margin:.2rem 0"><b>Homework set</b> — {{ h.subject.name }}: {{ h.title }} <span class="hint">(due {{ h.due_on|date:"D j M" }})</span></p>{% endfor %}
+    {% for h in i.due %}<p style="margin:.2rem 0"><b>Due tomorrow</b> — {{ h.subject.name }}: {{ h.title }}</p>{% endfor %}
+    {% for a in i.awards %}<p style="margin:.2rem 0"><b>Award:</b> {{ a.title }}</p>{% endfor %}
+    {% if i.points %}<p style="margin:.2rem 0"><b>House points:</b> {{ i.points }}</p>{% endif %}
+    {% for b in i.behaviour %}<p style="margin:.2rem 0"><b>{% if b.points > 0 %}Praise{% else %}Concern{% endif %}:</b> {{ b.get_category_display }}{% if b.note %} — {{ b.note }}{% endif %}</p>{% endfor %}
+    {% if i.spent %}<p style="margin:.2rem 0"><b>Shop / canteen:</b> ₦{{ i.spent|floatformat:"2g" }}</p>{% endif %}
+  </div>
+  {% endfor %}
+  <p class="hint">Want this by email each afternoon? Make sure "Daily summary" is ticked under <a href="{% url 'communications:preferences' %}">Message preferences</a>.</p>
+{% include "family/_end.html" %}

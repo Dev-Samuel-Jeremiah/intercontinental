@@ -1,0 +1,12 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Fee statement — {{ st.student.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.card{border:1px solid var(--rim);border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem}.card table{width:100%;border-collapse:collapse;font-size:.88rem}.card td,.card th{padding:.4rem;border-bottom:1px solid var(--rim);text-align:left}.num{text-align:right}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Finance</div>
+  <h1 class="fin-title">Fee <em>statement</em></h1>
+  <p class="fin-sub">{{ st.student.full_name }} · {{ st.student.admission_number }} · billed ₦{{ st.billed|floatformat:"2g" }} · paid ₦{{ st.paid|floatformat:"2g" }} · balance ₦{{ st.balance|floatformat:"2g" }}</p>
+</div><a class="fin-btn fin-btn-gold" href="?pdf=1"><i class="bi bi-download"></i> PDF</a></div>
+{% include "family/_statement_tables.html" %}
+{% endblock %}

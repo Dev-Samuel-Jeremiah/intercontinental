@@ -1,0 +1,943 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Finance Dashboard{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--ink);
+    color:var(--white);
+    font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+    max-width:1700px;
+    margin:0 auto;
+    padding:2rem 2.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* HEADER */
+.page-head{
+    margin-bottom:2rem;
+}
+
+.page-head-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    flex-wrap:wrap;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    color:var(--champagne);
+    font-size:.72rem;
+    letter-spacing:3px;
+    text-transform:uppercase;
+    margin-bottom:12px;
+    font-weight:700;
+}
+
+.eyebrow::before{
+    content:"";
+    width:38px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.7;
+}
+
+.page-title{
+    margin:0;
+    font-family:'Cormorant Garamond',serif;
+    font-size:3rem;
+    line-height:1;
+    font-weight:700;
+    color:var(--white);
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+    font-weight:600;
+}
+
+.page-sub{
+    color:var(--slate2);
+    margin-top:12px;
+    font-size:.95rem;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.24);
+    color:var(--champagne-lt);
+    font-size:.82rem;
+    font-weight:600;
+}
+
+.head-divider{
+    margin-top:1.5rem;
+    border-bottom:1px solid var(--rim);
+    position:relative;
+    padding-bottom:1rem;
+}
+
+.head-divider::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:-1px;
+    width:80px;
+    height:1px;
+    background:var(--champagne);
+}
+
+/* PANEL */
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:1.2rem 1.3rem;
+    border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.9rem;
+    color:#fff;
+}
+
+.icon-green{
+    background:linear-gradient(135deg,var(--green),#15803d);
+}
+.icon-blue{
+    background:linear-gradient(135deg,var(--blue),#1d4ed8);
+}
+.icon-red{
+    background:linear-gradient(135deg,var(--red),#b91c1c);
+}
+.icon-amber{
+    background:linear-gradient(135deg,var(--amber),#b45309);
+}
+.icon-purple{
+    background:linear-gradient(135deg,var(--purple),#6d28d9);
+}
+.icon-teal{
+    background:linear-gradient(135deg,var(--teal),#0f766e);
+}
+
+.panel-title h3{
+    margin:0;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+/* GRID */
+.fin-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:18px;
+    margin-bottom:20px;
+}
+
+.g2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+@media(max-width:980px){
+    .g2{
+        grid-template-columns:1fr;
+    }
+
+    .your-wrap{
+        padding:1.3rem 1rem 3rem;
+    }
+
+    .page-title{
+        font-size:2.25rem;
+    }
+}
+
+/* STATS */
+.stat-card{
+    padding:1.4rem;
+}
+
+.stat-label{
+    color:var(--slate2);
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    font-size:.72rem;
+    font-weight:700;
+}
+
+.stat-value{
+    margin-top:10px;
+    font-family:'Cormorant Garamond',serif;
+    font-size:2.2rem;
+    font-weight:700;
+    color:var(--white);
+}
+
+.stat-meta{
+    margin-top:6px;
+    color:var(--slate);
+    font-size:.82rem;
+}
+
+/* BUTTONS */
+.btn-lux{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    padding:.8rem 1rem;
+    border-radius:12px;
+    text-decoration:none;
+    border:1px solid transparent;
+    font-size:.83rem;
+    font-weight:600;
+    transition:.25s ease;
+    cursor:pointer;
+    font-family:'Outfit',sans-serif;
+}
+
+.btn-gold{
+    background:linear-gradient(135deg,#f4d21f,#d1ad00);
+    color:#0a1f44;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-gold:hover{
+    transform:translateY(-2px);
+    color:#fff;
+}
+
+.btn-ghost{
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    color:var(--white);
+}
+
+.btn-ghost:hover{
+    border-color:var(--champagne);
+    color:var(--champagne-lt);
+}
+
+.btn-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#ffb4b4;
+}
+
+.btn-red:hover{
+    background:rgba(239,68,68,.18);
+}
+
+.btn-green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:#8ff0b3;
+}
+
+/* FORM */
+form{
+    margin:0;
+}
+
+.f-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.fg{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+}
+
+label{
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    color:var(--white);
+    padding:.9rem 1rem;
+    font-size:.9rem;
+    outline:none;
+    transition:.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* TABLE */
+.table-wrap{
+    overflow-x:auto;
+}
+
+.tbl{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.tbl th{
+    text-align:left;
+    padding:14px 16px;
+    border-bottom:1px solid var(--rim);
+    color:var(--slate2);
+    font-size:.72rem;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    font-weight:700;
+    white-space:nowrap;
+}
+
+.tbl td{
+    padding:14px 16px;
+    border-bottom:1px solid var(--rim);
+    color:var(--white);
+    font-size:.88rem;
+    vertical-align:middle;
+}
+
+.tbl tr:hover td{
+    background:rgba(255,255,255,.025);
+}
+
+.avatar{
+    width:42px;
+    height:42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    color:#fff;
+    font-weight:700;
+    font-size:.83rem;
+}
+
+.student-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.student-meta{
+    color:var(--slate);
+    font-size:.75rem;
+    margin-top:2px;
+}
+
+/* BADGES */
+.badge-lux{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:.72rem;
+    font-weight:700;
+    border:1px solid;
+}
+
+.badge-green{
+    background:var(--green-dim);
+    border-color:var(--green-border);
+    color:#9af0b6;
+}
+
+.badge-red{
+    background:var(--red-dim);
+    border-color:var(--red-border);
+    color:#ffb0b0;
+}
+
+.badge-blue{
+    background:var(--blue-dim);
+    border-color:var(--blue-border);
+    color:#a9c8ff;
+}
+
+.badge-purple{
+    background:var(--purple-dim);
+    border-color:var(--purple-border);
+    color:#d0bcff;
+}
+
+.badge-amber{
+    background:var(--amber-dim);
+    border-color:var(--amber-border);
+    color:#ffd38c;
+}
+
+/* EMPTY */
+.empty-state{
+    padding:3rem 1rem;
+    text-align:center;
+}
+
+.empty-icon{
+    width:70px;
+    height:70px;
+    margin:0 auto 1rem;
+    border-radius:18px;
+    background:var(--surface3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--champagne);
+    font-size:1.5rem;
+    border:1px solid var(--rim);
+}
+
+.empty-title{
+    font-weight:600;
+    font-size:1rem;
+    color:var(--white);
+}
+
+.empty-sub{
+    color:var(--slate);
+    margin-top:6px;
+    font-size:.86rem;
+}
+
+/* MESSAGES */
+.msg{
+    padding:14px 16px;
+    border-radius:14px;
+    margin-bottom:16px;
+    border:1px solid;
+    font-size:.87rem;
+    font-weight:600;
+}
+
+.msg-success{
+    background:var(--green-dim);
+    border-color:var(--green-border);
+    color:#a4f0c0;
+}
+
+.msg-error{
+    background:var(--red-dim);
+    border-color:var(--red-border);
+    color:#ffb0b0;
+}
+
+.msg-info{
+    background:var(--blue-dim);
+    border-color:var(--blue-border);
+    color:#b8d2ff;
+}
+
+.chart-wrap{
+    position:relative;
+    height:280px;
+    padding:1rem;
+}
+
+.rate-wrap{
+    padding:1.4rem;
+}
+
+.rate-track{
+    width:100%;
+    height:12px;
+    border-radius:999px;
+    overflow:hidden;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    margin-top:10px;
+}
+
+.rate-fill{
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,var(--champagne),#ffe066);
+}
+</style>
+
+<div class="your-wrap">
+
+    <!-- HEADER -->
+    <div class="page-head">
+        <div class="page-head-top">
+
+            <div>
+                <div class="eyebrow">Finance Overview</div>
+
+                <h1 class="page-title">
+                    Finance <em>Dashboard</em>
+                </h1>
+
+                <div class="page-sub">
+                    {% if sel_term %}{{ sel_term }}{% endif %}
+                    {% if sel_session %} · {{ sel_session }}{% endif %}
+                    · {{ total_unpaid_count|default:"0" }} students with outstanding balance
+                </div>
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-bank2"></i>
+                Financial Operations Center
+            </div>
+
+        </div>
+
+        <div class="head-divider"></div>
+    </div>
+
+    {% if messages %}
+        {% for m in messages %}
+            <div class="msg 
+                {% if m.tags == 'success' %}msg-success
+                {% elif m.tags == 'error' %}msg-error
+                {% else %}msg-info{% endif %}">
+                {{ m }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- FILTERS -->
+    <div class="panel" style="padding:1.4rem;margin-bottom:20px;animation-delay:.05s;">
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:end;">
+
+            <form method="GET" style="flex:1;">
+                <div class="f-row">
+
+                    <div class="fg">
+                        <label>Academic Session</label>
+                        <select name="session">
+                            <option value="">Active Session</option>
+                            {% for s in sessions %}
+                                <option value="{{ s.id }}" {% if sel_session.id == s.id %}selected{% endif %}>
+                                    {{ s.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="fg">
+                        <label>Academic Term</label>
+                        <select name="term">
+                            <option value="">Active Term</option>
+                            {% for t in terms %}
+                                <option value="{{ t.id }}" {% if sel_term.id == t.id %}selected{% endif %}>
+                                    {{ t.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div style="display:flex;align-items:end;">
+                        <button type="submit" class="btn-lux btn-gold">
+                            <i class="bi bi-funnel"></i>
+                            Filter Dashboard
+                        </button>
+                    </div>
+
+                </div>
+            </form>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <a href="{% url 'finance:admin_billing' %}" class="btn-lux btn-ghost">
+                    <i class="bi bi-table"></i>
+                    Billing Report
+                </a>
+
+                <a href="{% url 'finance:admin_invoices' %}" class="btn-lux btn-ghost">
+                    <i class="bi bi-receipt"></i>
+                    Invoices
+                </a>
+
+                <a href="{% url 'finance:admin_pay_on_behalf' %}" class="btn-lux btn-gold">
+                    <i class="bi bi-cash-coin"></i>
+                    Issue & Pay
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="fin-grid">
+
+        <div class="panel stat-card" style="animation-delay:.08s;">
+            <div class="panel-title" style="margin-bottom:10px;">
+                <div class="icon-badge icon-green">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div class="stat-label">Total Expected</div>
+            </div>
+
+            <div class="stat-value">₦{{ total_expected|floatformat:0 }}</div>
+            <div class="stat-meta">All active students this term</div>
+        </div>
+
+        <div class="panel stat-card" style="animation-delay:.12s;">
+            <div class="panel-title" style="margin-bottom:10px;">
+                <div class="icon-badge icon-blue">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div class="stat-label">Total Collected</div>
+            </div>
+
+            <div class="stat-value">₦{{ total_paid|floatformat:0 }}</div>
+            <div class="stat-meta">From approved payments</div>
+        </div>
+
+        <div class="panel stat-card" style="animation-delay:.16s;">
+            <div class="panel-title" style="margin-bottom:10px;">
+                <div class="icon-badge icon-red">
+                    <i class="bi bi-exclamation-diamond"></i>
+                </div>
+                <div class="stat-label">Outstanding</div>
+            </div>
+
+            <div class="stat-value">₦{{ outstanding|floatformat:0 }}</div>
+            <div class="stat-meta">{{ total_unpaid_count|default:"0" }} student(s)</div>
+        </div>
+
+        <div class="panel stat-card" style="animation-delay:.20s;">
+            <div class="panel-title" style="margin-bottom:10px;">
+                <div class="icon-badge icon-amber">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-label">Pending Approvals</div>
+            </div>
+
+            <div class="stat-value">{{ pending_count }}</div>
+            <div class="stat-meta">₦{{ pending_amount|floatformat:0 }} total</div>
+        </div>
+
+    </div>
+
+    <!-- COLLECTION RATE -->
+    <div class="panel" style="animation-delay:.24s;margin-bottom:20px;">
+        <div class="rate-wrap">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div class="stat-label">Collection Rate</div>
+                    <div style="margin-top:4px;color:var(--slate2);font-size:.86rem;">
+                        Approved collection progress
+                    </div>
+                </div>
+
+                <div style="font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--champagne);font-weight:700;">
+                    {{ collection_rate }}%
+                </div>
+            </div>
+
+            <div class="rate-track">
+                <div class="rate-fill" style="width:{{ collection_rate }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING -->
+    <div class="g2">
+
+        <!-- PAYMENTS -->
+        <div class="panel" style="animation-delay:.28s;">
+
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="icon-badge icon-purple">
+                        <i class="bi bi-hourglass"></i>
+                    </div>
+
+                    <h3>Pending Payments</h3>
+                </div>
+
+                <span class="badge-lux badge-purple">
+                    {{ pending_pmts|length }} Pending
+                </span>
+            </div>
+
+            {% if pending_pmts %}
+
+            <div class="table-wrap">
+                <table class="tbl">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for p in pending_pmts %}
+                        <tr>
+
+                            <td>
+                                <div class="student-row">
+                                    <div class="avatar">
+                                        {{ p.wallet.student.full_name|slice:":2"|upper }}
+                                    </div>
+
+                                    <div>
+                                        <div>{{ p.wallet.student.full_name }}</div>
+                                        <div class="student-meta">
+                                            {{ p.wallet.student.admission_number }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td style="font-weight:700;color:#9af0b6;">
+                                ₦{{ p.amount|floatformat:2 }}
+                            </td>
+
+                            <td>
+                                <span class="badge-lux badge-blue">
+                                    {{ p.get_method_display }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+
+                                    <form method="POST" action="{% url 'finance:review_payment' p.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="approve">
+
+                                        <button type="submit" class="btn-lux btn-green">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+
+                                    <form method="POST" action="{% url 'finance:review_payment' p.id %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="reject">
+
+                                        <button type="submit" class="btn-lux btn-red">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+
+                                    {% if p.proof %}
+                                    <a href="{{ p.proof.url }}" target="_blank" class="btn-lux btn-ghost">
+                                        Proof
+                                    </a>
+                                    {% endif %}
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-check2-circle"></i>
+                </div>
+
+                <div class="empty-title">
+                    No Pending Payments
+                </div>
+
+                <div class="empty-sub">
+                    All submitted payments have been processed.
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- TOPUPS -->
+        <div class="panel" style="animation-delay:.32s;">
+
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="icon-badge icon-teal">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+
+                    <h3>Pending Top-Ups</h3>
+                </div>
+
+                <span class="badge-lux badge-teal">
+                    {{ pending_topups|length }} Requests
+                </span>
+            </div>
+
+            {% if pending_topups %}
+
+            <div style="padding:1.2rem;display:flex;flex-direction:column;gap:12px;">
+
+                {% for t in pending_topups %}
+                <div style="background:var(--surface2);border:1px solid var(--rim);border-radius:14px;padding:1rem;">
+
+                    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+
+                        <div>
+                            <div style="font-weight:600;">
+                                {{ t.wallet.student.full_name }}
+                            </div>
+
+                            <div class="student-meta">
+                                {{ t.wallet.student.admission_number }}
+                                · {{ t.get_method_display }}
+                            </div>
+
+                            {% if t.reference %}
+                            <div class="student-meta">
+                                Ref: {{ t.reference }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div style="font-family:'Cormorant Garamond',serif;font-size:1.7rem;color:var(--champagne);font-weight:700;">
+                            ₦{{ t.amount|floatformat:2 }}
+                        </div>
+
+                    </div>
+
+                    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+
+                        <form method="POST" action="{% url 'finance:review_topup' t.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve">
+
+                            <button type="submit" class="btn-lux btn-green">
+                                <i class="bi bi-check-lg"></i>
+                                Approve
+                            </button>
+                        </form>
+
+                        <form method="POST" action="{% url 'finance:review_topup' t.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+
+                            <button type="submit" class="btn-lux btn-red">
+                                <i class="bi bi-x-lg"></i>
+                                Reject
+                            </button>
+                        </form>
+
+                        {% if t.payment_proof %}
+                        <a href="{{ t.payment_proof.url }}" target="_blank" class="btn-lux btn-ghost">
+                            <i class="bi bi-file-earmark-image"></i>
+                            View Proof
+                        </a>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+
+                <div class="empty-title">
+                    No Pending Top-Ups
+                </div>
+
+                <div class="empty-sub">
+                    Wallet funding requests will appear here.
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

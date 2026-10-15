@@ -1,0 +1,59 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Analysis — {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "cbt/_math.html" %}
+<style>
+  .ia{padding:1rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .ia .top{display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;align-items:baseline}
+  .ia .meters{display:flex;gap:.4rem;flex-wrap:wrap}
+  .ob{display:grid;grid-template-columns:minmax(0,1fr) 140px 46px;gap:.5rem;align-items:center;font-size:.82rem;padding:.15rem 0}
+  .ob .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .ob .bar i{display:block;height:100%;background:var(--slate)}
+  .ob.c .bar i{background:var(--green)} .ob.c span:first-child{color:var(--green);font-weight:600}
+  .fl{margin-top:.5rem;font-size:.82rem;padding:.4rem .6rem;border-radius:9px}
+  .fl.red{color:var(--red);background:var(--red-dim);border:1px solid var(--red-border)}
+  .fl.amber{color:var(--amber);background:var(--amber-dim);border:1px solid var(--amber-border)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Item analysis</div>
+  <h1 class="fin-title">{{ exam.title }}</h1>
+  <p class="fin-sub">{{ exam.subject.name }} · {{ data.candidates }} candidate{{ data.candidates|pluralize }} submitted. <b>Right</b> = share who answered correctly. <b>Separates</b> = top 27% minus bottom 27% (above 0.3 is good; below 0 usually means a wrong key).</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if parts|length > 1 %}{% for p in parts %}<a class="fin-btn fin-btn-sm{% if p.id == part.id %} fin-btn-gold{% endif %}" href="?part={{ p.id }}">Section {{ forloop.counter }}</a>{% endfor %}{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'cbt:invigilate' exam.id %}"><i class="bi bi-display"></i> Console</a>
+</div></div>
+{% include "cbt/_bank_msgs.html" %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-shuffle"></i> Random question pool</h3></div><div class="panel-b">
+    {% if part %}<form method="post" class="fin-form">{% csrf_token %}
+      <div style="display:flex;gap:.5rem;align-items:flex-end"><div style="flex:1"><label>Questions per candidate (of {{ question_count }})</label><input type="number" name="pool_size" min="0" max="{{ question_count }}" value="{{ part.pool_size }}"></div><button class="fin-btn fin-btn-sm" type="submit">Save</button></div>
+      <p class="hint" style="margin:0">0 = everyone gets every question. A pool gives each candidate their own random selection, which makes copying harder. Set it before candidates start — anyone who has already started keeps their paper.</p>
+    </form>{% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-collection"></i> Question bank</h3></div><div class="panel-b">
+    <p style="margin-top:0" class="hint">{{ in_bank }} of this exam's questions came from or are saved in the bank.</p>
+    <form method="post" action="{% url 'cbt:exam_to_bank' exam.id %}" class="fin-form">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <div class="row2"><input name="level" maxlength="40" placeholder="Class level, e.g. SS 1"><input name="topic" maxlength="120" placeholder="Topic (optional)"></div>
+      <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-box-arrow-in-down"></i> Save this exam's questions to the bank</button></form>
+  </div></div>
+</div>
+{% if data.summary %}<div class="fin-stats">
+  <div class="fin-stat"><small>Mean score</small><b>{{ data.summary.mean }}</b></div>
+  <div class="fin-stat"><small>Highest / lowest</small><b>{{ data.summary.highest|floatformat:"-1" }} / {{ data.summary.lowest|floatformat:"-1" }}</b></div>
+  <div class="fin-stat"><small>Questions to check</small><b style="{% if data.summary.flagged %}color:var(--amber){% endif %}">{{ data.summary.flagged }}</b></div>
+</div>
+{% if data.summary.too_few %}<p class="hint">Warnings appear once at least 5 candidates have submitted — with fewer, the percentages say little.</p>{% endif %}{% endif %}
+<div class="panel">
+  {% for r in data.rows %}<div class="ia">
+    <div class="top"><div><span class="hint">Q{{ forloop.counter }}</span> {{ r.question.question_text|safe }}</div>
+      <div class="meters"><span class="chip {% if r.p < 25 %}red{% elif r.p > 95 %}amber{% else %}green{% endif %}">Right {{ r.p }}%</span>
+        {% if r.d is not None %}<span class="chip {% if r.d < 0 %}red{% elif r.d < 0.15 %}amber{% else %}green{% endif %}">Separates {{ r.d }}</span>{% endif %}
+        <span class="chip">{{ r.seen }} saw it</span>
+        <a class="fin-btn fin-btn-sm" href="{% url 'cbt:cbt_edit_question' r.question.id %}" title="Edit question"><i class="bi bi-pencil"></i></a></div></div>
+    <div style="margin-top:.5rem">{% for o in r.options %}<div class="ob{% if o.correct %} c{% endif %}"><span>{% if o.correct %}✓ {% endif %}{{ o.option.text }}</span><div class="bar"><i style="width:{{ o.percent }}%"></i></div><span class="hint">{{ o.percent }}%</span></div>{% endfor %}
+      {% if r.blank %}<div class="hint" style="font-size:.78rem">{{ r.blank }} left it blank</div>{% endif %}</div>
+    {% for tone, msg in r.flags %}<div class="fl {{ tone }}"><i class="bi bi-exclamation-triangle"></i> {{ msg }}</div>{% endfor %}
+  </div>{% empty %}<div class="empty"><i class="bi bi-bar-chart"></i><p>Analysis appears once candidates have submitted.</p></div>{% endfor %}
+</div>
+{% endblock %}

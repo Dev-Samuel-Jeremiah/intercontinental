@@ -1,0 +1,19 @@
+<h1>Stock Ledger</h1>
+<table border="1">
+<tr>
+  <th>Date</th>
+  <th>Asset</th>
+  <th>Type</th>
+  <th>Quantity</th>
+  <th>Reason</th>
+</tr>
+{% for m in movements %}
+<tr>
+  <td>{{ m.date }}</td>
+  <td>{{ m.asset.name }}</td>
+  <td>{{ m.movement_type }}</td>
+  <td>{{ m.quantity }}</td>
+  <td>{{ m.reason }}</td>
+</tr>
+{% endfor %}
+</table>

@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}After-school lessons{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .pick{display:flex;flex-wrap:wrap;gap:.35rem;max-height:150px;overflow:auto}
+  .pick label{display:inline-flex!important;align-items:center;gap:.3rem;padding:.3rem .6rem;border:1px solid var(--rim2);border-radius:99px;font-size:.76rem!important;cursor:pointer;margin:0!important}
+  .pick input{width:auto!important;accent-color:var(--champagne)}
+  .pick label:has(input:checked){border-color:var(--champagne-border);color:var(--champagne-lt)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Timetable</div>
+  <h1 class="fin-title">After-school <em>lessons</em></h1>
+  <p class="fin-sub">Extra lessons and coaching classes with their own weekly time, room and fee. Fees are billed separately from school fees — paid from the family wallet, at the bursary, or waived.</p>
+</div></div>
+<div class="fin-grid">
+  {% if runs %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> New group</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}{% include "timetable/_extra_form.html" with g=None %}
+      <button class="fin-btn fin-btn-gold" type="submit">Create group</button></form>
+  </div></div>{% endif %}
+  <div class="panel" {% if not runs %}style="grid-column:1/-1"{% endif %}><div class="panel-h"><h3><i class="bi bi-collection"></i> Groups</h3></div>
+    {% if groups %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Group</th><th>When</th><th>Children</th>{% if runs %}<th>Paid</th><th>Still to pay</th>{% endif %}<th></th></tr></thead><tbody>
+    {% for g in groups %}<tr><td class="name">{% if runs or g in mine %}<a href="{% url 'timetable:extra_detail' g.id %}" style="color:inherit">{{ g.name }}</a>{% else %}{{ g.name }}{% endif %}<div class="hint">{{ g.teacher.full_name|default:"No teacher yet" }}{% if g.room %} · {{ g.room.name }}{% endif %}</div></td>
+      <td>{{ g.get_day_display }}<div class="hint">{{ g.start_time|time:"H:i" }}–{{ g.end_time|time:"H:i" }}</div></td>
+      <td>{{ g.money.count }}{% if g.capacity %} / {{ g.capacity }}{% endif %}</td>
+      {% if runs %}<td class="money">₦{{ g.money.paid|floatformat:2|intcomma }}</td><td class="money">{% if g.money.due %}<span style="color:var(--amber)">₦{{ g.money.due|floatformat:2|intcomma }}</span>{% else %}—{% endif %}</td>{% endif %}
+      <td>{% if not g.active %}<span class="chip">Closed</span>{% elif g.open_to_parents %}<span class="chip green">Open to parents</span>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-collection"></i><p>No after-school groups yet.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

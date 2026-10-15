@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Calendar sync{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cs .card{border-radius:18px;border:1px solid var(--rim);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));padding:1.2rem;margin-bottom:1rem}
+  .cs .card h2{font-size:.98rem;margin:0 0 .8rem;display:flex;gap:.5rem;align-items:center}
+  .cs .url{display:flex;gap:.5rem}
+  .cs .url input{flex:1;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-family:ui-monospace,monospace;font-size:.8rem}
+  .cs button{padding:.55rem 1rem;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--rim2);background:rgba(255,255,255,.04);color:var(--slate2);margin-top:.6rem}
+  .cs .url button{margin-top:0}
+  .cs a.btn{display:inline-flex;gap:.4rem;align-items:center;text-decoration:none;margin:.8rem .4rem 0 0;padding:.6rem 1rem;border-radius:11px;font-weight:600;font-size:.86rem;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .cs ol{padding-left:1.2rem;color:var(--slate2);font-size:.88rem;line-height:1.7;margin:0}
+  .cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0 1rem;align-items:start}
+  .cs .card:first-child{grid-column:1/-1}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Calendar sync</div>
+  <h1 class="fin-title">Your timetable on your <em>phone</em></h1>
+  <p class="fin-sub">Your lessons (repeating each week until the end of term, skipping public holidays), parent meetings, room bookings and school events — in Google, Apple or Outlook calendar. Changes show up by themselves.</p>
+</div></div>
+<div class="cs">{% include "timetable/_calendar_sync_body.html" %}</div>
+{% endblock %}

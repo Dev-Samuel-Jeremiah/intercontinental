@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bed map{% endblock %}
+{% block content %}
+<style>
+  .rooms{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.8rem;margin-bottom:1.2rem}
+  .room{border:1px solid var(--rim);border-radius:14px;padding:.7rem}
+  .beds{display:grid;grid-template-columns:repeat(2,1fr);gap:.35rem;margin-top:.4rem}
+  .bed{border-radius:9px;padding:.35rem .45rem;font-size:.76rem;line-height:1.3;border:1px solid var(--rim2)}
+  .bed.AVAILABLE{background:rgba(74,222,128,.10);border-color:rgba(74,222,128,.35)}
+  .bed.OCCUPIED{background:rgba(244,210,31,.12);border-color:rgba(244,210,31,.35)}
+  .bed.MAINTENANCE,.bed.RESERVED{background:rgba(255,255,255,.04);opacity:.7}
+  .bed select{font-size:.72rem;padding:.2rem;margin-top:.2rem;width:100%}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Bed <em>map</em>{% if h %} — {{ h.name }}{% endif %}</h1>
+  <p class="fin-sub">Every room and bed at a glance. Green beds are free — pick a boarder to put them there. {{ waiting|length }} boarder{{ waiting|length|pluralize }} without a bed.</p>
+</div>{% include "hostel/boarding/_hostel_pick.html" %}</div>
+{% include "hostel/boarding/_nav.html" %}
+{% for floor, rooms in floors %}
+<h3 style="margin:.4rem 0 .6rem">{{ floor }}</h3>
+<div class="rooms">{% for room, beds in rooms %}
+  <div class="room"><b>Room {{ room.room_number }}</b> <small class="hint">{{ room.get_room_type_display }} · {{ room.capacity }}</small>
+    <div class="beds">{% for bed, b in beds %}<div class="bed {{ bed.status }}"><b>{{ bed.bed_number }}</b><br>
+      {% if b %}{{ b.student.full_name }}<br><small class="hint">{{ b.student.class_assigned.name|default:"" }}{% if b.status == 'EXEAT' %} · on exeat{% endif %}</small>
+      {% elif bed.status == 'AVAILABLE' and waiting %}<form method="post">{% csrf_token %}<input type="hidden" name="bed" value="{{ bed.pk }}"><select name="boarder" onchange="this.form.submit()"><option value="">Assign…</option>{% for w in waiting %}<option value="{{ w.pk }}">{{ w.student.full_name }}</option>{% endfor %}</select></form>
+      {% else %}<small class="hint">{{ bed.get_status_display }}</small>{% endif %}</div>{% empty %}<small class="hint">No beds set up.</small>{% endfor %}</div>
+  </div>{% endfor %}</div>
+{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No rooms yet. Add rooms under Hostels &amp; Rooms.</p></div></div>{% endfor %}
+{% endblock %}

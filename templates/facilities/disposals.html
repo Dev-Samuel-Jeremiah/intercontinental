@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Asset disposals{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Assets</div>
+  <h1 class="fin-title"><em>Disposals</em></h1>
+  <p class="fin-sub">Items sold, scrapped, donated, stolen or written off. Each needs an administrator's approval; the record keeps the book value written off and any money received.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="panel"><div class="panel-b"><table class="tbl">
+  <thead><tr><th>Asset</th><th>How</th><th class="num">Book value</th><th class="num">Proceeds</th><th class="num">Gain / loss</th><th></th></tr></thead><tbody>
+  {% for d in rows %}<tr><td class="name"><a href="{% url 'facilities:asset' d.tag_id %}">{{ d.tag }}</a><br><small class="hint">{{ d.reason }} · {{ d.created_at|date:"j M Y" }}</small></td><td>{{ d.get_method_display }}</td><td class="num">{{ d.book_value|floatformat:2 }}</td><td class="num">{{ d.proceeds|floatformat:2 }}</td><td class="num">{{ d.gain|floatformat:2 }}</td>
+    <td>{% if d.status == 'PENDING' %}{% if admin %}<form method="post" style="display:flex;gap:.25rem">{% csrf_token %}<input type="hidden" name="id" value="{{ d.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form>{% else %}<span class="chip gold">Waiting</span>{% endif %}{% else %}<span class="chip{% if d.status == 'APPROVED' %} ok{% endif %}">{{ d.get_status_display }}</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No disposals.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

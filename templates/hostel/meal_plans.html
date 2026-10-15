@@ -1,0 +1,716 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Meal Plans{% endblock %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{box-sizing:border-box;}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.page-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.15rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:2px;
+  background:linear-gradient(90deg,var(--champagne),transparent);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  color:var(--champagne);
+  font-size:.7rem;
+  letter-spacing:.24rem;
+  text-transform:uppercase;
+  font-weight:700;
+  margin-bottom:.75rem;
+}
+
+.eyebrow::before{
+  content:"";
+  width:40px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.8rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  flex-wrap:wrap;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.72rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.78rem;
+  font-weight:700;
+}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  position:relative;
+  margin-bottom:1.5rem;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(2){animation-delay:.06s;}
+.panel:nth-child(3){animation-delay:.12s;}
+.panel:nth-child(4){animation-delay:.18s;}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-head{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  flex-shrink:0;
+  font-size:.9rem;
+}
+
+.icon-teal{
+  background:var(--teal-dim);
+  border:1px solid var(--teal-border);
+  color:#7dd3fc;
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:.96rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.25rem;
+}
+
+.tbl-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:850px;
+}
+
+.tbl th{
+  text-align:left;
+  padding:1rem 1.1rem;
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.08rem;
+  color:var(--slate2);
+  font-weight:700;
+  border-bottom:1px solid var(--rim);
+}
+
+.tbl td{
+  padding:1rem 1.1rem;
+  border-bottom:1px solid var(--rim);
+  color:var(--white);
+  font-size:.87rem;
+  vertical-align:middle;
+}
+
+.tbl tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.38rem .72rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  border:1px solid transparent;
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:#93c5fd;
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:#fcd34d;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.badge-purple{
+  background:var(--purple-dim);
+  border-color:var(--purple-border);
+  color:#c4b5fd;
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  border-radius:10px;
+  padding:.82rem 1.15rem;
+  font-size:.84rem;
+  font-weight:700;
+  font-family:'Outfit',sans-serif;
+  transition:.24s ease;
+}
+
+.btn-main{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-main:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--slate2);
+}
+
+.btn-ghost:hover{
+  background:var(--surface3);
+  color:var(--white);
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+  flex:1;
+  min-width:160px;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  color:var(--white);
+  padding:.82rem .95rem;
+  font-size:.88rem;
+  outline:none;
+  font-family:'Outfit',sans-serif;
+  transition:.2s ease;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;
+}
+
+.modal-ov{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(4px);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
+}
+
+.modal-ov.active{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:560px;
+  background:var(--surface);
+  border:1px solid var(--rim2);
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+}
+
+.modal-box::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.modal-head{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--rim);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.modal-title{
+  margin:0;
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.modal-close{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  border:1px solid var(--rim2);
+  background:var(--surface2);
+  color:var(--slate2);
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.modal-close:hover{
+  background:var(--surface3);
+  color:var(--white);
+}
+
+.modal-body{
+  padding:1.25rem;
+}
+
+.form-stack{
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+
+.empty-state{
+  padding:3.5rem 1.5rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:68px;
+  height:68px;
+  border-radius:18px;
+  margin:0 auto 1rem;
+  display:grid;
+  place-items:center;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  color:var(--champagne);
+  font-size:1.5rem;
+}
+
+.empty-title{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+  margin-bottom:.35rem;
+}
+
+.empty-sub{
+  color:var(--slate2);
+  font-size:.88rem;
+}
+
+.alert{
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  margin-bottom:1rem;
+  font-size:.85rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+@media(max-width:768px){
+
+  .your-wrap{
+    padding:1.25rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2rem;
+  }
+
+  .grid-2{
+    grid-template-columns:1fr;
+  }
+
+  .tbl{
+    min-width:700px;
+  }
+}
+</style>
+
+<script>
+function openModal(id){
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(m=>{
+    m.addEventListener('click',e=>{
+      if(e.target===m){
+        m.classList.remove('active');
+      }
+    });
+  });
+});
+</script>
+
+<div class="your-wrap">
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert {% if m.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-head">
+
+    <div>
+      <div class="eyebrow">Dining Administration</div>
+
+      <h1 class="page-title">
+        Meal <em>Plans</em>
+      </h1>
+    </div>
+
+    <div class="top-actions">
+
+      <div class="context-badge">
+        <i class="bi bi-cup-hot"></i>
+        {{ plans|length }} Active Plan{{ plans|length|pluralize }}
+      </div>
+
+      <button onclick="openModal('mealModal')" class="btn btn-main">
+        <i class="bi bi-plus-lg"></i>
+        Add Meal Plan
+      </button>
+
+      <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-head">
+
+      <div class="panel-title">
+        <div class="icon-badge icon-teal">
+          <i class="bi bi-calendar-week"></i>
+        </div>
+
+        <h3>Weekly Meal Schedule</h3>
+      </div>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% if plans %}
+
+      <div class="tbl-wrap">
+
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Hostel</th>
+              <th>Day</th>
+              <th>Meal Type</th>
+              <th>Menu</th>
+              <th>Serving Time</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for p in plans %}
+            <tr>
+
+              <td>{{ p.hostel.name }}</td>
+
+              <td>
+                <span class="badge badge-purple">
+                  <i class="bi bi-calendar3"></i>
+                  {{ p.get_day_of_week_display }}
+                </span>
+              </td>
+
+              <td>
+                <span class="badge badge-blue">
+                  <i class="bi bi-cup-straw"></i>
+                  {{ p.get_meal_type_display }}
+                </span>
+              </td>
+
+              <td>{{ p.menu }}</td>
+
+              <td>
+                <span class="badge badge-green">
+                  <i class="bi bi-clock-history"></i>
+                  {{ p.time|time:"H:i" }}
+                </span>
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-cup-hot"></i>
+        </div>
+
+        <div class="empty-title">
+          No Meal Plans Available
+        </div>
+
+        <div class="empty-sub">
+          Start organizing student meals by creating your first weekly meal schedule.
+        </div>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="modal-ov" id="mealModal">
+
+  <div class="modal-box">
+
+    <div class="modal-head">
+
+      <h3 class="modal-title">
+        Add / Update Meal Plan
+      </h3>
+
+      <button onclick="closeModal('mealModal')" class="modal-close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <form method="POST" class="form-stack">
+
+        {% csrf_token %}
+
+        <div class="fg">
+          <label>Hostel *</label>
+
+          <select name="hostel_id" required>
+            {% for h in hostels %}
+            <option value="{{ h.id }}">{{ h.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="grid-2">
+
+          <div class="fg">
+            <label>Day</label>
+
+            <select name="day_of_week">
+              <option value="0">Monday</option>
+              <option value="1">Tuesday</option>
+              <option value="2">Wednesday</option>
+              <option value="3">Thursday</option>
+              <option value="4">Friday</option>
+              <option value="5">Saturday</option>
+              <option value="6">Sunday</option>
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Meal Type</label>
+
+            <select name="meal_type">
+              <option value="BREAKFAST">Breakfast</option>
+              <option value="LUNCH">Lunch</option>
+              <option value="DINNER">Dinner</option>
+              <option value="SNACK">Snack</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="fg">
+          <label>Menu (What is Served) *</label>
+
+          <input
+            name="menu"
+            required
+            placeholder="e.g. Jollof Rice, Chicken, Coleslaw">
+        </div>
+
+        <div class="fg">
+          <label>Serving Time</label>
+
+          <input type="time" name="time" value="07:30">
+        </div>
+
+        <button type="submit" class="btn btn-main" style="justify-content:center;">
+          <i class="bi bi-save"></i>
+          Save Meal Plan
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

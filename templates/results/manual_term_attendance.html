@@ -1,0 +1,867 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Manual Term Attendance{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.mta-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   MESSAGES
+════════════════════════════════════════════ */
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem 1.1rem;
+  border-radius: 10px;
+  margin-bottom: .85rem;
+  font-size: .86rem;
+  font-weight: 500;
+  border: 1px solid;
+  animation: riseUp .3s ease both;
+}
+.msg.success { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+.msg.error   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red);   }
+.msg.warning { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+.msg.info    { background: var(--blue-dim);  border-color: var(--blue-border);  color: var(--blue);  }
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.9rem, 4vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--slate2);
+  max-width: 520px;
+  line-height: 1.55;
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.icon-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .8rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.2);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.15rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.34); }
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--rim2); color: var(--white); }
+
+.btn-success {
+  background: linear-gradient(135deg, #4ade80, #15803d);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(74,222,128,.18);
+}
+.btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(74,222,128,.28); }
+
+.btn-sm { padding: .38rem .8rem; font-size: .78rem; border-radius: 8px; }
+
+/* ════════════════════════════════════════════
+   FILTER PANEL
+════════════════════════════════════════════ */
+.filter-panel { margin-bottom: 1.5rem; animation-delay: .1s; }
+.filter-body  { padding: 1.25rem 1.5rem; }
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: .85rem;
+  align-items: end;
+}
+
+.form-group { display: flex; flex-direction: column; gap: .45rem; }
+
+.form-group label {
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: .65rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.form-control.active-filter {
+  border-color: rgba(244,210,31,.4);
+  background: rgba(244,210,31,.06);
+}
+.form-control option { background: var(--surface2); }
+
+/* ════════════════════════════════════════════
+   INFO BAR
+════════════════════════════════════════════ */
+.info-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .75rem;
+  padding: .9rem 1.25rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.18);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  animation: riseUp .4s ease .15s both;
+}
+
+.info-bar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .84rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+
+.info-bar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .75rem;
+  background: rgba(244,210,31,.14);
+  border: 1px solid rgba(244,210,31,.22);
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--champagne);
+}
+
+.info-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(244,210,31,.25);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr { border-bottom: 1px solid var(--rim2); }
+
+thead th {
+  padding: .85rem 1rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  text-align: center;
+  white-space: nowrap;
+  background: var(--surface2);
+}
+thead th:nth-child(2) { text-align: left; }
+thead th:first-child  { padding-left: 1.5rem; width: 52px; }
+thead th:last-child   { padding-right: 1.5rem; }
+
+tbody tr { border-bottom: 1px solid var(--rim); transition: background .18s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+
+tbody td {
+  padding: .95rem 1rem;
+  font-size: .86rem;
+  color: var(--slate2);
+  vertical-align: middle;
+  text-align: center;
+}
+tbody td:nth-child(2)  { text-align: left; }
+tbody td:first-child   { padding-left: 1.5rem; }
+tbody td:last-child    { padding-right: 1.5rem; }
+
+/* ════════════════════════════════════════════
+   AVATAR / INITIALS
+════════════════════════════════════════════ */
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  object-fit: cover;
+  border: 1px solid var(--rim2);
+  display: block;
+  margin: 0 auto;
+}
+
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #0a1f44;
+  background: linear-gradient(135deg, var(--champagne), #c9a800);
+}
+.av-blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important; }
+.av-teal   { background: linear-gradient(135deg, #14b8a6, #0f766e) !important; }
+.av-purple { background: linear-gradient(135deg, #a855f7, #6d28d9) !important; }
+.av-green  { background: linear-gradient(135deg, #22c55e, #15803d) !important; }
+
+.student-name {
+  font-weight: 600;
+  color: var(--white);
+  font-size: .88rem;
+  line-height: 1.3;
+}
+.student-adm {
+  font-size: .74rem;
+  color: var(--slate);
+  margin-top: .15rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* ════════════════════════════════════════════
+   DAYS INPUT
+════════════════════════════════════════════ */
+.days-input {
+  width: 82px;
+  padding: .5rem .65rem;
+  text-align: center;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 9px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .92rem;
+  font-weight: 600;
+  transition: border-color .2s, box-shadow .2s;
+  -moz-appearance: textfield;
+}
+.days-input::-webkit-outer-spin-button,
+.days-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.days-input:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.12);
+}
+.days-input.over-limit {
+  border-color: var(--red-border);
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+/* ════════════════════════════════════════════
+   PERCENTAGE BADGE
+════════════════════════════════════════════ */
+.pct-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .28rem .7rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.pct-high { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green);  }
+.pct-mid  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber);  }
+.pct-low  { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red);    }
+.pct-none { background: var(--surface3);   border: 1px solid var(--rim2);          color: var(--slate);  }
+
+/* ════════════════════════════════════════════
+   ADM BADGE (table)
+════════════════════════════════════════════ */
+.adm-code {
+  font-family: 'Courier New', monospace;
+  font-size: .8rem;
+  color: var(--champagne);
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════
+   SAVE BAR
+════════════════════════════════════════════ */
+.save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-top: none;
+  border-radius: 0 0 16px 16px;
+  flex-wrap: wrap;
+}
+
+.save-hint {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .83rem;
+  color: var(--slate);
+  flex: 1;
+}
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+.empty-icon-box {
+  width: 72px;
+  height: 72px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--slate);
+  margin-bottom: 1.25rem;
+}
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.empty-state p {
+  font-size: .88rem;
+  color: var(--slate2);
+  max-width: 320px;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .filter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .mta-wrap { padding: 1rem .9rem 2.5rem; }
+  .page-title { font-size: 1.8rem; }
+  .page-header { flex-direction: column; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .info-bar { flex-direction: column; align-items: flex-start; }
+  .info-sep { display: none; }
+
+  /* Card-style mobile rows */
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: .85rem;
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .55rem 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    font-size: .82rem;
+    gap: .5rem;
+    text-align: right;
+  }
+  table td:last-child { border-bottom: none; }
+  table td:first-child { padding-bottom: .75rem; border-bottom: 1px solid var(--rim2); margin-bottom: .25rem; justify-content: flex-start; }
+  table td:first-child::before { display: none; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex-shrink: 0;
+    text-align: left;
+  }
+  .days-input { width: 72px; }
+  .save-bar { flex-direction: column; }
+  .save-bar .btn { width: 100%; justify-content: center; }
+  .save-hint { font-size: .78rem; }
+}
+
+@media (max-width: 480px) {
+  .mta-wrap { padding: .75rem .65rem 2rem; }
+  .page-title { font-size: 1.5rem; }
+}
+</style>
+
+<div class="mta-wrap">
+
+  <!-- ══ MESSAGES ═════════════════════════════════ -->
+  {% if messages %}
+  {% for msg in messages %}
+  <div class="msg success">
+    <i class="bi bi-check-circle-fill"></i> {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ══ PAGE HEADER ══════════════════════════════ -->
+  <header class="page-header">
+    <div>
+      <div class="eyebrow">Attendance Management</div>
+      <h1 class="page-title">Manual Term <em>Attendance</em></h1>
+      <p class="page-subtitle">Enter the number of days each student was present this term. This appears on the result sheet and overrides the automatic count.</p>
+    </div>
+    <div style="padding-top:.3rem;">
+      <a href="{% url 'results:term_results' %}" class="btn btn-ghost">
+        <i class="bi bi-file-earmark-text-fill"></i> View Results
+      </a>
+    </div>
+  </header>
+
+  <!-- ══ FILTER PANEL ═════════════════════════════ -->
+  <div class="panel filter-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--purple-dim);">
+          <i class="bi bi-funnel-fill" style="color:var(--purple);"></i>
+        </div>
+        <h3>Select Class &amp; Term</h3>
+      </div>
+    </div>
+    <div class="filter-body">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+
+          <div class="form-group">
+            <label><i class="bi bi-building"></i> Class</label>
+            <select name="class" class="form-control {% if selected_class_id %}active-filter{% endif %}" onchange="this.form.submit()">
+              <option value="">— Select Class —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class_id %}selected{% endif %}>{{ cls.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="bi bi-bookmark-fill"></i> Term</label>
+            <select name="term" class="form-control {% if selected_term_id %}active-filter{% endif %}" onchange="this.form.submit()">
+              <option value="">— Select Term —</option>
+              {% for term in terms %}
+              <option value="{{ term.id }}" {% if term.id|stringformat:"s" == selected_term_id %}selected{% endif %}>{{ term.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="bi bi-calendar3"></i> Session</label>
+            <select name="session" class="form-control {% if selected_session_id %}active-filter{% endif %}" onchange="this.form.submit()">
+              <option value="">— Select Session —</option>
+              {% for session in sessions %}
+              <option value="{{ session.id }}" {% if session.id|stringformat:"s" == selected_session_id %}selected{% endif %}>{{ session.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="justify-content:flex-end;">
+            <label style="visibility:hidden;">Reset</label>
+            <a href="{% url 'results:manual_term_attendance' %}" class="btn btn-ghost" style="justify-content:center;">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset
+            </a>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if selected_class and selected_term and selected_session %}
+
+  <!-- ══ INFO BAR ══════════════════════════════════ -->
+  <div class="info-bar">
+    <span class="info-bar-item"><i class="bi bi-building"></i> {{ selected_class.name }}</span>
+    <div class="info-sep"></div>
+    <span class="info-bar-item"><i class="bi bi-bookmark-fill"></i> {{ selected_term.name }}</span>
+    <div class="info-sep"></div>
+    <span class="info-bar-item"><i class="bi bi-calendar3"></i> {{ selected_session.name }}</span>
+    {% if school_days_open %}
+    <div class="info-sep"></div>
+    <span class="info-bar-badge"><i class="bi bi-clock-fill"></i> School open: {{ school_days_open }} days</span>
+    {% endif %}
+    <span class="info-bar-badge"><i class="bi bi-people-fill"></i> {{ students|length }} student{{ students|length|pluralize }}</span>
+  </div>
+
+  <!-- ══ ATTENDANCE TABLE ══════════════════════════ -->
+  <form method="POST" id="attendanceForm">
+    {% csrf_token %}
+    <input type="hidden" name="class"   value="{{ selected_class_id }}">
+    <input type="hidden" name="term"    value="{{ selected_term_id }}">
+    <input type="hidden" name="session" value="{{ selected_session_id }}">
+
+    <div class="panel" style="animation-delay:.22s; border-radius: 16px 16px 0 0;">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge" style="background:var(--teal-dim);">
+            <i class="bi bi-calendar-check-fill" style="color:var(--teal);font-size:.8rem;"></i>
+          </div>
+          <h3>Student Attendance</h3>
+        </div>
+        <span class="count-pill">
+          <i class="bi bi-people-fill"></i>
+          {{ students|length }} Student{{ students|length|pluralize }}
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:center;"></th>
+              <th style="text-align:left;">Student</th>
+              <th>Admission No.</th>
+              <th>Days Present</th>
+              {% if school_days_open %}<th>Attendance %</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <!-- Avatar -->
+              <td style="text-align:center; width:52px;">
+                {% if student.passport %}
+                  <img src="{{ student.passport.url }}" class="avatar" alt="">
+                {% else %}
+                  {% with n=forloop.counter %}
+                  <span class="avatar-initials {% if n|divisibleby:4 %}av-teal{% elif n|divisibleby:3 %}av-green{% elif n|divisibleby:2 %}av-blue{% else %}av-purple{% endif %}">
+                    {{ student.user.first_name|first|upper }}{{ student.user.last_name|first|upper }}
+                  </span>
+                  {% endwith %}
+                {% endif %}
+              </td>
+
+              <!-- Name -->
+              <td data-label="Student">
+                <div class="student-name">{{ student.full_name }}</div>
+                <div class="student-adm">{{ student.admission_number }}</div>
+              </td>
+
+              <!-- Admission No. -->
+              <td data-label="Admission No.">
+                <span class="adm-code">{{ student.admission_number }}</span>
+              </td>
+
+              <!-- Days Present -->
+              <td data-label="Days Present">
+                <input
+                  type="number"
+                  name="days_{{ student.id }}"
+                  value="{{ student.days_present }}"
+                  min="0"
+                  {% if school_days_open %}max="{{ school_days_open }}"{% endif %}
+                  class="days-input"
+                  data-max="{{ school_days_open|default:0 }}"
+                  placeholder="0"
+                  onchange="updatePct(this, {{ student.id }})"
+                  oninput="updatePct(this, {{ student.id }})"
+                >
+              </td>
+
+              <!-- Attendance % -->
+              {% if school_days_open %}
+              <td data-label="Attendance %" id="pct_{{ student.id }}">
+                <span class="pct-badge pct-none">—</span>
+              </td>
+              {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon-box">
+                    <i class="bi bi-person-x"></i>
+                  </div>
+                  <h3>No Students Found</h3>
+                  <p>Make sure students are assigned to {{ selected_class.name }}.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div><!-- /panel -->
+
+    {% if students %}
+    <div class="save-bar">
+      <div class="save-hint">
+        <i class="bi bi-info-circle-fill" style="color:var(--champagne);flex-shrink:0;"></i>
+        Changes are saved when you click Save. Blank fields are skipped.
+      </div>
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-floppy-fill"></i> Save Attendance
+      </button>
+    </div>
+    {% endif %}
+
+  </form>
+
+  {% else %}
+
+  <!-- ══ NO FILTER SELECTED ════════════════════════ -->
+  <div class="panel" style="animation-delay:.2s;">
+    <div class="empty-state">
+      <div class="empty-icon-box">
+        <i class="bi bi-funnel"></i>
+      </div>
+      <h3>Select Filters Above</h3>
+      <p>Choose a class, term, and session to load the student list and enter attendance.</p>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div><!-- /mta-wrap -->
+
+<script>
+const schoolDaysOpen = {{ school_days_open|default:0 }};
+
+function updatePct(input, studentId) {
+  const val  = parseInt(input.value, 10);
+  const max  = parseInt(input.dataset.max, 10) || schoolDaysOpen;
+  const cell = document.getElementById('pct_' + studentId);
+  if (!cell) return;
+
+  if (isNaN(val) || input.value.trim() === '') {
+    cell.innerHTML = '<span class="pct-badge pct-none">—</span>';
+    input.classList.remove('over-limit');
+    return;
+  }
+
+  input.classList.toggle('over-limit', max > 0 && val > max);
+
+  if (max <= 0) {
+    cell.innerHTML = `<span class="pct-badge pct-none">${val} days</span>`;
+    return;
+  }
+
+  const pct = Math.round((val / max) * 100);
+  const cls = pct >= 75 ? 'pct-high' : pct >= 50 ? 'pct-mid' : 'pct-low';
+  const icon = pct >= 75
+    ? '<i class="bi bi-check-circle-fill"></i>'
+    : pct >= 50
+      ? '<i class="bi bi-dash-circle-fill"></i>'
+      : '<i class="bi bi-x-circle-fill"></i>';
+
+  cell.innerHTML = `<span class="pct-badge ${cls}">${icon} ${pct}%</span>`;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.days-input').forEach(function (input) {
+    const match = input.name.match(/days_(\d+)/);
+    if (match) updatePct(input, match[1]);
+  });
+});
+</script>
+{% endblock %}

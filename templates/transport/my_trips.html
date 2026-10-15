@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bus trips{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport · {{ today|date:"l j F" }}</div>
+  <h1 class="fin-title"><em>Today's trips</em></h1>
+  <p class="fin-sub">Open a trip on your phone, keep the page open while driving so parents can see the bus, and scan each child on and off.</p>
+</div></div>
+<div style="display:grid;gap:.8rem;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+  {% for r in routes %}<div class="panel" style="padding:1rem"><h3 style="margin:0 0 .3rem">{{ r.name }}</h3><p class="hint" style="margin:0 0 .6rem">{{ r.vehicle|default:"" }}</p>
+    <a class="fin-btn fin-btn-gold" href="{% url 'transport:run_trip' r.pk %}?leg=AM">Morning</a>
+    <a class="fin-btn" href="{% url 'transport:run_trip' r.pk %}?leg=PM">Afternoon</a>
+    <a class="fin-btn fin-btn-sm" href="{% url 'transport:manifest' r.pk %}">Manifest</a></div>
+  {% empty %}<p class="empty">No routes.</p>{% endfor %}
+  {% for f in field %}<div class="panel" style="padding:1rem"><h3 style="margin:0 0 .3rem">{{ f.title }}</h3><p class="hint" style="margin:0 0 .6rem">Field trip to {{ f.destination }} · {{ f.depart|time:"H:i" }}</p>
+    <a class="fin-btn fin-btn-gold" href="{% url 'transport:run_field_trip' f.pk %}">Open trip</a></div>{% endfor %}
+</div>
+<p style="margin-top:1rem"><a href="{% url 'transport:incidents' %}"><i class="bi bi-exclamation-triangle"></i> Report an incident</a></p>
+{% endblock %}

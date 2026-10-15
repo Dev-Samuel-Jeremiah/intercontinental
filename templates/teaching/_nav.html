@@ -1,0 +1,18 @@
+{% include "finance/_fin_styles.html" %}
+<style>
+  .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#f4d21f,#ffe066)}
+  .pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .5rem .4rem 0;font-size:.86rem}.pill input{width:auto}
+  .tiny{width:70px;text-align:center}
+</style>
+<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:home' %}"><i class="bi bi-inbox"></i> Marking queue</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:class_dashboard' %}"><i class="bi bi-people"></i> My form class</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:gradebooks' %}"><i class="bi bi-journal-bookmark"></i> Gradebook</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:behaviour' %}"><i class="bi bi-hand-thumbs-up"></i> Behaviour</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:comments' %}"><i class="bi bi-chat-quote"></i> Comment bank</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:resources' %}"><i class="bi bi-folder2-open"></i> Resources</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:picker' %}"><i class="bi bi-shuffle"></i> Name picker</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:tasks' %}"><i class="bi bi-check2-square"></i> Tasks</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:duties' %}"><i class="bi bi-calendar-week"></i> Duties</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'teaching:handovers' %}"><i class="bi bi-arrow-left-right"></i> Handovers</a>
+</div>

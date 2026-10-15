@@ -1,0 +1,212 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bank reconciliation{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .bank-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin:1.2rem 0 .8rem}
+  .bank-tab{padding:.45rem .9rem;border-radius:999px;border:1px solid var(--rim2);color:var(--slate2);font-size:.8rem;text-decoration:none;transition:all .2s}
+  .bank-tab:hover{color:var(--white);border-color:var(--champagne)}
+  .bank-tab.on{color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));border-color:transparent;font-weight:600}
+  .bank-in{color:var(--green)} .bank-out{color:var(--red)}
+  .bank-mini{padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.76rem;max-width:260px}
+  .bank-mini option{background:var(--surface2)}
+  .bank-acct{display:inline-flex;align-items:center;gap:.4rem}
+  details.bank-more summary{cursor:pointer;color:var(--champagne-lt);font-size:.82rem;list-style:none;margin-top:.9rem}
+  details.bank-more summary::-webkit-details-marker{display:none}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Does the bank <em>agree</em>?</h1>
+    <p class="fin-sub">Import the statement from the bank and every line is checked against the payments, expenses and refunds you recorded.</p>
+  </div>
+  {% if account %}
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+    {% if accounts|length > 1 %}
+    <form method="get" class="bank-acct">
+      <select name="account" class="bank-mini" onchange="this.form.submit()" style="padding:.55rem .7rem;font-size:.82rem">
+        {% for a in accounts %}<option value="{{ a.id }}"{% if a.id == account.id %} selected{% endif %}>{{ a.name }} — {{ a.bank_name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="rematch"><input type="hidden" name="account_id" value="{{ account.id }}">
+      <button class="fin-btn" type="submit"><i class="bi bi-magic"></i> Match again</button>
+    </form>
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:income_statement' %}"><i class="bi bi-graph-up-arrow"></i> Income &amp; expenditure</a>
+  </div>
+  {% endif %}
+</div>
+
+{% if not account %}
+<div class="panel" style="max-width:560px">
+  <div class="panel-h"><h3><i class="bi bi-bank2"></i> Add the school's bank account</h3></div>
+  <div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <input type="hidden" name="action" value="add_account">
+      <div><label>What you call it</label><input name="name" maxlength="120" placeholder="Fees account" required></div>
+      <div><label>Bank</label><input name="bank_name" maxlength="80" placeholder="GTBank" required></div>
+      <div><label>Account number</label><input name="account_number" maxlength="20" placeholder="0123456789" required></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Add account</button>
+    </form>
+  </div>
+</div>
+{% else %}
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Lines imported</small><b>{{ summary.lines|intcomma }}</b>
+    <span class="hint">{{ summary.matched }} matched · {{ summary.ignored }} set aside</span></div>
+  <div class="fin-stat"><small>Not matched</small><b style="color:{% if summary.unmatched %}var(--amber){% else %}var(--green){% endif %}">{{ summary.unmatched|intcomma }}</b>
+    {% if summary.unmatched %}<span class="hint">₦{{ summary.unmatched_in|floatformat:"-2"|intcomma }} in · ₦{{ summary.unmatched_out|floatformat:"-2"|intcomma }} out</span>{% endif %}</div>
+  <div class="fin-stat"><small>Recorded, not in the bank</small><b style="color:{% if missing_count %}var(--red){% else %}var(--green){% endif %}">{{ missing_count }}</b>
+    {% if start %}<span class="hint">{{ start|date:"j M" }} – {{ end|date:"j M Y" }}</span>{% endif %}</div>
+  <div class="fin-stat"><small>Bank balance</small><b style="color:var(--champagne-lt)">{% if summary.bank_balance is not None %}₦{{ summary.bank_balance|floatformat:0|intcomma }}{% else %}—{% endif %}</b>
+    {% if summary.bank_balance_on %}<span class="hint">on {{ summary.bank_balance_on|date:"j M Y" }}</span>{% endif %}</div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-upload"></i> Import a statement</h3><span class="hint">{{ account.bank_name }} {{ account.account_number }}</span></div>
+    <div class="panel-b">
+      <form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}
+        <input type="hidden" name="action" value="import"><input type="hidden" name="account_id" value="{{ account.id }}">
+        <div><label>Statement file (CSV or Excel)</label><input type="file" name="statement" accept=".csv,.xlsx,.xlsm,.xls" required></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-cloud-arrow-up"></i> Import and match</button>
+        <p class="hint">Download the statement from internet banking as CSV or Excel. Lines already imported are skipped, so overlapping periods are fine.</p>
+      </form>
+
+      {% if statements %}
+      <div style="margin-top:1rem">
+        <div class="hint" style="margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem">Imported</div>
+        {% for st in statements %}
+          <div class="hint" style="padding:.3rem 0;border-top:1px solid var(--rim)"><i class="bi bi-file-earmark-spreadsheet"></i> {{ st.period_start|date:"j M" }} – {{ st.period_end|date:"j M Y" }} · {{ st.lines.count }} line{{ st.lines.count|pluralize }}{% if st.file_name %} · {{ st.file_name }}{% endif %}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <details class="bank-more">
+        <summary><i class="bi bi-plus-circle"></i> Add another bank account</summary>
+        <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}
+          <input type="hidden" name="action" value="add_account">
+          <div><label>What you call it</label><input name="name" maxlength="120" placeholder="Main account" required></div>
+          <div style="display:flex;gap:.6rem">
+            <div style="flex:1"><label>Bank</label><input name="bank_name" maxlength="80" placeholder="Zenith" required></div>
+            <div style="flex:1"><label>Account number</label><input name="account_number" maxlength="20" required></div>
+          </div>
+          <button class="fin-btn" type="submit"><i class="bi bi-check2"></i> Add account</button>
+        </form>
+      </details>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Recorded, but not in the bank</h3>{% if missing_count %}<span class="chip red">{{ missing_count }}</span>{% endif %}</div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>What</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>
+          {% for p in missing.payments %}
+          <tr><td>{{ p.created_at|date:"j M" }}</td>
+              <td>{{ p.wallet.student.full_name }}<br><span class="hint">{{ p.get_method_display }} · {{ p.reference }}</span></td>
+              <td class="money bank-in" style="text-align:right">+₦{{ p.amount|floatformat:"-2"|intcomma }}</td></tr>
+          {% endfor %}
+          {% for e in missing.expenses %}
+          <tr><td>{{ e.spent_on|date:"j M" }}</td>
+              <td>{{ e.description }}<br><span class="hint">{{ e.paid_to }} · {{ e.get_method_display }}</span></td>
+              <td class="money bank-out" style="text-align:right">−₦{{ e.net_paid|floatformat:"-2"|intcomma }}</td></tr>
+          {% endfor %}
+          {% for w in missing.remittances %}
+          <tr><td>{{ w.paid_on|date:"j M" }}</td>
+              <td>Withholding tax to {{ w.get_authority_display }}<br><span class="hint">{{ w.period_start|date:"M Y" }}{% if w.reference %} · {{ w.reference }}{% endif %}</span></td>
+              <td class="money bank-out" style="text-align:right">−₦{{ w.amount|floatformat:"-2"|intcomma }}</td></tr>
+          {% endfor %}
+          {% for r in missing.refunds %}
+          <tr><td>{{ r.paid_on|date:"j M" }}</td>
+              <td>Refund — {{ r.student.full_name }}<br><span class="hint">{{ r.get_method_display }}{% if r.reference %} · {{ r.reference }}{% endif %}</span></td>
+              <td class="money bank-out" style="text-align:right">−₦{{ r.amount|floatformat:"-2"|intcomma }}</td></tr>
+          {% endfor %}
+          {% if not missing_count %}
+          <tr><td colspan="3" class="empty"><i class="bi bi-check2-circle"></i><p>{% if start %}Everything recorded as going through the bank between {{ start|date:"j M" }} and {{ end|date:"j M Y" }} is on the statement.{% else %}Import a statement to check.{% endif %}</p></td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    {% if missing_count %}<p class="hint" style="padding:.8rem 1.1rem 1rem">Each of these is either still on its way to the bank, or was recorded against the wrong method or amount.</p>{% endif %}
+  </div>
+</div>
+
+<div class="bank-tabs">
+  {% for value, label in statuses %}
+    <a class="bank-tab{% if status == value %} on{% endif %}" href="?account={{ account.id }}&status={{ value }}">{{ label }}</a>
+  {% endfor %}
+  <a class="bank-tab{% if not status %} on{% endif %}" href="?account={{ account.id }}&status=">All lines</a>
+</div>
+
+<div class="panel">
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>On the statement</th><th style="text-align:right">Amount</th><th>Matched to</th><th></th></tr></thead>
+      <tbody>
+        {% for line in lines %}
+        <tr>
+          <td style="white-space:nowrap">{{ line.date|date:"j M Y" }}</td>
+          <td>{{ line.description|default:"—" }}{% if line.reference %}<br><span class="hint">{{ line.reference }}</span>{% endif %}</td>
+          <td class="money {% if line.is_credit %}bank-in{% else %}bank-out{% endif %}" style="text-align:right;white-space:nowrap">{% if line.is_credit %}+₦{{ line.amount|floatformat:"-2"|intcomma }}{% else %}−₦{{ line.amount|floatformat:"-2"|cut:"-"|intcomma }}{% endif %}</td>
+          <td>
+            {% if line.status == 'MATCHED' %}
+              {% if line.payment %}<b>{{ line.payment.wallet.student.full_name }}</b><br><span class="hint">payment {{ line.payment.reference }}{% if line.payment.status == 'PENDING' %} · <span style="color:var(--amber)">still awaiting approval</span>{% endif %}</span>
+              {% elif line.expense %}<b>{{ line.expense.description }}</b><br><span class="hint">{{ line.expense.category }} · {{ line.expense.paid_to }}</span>
+              {% elif line.refund %}<b>Refund — {{ line.refund.student.full_name }}</b><br><span class="hint">{{ line.refund.get_reason_display }}</span>
+              {% elif line.wht_remittance %}<b>Withholding tax — {{ line.wht_remittance.get_authority_display }}</b><br><span class="hint">{{ line.wht_remittance.period_start|date:"M Y" }}</span>{% endif %}
+              <br><span class="chip {% if line.matched_automatically %}gold{% else %}green{% endif %}">{% if line.matched_automatically %}matched automatically{% else %}matched by {% if line.matched_by.get_full_name %}{{ line.matched_by.get_full_name }}{% else %}{{ line.matched_by.username|default:"hand" }}{% endif %}{% endif %}</span>
+            {% elif line.status == 'IGNORED' %}
+              <span class="chip">set aside</span>{% if line.note %}<br><span class="hint">{{ line.note }}</span>{% endif %}
+            {% else %}
+              {% if line.options %}
+              <form method="post" style="display:flex;gap:.35rem;flex-wrap:wrap">{% csrf_token %}
+                <input type="hidden" name="action" value="match"><input type="hidden" name="line_id" value="{{ line.id }}">
+                <input type="hidden" name="account_id" value="{{ account.id }}"><input type="hidden" name="status" value="{{ status }}">
+                <select name="record" class="bank-mini" required>
+                  <option value="">— what is this? —</option>
+                  {% for kind, rec in line.options %}
+                    {% if kind == 'payment' %}<option value="payment:{{ rec.id }}">{{ rec.wallet.student.full_name }} · {{ rec.created_at|date:"j M" }} · {{ rec.reference }}</option>
+                    {% elif kind == 'expense' %}<option value="expense:{{ rec.id }}">{{ rec.description|truncatechars:34 }} · {{ rec.spent_on|date:"j M" }}</option>
+                    {% elif kind == 'refund' %}<option value="refund:{{ rec.id }}">Refund · {{ rec.student.full_name }} · {{ rec.paid_on|date:"j M" }}</option>
+                    {% else %}<option value="wht_remittance:{{ rec.id }}">WHT to {{ rec.get_authority_display }} · {{ rec.paid_on|date:"j M" }}</option>{% endif %}
+                  {% endfor %}
+                </select>
+                <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Match</button>
+              </form>
+              {% else %}
+                <span class="hint">Nothing recorded for ₦{{ line.amount|floatformat:"-2"|cut:"-"|intcomma }} within a month.{% if line.is_credit %} Was a payment missed?{% endif %}</span>
+              {% endif %}
+            {% endif %}
+          </td>
+          <td style="white-space:nowrap;text-align:right">
+            {% if line.status == 'UNMATCHED' %}
+              <form method="post" style="display:inline-flex;gap:.35rem">{% csrf_token %}
+                <input type="hidden" name="action" value="ignore"><input type="hidden" name="line_id" value="{{ line.id }}">
+                <input type="hidden" name="account_id" value="{{ account.id }}"><input type="hidden" name="status" value="{{ status }}">
+                <input name="note" class="bank-mini" placeholder="Bank charge, own transfer…" maxlength="255" style="width:150px">
+                <button class="fin-btn fin-btn-sm" type="submit">Set aside</button>
+              </form>
+            {% else %}
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="unmatch"><input type="hidden" name="line_id" value="{{ line.id }}">
+                <input type="hidden" name="account_id" value="{{ account.id }}"><input type="hidden" name="status" value="{{ status }}">
+                <button class="fin-btn fin-btn-sm" type="submit">Undo</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty"><i class="bi bi-{% if status == 'UNMATCHED' and summary.lines %}check2-all{% else %}inbox{% endif %}"></i>
+          <p>{% if status == 'UNMATCHED' and summary.lines %}Every line is matched or set aside. The bank agrees with your books.{% elif summary.lines %}No lines here.{% else %}No statement imported yet.{% endif %}</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

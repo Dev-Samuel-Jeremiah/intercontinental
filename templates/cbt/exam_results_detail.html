@@ -1,0 +1,887 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Exam Results{% endblock %}
+
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 1600px;
+  padding: 2rem 2.5rem 4rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 32px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em { color: var(--champagne); font-style: italic; font-weight: 400; }
+.header-sub {
+  font-size: .85rem;
+  color: var(--slate);
+  margin-top: 6px;
+}
+
+/* Legend */
+.legend-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: .76rem;
+  font-weight: 600;
+  border: 1px solid;
+}
+.legend-correct { background: var(--green-dim);  color: var(--green);  border-color: var(--green-border); }
+.legend-wrong   { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border); }
+.legend-answer  { background: var(--teal-dim);   color: var(--teal);   border-color: var(--teal-border); }
+.legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.legend-dot.correct { background: var(--green); }
+.legend-dot.wrong   { background: var(--red); }
+.legend-dot.answer  { background: var(--teal); }
+
+/* ─── STATS GRID ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 70px; height: 70px;
+  border-radius: 0 0 0 100%;
+  opacity: .5;
+}
+.stat-card:hover { border-color: var(--rim3); box-shadow: 0 6px 24px rgba(0,0,0,.3); transform: translateY(-2px); }
+
+.stat-card.c-total::after   { background: var(--blue-dim); }
+.stat-card.c-correct::after { background: var(--green-dim); }
+.stat-card.c-wrong::after   { background: var(--red-dim); }
+.stat-card.c-avg::after     { background: var(--amber-dim); }
+
+.stat-icon {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 14px;
+  position: relative; z-index: 1;
+}
+.stat-card.c-total .stat-icon   { background: var(--blue-dim);   color: var(--blue); }
+.stat-card.c-correct .stat-icon { background: var(--green-dim);  color: var(--green); }
+.stat-card.c-wrong .stat-icon   { background: var(--red-dim);    color: var(--red); }
+.stat-card.c-avg .stat-icon     { background: var(--amber-dim);  color: var(--amber); }
+
+.stat-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--slate);
+  margin-bottom: 6px;
+  position: relative; z-index: 1;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  line-height: 1;
+  position: relative; z-index: 1;
+}
+.stat-card.c-total .stat-value   { color: var(--blue); }
+.stat-card.c-correct .stat-value { color: var(--green); }
+.stat-card.c-wrong .stat-value   { color: var(--red); }
+.stat-card.c-avg .stat-value     { color: var(--amber); }
+
+.stat-card:nth-child(1) { animation: riseUp .45s ease both; animation-delay: .08s; }
+.stat-card:nth-child(2) { animation: riseUp .45s ease both; animation-delay: .14s; }
+.stat-card:nth-child(3) { animation: riseUp .45s ease both; animation-delay: .20s; }
+.stat-card:nth-child(4) { animation: riseUp .45s ease both; animation-delay: .26s; }
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--rim);
+}
+.panel-hdr-left { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.panel-hdr h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--white);
+}
+
+/* ─── FILTER PANEL ─── */
+.filter-panel { margin-bottom: 22px; animation: riseUp .45s ease both; animation-delay: .12s; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px 18px;
+  padding: 18px 22px;
+}
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fg label {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fg label i { color: var(--champagne); font-size: .8rem; }
+.fg select {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.fg select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.fg select option { background: var(--surface2); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(244,210,31,.32); }
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--white); border-color: var(--rim3); }
+.btn-teal {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border: 1px solid var(--teal-border);
+}
+.btn-teal:hover { background: rgba(45,212,191,.18); }
+.btn-sm { padding: 7px 14px; font-size: .78rem; }
+
+/* ─── TABLE ─── */
+.table-panel { animation: riseUp .45s ease both; animation-delay: .18s; }
+.table-responsive { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+table thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 13px 14px;
+  text-align: center;
+  color: var(--slate2);
+  font-weight: 700;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
+}
+table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+}
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table td {
+  padding: 13px 14px;
+  color: var(--slate2);
+  font-size: .86rem;
+  text-align: center;
+  vertical-align: middle;
+  font-family: 'Outfit', sans-serif;
+}
+table td.text-start { text-align: left; }
+
+/* Question text */
+.question-text {
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+  text-align: left;
+  color: var(--white);
+}
+.question-text:hover { white-space: normal; }
+
+/* ─── BADGES ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  font-size: .74rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.badge-correct { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+.badge-wrong   { background: var(--red-dim);   color: var(--red);   border-color: var(--red-border);   }
+.badge-answer  { background: var(--teal-dim);  color: var(--teal);  border-color: var(--teal-border);  }
+.badge-page    {
+  background: var(--champagne-dim);
+  color: var(--champagne-lt);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 99px;
+  padding: 5px 13px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.text-muted { color: var(--slate); font-style: italic; font-size: .82rem; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 70px 30px;
+  text-align: center;
+}
+.empty-icon {
+  width: 72px; height: 72px;
+  border-radius: 16px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  color: var(--slate);
+  margin-bottom: 20px;
+}
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin-bottom: 8px;
+}
+.empty-sub { font-size: .85rem; color: var(--slate); }
+
+/* ─── DATATABLES CUSTOM ─── */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  padding: 14px 20px;
+  color: var(--slate);
+  font-family: 'Outfit', sans-serif;
+  font-size: .83rem;
+  background: var(--surface);
+}
+.dataTables_wrapper .dataTables_filter label,
+.dataTables_wrapper .dataTables_length label {
+  color: var(--slate2);
+}
+.dataTables_wrapper .dataTables_filter input {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 9px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .85rem;
+  padding: 7px 12px;
+  margin-left: 8px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.dataTables_wrapper .dataTables_length select {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .83rem;
+  padding: 5px 10px;
+  margin: 0 6px;
+  outline: none;
+}
+.dataTables_wrapper .dataTables_length select option { background: var(--surface2); }
+.dataTables_wrapper .dataTables_info { color: var(--slate); border-top: 1px solid var(--rim); }
+.dataTables_wrapper .dataTables_paginate {
+  border-top: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 13px;
+  margin: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--rim2) !important;
+  background: var(--surface2) !important;
+  color: var(--slate2) !important;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  border-color: rgba(244,210,31,.4) !important;
+  color: var(--champagne) !important;
+  background: var(--champagne-dim) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: var(--champagne-dim) !important;
+  border-color: rgba(244,210,31,.4) !important;
+  color: var(--champagne-lt) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+  opacity: .35 !important;
+  cursor: not-allowed !important;
+  color: var(--slate) !important;
+}
+
+/* DataTables top/bottom bar flex layout */
+.dataTables_wrapper .dataTables_filter { border-bottom: 1px solid var(--rim); }
+.dataTables_wrapper .dataTables_length { border-bottom: 1px solid var(--rim); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .your-wrap { padding: 1.4rem 1.4rem 3rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .filter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .your-wrap { padding: 1rem 1rem 3rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .stat-card { padding: 14px 12px; }
+  .stat-value { font-size: 1.7rem; }
+  .filter-grid { grid-template-columns: 1fr; gap: 12px; }
+  .fg select { font-size: 16px; }
+  .legend-row { gap: 7px; }
+  .legend-item { font-size: .72rem; padding: 5px 10px; }
+
+  table.dataTable thead { display: none !important; }
+  table thead { display: none !important; }
+  table.dataTable, table.dataTable tbody, table.dataTable tbody tr, table.dataTable tbody td,
+  table, table tbody, table tr, table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+  }
+  table tbody tr, table.dataTable tbody tr {
+    margin: 0 12px 14px !important;
+    width: calc(100% - 24px) !important;
+    background: var(--surface2) !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    border: 1px solid var(--rim2) !important;
+    box-shadow: none !important;
+  }
+  table tbody td, table.dataTable tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--rim) !important;
+    text-align: right;
+    font-size: .83rem;
+    gap: 8px;
+    min-height: 36px;
+    color: var(--white) !important;
+  }
+  table tbody td:last-child, table.dataTable tbody td:last-child { border-bottom: none !important; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--slate);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    flex: 0 0 38%;
+    text-align: left;
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .question-text {
+    max-width: 62%; white-space: normal; overflow: visible;
+    text-overflow: unset; text-align: right; word-break: break-word; flex: 1;
+  }
+  .badge { white-space: normal; word-break: break-word; text-align: right; flex-wrap: wrap; }
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_length { padding: 10px 14px; }
+  .dataTables_wrapper .dataTables_filter { display: block; text-align: left; }
+  .dataTables_wrapper .dataTables_filter input {
+    width: 100%; box-sizing: border-box; margin-left: 0; margin-top: 6px; display: block; font-size: 16px;
+  }
+  .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 5px 10px; font-size: .76rem; }
+}
+@media (max-width: 480px) {
+  .your-wrap { padding: .8rem .8rem 3rem; }
+  .stats-grid { gap: 10px; }
+  .stat-card { padding: 12px 10px; }
+  .stat-value { font-size: 1.5rem; }
+  table tbody tr, table.dataTable tbody tr { margin: 0 6px 10px !important; width: calc(100% - 12px) !important; padding: 12px !important; }
+  table td::before { flex: 0 0 35%; font-size: .68rem; }
+}
+
+/* ─── PRINT ─── */
+@media print {
+  .page-header, .filter-panel, .stats-grid,
+  .dataTables_wrapper .dataTables_filter,
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_paginate,
+  .panel-hdr .btn { display: none !important; }
+  body, .your-wrap { background: #fff !important; color: #000 !important; }
+  table th, table td { border: 1px solid #ccc !important; padding: 6px !important; color: #000 !important; }
+  .badge { border: 1px solid #999 !important; color: #000 !important; background: transparent !important; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>CBT &nbsp;·&nbsp; Performance Analytics</span>
+      </div>
+      <h1 class="header-title">Exam Results &amp; <em>Analysis</em></h1>
+      <p class="header-sub">Detailed student performance and answer breakdown</p>
+      <!-- Legend -->
+      <div class="legend-row" style="margin-top:14px;">
+        <span class="legend-item legend-correct">
+          <span class="legend-dot correct"></span> Correct Answer
+        </span>
+        <span class="legend-item legend-wrong">
+          <span class="legend-dot wrong"></span> Wrong Answer
+        </span>
+        <span class="legend-item legend-answer">
+          <span class="legend-dot answer"></span> Correct Option
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── STATS ─── -->
+  <div class="stats-grid">
+    <div class="stat-card c-total">
+      <div class="stat-icon"><i class="bi bi-clipboard-data-fill"></i></div>
+      <div class="stat-label">Total Attempts</div>
+      <div class="stat-value" id="totalAttempts">{{ attempts|length }}</div>
+    </div>
+    <div class="stat-card c-correct">
+      <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div class="stat-label">Correct Answers</div>
+      <div class="stat-value" id="correctCount">0</div>
+    </div>
+    <div class="stat-card c-wrong">
+      <div class="stat-icon"><i class="bi bi-x-circle-fill"></i></div>
+      <div class="stat-label">Wrong Answers</div>
+      <div class="stat-value" id="wrongCount">0</div>
+    </div>
+    <div class="stat-card c-avg">
+      <div class="stat-icon"><i class="bi bi-percent"></i></div>
+      <div class="stat-label">Accuracy Rate</div>
+      <div class="stat-value" id="accuracyRate">0%</div>
+    </div>
+  </div>
+
+  <!-- ─── FILTER PANEL ─── -->
+  <div class="panel filter-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--blue-dim);color:var(--blue);">
+          <i class="bi bi-funnel-fill"></i>
+        </div>
+        <h3>Filter Results</h3>
+      </div>
+    </div>
+
+    <form method="GET" id="filterForm">
+      <div class="filter-grid">
+        <div class="fg">
+          <label><i class="bi bi-people-fill"></i> Class</label>
+          <select name="class" onchange="this.form.submit()">
+            <option value="">— All Classes —</option>
+            {% for c in classes %}
+            <option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label><i class="bi bi-person-fill"></i> Student</label>
+          <select name="student" onchange="this.form.submit()">
+            <option value="">— All Students —</option>
+            {% for s in students %}
+            <option value="{{ s.id }}" {% if selected_student == s.id|stringformat:"s" %}selected{% endif %}>{{ s.full_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label><i class="bi bi-book-fill"></i> Subject</label>
+          <select name="subject" onchange="this.form.submit()">
+            <option value="">— All Subjects —</option>
+            {% for sub in subjects %}
+            <option value="{{ sub.id }}" {% if selected_subject == sub.id|stringformat:"s" %}selected{% endif %}>{{ sub.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label><i class="bi bi-calendar-range-fill"></i> Session</label>
+          <select name="session" onchange="this.form.submit()">
+            <option value="">— All Sessions —</option>
+            {% for s in sessions %}
+            <option value="{{ s.id }}" {% if selected_session == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label><i class="bi bi-calendar-week-fill"></i> Term</label>
+          <select name="term" onchange="this.form.submit()">
+            <option value="">— All Terms —</option>
+            {% for t in terms %}
+            <option value="{{ t.id }}" {% if selected_term == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg" style="justify-content:flex-end;">
+          <label style="visibility:hidden;">Reset</label>
+          <a href="{% url 'cbt:exam_results' %}" class="btn btn-ghost" style="width:100%;">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── RESULTS TABLE ─── -->
+  <div class="panel table-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--champagne-dim);color:var(--champagne);">
+          <i class="bi bi-table"></i>
+        </div>
+        <h3>Detailed Results</h3>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-teal btn-sm" onclick="exportToExcel()">
+          <i class="bi bi-file-earmark-excel-fill"></i> Export
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="printResults()">
+          <i class="bi bi-printer-fill"></i> Print
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table id="resultsTable" class="table">
+        <thead>
+          <tr>
+            <th><i class="bi bi-people-fill"></i> Class</th>
+            <th><i class="bi bi-person-fill"></i> Student</th>
+            <th><i class="bi bi-file-text-fill"></i> Exam</th>
+            <th><i class="bi bi-question-circle-fill"></i> Question</th>
+            <th><i class="bi bi-pencil-fill"></i> Student Answer</th>
+            <th><i class="bi bi-check-all"></i> Correct Answer</th>
+            <th><i class="bi bi-star-fill"></i> Marks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for attempt in attempts %}
+            {% for ans in attempt.answers.all %}
+            <tr data-correct="{% if ans.selected_option.is_correct %}true{% else %}false{% endif %}">
+              <td data-label="Class">{{ attempt.student.class_assigned.name }}</td>
+              <td data-label="Student">{{ attempt.student.full_name }}</td>
+              <td data-label="Exam">{{ attempt.exam_part.exam.title }} | {{ attempt.exam_part.get_part_type_display }}</td>
+              <td data-label="Question" class="text-start">
+                <div class="question-text" title="{{ ans.question.question_text|striptags }}">
+                  {{ ans.question.question_text|safe|truncatewords:20 }}
+                </div>
+              </td>
+              <td data-label="Student Answer">
+                {% if ans.selected_option %}
+                  {% if ans.selected_option.is_correct %}
+                    <span class="badge badge-correct">
+                      <i class="bi bi-check-lg"></i> {{ ans.selected_option.text|safe|truncatewords:10 }}
+                    </span>
+                  {% else %}
+                    <span class="badge badge-wrong">
+                      <i class="bi bi-x-lg"></i> {{ ans.selected_option.text|safe|truncatewords:10 }}
+                    </span>
+                  {% endif %}
+                {% elif ans.text_answer %}
+                  {% if ans.text_answer == ans.question.correct_answer %}
+                    <span class="badge badge-correct">
+                      <i class="bi bi-check-lg"></i> {{ ans.text_answer|truncatewords:10 }}
+                    </span>
+                  {% else %}
+                    <span class="badge badge-wrong">
+                      <i class="bi bi-x-lg"></i> {{ ans.text_answer|truncatewords:10 }}
+                    </span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted">Not Answered</span>
+                {% endif %}
+              </td>
+              <td data-label="Correct Answer">
+                {% if ans.question.question_type in "MCQ TF" %}
+                  {% for opt in ans.question.options.all %}
+                    {% if opt.is_correct %}
+                    <span class="badge badge-answer">
+                      <i class="bi bi-check2-all"></i> {{ opt.text|safe|truncatewords:10 }}
+                    </span>
+                    {% endif %}
+                  {% endfor %}
+                {% elif ans.question.question_type == "SA" %}
+                  {% if ans.question.correct_answer %}
+                    <span class="badge badge-answer">
+                      <i class="bi bi-check2-all"></i> {{ ans.question.correct_answer|truncatewords:10 }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">Manual Grading</span>
+                  {% endif %}
+                {% else %}
+                  <span class="text-muted">N/A</span>
+                {% endif %}
+              </td>
+              <td data-label="Marks">
+                <strong style="color:var(--champagne-lt);">{{ ans.question.marks }}</strong>
+              </td>
+            </tr>
+            {% endfor %}
+          {% empty %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <div class="empty-title">No Results Found</div>
+                <p class="empty-sub">Try adjusting your filters or check back later</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /table-panel -->
+
+</div><!-- /your-wrap -->
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  const isMobile = window.innerWidth <= 768;
+
+  const table = $('#resultsTable').DataTable({
+    paging: true,
+    searching: true,
+    ordering: !isMobile,
+    order: isMobile ? [] : [[1, 'asc']],
+    lengthMenu: [10, 25, 50, 100],
+    pageLength: isMobile ? 10 : 25,
+    scrollX: false,
+    autoWidth: false,
+    dom: isMobile
+      ? '<"dt-top-mobile"fl>rt<"dt-bottom-mobile"ip>'
+      : 'lfrtip',
+    language: {
+      search: 'Search:',
+      searchPlaceholder: 'Filter results…',
+      lengthMenu: 'Show _MENU_ per page',
+      info: 'Showing _START_–_END_ of _TOTAL_',
+      infoEmpty: 'No results',
+      infoFiltered: '(filtered from _MAX_)',
+      paginate: { previous: '‹', next: '›' }
+    }
+  });
+
+  if (isMobile) {
+    $('.dt-top-mobile').css({ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 14px' });
+    $('.dt-bottom-mobile').css({ display: 'flex', flexDirection: 'column', gap: '6px', padding: '8px 14px' });
+  }
+
+  // Calculate stats
+  let correct = 0, total = 0;
+  $('tbody tr').each(function () {
+    const v = $(this).data('correct');
+    if (v !== undefined) {
+      total++;
+      if (v === true || v === 'true') correct++;
+    }
+  });
+  const wrong = total - correct;
+  const accuracy = total > 0 ? ((correct / total) * 100).toFixed(1) : 0;
+  $('#correctCount').text(correct);
+  $('#wrongCount').text(wrong);
+  $('#accuracyRate').text(accuracy + '%');
+});
+
+function exportToExcel() {
+  alert('Export to Excel — connect with backend for implementation');
+}
+function printResults() {
+  window.print();
+}
+</script>
+
+{% endblock %}

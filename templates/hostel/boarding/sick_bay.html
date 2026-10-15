@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Sick bay{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Sick <em>bay</em></h1>
+  <p class="fin-sub">Who is in the sick bay now. Boarders here show as "in sick bay" at roll call, and families are told when their child is admitted, sent home or referred.</p>
+</div></div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="admit">
+    <h3 style="margin:0 0 .6rem">Admit a student</h3>
+    <div><label>Student</label><input list="studs" id="stud" placeholder="Type a name" autocomplete="off" oninput="var o=[...document.querySelectorAll('#studs option')].find(x=>x.value===this.value);document.getElementById('sid').value=o?o.dataset.id:''"><input type="hidden" name="student" id="sid" required>
+      <datalist id="studs">{% for s in students %}<option value="{{ s.full_name }} ({{ s.admission_number }})" data-id="{{ s.pk }}"></option>{% endfor %}</datalist></div>
+    <div class="row2"><div><label>Complaint</label><input name="complaint" required maxlength="255"></div><div><label>Temperature (°C)</label><input name="temperature" inputmode="decimal"></div></div>
+    <div><label>Treatment given</label><textarea name="treatment" rows="2"></textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="tell_parent" value="1" checked style="width:auto"> Tell the family</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Admit</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>In the sick bay now ({{ inside|length }})</h3></div><div class="panel-b">
+      {% for v in inside %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ v.student.full_name }}</b> <small class="hint">{{ v.student.class_assigned.name|default:"" }} · since {{ v.admitted_at|date:"D H:i" }}{% if v.temperature %} · {{ v.temperature }}°C{% endif %}</small><div class="hint">{{ v.complaint }}</div>
+        <form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="discharge"><input type="hidden" name="id" value="{{ v.pk }}"><select name="outcome" style="max-width:220px">{% for k, l in outcomes %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select><input name="treatment" placeholder="Note" style="flex:1;min-width:120px"><button class="fin-btn fin-btn-sm" type="submit">Discharge</button></form></div>
+      {% empty %}<p class="empty">Nobody in the sick bay.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b"><table class="tbl"><tbody>{% for v in history %}<tr><td>{{ v.admitted_at|date:"j M" }}</td><td class="name">{{ v.student.full_name }}</td><td>{{ v.complaint|truncatechars:40 }}</td><td>{{ v.get_outcome_display }}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ it.title }}{% endblock %}
+{% block content %}
+{% include "teaching/_nav.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'teaching:gradebook' gb.pk %}" style="color:inherit">{{ gb.school_class.name }} — {{ gb.subject.name }}</a></div>
+  <h1 class="fin-title">{{ it.title }}</h1>
+  <p class="fin-sub">{{ it.get_category_display }} · out of {{ it.max_score|floatformat:"-1" }} · {{ it.date|date:"j M Y" }}. Type x for a student excused (absent with a reason); leave blank if not marked yet. Press Enter to move down.</p>
+</div><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><button class="fin-btn" type="submit" onclick="return confirm('Delete this assessment and its marks?')">Delete</button></form></div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:620px">{% csrf_token %}
+  <table class="tbl" data-no-export><tbody>
+  {% for s, m in rows %}<tr><td class="name">{{ s.full_name }}</td><td><input class="tiny mark" name="m_{{ s.pk }}" value="{% if m.excused %}x{% elif m.score is not None %}{{ m.score|floatformat:'-1' }}{% endif %}" autocomplete="off"></td></tr>{% endfor %}
+  </tbody></table>
+  <button class="fin-btn fin-btn-gold" type="submit">Save marks</button>
+</form>
+<script>
+document.querySelectorAll('input.mark').forEach(function(el, i, all){
+  el.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); if(all[i+1]){ all[i+1].focus(); all[i+1].select(); } else { el.form.submit(); } } });
+});
+</script>
+{% endblock %}

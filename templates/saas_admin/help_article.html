@@ -1,0 +1,9 @@
+{% extends base %}
+{% block title %}{{ a.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}<div class="fin-head"><div><div class="fin-eyebrow"><a href="{% url 'platform_school:help' %}">Help centre</a> · {{ a.category }}</div><h1 class="fin-title"><em>{{ a.title }}</em></h1>{% if a.summary %}<p class="fin-sub">{{ a.summary }}</p>{% endif %}</div></div>
+<div class="fin-grid"><div class="panel"><div class="panel-b art">{{ body|safe }}
+  <form method="post" style="margin-top:1.4rem;display:flex;gap:.4rem;align-items:center">{% csrf_token %}<span class="hint">Was this helpful?</span><button class="fin-btn fin-btn-sm" type="submit" name="helpful" value="yes">Yes</button><button class="fin-btn fin-btn-sm" type="submit" name="helpful" value="no">No</button></form>
+</div></div>
+<div class="panel"><div class="panel-h"><h3>Related</h3></div><div class="panel-b">{% for r in related %}<p style="margin:.2rem 0"><a href="{% url 'platform_school:help_article' r.slug %}">{{ r.title }}</a></p>{% empty %}<p class="hint">—</p>{% endfor %}</div></div></div>
+{% endblock %}

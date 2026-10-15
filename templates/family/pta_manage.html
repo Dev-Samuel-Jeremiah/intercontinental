@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% block title %}PTA{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Parent experience</div>
+  <h1 class="fin-title"><em>PTA</em></h1>
+  <p class="fin-sub">Executives, meetings and minutes, and levies (one payment per family). Parents see all of this on their portal.</p>
+</div></div>
+{% include "family/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="levy">
+      <h3 style="margin:0 0 .6rem">New levy</h3>
+      <div><label>Title</label><input name="title" required maxlength="160" placeholder="e.g. 2026/27 PTA levy"></div>
+      <div class="row2"><div><label>Amount per family (₦)</label><input name="amount" required inputmode="decimal"></div><div><label>Due</label><input type="date" name="due_date"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add levy</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="meeting">
+      <h3 style="margin:0 0 .6rem">New meeting</h3>
+      <div><label>Title</label><input name="title" required maxlength="160"></div>
+      <div class="row2"><div><label>Date</label><input type="date" name="date" required></div><div><label>Time</label><input type="time" name="time" value="10:00"></div></div>
+      <div><label>Venue</label><input name="venue" maxlength="160"></div>
+      <div><label>Agenda</label><textarea name="agenda" rows="3"></textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add meeting</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="exec">
+      <h3 style="margin:0 0 .6rem">Add an executive</h3>
+      <div class="row2"><div><label>Name</label><input name="name" required maxlength="120"></div><div><label>Role</label><input name="role" required maxlength="80" placeholder="Chairman, Secretary…"></div></div>
+      <div class="row2"><div><label>Phone</label><input name="phone" maxlength="20"></div><div><label>Email</label><input name="email" type="email"></div></div>
+      <button class="fin-btn" type="submit">Add</button>
+    </form>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Levies</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for lv, rep in levies %}<tr><td class="name"><a href="{% url 'family:pta_levy' lv.pk %}">{{ lv.title }}</a></td><td>₦{{ lv.amount|floatformat:"2g" }}</td><td>{{ rep.paid }} of {{ rep.total }} families</td><td class="money">₦{{ rep.collected|floatformat:"2g" }}</td><td>{% if lv.active %}<span class="chip green">Open</span>{% else %}<span class="chip">Closed</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">No levies.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Meetings and minutes</h3></div><div class="panel-b">
+      {% for m in meetings %}<details style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><summary><b>{{ m.title }}</b> — {{ m.date|date:"j M Y" }}{% if m.minutes_published %} <span class="chip green">Minutes published</span>{% endif %}</summary>
+        <form method="post" class="fin-form" style="margin-top:.5rem">{% csrf_token %}<input type="hidden" name="action" value="minutes"><input type="hidden" name="id" value="{{ m.pk }}">
+          <textarea name="minutes" rows="5" placeholder="Minutes">{{ m.minutes }}</textarea>
+          <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="publish" value="1" style="width:auto" {% if m.minutes_published %}checked{% endif %}> Show the minutes to parents</label>
+          <button class="fin-btn fin-btn-sm" type="submit">Save minutes</button></form></details>{% empty %}<p class="empty">No meetings yet.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Executives</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for e in execs %}<tr><td class="name">{{ e.name }}</td><td>{{ e.role }}</td><td>{{ e.phone }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="exec_remove"><input type="hidden" name="id" value="{{ e.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></td></tr>{% empty %}<tr><td class="empty">None listed.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Review — {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "cbt/_math.html" %}
+<style>
+  .rq{padding:1rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .rq .n{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--slate)}
+  .rq .o{display:flex;gap:.5rem;align-items:flex-start;padding:.4rem .6rem;margin:.25rem 0;border-radius:10px;border:1px solid var(--rim)}
+  .rq .o.ok{border-color:var(--green-border);background:var(--green-dim)}
+  .rq .o.bad{border-color:var(--red-border);background:var(--red-dim)}
+  .rq .ex{margin-top:.6rem;padding:.6rem .8rem;border-left:3px solid var(--champagne);background:var(--champagne-dim);border-radius:0 10px 10px 0;font-size:.88rem}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Answer review</div>
+  <h1 class="fin-title">{{ exam.title }}</h1>
+  <p class="fin-sub">{{ exam.subject.name }} · you scored {{ attempt.score|floatformat:"-1" }}{% if auto_total %} — {{ right }} of {{ auto_total }} objective questions right{% endif %}.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'cbt:available_exams' %}"><i class="bi bi-arrow-left"></i> My exams</a></div>
+<div class="panel">
+  {% for i in items %}<div class="rq">
+    <div class="n">Question {{ forloop.counter }} · {{ i.question.marks|floatformat:"-1" }} mark{{ i.question.marks|pluralize }}{% if i.auto_marked %} · {% if i.right %}<span style="color:var(--green)">correct</span>{% elif i.chosen %}<span style="color:var(--red)">wrong</span>{% else %}<span style="color:var(--amber)">not answered</span>{% endif %}{% endif %}</div>
+    <div style="margin:.4rem 0 .5rem">{{ i.question.question_text|safe }}</div>
+    {% if i.question.image %}<img src="{{ i.question.image.url }}" alt="" style="max-width:100%;max-height:260px;border-radius:10px;margin-bottom:.4rem">{% endif %}
+    {% if i.auto_marked %}{% for o in i.question.ordered_options %}<div class="o{% if o.is_correct %} ok{% elif i.chosen and o.id == i.chosen.id %} bad{% endif %}">
+        <i class="bi {% if o.is_correct %}bi-check-circle-fill{% elif i.chosen and o.id == i.chosen.id %}bi-x-circle-fill{% else %}bi-circle{% endif %}" style="color:{% if o.is_correct %}var(--green){% elif i.chosen and o.id == i.chosen.id %}var(--red){% else %}var(--slate){% endif %}"></i>
+        <span>{{ o.text }}{% if i.chosen and o.id == i.chosen.id %} <span class="hint">— your answer</span>{% endif %}</span></div>{% endfor %}
+    {% else %}<div class="o"><i class="bi bi-pencil"></i><span>{{ i.text|default:"(no answer)" }}</span></div><span class="hint">Marked by your teacher.</span>{% endif %}
+    {% if i.question.explanation %}<div class="ex"><b>Why:</b> {{ i.question.explanation|linebreaksbr }}</div>{% endif %}
+  </div>{% endfor %}
+</div>
+{% endblock %}

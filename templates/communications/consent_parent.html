@@ -1,0 +1,36 @@
+{% include "communications/_portal_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Consent <em>forms</em></h1>
+  <p class="sub">Trips and activities that need your permission. Typing your full name counts as your signature; the school sees the time you signed.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for c in cards %}
+  <div class="card job">
+    <h2><i class="bi bi-pen" style="color:var(--champagne-lt)"></i> {{ c.f.title }}</h2>
+    <p>{{ c.f.details|linebreaksbr }}</p>
+    <p>{% if c.f.cost %}Cost: ₦{{ c.f.cost|floatformat:"2g" }} · {% endif %}Reply by {{ c.f.deadline|date:"l j F Y" }}</p>
+    {% for kid, reply in c.kids %}
+    <div style="border-top:1px solid var(--rim2);padding-top:.8rem;margin-top:.8rem">
+      <b>{{ kid.full_name }}</b>
+      {% if reply %} <span class="chip {% if reply.answer == 'YES' %}ok{% else %}no{% endif %}">{{ reply.get_answer_display }}</span>
+        <div class="hint">Signed "{{ reply.signed_name }}" on {{ reply.created_at|date:"j M Y, H:i" }}</div>{% endif %}
+      {% if c.open %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="form" value="{{ c.f.pk }}"><input type="hidden" name="student" value="{{ kid.pk }}">
+        <label class="opt"><input type="radio" name="answer" value="YES" required {% if reply.answer == 'YES' %}checked{% endif %}> I give consent for {{ kid.full_name }}</label>
+        <label class="opt"><input type="radio" name="answer" value="NO" {% if reply.answer == 'NO' %}checked{% endif %}> I do not give consent</label>
+        <label>Anything the school should know (medical, dietary…)</label><input name="note" maxlength="255" value="{{ reply.note|default:'' }}">
+        <label>Type your full name to sign</label><input name="signed_name" required maxlength="160" value="{{ reply.signed_name|default:'' }}">
+        <button type="submit">{% if reply %}Update my answer{% else %}Sign and send{% endif %}</button>
+      </form>
+      {% else %}{% if not reply %}<div class="hint">Replies have closed.</div>{% endif %}{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% empty %}
+  <div class="card"><p class="sub" style="margin:0">No consent forms need your attention.</p></div>
+  {% endfor %}
+</div>
+</body>
+</html>

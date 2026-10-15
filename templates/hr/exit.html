@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Exit — {{ e.staff.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hr:staff_file' e.staff_id %}" style="color:inherit">{{ e.staff.full_name }}</a></div>
+  <h1 class="fin-title">{{ e.get_kind_display }}</h1>
+  <p class="fin-sub">Notice {{ e.notice_date|date:"j M Y" }} · last day {{ e.last_day|date:"j M Y" }}{% if e.reason %} · {{ e.reason }}{% endif %}{% if e.completed_at %} · <span class="chip">Completed {{ e.completed_at|date:"j M Y" }}</span>{% endif %}</p>
+</div></div>
+{% include "hr/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="handover">
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-check2-square"></i> Handover</h3>
+    {% for h in e.handover %}<label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="done" value="{{ forloop.counter0 }}" style="width:auto" {% if h.done %}checked{% endif %} {% if e.completed_at %}disabled{% endif %}> {{ h.item }}</label>{% endfor %}
+    {% if not e.completed_at %}
+    <div><label>Add an item</label><input name="new_item" maxlength="120"></div>
+    <div><label>Other amounts (₦) <span class="hint">owed to them, or minus if they owe the school</span></label><input name="other_amounts" value="{{ e.other_amounts }}" inputmode="decimal"></div>
+    <button class="fin-btn" type="submit">Save</button>
+    {% endif %}
+  </form>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Final settlement</h3></div><div class="panel-b">
+    {% if money.note %}<p class="hint">{{ money.note }}</p>{% else %}
+    <table class="tbl" data-no-export><tbody>
+      <tr><td>Monthly gross</td><td class="money">₦{{ money.monthly|floatformat:"2g" }}</td></tr>
+      <tr><td>Working days in the last month</td><td>{{ money.worked_days }} of {{ money.month_days }}</td></tr>
+      <tr><td>Pay for days worked</td><td class="money">₦{{ money.final_pay|floatformat:"2g" }}</td></tr>
+      <tr><td>Other amounts</td><td class="money">₦{{ money.other|floatformat:"2g" }}</td></tr>
+      <tr><td>Less staff loans outstanding</td><td class="money">−₦{{ money.loans|floatformat:"2g" }}</td></tr>
+    </tbody></table>{% endif %}
+    <p style="font-size:1.2rem;margin:.8rem 0"><b>Total: ₦{{ money.total|floatformat:"2g" }}</b></p>
+    <p class="hint">Before tax and pension on the final pay — run it through payroll as extra pay if it is paid with salaries.</p>
+    {% if not e.completed_at %}
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="complete">
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="disable_login" value="1" checked style="width:auto"> Turn off their sign-in</label>
+      <button class="fin-btn fin-btn-danger" type="submit" onclick="return confirm('Complete the exit and take them off payroll?')">Complete exit</button>
+    </form>
+    {% endif %}
+  </div></div>
+</div>
+{% endblock %}

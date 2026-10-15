@@ -1,0 +1,1197 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Edit Student — {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+:root{
+  /* semantic */
+  --green:          #4ade80;
+}
+
+/* ═══════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  color: var(--white);
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════
+   RISE ANIMATION
+═══════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ═══════════════════════════════════════════════════
+   WRAPPER
+═══════════════════════════════════════════════════ */
+.es-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════ */
+.es-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+
+.es-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+}
+
+.es-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.es-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.es-eyebrow::before {
+  content: '';
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+
+.es-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--white);
+}
+
+.es-title em {
+  font-style: italic;
+  color: var(--champagne);
+}
+
+.es-meta-pills {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: .25rem;
+}
+
+.es-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .28rem .75rem;
+  border-radius: 100px;
+  font-size: .73rem;
+  font-weight: 500;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  color: var(--slate2);
+}
+
+.es-pill i { color: var(--champagne); font-size: .78rem; }
+
+.es-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .6rem;
+}
+
+.es-context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem 1.1rem;
+  border-radius: 100px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  color: var(--champagne-lt);
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+
+.es-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .75rem;
+  color: var(--slate);
+}
+
+.es-breadcrumb a {
+  color: var(--slate2);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.es-breadcrumb a:hover { color: var(--champagne); }
+.es-breadcrumb i { font-size: .6rem; color: var(--slate); }
+
+/* ═══════════════════════════════════════════════════
+   ALERTS
+═══════════════════════════════════════════════════ */
+.es-alert {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .9rem 1.2rem;
+  border-radius: 10px;
+  font-size: .85rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  animation: riseUp .3s ease both;
+}
+
+.es-alert-success {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+}
+
+.es-alert-error {
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+}
+
+.es-alert-info {
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  color: var(--blue);
+}
+
+/* ═══════════════════════════════════════════════════
+   LAYOUT GRID
+═══════════════════════════════════════════════════ */
+.es-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.panel-inner {
+  padding: 2rem;
+}
+
+.panel-section {
+  padding: 1.75rem 2rem;
+  border-bottom: 1px solid var(--rim);
+}
+
+.panel-section:last-child { border-bottom: none; }
+
+/* Panel section header */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  margin-bottom: 1.4rem;
+}
+
+.section-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.section-badge.blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border); }
+.section-badge.green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.section-badge.orange { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.section-badge.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+.section-badge.teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border); }
+
+.section-head h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0 0 2px 0;
+}
+
+.section-head p {
+  font-size: .75rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════ */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-grid-2 .span-2 { grid-column: 1 / -1; }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.form-label {
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.form-label .req { color: var(--red); margin-left: 2px; }
+
+/* Style all Django form inputs */
+input[type="text"],
+input[type="email"],
+input[type="date"],
+input[type="number"],
+input[type="file"],
+select,
+textarea {
+  width: 100%;
+  padding: .7rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .9rem;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f4d21f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .9rem center;
+  padding-right: 2.4rem;
+}
+
+select option { background: var(--surface2); color: var(--white); }
+
+textarea { resize: vertical; min-height: 90px; }
+
+input[type="file"] {
+  color: var(--slate2);
+  cursor: pointer;
+  padding: .6rem .8rem;
+  font-size: .82rem;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.3);
+  border-radius: 7px;
+  color: var(--champagne-lt);
+  padding: .3rem .75rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: .75rem;
+  transition: background .2s;
+}
+
+input[type="file"]::-webkit-file-upload-button:hover {
+  background: rgba(244,210,31,.2);
+}
+
+::placeholder { color: var(--slate); opacity: .7; }
+
+/* ═══════════════════════════════════════════════════
+   PASSPORT PHOTO SECTION
+═══════════════════════════════════════════════════ */
+.passport-zone {
+  background: var(--surface2);
+  border: 1px dashed rgba(244,210,31,.25);
+  border-radius: 14px;
+  padding: 1.4rem;
+}
+
+.passport-row {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.passport-thumb-wrap {
+  flex-shrink: 0;
+}
+
+.passport-thumb {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--rim2);
+}
+
+.passport-thumb-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  background: var(--surface3);
+  border: 2px dashed var(--rim2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  color: var(--slate);
+}
+
+.passport-controls {
+  flex: 1;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.passport-hint {
+  font-size: .75rem;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
+.pp-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem .9rem;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  border: 1px solid;
+  cursor: pointer;
+  background: var(--surface3);
+  transition: all .2s;
+  text-decoration: none;
+}
+
+.pp-btn:hover { transform: translateY(-1px); }
+
+.pp-upload { color: var(--blue);   border-color: var(--blue-border);   }
+.pp-upload:hover { background: var(--blue-dim); }
+.pp-camera { color: var(--green);  border-color: var(--green-border);  }
+.pp-camera:hover { background: var(--green-dim); }
+.pp-switch { color: var(--purple); border-color: var(--purple-border); }
+.pp-switch:hover { background: var(--purple-dim); }
+.pp-snap   { color: var(--teal);   border-color: var(--teal-border);   }
+.pp-snap:hover { background: var(--teal-dim); }
+.pp-cancel { color: var(--red);    border-color: var(--red-border);    }
+.pp-cancel:hover { background: var(--red-dim); }
+
+.camera-panel-edit {
+  display: none;
+  flex-direction: column;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+.camera-panel-edit.active { display: flex; }
+
+.camera-panel-edit video {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  border: 1px solid var(--rim2);
+  background: #000;
+}
+
+.camera-btns-row {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.new-photo-badge {
+  display: none;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .75rem;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: 7px;
+  color: var(--green);
+  font-size: .73rem;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════
+   FORM FOOTER
+═══════════════════════════════════════════════════ */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--rim);
+  background: var(--surface2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .65rem 1.5rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+}
+
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-champagne:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(244,210,31,.32);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+
+.btn-ghost:hover {
+  background: var(--rim);
+  color: var(--white);
+  border-color: var(--rim3);
+}
+
+.btn-lg { padding: .8rem 2rem; font-size: .95rem; }
+
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════ */
+.sidebar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: 1.5rem;
+}
+
+/* Sidebar panels */
+.sidebar-stack .panel { animation-delay: .1s; }
+.sidebar-stack .panel:nth-child(2) { animation-delay: .18s; }
+.sidebar-stack .panel:nth-child(3) { animation-delay: .26s; }
+
+.sidebar-panel-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.sidebar-panel-header i { color: var(--champagne); font-size: .9rem; }
+
+/* Info rows */
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .8rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  transition: background .2s;
+}
+
+.info-row:last-child { border-bottom: none; }
+.info-row:hover { background: rgba(255,255,255,.025); }
+
+.info-row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.info-row-icon.blue   { background: var(--blue-dim);   color: var(--blue);   }
+.info-row-icon.green  { background: var(--green-dim);  color: var(--green);  }
+.info-row-icon.amber  { background: var(--amber-dim);  color: var(--amber);  }
+
+.info-row-body { min-width: 0; }
+
+.info-row-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 2px;
+}
+
+.info-row-value {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Quick actions */
+.action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.action-link {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .85rem 1.4rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--slate2);
+  border-bottom: 1px solid var(--rim);
+  transition: all .2s;
+}
+
+.action-link:last-child { border-bottom: none; }
+.action-link:hover { background: rgba(255,255,255,.025); color: var(--white); }
+
+.action-link i {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.action-link.action-reset i { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+.action-link.action-delete i { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red-border);   }
+.action-link.action-back  i { background: var(--rim);        color: var(--slate2); }
+
+.action-link.action-delete { color: var(--red); }
+.action-link.action-delete:hover { background: var(--red-dim); }
+
+/* Warning card */
+.warn-card {
+  margin: 1rem 1.4rem;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 10px;
+  padding: .9rem 1rem;
+}
+
+.warn-card-title {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--amber);
+  margin-bottom: .35rem;
+}
+
+.warn-card-body {
+  font-size: .75rem;
+  color: rgba(251,191,36,.7);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .es-layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-stack { position: static; }
+}
+
+@media (max-width: 700px) {
+  .es-wrap { padding: 1.25rem 1rem 3rem; }
+  .es-header { flex-direction: column; gap: 1rem; }
+  .es-header-right { align-items: flex-start; }
+  .es-title { font-size: 2rem; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+  .form-grid-2 .span-2 { grid-column: 1; }
+  .form-footer { flex-direction: column-reverse; gap: .75rem; }
+  .btn-lg { width: 100%; justify-content: center; }
+  .btn-ghost { width: 100%; justify-content: center; }
+}
+</style>
+
+<div class="es-wrap">
+
+  <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+  <header class="es-header">
+    <div class="es-header-left">
+      <div class="es-eyebrow">
+        <i class="bi bi-person-gear"></i> Student Management
+      </div>
+      <h1 class="es-title">Edit <em>Student</em> Profile</h1>
+      <div class="es-meta-pills">
+        <span class="es-pill"><i class="bi bi-hash"></i> {{ student.admission_number }}</span>
+        <span class="es-pill"><i class="bi bi-person"></i> {{ student.full_name }}</span>
+        <span class="es-pill"><i class="bi bi-building"></i> {{ student.class_assigned.name|default:"Unassigned" }}</span>
+      </div>
+    </div>
+    <div class="es-header-right">
+      <div class="es-context-badge">
+        <i class="bi bi-pencil-square"></i>
+        Editing Profile
+      </div>
+      <div class="es-breadcrumb">
+        <a href="{% url 'users:all_students' %}"><i class="bi bi-people"></i> All Students</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Edit</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══════════════════ ALERTS ══════════════════ -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="es-alert es-alert-{{ message.tags }}">
+        <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ══════════════════ MAIN LAYOUT ══════════════════ -->
+  <div class="es-layout">
+
+    <!-- ── MAIN FORM COLUMN ── -->
+    <div>
+      <form method="POST" enctype="multipart/form-data" id="editStudentForm">
+        {% csrf_token %}
+        <input type="hidden" id="capturedPassportData" name="captured_passport_data" value="">
+
+        <div class="panel" style="animation-delay:.05s">
+
+          <!-- ── PASSPORT PHOTO ── -->
+          <div class="panel-section">
+            <div class="section-head">
+              <div class="section-badge blue"><i class="bi bi-camera-fill"></i></div>
+              <div>
+                <h3>Passport Photo</h3>
+                <p>Upload a file or capture with camera</p>
+              </div>
+            </div>
+
+            <div class="passport-zone">
+              <div class="passport-row">
+                <!-- Thumbnail -->
+                <div class="passport-thumb-wrap">
+                  {% if student.passport %}
+                    <img id="passportThumb" class="passport-thumb" src="{{ student.passport.url }}" alt="Passport">
+                    <div id="passportThumbPlaceholder" class="passport-thumb-placeholder" style="display:none"><i class="bi bi-person"></i></div>
+                  {% else %}
+                    <div id="passportThumbPlaceholder" class="passport-thumb-placeholder"><i class="bi bi-person"></i></div>
+                    <img id="passportThumb" class="passport-thumb" src="" alt="Passport" style="display:none">
+                  {% endif %}
+                </div>
+
+                <div class="passport-controls">
+                  <p class="passport-hint">
+                    {% if student.passport %}Current photo on file — replace below{% else %}No photo yet — upload or capture one{% endif %}
+                  </p>
+                  <div class="pp-actions">
+                    <input type="file" id="passportFileInput" name="passport" accept="image/*" style="display:none">
+                    <button type="button" class="pp-btn pp-upload" onclick="document.getElementById('passportFileInput').click()">
+                      <i class="bi bi-upload"></i> Upload File
+                    </button>
+                    <button type="button" class="pp-btn pp-camera" id="editOpenCameraBtn">
+                      <i class="bi bi-camera"></i> Use Camera
+                    </button>
+                  </div>
+                  <div id="currentFileName" style="font-size:.72rem;color:var(--slate);"></div>
+                  <span id="newPhotoBadge" class="new-photo-badge">
+                    <i class="bi bi-check-circle-fill"></i> New photo captured — will save on submit
+                  </span>
+                </div>
+              </div>
+
+              <!-- Camera panel -->
+              <div class="camera-panel-edit" id="editCameraPanel">
+                <video id="editCameraFeed" autoplay playsinline muted></video>
+                <div class="camera-btns-row">
+                  <button type="button" class="pp-btn pp-snap" id="editSnapBtn">
+                    <i class="bi bi-camera-fill"></i> Snap Photo
+                  </button>
+                  <button type="button" class="pp-btn pp-switch" id="editSwitchBtn" style="display:none">
+                    <i class="bi bi-arrow-repeat"></i> Switch Cam
+                  </button>
+                  <button type="button" class="pp-btn pp-cancel" id="editCloseCameraBtn">
+                    <i class="bi bi-x-lg"></i> Cancel
+                  </button>
+                </div>
+              </div>
+              <canvas id="editSnapCanvas" style="display:none"></canvas>
+            </div>
+          </div>
+
+          <!-- ── STUDENT INFORMATION ── -->
+          <div class="panel-section">
+            <div class="section-head">
+              <div class="section-badge blue"><i class="bi bi-person-fill"></i></div>
+              <div>
+                <h3>Student Information</h3>
+                <p>Basic personal and academic details</p>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-person"></i> Full Name <span class="req">*</span>
+                </label>
+                {{ form.full_name }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-credit-card"></i> Admission Number <span class="req">*</span>
+                </label>
+                {{ form.admission_number }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-gender-ambiguous"></i> Gender
+                </label>
+                {{ form.gender }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-cake"></i> Date of Birth
+                </label>
+                {{ form.date_of_birth }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-building"></i> Class Assigned
+                </label>
+                {{ form.class_assigned }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-toggle-on"></i> Status
+                </label>
+                {{ form.status }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ── PARENT / GUARDIAN ── -->
+          <div class="panel-section">
+            <div class="section-head">
+              <div class="section-badge green"><i class="bi bi-people-fill"></i></div>
+              <div>
+                <h3>Parent / Guardian</h3>
+                <p>Contact information for parent or guardian</p>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-person-hearts"></i> Parent Name
+                </label>
+                {{ form.parent_name }}
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-telephone"></i> Parent Phone
+                </label>
+                {{ form.parent_phone }}
+              </div>
+              <div class="form-group span-2">
+                <label class="form-label">
+                  <i class="bi bi-envelope"></i> Parent Email
+                </label>
+                {{ form.parent_email }}
+              </div>
+            </div>
+          </div>
+
+          <!-- ── ADDRESS ── -->
+          <div class="panel-section">
+            <div class="section-head">
+              <div class="section-badge orange"><i class="bi bi-geo-alt-fill"></i></div>
+              <div>
+                <h3>Address</h3>
+                <p>Residential address on file</p>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-house"></i> Full Address
+              </label>
+              {{ form.address }}
+            </div>
+          </div>
+
+          <!-- ── FORM FOOTER ── -->
+          <div class="form-footer">
+            <a href="{% url 'users:all_students' %}" class="btn btn-ghost" id="cancelBtn">
+              <i class="bi bi-x-circle"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-champagne btn-lg">
+              <i class="bi bi-floppy-fill"></i> Save Changes
+            </button>
+          </div>
+
+        </div><!-- /.panel -->
+      </form>
+    </div>
+
+    <!-- ── SIDEBAR ── -->
+    <div class="sidebar-stack">
+
+      <!-- Student Details -->
+      <div class="panel">
+        <div class="sidebar-panel-header">
+          <i class="bi bi-info-circle-fill"></i>
+          Student Record
+        </div>
+        <div class="info-row">
+          <div class="info-row-icon blue"><i class="bi bi-calendar3"></i></div>
+          <div class="info-row-body">
+            <div class="info-row-label">Date Registered</div>
+            <div class="info-row-value">{{ student.user.date_joined|date:"M d, Y" }}</div>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-row-icon green"><i class="bi bi-key-fill"></i></div>
+          <div class="info-row-body">
+            <div class="info-row-label">Student Password</div>
+            <div class="info-row-value">{{ student.user.term_password|default:"N/A" }}</div>
+          </div>
+        </div>
+        {% if student.parent_term_password %}
+        <div class="info-row">
+          <div class="info-row-icon amber"><i class="bi bi-lock-fill"></i></div>
+          <div class="info-row-body">
+            <div class="info-row-label">Parent Password</div>
+            <div class="info-row-value">{{ student.parent_term_password }}</div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel">
+        <div class="sidebar-panel-header">
+          <i class="bi bi-lightning-fill"></i>
+          Quick Actions
+        </div>
+        <div class="action-list">
+          <a href="{% url 'users:reset_student_password' student.id %}"
+             class="action-link action-reset"
+             onclick="return confirm('Reset password for {{ student.full_name }}?')">
+            <i class="bi bi-key"></i>
+            Reset Password
+          </a>
+          <a href="{% url 'users:student_profile' student.id %}" class="action-link action-reset">
+            <i class="bi bi-person-vcard"></i>
+            Profile &amp; status
+          </a>
+          <form method="post" action="{% url 'users:delete_student' student.id %}" style="display:contents"
+                onsubmit="return confirm('Permanently delete {{ student.full_name|escapejs }} and their login?\n\nIf they have left, cancel and change their status to Withdrawn or Graduated on their profile instead — the record is kept.')">
+            {% csrf_token %}
+            <button type="submit" class="action-link action-delete" style="cursor:pointer;font:inherit;text-align:left">
+              <i class="bi bi-trash3"></i>
+              Delete Student
+            </button>
+          </form>
+          <a href="{% url 'users:all_students' %}" class="action-link action-back">
+            <i class="bi bi-arrow-left"></i>
+            Back to List
+          </a>
+        </div>
+      </div>
+
+      <!-- Warning notice -->
+      <div class="panel">
+        <div class="warn-card" style="margin:.25rem">
+          <div class="warn-card-title">
+            <i class="bi bi-exclamation-triangle-fill"></i> Important
+          </div>
+          <div class="warn-card-body">
+            Changes are saved immediately. Verify all information is correct before submitting.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.sidebar-stack -->
+  </div><!-- /.es-layout -->
+</div><!-- /.es-wrap -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function () {
+  // Style Django form widgets
+  $('input[type=text], input[type=email], input[type=date], input[type=number], select, textarea')
+    .each(function () { $(this).addClass('form-control'); });
+
+  // Unsaved changes guard
+  const originalData = $('#editStudentForm').serialize();
+  $('#cancelBtn').on('click', function (e) {
+    if ($('#editStudentForm').serialize() !== originalData) {
+      e.preventDefault();
+      if (confirm('You have unsaved changes. Leave anyway?')) {
+        window.location.href = $(this).attr('href');
+      }
+    }
+  });
+});
+
+// ── PASSPORT CAMERA ──────────────────────────────────
+(function () {
+  const openBtn     = document.getElementById('editOpenCameraBtn');
+  const cameraPanel = document.getElementById('editCameraPanel');
+  const video       = document.getElementById('editCameraFeed');
+  const snapBtn     = document.getElementById('editSnapBtn');
+  const switchBtn   = document.getElementById('editSwitchBtn');
+  const closeBtn    = document.getElementById('editCloseCameraBtn');
+  const canvas      = document.getElementById('editSnapCanvas');
+  const captInput   = document.getElementById('capturedPassportData');
+  const fileInput   = document.getElementById('passportFileInput');
+  const thumb       = document.getElementById('passportThumb');
+  const placeholder = document.getElementById('passportThumbPlaceholder');
+  const badge       = document.getElementById('newPhotoBadge');
+  const fileLabel   = document.getElementById('currentFileName');
+
+  let stream = null;
+  let facing = 'user';
+  let hasMultiple = false;
+
+  async function detectCams() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      hasMultiple = devices.filter(d => d.kind === 'videoinput').length > 1;
+    } catch (e) {}
+  }
+
+  async function startCamera(facingMode) {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    const constraints = {
+      audio: false,
+      video: facingMode === 'environment'
+        ? { facingMode: { exact: 'environment' } }
+        : { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+    };
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      facing = facingMode;
+      await detectCams();
+      const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      switchBtn.style.display = (hasMultiple || isMobile) ? 'inline-flex' : 'none';
+      switchBtn.innerHTML = facingMode === 'user'
+        ? '<i class="bi bi-arrow-repeat"></i> Back Cam'
+        : '<i class="bi bi-arrow-repeat"></i> Front Cam';
+    } catch (err) {
+      if (facingMode === 'environment') {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+          });
+          video.srcObject = stream;
+          facing = facingMode;
+          await detectCams();
+          switchBtn.style.display = 'inline-flex';
+          return;
+        } catch (e2) {}
+      }
+      alert('Camera not available. Please use file upload.');
+    }
+  }
+
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    cameraPanel.classList.remove('active');
+    switchBtn.style.display = 'none';
+  }
+
+  openBtn.addEventListener('click', async () => {
+    await startCamera(facing);
+    if (stream) cameraPanel.classList.add('active');
+  });
+
+  switchBtn.addEventListener('click', async () => {
+    await startCamera(facing === 'user' ? 'environment' : 'user');
+  });
+
+  closeBtn.addEventListener('click', stopCamera);
+
+  snapBtn.addEventListener('click', () => {
+    const w = video.videoWidth || 640;
+    const h = video.videoHeight || 480;
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    if (facing === 'user') {
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, -w, 0, w, h);
+    } else {
+      ctx.drawImage(video, 0, 0, w, h);
+    }
+    ctx.restore();
+    const dataURL = canvas.toDataURL('image/jpeg', 0.88);
+    if (placeholder) placeholder.style.display = 'none';
+    thumb.src = dataURL;
+    thumb.style.display = 'block';
+    captInput.value = dataURL;
+    fileInput.value = '';
+    badge.style.display = 'inline-flex';
+    stopCamera();
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    captInput.value = '';
+    badge.style.display = 'none';
+    fileLabel.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (placeholder) placeholder.style.display = 'none';
+      thumb.src = e.target.result;
+      thumb.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById('editStudentForm').addEventListener('submit', async function (e) {
+    const b64 = captInput.value;
+    if (!b64 || fileInput.files.length > 0) return;
+    e.preventDefault();
+    const res  = await fetch(b64);
+    const blob = await res.blob();
+    const file = new File([blob], 'passport_capture.jpg', { type: 'image/jpeg' });
+    const dt   = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    captInput.value = '';
+    this.submit();
+  });
+})();
+</script>
+
+{% endblock %}

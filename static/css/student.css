@@ -1,0 +1,253 @@
+:root {
+    /* Palette - Student Theme */
+    --primary: #9333ea; /* Purple 600 */
+    --primary-light: #f3e8ff; /* Purple 100 */
+    --primary-hover: #7e22ce;
+    --text-dark: #111827;
+    --text-gray: #6b7280;
+    --bg-body: #f9fafb;
+    --card-bg: #ffffff;
+    --border-color: #e5e7eb;
+    
+    /* Status Colors */
+    --success: #22c55e; --success-bg: #dcfce7;
+    --warning: #f59e0b; --warning-bg: #fef3c7;
+    --danger: #ef4444; --danger-bg: #fee2e2;
+    --blue: #3b82f6; --blue-bg: #dbeafe;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- Layout --- */
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+}
+
+/* --- Header --- */
+header {
+    background: white;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 30px;
+}
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+.brand-text h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+.brand-text span {
+    font-size: 12px;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+.btn-logout {
+    padding: 8px 16px;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 8px;
+    font-family: 'Inter';
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-logout:hover { background: #f3f4f6; }
+
+/* --- Navigation --- */
+.nav-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+.nav-btn {
+    display: inline-flex; /* Make links behave like buttons */
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-family: 'Inter';
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-gray);
+    cursor: pointer;
+    text-decoration: none; /* Remove underline for <a> */
+    transition: all 0.2s;
+}
+.nav-btn:hover { background: #f3f4f6; color: var(--text-dark); }
+.nav-btn.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+/* --- Cards & Grid --- */
+.card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; }
+
+/* --- Profile Hero --- */
+.profile-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.profile-left { display: flex; align-items: center; gap: 16px; }
+.avatar {
+    width: 64px; height: 64px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700;
+}
+.grade-badge {
+    text-align: right;
+}
+.grade-score {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1;
+}
+
+/* --- Stats Widgets --- */
+.stat-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+.stat-value { font-size: 24px; font-weight: 700; margin: 0; }
+.stat-label { font-size: 13px; color: var(--text-gray); margin: 0; }
+
+/* --- Progress Bars --- */
+.progress-item { margin-bottom: 16px; }
+.progress-header { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; font-weight: 500;}
+.progress-track {
+    height: 8px;
+    background: #f3f4f6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.progress-fill { height: 100%; background: var(--primary); border-radius: 4px; }
+
+/* --- Upcoming Exam Alert --- */
+.exam-alert {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #faf5ff;
+    border: 1px solid #f3e8ff;
+    padding: 20px;
+    border-radius: 12px;
+}
+.tag-urgent { background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase;}
+
+/* --- Learning Tabs --- */
+.sub-nav {
+    display: flex;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 24px;
+    padding-bottom: 0;
+}
+.sub-nav-btn {
+    background: none;
+    border: none;
+    padding: 0 0 12px 0;
+    font-family: 'Inter';
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-gray);
+    cursor: pointer;
+    position: relative;
+}
+.sub-nav-btn.active { color: var(--primary); }
+.sub-nav-btn.active::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px;
+    background: var(--primary);
+}
+
+/* --- Assignments List --- */
+.task-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: transform 0.2s;
+}
+.task-item:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+.btn-primary {
+    background: var(--primary); color: white; border: none;
+    padding: 10px 20px; border-radius: 8px; font-weight: 500; cursor: pointer;
+}
+
+/* --- Video & File Cards --- */
+.file-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+.file-card {
+    padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column;
+}
+.file-icon-lg { font-size: 32px; margin-bottom: 12px; }
+
+/* --- Utility Classes --- */
+.text-sm { font-size: 14px; }
+.text-muted { color: var(--text-gray); }
+.font-bold { font-weight: 600; }
+.bg-purple { background: var(--primary-light); color: var(--primary); }
+.bg-blue { background: var(--blue-bg); color: var(--blue); }
+.bg-green { background: var(--success-bg); color: var(--success); }
+.bg-orange { background: var(--warning-bg); color: var(--warning); }
+
+.d-none { display: none; }

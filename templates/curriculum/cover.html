@@ -1,0 +1,49 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Cover{% endblock %}
+{% block content %}
+<style>
+  .cv{display:grid;grid-template-columns:150px 1fr minmax(260px,1.2fr);gap:.8rem;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .cv:last-child{border-bottom:0}
+  .cv .t{font-size:.75rem;color:var(--slate2);font-weight:600}
+  .cv form{display:flex;gap:.4rem;flex-wrap:wrap}
+  .cv select,.cv input{padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem}
+  .cv select{flex:1 1 180px}.cv input{flex:1 1 140px}
+  @media(max-width:800px){.cv{grid-template-columns:1fr}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Staffing</div>
+  <h1 class="fin-title">Cover for absent <em>teachers</em></h1>
+  <p class="fin-sub">{{ day|date:"l j F Y" }} — teachers on approved leave appear automatically; add anyone else who is away. Free teachers who teach the subject are suggested first.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn fin-btn-sm" href="?date={{ prev|date:'Y-m-d' }}"><i class="bi bi-chevron-left"></i></a>
+  {% if day != today %}<a class="fin-btn fin-btn-sm" href="?">Today</a>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="?date={{ next|date:'Y-m-d' }}"><i class="bi bi-chevron-right"></i></a>
+</div></div>
+{% include "curriculum/_nav.html" %}
+{% if not has_timetable %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>Publish a timetable first — cover is arranged lesson by lesson from it.</p></div></div>{% else %}
+<form method="get" class="panel"><div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+  <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">{% for a in away %}<input type="hidden" name="away" value="{{ a }}">{% endfor %}
+  <span class="hint">Someone else away?</span>
+  <select name="away" class="fin-btn fin-btn-sm"><option value="">Choose a teacher…</option>{% for t in teachers %}{% if t.id not in away %}<option value="{{ t.id }}">{{ t.full_name }}</option>{% endif %}{% endfor %}</select>
+  <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-plus"></i> Add</button>
+  {% if need %}<span class="chip red" style="margin-left:auto">{{ need }} lesson{{ need|pluralize }} without cover</span>{% elif rows %}<span class="chip green" style="margin-left:auto">every lesson covered</span>{% endif %}
+</div></form>
+{% for r in rows %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-dash"></i> {{ r.teacher.full_name }}</h3>{% if r.leave %}<span class="chip amber">{{ r.leave.get_leave_type_display }} until {{ r.leave.end_date|date:"j M" }}</span>{% else %}<span class="chip">away</span>{% endif %}</div>
+  {% for l in r.lessons %}<div class="cv">
+    <div><div class="t">{{ l.slot.time_slot.name }}</div><span class="hint">{{ l.slot.time_slot.start_time|time:"H:i" }}–{{ l.slot.time_slot.end_time|time:"H:i" }}</span></div>
+    <div><b>{{ l.slot.subject.name }}</b><div class="hint">{{ l.slot.school_class.name }}</div></div>
+    <div>{% if l.cover %}<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="chip green"><i class="bi bi-check2"></i> {{ l.cover.cover_teacher.full_name }}</span>
+        {% if l.cover.notified_at %}<span class="hint">emailed</span>{% endif %}{% if l.cover.note %}<span class="hint">{{ l.cover.note }}</span>{% endif %}
+        <form method="post" style="margin-left:auto">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="id" value="{{ l.cover.id }}"><button class="fin-btn fin-btn-sm" name="action" value="cancel" title="Cancel cover"><i class="bi bi-x"></i></button></form></div>
+      {% elif day < today %}<span class="chip red">not covered</span>
+      {% elif l.free %}<form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="slot_id" value="{{ l.slot.id }}">
+        <select name="cover_id" required>{% for f in l.free %}<option value="{{ f.staff.id }}">{{ f.staff.full_name }}{% if f.subject_teacher %} ★ teaches {{ l.slot.subject.name }}{% endif %} · {{ f.recent_covers }} cover{{ f.recent_covers|pluralize }} lately</option>{% endfor %}</select>
+        <input name="note" maxlength="255" placeholder="Work set (optional)"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Assign</button></form>
+      {% else %}<span class="chip red">nobody is free this period</span>{% endif %}</div>
+  </div>{% endfor %}
+</div>
+{% empty %}<div class="panel"><div class="empty"><i class="bi bi-emoji-smile"></i><p>No teacher with lessons is away {% if day == today %}today{% else %}that day{% endif %}.</p></div></div>{% endfor %}
+{% if summary %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Cover in the last and next 30 days</h3></div><table class="tbl"><thead><tr><th>Teacher</th><th>Covers given</th><th>Lessons needing cover</th></tr></thead><tbody>
+  {% for s in summary %}<tr><td class="name">{{ s.staff.full_name }}</td><td>{{ s.given }}</td><td>{{ s.needed }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% endif %}
+{% endblock %}

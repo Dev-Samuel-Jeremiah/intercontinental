@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Onboarding checklist{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hr:people' %}" style="color:inherit">People &amp; HR</a></div>
+  <h1 class="fin-title">Onboarding <em>checklist</em></h1>
+  <p class="fin-sub">What every new member of staff must complete. Items that need a document can only be ticked once it is uploaded.</p>
+</div></div>
+{% include "hr/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <div><label>New item</label><input name="title" maxlength="120" required placeholder="e.g. Guarantor form returned"></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="needs_file" value="1" style="width:auto"> A document must be uploaded</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+  {% for t in tasks %}<tr><td class="name">{{ t.title }}</td><td>{% if t.needs_file %}<span class="chip gold">Document</span>{% endif %}</td>
+    <td>{% if t.active %}<span class="chip green">In use</span>{% else %}<span class="chip">Off</span>{% endif %}</td>
+    <td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if t.active %}Turn off{% else %}Turn on{% endif %}</button></form></td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

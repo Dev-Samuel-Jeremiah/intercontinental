@@ -1,0 +1,16 @@
+{% include "communications/_portal_head.html" %}
+<style>
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.8rem;margin-bottom:1rem}
+  a.tile{display:block;padding:1rem;border:1px solid var(--rim2);border-radius:16px;background:var(--surface);color:var(--white);text-decoration:none}
+  a.tile:hover{border-color:var(--champagne)}
+  a.tile i{font-size:1.4rem;color:var(--champagne-lt)}a.tile b{display:block;margin:.4rem 0 .15rem}a.tile span{font-size:.8rem;color:var(--slate2)}
+  .badge{display:inline-block;background:var(--champagne);color:#0a1f44;border-radius:99px;font-size:.7rem;font-weight:700;padding:.05rem .45rem;margin-left:.3rem}
+  table{width:100%;border-collapse:collapse;font-size:.88rem}td,th{padding:.45rem .3rem;border-bottom:1px solid var(--rim2);text-align:left}th{color:var(--slate2);font-weight:600;font-size:.75rem}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .btn{display:inline-block;width:auto;margin:0;padding:.55rem .9rem;border-radius:10px;font-size:.85rem;text-decoration:none;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));font-weight:700;border:0;cursor:pointer}
+  .btn.ghost{background:transparent;color:var(--white);border:1px solid var(--rim2)}
+  .row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">

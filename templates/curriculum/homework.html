@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Homework{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Homework <em>diary</em></h1>
+  <p class="fin-sub">Homework you set appears straight away in the student and parent portals.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Set homework</h3></div><div class="panel-b">
+    {% if pairs %}<form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}
+      <div><label>Class and subject</label><select id="pair" required onchange="var v=this.value.split(':');document.getElementById('sub').value=v[0];document.getElementById('cls').value=v[1]">
+        <option value="">Choose…</option>{% for s, c in pairs %}<option value="{{ s.id }}:{{ c.id }}">{{ c.name }} · {{ s.name }}</option>{% endfor %}</select>
+        <input type="hidden" name="subject" id="sub"><input type="hidden" name="school_class" id="cls"></div>
+      <div><label>Title</label><input name="title" required maxlength="160" placeholder="Exercise 4b, questions 1–10"></div>
+      <div><label>Details <span class="hint">(optional)</span></label><textarea name="details" rows="4" placeholder="Page 62 of New General Mathematics. Show your working."></textarea></div>
+      <div class="row2"><div><label>Due</label><input type="date" name="due_on" required value="{{ default_due|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}"></div>
+      <div><label>Worksheet <span class="hint">(PDF/photo)</span></label><input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Set homework</button>
+    </form>{% else %}<p class="hint" style="margin:0">You aren't assigned to teach any subject yet.</p>{% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-check"></i> Recent and upcoming</h3></div>
+    {% if items %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Due</th><th>Homework</th><th>Class</th><th></th></tr></thead><tbody>
+    {% for h in items %}<tr><td>{% if h.due_on < today %}<span class="chip">{{ h.due_on|date:"D j M" }}</span>{% elif h.due_on == today %}<span class="chip amber">today</span>{% else %}<span class="chip gold">{{ h.due_on|date:"D j M" }}</span>{% endif %}</td>
+      <td class="name">{{ h.title }}<div class="hint">{{ h.subject.name }}{% if h.set_by %} · {{ h.set_by.full_name }}{% endif %}{% if h.attachment %} · <a href="{% url 'curriculum:homework_file' h.id %}" target="_blank"><i class="bi bi-paperclip"></i>worksheet</a>{% endif %}</div>{% if h.details %}<div class="hint">{{ h.details|truncatechars:120 }}</div>{% endif %}</td>
+      <td>{{ h.school_class.name }}</td>
+      <td>{% if can_manage or h.set_by_id == request.user.staff.id %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ h.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete" onclick="return confirm('Remove this homework?')"><i class="bi bi-trash"></i></button></form>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-journal"></i><p>No homework in the last two weeks.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

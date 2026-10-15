@@ -1,0 +1,74 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Class register{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .rg-opts{display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end}
+  .rg-opts select,.rg-opts input[type=text],.rg-opts input[type=number]{padding:.55rem .75rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .rg-opts label.l{font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem}
+  .rg-opts .ck{display:flex;gap:.4rem;align-items:center;color:var(--slate2);font-size:.82rem;padding-bottom:.6rem}
+  .sheet{background:#fff;color:#1c1917;border-radius:8px;padding:1.4rem 1.5rem;margin-top:1rem;font-family:'Outfit',system-ui,sans-serif;box-shadow:0 30px 60px -40px rgba(0,0,0,.9)}
+  .sheet *{color:#1c1917}
+  .sheet h2{margin:0;font-size:1.25rem;text-align:center}
+  .sheet .sub{text-align:center;font-size:.78rem;color:#57534e!important;margin:.15rem 0 .9rem}
+  .sheet .meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;font-size:.78rem;margin-bottom:.6rem}
+  .sheet table{width:100%;border-collapse:collapse;font-size:.78rem}
+  .sheet th,.sheet td{border:1px solid #a8a29e!important;padding:.3rem .4rem!important;background:none!important;text-align:left;vertical-align:middle}
+  .sheet th{background:#f5f5f4!important;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em}
+  .sheet td.n{width:28px;text-align:center}
+  .sheet td.ph{width:44px;padding:.15rem!important}
+  .sheet td.ph img{width:38px;height:50px;object-fit:cover;border-radius:3px;display:block}
+  .sheet td.mk{width:34px}
+  .sheet .foot{display:flex;justify-content:space-between;margin-top:1.4rem;font-size:.76rem}
+  .sheet .sig{border-top:1px solid #57534e;padding-top:.25rem;width:200px;text-align:center}
+  @media print{
+    body *{visibility:hidden!important}
+    .sheet,.sheet *{visibility:visible!important}
+    .sheet{position:absolute;left:0;top:0;width:100%;margin:0;box-shadow:none;border-radius:0;padding:0}
+    @page{size:A4;margin:12mm}
+    .sheet tr{page-break-inside:avoid}
+  }
+</style>
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Class <em>registers</em></h1>
+    <p class="fin-sub">Print a list of a class with photos, parent phones and columns to mark.</p>
+  </div>
+  {% if cls %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>{% endif %}
+</div>
+<form method="get" class="panel"><div class="panel-b rg-opts">
+  <div><label class="l">Class</label><select name="class" required onchange="this.form.submit()"><option value="">— choose —</option>{% for c in classes %}<option value="{{ c.id }}"{% if cls and cls.id == c.id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+  <div><label class="l">Heading</label><input type="text" name="title" value="{{ opts.title }}" maxlength="60"></div>
+  <div><label class="l">Blank columns</label><input type="number" name="columns" value="{{ opts.columns }}" min="0" max="15" style="width:90px"></div>
+  <label class="ck"><input type="hidden" name="photos" value="0"><input type="checkbox" name="photos" value="1"{% if opts.photos %} checked{% endif %} onchange="this.previousElementSibling.disabled=this.checked"> Photos</label>
+  <label class="ck"><input type="hidden" name="phones" value="0"><input type="checkbox" name="phones" value="1"{% if opts.phones %} checked{% endif %} onchange="this.previousElementSibling.disabled=this.checked"> Parent phones</label>
+  <button class="fin-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Update</button>
+</div></form>
+
+{% if cls %}
+<div class="sheet">
+  <h2>{{ school.name }}</h2>
+  <div class="sub">{{ opts.title }} — {{ cls.name }}</div>
+  <div class="meta">
+    <span>Form teacher: <b>{{ cls.form_teacher.full_name|default:"________________" }}</b></span>
+    <span>{{ students|length }} student{{ students|length|pluralize }} · {{ boys }} boy{{ boys|pluralize }} · {{ girls }} girl{{ girls|pluralize }}</span>
+    <span>Printed {{ today|date:"j M Y" }}</span>
+  </div>
+  <table>
+    <thead><tr><th>#</th>{% if opts.photos %}<th>Photo</th>{% endif %}<th>Name</th><th>Adm. no.</th><th>Sex</th>{% if opts.phones %}<th>Parent phone</th>{% endif %}{% for i in column_range %}<th></th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for s in students %}
+      <tr><td class="n">{{ forloop.counter }}</td>
+        {% if opts.photos %}<td class="ph">{% if s.passport %}<img src="{{ s.passport.url }}" alt="">{% endif %}</td>{% endif %}
+        <td><b>{{ s.full_name }}</b>{% if s.status == 'Suspended' %} <i>(suspended)</i>{% endif %}</td>
+        <td>{{ s.admission_number }}</td><td>{{ s.gender|slice:":1"|default:"" }}</td>
+        {% if opts.phones %}<td>{{ s.parent_phone|default:"" }}</td>{% endif %}
+        {% for i in column_range %}<td class="mk"></td>{% endfor %}</tr>
+      {% empty %}<tr><td colspan="20" style="text-align:center;padding:1rem!important">No students on the roll in this class.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+  <div class="foot"><span class="sig">Form teacher's signature</span><span class="sig">Date</span></div>
+</div>
+{% endif %}
+{% endblock %}

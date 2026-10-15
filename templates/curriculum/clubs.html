@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Clubs &amp; societies{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Co-curricular</div>
+  <h1 class="fin-title">Clubs &amp; <em>societies</em></h1>
+  <p class="fin-sub">Members and officers, patrons, meetings and attendance. Students and parents see their clubs in the portal.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <div class="panel">{% if clubs %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Club</th><th>Patrons</th><th>Meets</th><th>Members</th><th>Meetings</th><th></th></tr></thead><tbody>
+    {% for c in clubs %}<tr{% if not c.active %} style="opacity:.55"{% endif %}><td class="name">{{ c.name }}{% if not c.active %} <span class="chip">inactive</span>{% endif %}<div class="hint">{{ c.description|truncatechars:60 }}</div></td>
+      <td class="hint">{% for p in c.patrons.all %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+      <td class="hint">{% if c.meeting_day %}{{ c.get_meeting_day_display }}{% if c.meeting_time %} {{ c.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if c.venue %}<br>{{ c.venue }}{% endif %}</td>
+      <td>{{ c.n_members }}{% if c.capacity %}/{{ c.capacity }}{% endif %}</td><td>{{ c.n_meetings }}</td>
+      <td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:club' c.id %}">Open</a></td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-people"></i><p>No clubs yet.</p></div>{% endif %}</div>
+  {% if can_manage %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> New club</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Name</label><input name="name" required maxlength="80" placeholder="Jets Club"></div>
+      <div><label>About</label><input name="description" maxlength="255" placeholder="Junior engineers, technicians and scientists"></div>
+      <div><label>Patrons</label><select name="patrons" multiple size="5">{% for s in staff %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Meets on</label><select name="meeting_day"><option value="">—</option>{% for k, l in days %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <div><label>At</label><input type="time" name="meeting_time"></div></div>
+      <div class="row2"><div><label>Venue</label><input name="venue" maxlength="80" placeholder="Physics lab"></div><div><label>Capacity <span class="hint">(optional)</span></label><input type="number" name="capacity" min="1"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Create club</button>
+    </form></div></div>{% endif %}
+</div>
+{% endblock %}

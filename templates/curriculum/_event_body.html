@@ -1,0 +1,26 @@
+<div class="card">
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap"><span style="width:12px;height:12px;border-radius:4px;background:{{ ev.colour }}"></span><span class="hint">{{ ev.get_kind_display }}{% if ev.audience == 'STAFF' %} · staff only{% endif %}</span></div>
+  <div class="facts">
+    <div><i class="bi bi-calendar3"></i> {{ ev.start_date|date:"l j F Y" }}{% if ev.end_date %} – {{ ev.end_date|date:"l j F" }}{% endif %}</div>
+    {% if ev.start_time %}<div><i class="bi bi-clock"></i> {{ ev.start_time|time:"H:i" }}{% if ev.end_time %} – {{ ev.end_time|time:"H:i" }}{% endif %}</div>{% endif %}
+    {% if ev.venue %}<div><i class="bi bi-geo-alt"></i> {{ ev.venue }}</div>{% endif %}
+  </div>
+  {% if ev.description %}<p style="line-height:1.55">{{ ev.description }}</p>{% endif %}
+</div>
+
+{% if ev.rsvp %}
+<div class="card">
+  <h2><i class="bi bi-envelope-check" style="color:var(--champagne-lt)"></i> Are you coming?</h2>
+  {% if mine %}<p class="hint" style="margin-top:0">Your reply: <b style="color:var(--white)">{{ mine.get_answer_display }}</b>{% if mine.guests %} with {{ mine.guests }} guest{{ mine.guests|pluralize }}{% endif %}.{% if ev.rsvp_open %} You can change it below.{% endif %}</p>{% endif %}
+  {% if summary and summary.places_left is not None %}<p class="hint">{% if summary.places_left %}{{ summary.places_left }} place{{ summary.places_left|pluralize }} left.{% else %}This event is full — you can still say maybe or not coming.{% endif %}</p>{% endif %}
+  {% if ev.rsvp_open %}
+  <form method="post" class="rsvp">{% csrf_token %}
+    <div class="choices">{% for v, l in answers %}<label><input type="radio" name="answer" value="{{ v }}" required {% if mine.answer == v %}checked{% endif %}> {{ l }}</label>{% endfor %}</div>
+    <div class="two"><div><label>Guests coming with you</label><input type="number" name="guests" min="0" max="{{ max_guests }}" value="{{ mine.guests|default:0 }}"></div>
+      <div><label>Note <span class="hint">(optional)</span></label><input name="note" maxlength="255" value="{{ mine.note|default:'' }}" placeholder="e.g. dietary needs"></div></div>
+    <button type="submit">{% if mine %}Update my reply{% else %}Send my reply{% endif %}</button>
+  </form>
+  {% else %}<p class="hint">Replies closed{% if ev.rsvp_deadline %} on {{ ev.rsvp_deadline|date:"j M" }}{% endif %}.</p>{% endif %}
+  {% if ev.rsvp_deadline and ev.rsvp_open %}<p class="hint" style="margin-bottom:0">Please reply by {{ ev.rsvp_deadline|date:"l j M" }}.</p>{% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,20 @@
+{% extends base %}
+{% block title %}Where you are signed in{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Your account</div>
+  <h1 class="fin-title">Where you are <em>signed in</em></h1>
+  <p class="fin-sub">Sign out of any device you do not recognise, then change your password.</p>
+</div>
+<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-danger" name="op" value="others"><i class="bi bi-box-arrow-right"></i> Sign out everywhere else</button></form></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-laptop"></i> Active sessions</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:me' %}">Sign-in &amp; security</a></div>
+<table class="tbl"><thead><tr><th>Device</th><th>IP address</th><th>Signed in</th><th>Last active</th><th></th></tr></thead><tbody>
+{% for s in sessions %}<tr><td class="name">{% if s.session_key == current %}<span class="chip green">This device</span> {% endif %}{{ s.user_agent|default:"Unknown browser"|truncatechars:70 }}</td><td>{{ s.ip|default:"—" }}</td><td>{{ s.created_at|date:"j M Y H:i" }}</td><td>{{ s.last_seen|timesince }} ago</td>
+<td>{% if s.session_key != current %}<form method="post">{% csrf_token %}<input type="hidden" name="op" value="one"><input type="hidden" name="id" value="{{ s.pk }}"><button class="fin-btn fin-btn-sm fin-btn-danger">Sign out</button></form>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="5" class="empty">No sessions recorded.</td></tr>{% endfor %}</tbody></table></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-phone"></i> Devices you have used</h3></div>
+<table class="tbl"><thead><tr><th>Device</th><th>First used</th><th>Last used</th><th>Last IP</th><th></th></tr></thead><tbody>
+{% for d in devices %}<tr><td class="name">{{ d.label }}</td><td>{{ d.first_seen|date:"j M Y" }}</td><td>{{ d.last_seen|date:"j M Y H:i" }}</td><td>{{ d.ip|default:"—" }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="op" value="forget"><input type="hidden" name="id" value="{{ d.pk }}"><button class="fin-btn fin-btn-sm">Forget</button></form></td></tr>
+{% empty %}<tr><td colspan="5" class="empty">No devices yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Class report cards{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% if busy %}<meta http-equiv="refresh" content="6">{% endif %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Class report <em>cards</em></h1>
+  <p class="fin-sub">Every report card in a class as PDFs in one ZIP — built in the background, so you can keep working.</p>
+</div></div>
+{% include "results/_msgs.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-file-earmark-zip"></i> Prepare a class</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Class</label><select name="class" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <div><label>Term</label><select name="term" required>{% for t in terms %}<option value="{{ t.id }}" {% if t.id == active_term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select></div>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="published_only" style="width:auto"> Published results only</label>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-gear"></i> Prepare report cards</button>
+      <p class="hint" style="margin:0">Large classes take a minute or two. The list updates on its own.</p>
+    </form></div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent</h3></div>
+    {% if items %}<table class="tbl"><thead><tr><th>Class</th><th>Term</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for b in items %}<tr><td class="name">{{ b.school_class.name }}<div class="hint">{{ b.created_at|date:"j M H:i" }}{% if b.published_only %} · published only{% endif %}</div></td><td>{{ b.term.name }}</td>
+      <td>{% if b.status == 'DONE' %}<span class="chip green">{{ b.count }} report card{{ b.count|pluralize }}</span>{% elif b.status == 'FAILED' %}<span class="chip red" title="{{ b.error }}">failed</span><div class="hint">{{ b.error|truncatechars:80 }}</div>{% else %}<span class="chip amber"><i class="bi bi-hourglass-split"></i> preparing…</span>{% endif %}</td>
+      <td>{% if b.status == 'DONE' %}<a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'results:bundle_download' b.id %}"><i class="bi bi-download"></i> ZIP</a>{% endif %}</td></tr>{% endfor %}
+    </tbody></table>{% else %}<div class="empty"><i class="bi bi-file-earmark-zip"></i><p>Nothing prepared yet.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

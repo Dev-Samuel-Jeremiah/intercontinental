@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Study plan — {{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<style>.days{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.8rem}.day{border:1px solid var(--rim);border-radius:14px;padding:.85rem 1rem;background:rgba(255,255,255,.025)}.day b{color:var(--champagne-lt)}.day ul{margin:.4rem 0 0;padding-left:1.05rem;font-size:.85rem;line-height:1.55}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ student.class_assigned.name|default:"" }}</div>
+  <h1 class="fin-title">Study plan for <em>{{ student.full_name }}</em></h1>
+  <p class="fin-sub">A revision plan built from the topics they find hardest in practice tests, last term's weaker subjects and the exam timetable.</p>
+</div><form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold"><i class="bi bi-stars"></i> {% if plan %}Make a fresh plan{% else %}Make my plan{% endif %}</button></form></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+  <div>
+  {% if plan %}
+    <div class="panel"><div class="panel-b"><p style="margin:0;line-height:1.6">{{ plan.plan.summary }}</p><p class="hint" style="margin-bottom:0">Made {{ plan.created_at|date:"j M Y" }}</p></div></div>
+    <div class="days">{% for d in plan.plan.days %}<div class="day"><b>{{ d.day }}</b><ul>{% for t in d.tasks %}<li>{{ t }}</li>{% endfor %}</ul></div>{% endfor %}</div>
+  {% else %}<div class="panel"><div class="empty"><i class="bi bi-calendar2-week"></i><p>No plan yet — press the button to make one.</p></div></div>{% endif %}
+  </div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bullseye"></i> Focus</h3></div><div class="panel-b">
+      {% if weak %}<b>Topics to work on</b><ul style="padding-left:1.1rem">{% for w in weak %}<li>{{ w }}</li>{% endfor %}</ul>{% endif %}
+      {% if subjects %}<b>Subjects below 50%</b><ul style="padding-left:1.1rem">{% for s in subjects %}<li>{{ s }}</li>{% endfor %}</ul>{% endif %}
+      {% if exams %}<b>Exams coming up</b><ul style="padding-left:1.1rem">{% for e in exams %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+      {% if not weak and not subjects and not exams %}<p class="hint" style="margin:0">Nothing to focus on yet — practice tests and term results will fill this in.</p>{% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

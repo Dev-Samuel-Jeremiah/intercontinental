@@ -1,0 +1,505 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.ann-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--slate2);
+  max-width: 420px;
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .6rem 1.25rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(244,210,31,.36);
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease .12s both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.icon-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .28rem .8rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.2);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr { border-bottom: 1px solid var(--rim2); }
+
+thead th {
+  padding: .85rem 1.25rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface2);
+}
+thead th:first-child { padding-left: 1.5rem; }
+thead th:last-child  { padding-right: 1.5rem; }
+
+tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .18s ease;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+
+tbody td {
+  padding: 1rem 1.25rem;
+  font-size: .86rem;
+  color: var(--slate2);
+  vertical-align: middle;
+}
+tbody td:first-child { padding-left: 1.5rem; }
+tbody td:last-child  { padding-right: 1.5rem; }
+
+/* ════════════════════════════════════════════
+   TITLE CELL
+════════════════════════════════════════════ */
+.ann-title {
+  font-weight: 600;
+  color: var(--white);
+  font-size: .9rem;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.ann-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .28rem .72rem;
+  border-radius: 999px;
+  font-size: .73rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue);   }
+.badge-purple { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+.badge-teal   { background: var(--teal-dim);   border: 1px solid var(--teal-border);   color: var(--teal);   }
+.badge-amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber);  }
+.badge-green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red);    }
+.badge-ghost  { background: var(--surface3);   border: 1px solid var(--rim2);          color: var(--slate2); }
+
+/* ════════════════════════════════════════════
+   DATE CHIP
+════════════════════════════════════════════ */
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .8rem;
+  color: var(--slate);
+  font-weight: 500;
+}
+.date-chip i { font-size: .72rem; color: var(--champagne); }
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+.empty-icon-box {
+  width: 72px;
+  height: 72px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--slate);
+  margin-bottom: 1.25rem;
+}
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.empty-state p {
+  font-size: .88rem;
+  color: var(--slate2);
+  margin-bottom: 1.5rem;
+  max-width: 300px;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .ann-wrap { padding: 1rem .9rem 2.5rem; }
+  .page-header { align-items: flex-start; flex-direction: column; gap: 1rem; }
+  .page-title { font-size: 1.8rem; }
+
+  /* Card-style mobile rows */
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: .85rem;
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .55rem 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    font-size: .83rem;
+    gap: .5rem;
+  }
+  table td:first-child { padding-left: 0; padding-bottom: .75rem; border-bottom: 1px solid var(--rim2); margin-bottom: .25rem; }
+  table td:last-child  { border-bottom: none; padding-right: 0; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex-shrink: 0;
+  }
+  table td:first-child::before { display: none; }
+  .ann-title { font-size: .86rem; }
+}
+
+@media (max-width: 480px) {
+  .ann-wrap { padding: .75rem .65rem 2rem; }
+  .page-title { font-size: 1.55rem; }
+}
+</style>
+
+<div class="ann-wrap">
+
+  <!-- ══ PAGE HEADER ══════════════════════════════ -->
+  <header class="page-header">
+    <div>
+      <div class="eyebrow">School Communications</div>
+      <h1 class="page-title">School <em>Announcements</em></h1>
+      <p class="page-subtitle">Broadcast notices, updates, and alerts to students, parents, or staff.</p>
+    </div>
+    <a href="{% url 'announcements:create_announcement' %}" class="btn btn-champagne">
+      <i class="bi bi-plus-lg"></i>
+      New Announcement
+    </a>
+  </header>
+
+  <!-- ══ TABLE PANEL ══════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--blue-dim);">
+          <i class="bi bi-megaphone-fill" style="color:var(--blue);"></i>
+        </div>
+        <h3>All Announcements</h3>
+      </div>
+      <span class="count-pill">
+        <i class="bi bi-list-ul"></i>
+        {{ announcements|length }} Record{{ announcements|length|pluralize }}
+      </span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Audience</th>
+            <th>Class</th>
+            <th>Published</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for announcement in announcements %}
+          <tr>
+
+            <td data-label="Title">
+              <div class="ann-title">
+                <span class="ann-dot"></span>
+                {{ announcement.title }}
+              </div>
+            </td>
+
+            <td data-label="Audience">
+              {% with aud=announcement.get_audience_display %}
+              {% if aud == "All" or aud == "Everyone" %}
+                <span class="badge badge-teal"><i class="bi bi-globe2"></i> {{ aud }}</span>
+              {% elif aud == "Students" %}
+                <span class="badge badge-blue"><i class="bi bi-mortarboard-fill"></i> {{ aud }}</span>
+              {% elif aud == "Parents" %}
+                <span class="badge badge-purple"><i class="bi bi-people-fill"></i> {{ aud }}</span>
+              {% elif aud == "Staff" or aud == "Teachers" %}
+                <span class="badge badge-amber"><i class="bi bi-person-badge-fill"></i> {{ aud }}</span>
+              {% else %}
+                <span class="badge badge-ghost"><i class="bi bi-tag-fill"></i> {{ aud }}</span>
+              {% endif %}
+              {% endwith %}
+            </td>
+
+            <td data-label="Class">
+              {% if announcement.school_class %}
+                <span class="badge badge-ghost">
+                  <i class="bi bi-building"></i>
+                  {{ announcement.school_class }}
+                </span>
+              {% else %}
+                <span style="color:var(--slate);font-size:.82rem;">All Classes</span>
+              {% endif %}
+            </td>
+
+            <td data-label="Published">
+              {% if announcement.published %}
+                <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> Yes</span>
+              {% else %}
+                <span class="badge badge-red"><i class="bi bi-x-circle-fill"></i> No</span>
+              {% endif %}
+            </td>
+
+            <td data-label="Created">
+              <span class="date-chip">
+                <i class="bi bi-calendar3"></i>
+                {{ announcement.created_at|date:"M d, Y" }}
+              </span>
+              <a href="{% url 'assistant:translations' announcement.id %}" style="display:inline-flex;gap:.3rem;align-items:center;margin-left:.5rem;font-size:.78rem;color:var(--champagne-lt);text-decoration:none" title="Translate for parents"><i class="bi bi-translate"></i> Translate</a>
+              <a href="{% url 'communications:announcement_reads' announcement.id %}" style="display:inline-flex;gap:.3rem;align-items:center;margin-left:.5rem;font-size:.78rem;color:var(--champagne-lt);text-decoration:none" title="Which families have read it"><i class="bi bi-eye"></i> Who read it</a>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <div class="empty-icon-box">
+                  <i class="bi bi-megaphone"></i>
+                </div>
+                <h3>No Announcements Yet</h3>
+                <p>Create your first announcement to notify students, parents, or staff.</p>
+                <a href="{% url 'announcements:create_announcement' %}" class="btn btn-champagne">
+                  <i class="bi bi-plus-lg"></i> New Announcement
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /panel -->
+
+</div><!-- /ann-wrap -->
+
+{% endblock %}

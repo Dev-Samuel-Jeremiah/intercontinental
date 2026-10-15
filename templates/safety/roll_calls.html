@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Emergency roll call{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Emergency <em>roll call</em></h1>
+  <p class="fin-sub">Start a head count during a drill or an emergency. Every staff member can mark people safe from their phone; everyone sees who is still unaccounted for.</p>
+</div></div>
+{% if open_roll %}
+<div class="panel" style="border-color:var(--red-border);background:var(--red-dim)"><div class="panel-b" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
+  <div><b style="color:var(--white);font-size:1.05rem">{{ open_roll.title }}</b> <span class="chip red">{{ open_roll.get_kind_display }}</span><div class="hint">started {{ open_roll.started_at|time:"H:i" }}{% if open_roll.assembly_point %} · {{ open_roll.assembly_point }}{% endif %}</div></div>
+  <a class="fin-btn fin-btn-gold" href="{% url 'safety:roll_call' open_roll.id %}"><i class="bi bi-broadcast"></i> Open the live roll call</a>
+</div></div>
+{% else %}
+<div class="panel" style="max-width:620px"><div class="panel-h"><h3><i class="bi bi-megaphone"></i> Start a roll call</h3></div><div class="panel-b">
+  <form method="post" class="fin-form">{% csrf_token %}
+    <div><label>What is happening</label><input name="title" value="Fire drill" maxlength="120" required></div>
+    <div><label>Type</label><select name="kind"><option value="DRILL">Drill</option><option value="REAL">Real emergency</option></select></div>
+    <div><label>Assembly point</label><input name="assembly_point" maxlength="120" placeholder="Football field"></div>
+    <button class="fin-btn fin-btn-gold" type="submit" style="padding:.85rem 1.3rem"><i class="bi bi-play-fill"></i> Start roll call</button>
+    <p class="hint">The list includes every student on the roll who is in school today (not marked absent, not already collected) and all staff.</p>
+  </form>
+</div></div>
+{% endif %}
+<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Past roll calls</h3></div>
+  <div style="overflow-x:auto"><table class="tbl"><tbody>{% for r in history %}
+    <tr><td style="white-space:nowrap">{{ r.started_at|date:"j M Y, H:i" }}</td><td><a href="{% url 'safety:roll_call' r.id %}" style="color:var(--white)"><b>{{ r.title }}</b></a> <span class="chip {% if r.kind == 'REAL' %}red{% endif %}">{{ r.get_kind_display }}</span></td>
+      <td class="hint">took {{ r.started_at|timesince:r.ended_at }}</td></tr>
+  {% empty %}<tr><td class="empty"><p class="hint">No roll calls yet.</p></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Handover from {{ h.from_staff.full_name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'teaching:handovers' %}" style="color:inherit">Handover notes</a></div>
+  <h1 class="fin-title">{{ h.get_kind_display }}</h1>
+  <p class="fin-sub">From {{ h.from_staff.full_name }} to {{ h.to_staff.full_name }}{% if h.school_class %} · {{ h.school_class.name }}{% endif %}{% if h.subject %} {{ h.subject.name }}{% endif %}{% if h.start %} · {{ h.start|date:"j M" }}{% if h.end %}–{{ h.end|date:"j M Y" }}{% endif %}{% endif %}</p>
+</div>
+{% if user.staff.pk == h.to_staff_id and not h.acknowledged_at %}<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold" type="submit">I have read this</button></form>{% elif h.acknowledged_at %}<span class="chip green">Read {{ h.acknowledged_at|date:"j M Y" }}</span>{% endif %}</div>
+{% if h.covered %}<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>What has been covered</h3></div><div class="panel-b"><p style="margin:0">{{ h.covered|linebreaksbr }}</p></div></div>{% endif %}
+{% if h.next_steps %}<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>What comes next</h3></div><div class="panel-b"><p style="margin:0">{{ h.next_steps|linebreaksbr }}</p></div></div>{% endif %}
+{% if h.students %}<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>Students to watch</h3></div><div class="panel-b"><p style="margin:0">{{ h.students|linebreaksbr }}</p></div></div>{% endif %}
+{% if h.other %}<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>Anything else</h3></div><div class="panel-b"><p style="margin:0">{{ h.other|linebreaksbr }}</p></div></div>{% endif %}
+{% if h.file %}<a class="fin-btn" href="?file=1" target="_blank"><i class="bi bi-paperclip"></i> Attachment</a>{% endif %}
+{% endblock %}

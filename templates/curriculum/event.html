@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ ev.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .evp .card{border-radius:18px;border:1px solid var(--rim);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));padding:1.2rem;margin-bottom:1rem}
+  .evp .card h2{font-size:1rem;margin:0 0 .8rem;display:flex;gap:.5rem;align-items:center}
+  .evp .facts{display:flex;gap:1.2rem;flex-wrap:wrap;margin:.8rem 0;color:var(--white)}
+  .evp .facts i{color:var(--champagne-lt)}
+  .evp .choices{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
+  .evp .choices label{display:inline-flex;gap:.4rem;align-items:center;padding:.5rem .9rem;border:1px solid var(--rim2);border-radius:99px;cursor:pointer}
+  .evp .choices label:has(input:checked){border-color:var(--champagne-border);color:var(--champagne-lt);background:var(--champagne-dim)}
+  .evp .two{display:grid;grid-template-columns:1fr 2fr;gap:.8rem}
+  .evp label{font-size:.78rem;color:var(--slate2)}
+  .evp input[type=number],.evp input[name=note]{width:100%;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;margin-top:.3rem}
+  .evp button[type=submit]{margin-top:.9rem;padding:.6rem 1.1rem;border-radius:11px;border:0;font:inherit;font-weight:700;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));cursor:pointer}
+  @media(max-width:700px){.evp .two{grid-template-columns:1fr}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'curriculum:calendar' %}" style="color:inherit">School calendar</a></div>
+  <h1 class="fin-title">{{ ev.title }}</h1>
+</div>{% if manager %}<div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="remind" onclick="return confirm('Email a reminder to everyone this event is for{% if ev.rsvp %} (except people not coming){% endif %}?')"><i class="bi bi-send"></i> Send reminder now</button></form>
+  {% if ev.rsvp %}<form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="csv"><i class="bi bi-download"></i> Replies (CSV)</button></form>{% endif %}
+</div>{% endif %}</div>
+<div class="fin-grid">
+  <div class="evp">{% include "curriculum/_event_body.html" %}
+    {% if manager and ev.reminder_days %}<p class="hint">{% if ev.reminded_at %}Reminder sent {{ ev.reminded_at|date:"j M, H:i" }}.{% else %}A reminder goes out {{ ev.reminder_days }} day{{ ev.reminder_days|pluralize }} before.{% endif %}</p>{% endif %}
+  </div>
+  {% if manager and ev.rsvp %}
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Replies</h3><span class="hint">{{ summary.headcount }} coming{% if ev.capacity %} of {{ ev.capacity }} places{% endif %}</span></div>
+    <div class="fin-stats" style="padding:1rem 1rem 0;margin-bottom:.5rem">
+      <div class="fin-stat"><small>Coming</small><b>{{ summary.YES }}</b></div>
+      <div class="fin-stat"><small>Maybe</small><b>{{ summary.MAYBE }}</b></div>
+      <div class="fin-stat"><small>Not coming</small><b>{{ summary.NO }}</b></div>
+    </div>
+    {% if summary.rows %}<table class="tbl"><thead><tr><th>Who</th><th>Reply</th><th>Guests</th><th>Note</th></tr></thead><tbody>
+      {% for r in summary.rows %}<tr><td class="name">{{ r.user.get_full_name|default:r.user.username }}</td><td><span class="chip {% if r.answer == 'YES' %}green{% elif r.answer == 'NO' %}red{% else %}amber{% endif %}">{{ r.get_answer_display }}</span></td><td>{{ r.guests }}</td><td>{{ r.note|default:"—" }}</td></tr>{% endfor %}
+    </tbody></table>{% else %}<div class="empty"><p>No replies yet.</p></div>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

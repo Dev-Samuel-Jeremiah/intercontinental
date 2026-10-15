@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Appraisals{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">People &amp; HR</div>
+  <h1 class="fin-title">Staff <em>appraisals</em></h1>
+  <p class="fin-sub">Each member of staff scores themselves, then their head of department (or an administrator) reviews. Scores run from 1 (poor) to 5 (excellent).</p>
+</div></div>
+{% if admin %}{% include "hr/_nav.html" %}{% endif %}
+
+{% if to_review %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3><i class="bi bi-inbox"></i> Waiting for your review</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>{% for a in to_review %}<tr><td class="name">{{ a.staff.full_name }}</td><td>{{ a.cycle.title }}</td><td><a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'hr:appraisal' a.pk %}">Review</a></td></tr>{% endfor %}</tbody></table>
+</div></div>
+{% endif %}
+
+<div class="fin-grid">
+  {% if admin %}
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-plus-circle"></i> Start an appraisal cycle</h3>
+    <div><label>Title</label><input name="title" required maxlength="120" placeholder="e.g. 2026/2027 First term appraisal"></div>
+    <div class="row2"><div><label>Opens</label><input type="date" name="opens" required></div><div><label>Closes</label><input type="date" name="closes" required></div></div>
+    <div><label>What is appraised, with weights <span class="hint">one per line, "name: weight"</span></label><textarea name="criteria" rows="7">{{ default_criteria }}</textarea></div>
+    <p class="hint">Every teacher, administrator, accountant and librarian gets an appraisal. Reviewers are the heads of department set on each HR record.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Start cycle</button>
+  </form>
+  {% endif %}
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-person"></i> My appraisals</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for a in mine %}<tr><td class="name"><a href="{% url 'hr:appraisal' a.pk %}">{{ a.cycle.title }}</a></td><td>{{ a.get_status_display }}</td><td>{% if a.overall %}<b>{{ a.overall }}</b> / 5{% elif a.status == 'SELF' %}<a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'hr:appraisal' a.pk %}">Do self-review</a>{% endif %}</td></tr>{% empty %}<tr><td class="empty">No appraisals yet.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    {% if admin %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-collection"></i> Cycles</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for c in cycles %}<tr><td class="name"><a href="{% url 'hr:cycle' c.pk %}">{{ c.title }}</a></td><td>{{ c.opens|date:"j M" }} – {{ c.closes|date:"j M Y" }}</td><td>{% if c.open %}<span class="chip green">Open</span>{% else %}<span class="chip">Closed</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">No cycles yet.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

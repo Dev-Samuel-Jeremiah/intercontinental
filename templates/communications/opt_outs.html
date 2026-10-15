@@ -1,0 +1,86 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Opt-Out Management{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.71rem;font-weight:700;}
+.br{background:var(--red-dim);color:var(--red);} .bg{background:var(--green-dim);color:var(--green);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.81rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-r{background:#dc2626;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;}
+.fg label{font-size:.77rem;font-weight:700;color:var(--slate2);}
+.fg select{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Opt-Out Management</h2>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:14px;">Add Opt-Out</div>
+  <form method="POST" style="display:flex;flex-direction:column;gap:12px;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="add">
+    <div class="fg"><label>Student</label>
+      <select name="student_id" required>
+        <option value="">— Select —</option>
+        {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="fg"><label>Channel</label>
+      <select name="channel">
+        <option value="EMAIL">Email</option>
+        <option value="SMS">SMS</option>
+        <option value="ALL">All Channels</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-r" style="justify-content:center;"><i class="bi bi-ban"></i> Add Opt-Out</button>
+  </form>
+</div>
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:10px;color:var(--slate2);">About Opt-Outs</div>
+  <div style="font-size:.82rem;color:var(--slate2);line-height:1.6;">
+    Students on the opt-out list will be <strong>skipped</strong> when campaigns are sent.<br><br>
+    Use this for parents who have requested not to receive emails or SMS messages.<br><br>
+    You can remove an opt-out at any time by clicking Remove on the right.
+  </div>
+</div>
+</div>
+
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:12px;">Current Opt-Outs ({{ opt_outs|length }})</div>
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Parent</th><th>Channel</th><th>Opted Out</th><th>Action</th></tr></thead>
+    <tbody>
+      {% for o in opt_outs %}
+      <tr>
+        <td><strong>{{ o.student.full_name }}</strong></td>
+        <td>{{ o.student.parent_name|default:"—" }}</td>
+        <td><span class="badge br">{{ o.channel }}</span></td>
+        <td style="font-size:.78rem;color:var(--slate2);">{{ o.opted_out_at|date:"d M Y" }}</td>
+        <td>
+          <form method="POST" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="student_id" value="{{ o.student.id }}">
+            <input type="hidden" name="channel" value="{{ o.channel }}">
+            <button type="submit" class="btn btn-g" style="padding:5px 10px;font-size:.75rem;">Remove</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--slate);">No opt-outs recorded.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

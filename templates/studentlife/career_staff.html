@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Careers — {{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Career guidance</div>
+  <h1 class="fin-title">{{ student.full_name }}</h1>
+  <p class="fin-sub">{{ student.class_assigned.name|default:"" }} · subjects: {{ subjects|join:", "|default:"none recorded" }}</p>
+</div><a class="fin-btn" href="{% url 'studentlife:portfolio_of' student.pk %}">Portfolio</a></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    <p><b>Interest areas:</b> {{ clusters|join:", "|default:"quiz not taken" }}</p>
+    {% for c in chosen %}<p><b>{{ c.course.name }}</b> {% if c.ok %}<span class="chip green">Subjects fit</span>{% else %}<span class="chip red">Missing {{ c.missing|join:", " }}{% for g in c.choose %} / one of {{ g|join:"/" }}{% endfor %}</span>{% endif %}</p>{% empty %}<p class="empty">No courses chosen yet.</p>{% endfor %}
+    {% if profile.notes %}<p><b>Student's thoughts:</b> {{ profile.notes|linebreaksbr }}</p>{% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<label>Counselling note (the student sees it)</label><textarea name="note" rows="4" required></textarea><button class="fin-btn fin-btn-gold" type="submit">Add note</button></form>
+    {% for n in notes %}<p><small class="hint">{{ n.staff.full_name }}, {{ n.created_at|date:"j M Y" }}</small><br>{{ n.note|linebreaksbr }}</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Visitor badge{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .badge-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem}
+  .vbadge{width:86mm;min-height:54mm;background:#fff;color:#1c1917;border-radius:8px;overflow:hidden;font-family:'Outfit',system-ui,sans-serif;box-shadow:0 24px 50px -28px rgba(0,0,0,.9)}
+  .vbadge *{color:#1c1917}
+  .vbadge .top{background:#1c1917;padding:6px 10px;display:flex;justify-content:space-between;align-items:center}
+  .vbadge .top b{color:#ffe066!important;font-size:11px;letter-spacing:.04em}
+  .vbadge .top span{color:#fff!important;font-size:18px;font-weight:900;letter-spacing:.2em}
+  .vbadge .mid{display:flex;gap:9px;padding:9px 10px}
+  .vbadge .ph{width:21mm;height:28mm;border-radius:4px;object-fit:cover;background:#e7e5e4;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700}
+  .vbadge .nm{font-size:15px;font-weight:800;line-height:1.15}
+  .vbadge .ln{font-size:10px;margin-top:3px;color:#44403c!important}
+  .vbadge .ft{display:flex;justify-content:space-between;align-items:flex-end;padding:0 10px 8px;font-size:9px}
+  .vbadge .no{font-size:22px;font-weight:900}
+  @media print{body *{visibility:hidden!important}.vbadge,.vbadge *{visibility:visible!important}.vbadge{position:absolute;left:0;top:0;box-shadow:none}}
+</style>
+<div class="badge-wrap">
+  <div class="vbadge">
+    <div class="top"><b>{{ school.name|upper }}</b><span>VISITOR</span></div>
+    <div class="mid">
+      {% if v.photo %}<img class="ph" src="{% url 'safety:visitor_photo' v.id %}" alt="">{% else %}<div class="ph">{{ v.name|slice:":1" }}</div>{% endif %}
+      <div>
+        <div class="nm">{{ v.name }}</div>
+        {% if v.organisation %}<div class="ln">{{ v.organisation }}</div>{% endif %}
+        <div class="ln"><b>Visiting:</b> {% if v.host %}{{ v.host.full_name }}{% else %}{{ v.get_purpose_display }}{% endif %}</div>
+        <div class="ln"><b>In:</b> {{ v.checked_in_at|date:"j M Y, H:i" }}</div>
+        <div class="ln">Valid today only · must be worn at all times</div>
+      </div>
+    </div>
+    <div class="ft"><span>Return this badge when you leave</span><span class="no">#{{ v.badge_number }}</span></div>
+  </div>
+  <div style="display:flex;gap:.6rem"><button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print badge</button><a class="fin-btn" href="{% url 'safety:visitor_desk' %}">Visitor desk</a></div>
+</div>
+{% endblock %}

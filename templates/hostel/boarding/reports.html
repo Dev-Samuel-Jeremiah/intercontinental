@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Boarding reports{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Housemaster <em>reports</em>{% if h %} — {{ h.name }}{% endif %}</h1>
+  <p class="fin-sub">{{ term }} {{ term.session }}. A short boarding report for each child; published reports appear on the parent portal.</p>
+</div>{% include "hostel/boarding/_hostel_pick.html" %}</div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+{% for row in rows %}<tr><td class="name">{{ row.b.student.full_name }}<br><small class="hint">Room {{ row.b.bed.room.room_number }}</small></td><td>{% if row.r %}{% if row.r.published %}<span class="chip green">Published</span>{% else %}<span class="chip">Draft</span>{% endif %}{% else %}<span class="chip">Not written</span>{% endif %}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'hostel:boarding_report' row.b.pk %}">{% if row.r %}Edit{% else %}Write{% endif %}</a></td></tr>{% empty %}<tr><td class="empty">No boarders.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

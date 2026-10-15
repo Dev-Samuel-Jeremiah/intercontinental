@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Patrol — {{ p.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security patrol</div>
+  <h1 class="fin-title"><em>{{ p.name }}</em></h1>
+  <p class="fin-sub">{% if recent %}Last check-in {{ recent.0.at|date:"D H:i" }} by {{ recent.0.guard_name }}.{% else %}No check-ins yet.{% endif %}</p>
+</div></div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:520px">{% csrf_token %}
+  <button class="fin-btn fin-btn-gold" type="submit" name="all_clear" value="1" style="width:100%;padding:1rem;font-size:1.1rem"><i class="bi bi-check-circle"></i> All clear</button>
+  <div style="margin-top:1rem"><label>Problem? Describe it</label><input name="note" maxlength="255" placeholder="e.g. Gate lock broken, stranger at fence"></div>
+  <button class="fin-btn" type="submit" name="all_clear" value="0" style="width:100%;margin-top:.4rem;border-color:var(--red-border)"><i class="bi bi-exclamation-triangle"></i> Report a problem</button>
+</form>
+{% endblock %}

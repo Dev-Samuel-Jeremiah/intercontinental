@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Available CBT Exams{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Available Exams</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Subject</th>
+                <th>Duration</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for exam in exams %}
+            <tr>
+                <td>{{ exam.title }}</td>
+                <td>{{ exam.subject.name }}</td>
+                <td>{{ exam.duration_minutes }} mins</td>
+                <td>{{ exam.start_time }}</td>
+                <td>{{ exam.end_time }}</td>
+                <td>
+                    <a href="{% url 'cbt_take_exam' exam.id %}" class="btn btn-primary btn-sm">Take Exam</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No exams available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Grade Assignment{% endblock %}
+{% block extra_css %}
+{% endblock %}
+{% block content %}
+    <style>
+/* ---------- Container ---------- */
+.grading-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px 25px;
+    background:rgba(255,255,255,.03);
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+    font-family: 'Inter', Arial, sans-serif;
+    perspective: 1000px;
+    overflow: visible;
+    transition: transform 0.3s ease;
+}
+
+.grading-container:hover {
+    transform: translateY(-3px) scale(1.01);
+}
+
+/* ---------- Headings ---------- */
+.grading-container h1 {
+    color:var(--blue);
+    font-size: 2em;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.grading-container h3 {
+    color:var(--blue);
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+/* ---------- Answers ---------- */
+.answer-box {
+    background:rgba(255,255,255,.045);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.answer-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+    background:#f0f4ff;
+}
+
+/* ---------- File Button ---------- */
+.file-btn {
+    display: inline-block;
+    padding: 10px 18px;
+    margin-bottom: 20px;
+    background:linear-gradient(135deg, #2563eb, #1d4ed8);
+    color:#fff;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.file-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    background:linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+/* ---------- Form Elements ---------- */
+.form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border:1px solid var(--rim2);
+    margin-bottom: 15px;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    outline:none;
+    border-color:#2563eb;
+    box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    border:none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-success {
+    background:linear-gradient(135deg, #16a34a, #15803d);
+    color:#fff;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.btn-secondary {
+    background:linear-gradient(135deg, #6b7280, #4b5563);
+    color:#fff;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .grading-container {
+        padding: 20px 15px;
+    }
+}
+</style>
+
+
+<div class="grading-container">
+    <h1>Grading {{ submission.student.get_full_name }} - {{ assignment.title }}</h1>
+
+    <h3>Answers:</h3>
+    {% for ans in answers %}
+    <div class="answer-box">
+        <strong>Q{{ forloop.counter }}:</strong> {{ ans.question.question_text }}<br>
+        <strong>Answer:</strong> {{ ans.answer_text }}
+    </div>
+    {% endfor %}
+
+    <h3>File Submission:</h3>
+    {% if submission.file %}
+    <a href="{{ submission.file.url }}" target="_blank" class="file-btn">Download Submitted File</a>
+    {% else %}
+    <p style="color:var(--slate2);">No file submitted.</p>
+    {% endif %}
+
+    <hr>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if criteria %}
+        <h3>Rubric</h3>
+        {% for c in criteria %}<div class="mb-3" style="border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:.7rem .9rem">
+            <b>{{ c.name }}</b>{% if c.description %} <span style="opacity:.6;font-size:.85rem">— {{ c.description }}</span>{% endif %}
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.4rem">{% for l in c.levels.all %}
+              <label style="display:flex;gap:.35rem;align-items:center;padding:.35rem .6rem;border-radius:9px;border:1px solid rgba(255,255,255,.12);cursor:pointer">
+                <input type="radio" name="rc_{{ c.id }}" value="{{ l.id }}" {% if c.chosen == l.id %}checked{% endif %} required> {{ l.label }} <span style="opacity:.6">({{ l.points }})</span></label>{% endfor %}</div>
+        </div>{% endfor %}
+        <p style="opacity:.65;font-size:.85rem">The mark out of 10 is worked out from the levels you choose.</p>
+        {% else %}
+        <div class="mb-3">
+            <label for="grade">Grade</label>
+            <select name="grade" id="grade" class="form-control">
+                {% for g in grade_options %}
+                    <option value="{{ g }}" {% if submission.grade|stringformat:"s" == g|stringformat:"s" %}selected{% endif %}>
+                        {{ g }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="feedback">Feedback</label>
+            <textarea name="feedback" id="feedback" rows="4" class="form-control">{{ submission.feedback }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Voice feedback <span style="opacity:.6">(optional)</span></label>
+            {% if submission.feedback_audio %}<audio controls src="{% url 'classroom:feedback_audio' submission.id %}" style="display:block;margin:.3rem 0"></audio>{% endif %}
+            <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+              <button type="button" class="btn btn-secondary" id="recBtn"><i class="bi bi-mic"></i> Record</button>
+              <span id="recState" style="opacity:.7;font-size:.85rem"></span>
+              <input type="file" name="feedback_audio" id="audioFile" accept="audio/*" style="font-size:.8rem">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">Save Grade</button>
+        <a href="{% url 'classroom:grade_assignment' assignment.id %}" class="btn btn-secondary">Back</a>
+    </form>
+</div>
+<script>
+(function(){
+  var btn=document.getElementById('recBtn'),state=document.getElementById('recState'),file=document.getElementById('audioFile'),rec=null,chunks=[];
+  if(!btn)return;
+  if(!navigator.mediaDevices||!window.MediaRecorder){btn.style.display='none';return;}
+  btn.addEventListener('click',async function(){
+    if(rec&&rec.state==='recording'){rec.stop();return;}
+    try{var stream=await navigator.mediaDevices.getUserMedia({audio:true});}catch(e){state.textContent='Microphone not available — upload a file instead.';return;}
+    chunks=[];rec=new MediaRecorder(stream);rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=function(){stream.getTracks().forEach(t=>t.stop());var blob=new Blob(chunks,{type:'audio/webm'});
+      var dt=new DataTransfer();dt.items.add(new File([blob],'feedback.webm',{type:'audio/webm'}));file.files=dt.files;
+      state.textContent='Recorded '+Math.round(blob.size/1024)+' KB — save to attach it.';btn.innerHTML='<i class="bi bi-mic"></i> Record again';};
+    rec.start();state.textContent='Recording… click again to stop.';btn.innerHTML='<i class="bi bi-stop-circle"></i> Stop';
+  });
+})();
+</script>
+{% endblock %}

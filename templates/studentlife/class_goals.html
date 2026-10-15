@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Class goals{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student experience</div>
+  <h1 class="fin-title">My class's <em>goals</em></h1>
+  <p class="fin-sub">Goals your students set themselves. A word of encouragement goes a long way.</p>
+</div></div>
+{% include "studentlife/_staffnav.html" %}
+<div class="panel"><div class="panel-b"><table class="tbl"><thead><tr><th>Student</th><th>Goal</th><th>Progress</th><th>Comment</th></tr></thead><tbody>
+{% for g in items %}<tr><td class="name">{{ g.student.full_name }}<br><small class="hint">{{ g.student.class_assigned.name|default:"" }}</small></td><td>{{ g.title }}<br><small class="hint">{{ g.get_status_display }}{% if g.target_date %} · by {{ g.target_date|date:"j M" }}{% endif %}</small></td><td style="min-width:120px"><div class="bar"><i style="width:{{ g.progress }}%"></i></div><small>{{ g.progress }}%</small></td>
+  <td><form method="post" style="display:flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ g.pk }}"><input name="comment" value="{{ g.teacher_comment }}" maxlength="500"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td></tr>{% empty %}<tr><td colspan="4" class="empty">No goals yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,686 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .sp-hero{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:1.4rem;align-items:center;padding:1.5rem 1.6rem;border-radius:20px;border:1px solid var(--rim2);background:
+    radial-gradient(120% 140% at 0% 0%,rgba(244,210,31,.14),transparent 55%),linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,0));overflow:hidden;animation:spRise .5s ease both}
+  @keyframes spRise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .sp-photo{width:104px;height:124px;border-radius:16px;object-fit:cover;border:2px solid rgba(244,210,31,.45);box-shadow:0 18px 36px -20px rgba(0,0,0,.9)}
+  .sp-initials{width:104px;height:124px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:2.6rem;font-weight:700;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .sp-photo-wrap{position:relative}
+  .sp-photo-btn{position:absolute;right:-8px;bottom:-8px;width:34px;height:34px;border-radius:50%;border:2px solid var(--surface,#111);background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -8px rgba(0,0,0,.8);transition:transform .15s}
+  .sp-photo-btn:hover{transform:scale(1.08)}
+  .crop-modal{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(2,8,22,.78);backdrop-filter:blur(4px);padding:16px}
+  .crop-modal.on{display:flex}
+  .crop-box{width:min(560px,100%);max-height:92vh;overflow:auto;border-radius:18px;border:1px solid var(--rim2);background:var(--surface2,#10254a);padding:1.1rem}
+  .crop-stage{width:100%;height:min(60vh,440px);background:#000;border-radius:12px;overflow:hidden;margin:.8rem 0}
+  .crop-stage img{display:block;max-width:100%}
+  .sp-name{font-family:'Cormorant Garamond',serif;font-size:2.1rem;line-height:1.05;margin:0;color:var(--white)}
+  .sp-meta{display:flex;flex-wrap:wrap;gap:.45rem .9rem;margin-top:.55rem;color:var(--slate2);font-size:.84rem}
+  .sp-meta span{display:inline-flex;gap:.35rem;align-items:center}
+  .sp-meta i{color:var(--champagne-lt)}
+  .sp-status{display:inline-flex;gap:.4rem;align-items:center;padding:.32rem .75rem;border-radius:999px;font-size:.76rem;font-weight:700;letter-spacing:.02em;margin-top:.8rem}
+  .st-Active{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+  .st-Suspended{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+  .st-Graduated{background:rgba(244,210,31,.14);color:var(--champagne-lt);border:1px solid rgba(244,210,31,.4)}
+  .st-Withdrawn,.st-Deceased{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
+  .sp-actions{display:flex;flex-direction:column;gap:.5rem;align-items:stretch}
+  @media(max-width:860px){.sp-hero{grid-template-columns:auto 1fr}.sp-actions{grid-column:1/-1;flex-direction:row;flex-wrap:wrap}}
+  @media(max-width:520px){.sp-hero{grid-template-columns:1fr;text-align:left}.sp-photo,.sp-initials{width:88px;height:104px}}
+  .sp-tabs{display:flex;gap:.3rem;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;margin:1.3rem 0 1rem;border-bottom:1px solid var(--rim2)}
+  .sp-tab{white-space:nowrap;flex:none}
+  .sp-tab{padding:.7rem 1rem;color:var(--slate2);font-size:.86rem;font-weight:600;cursor:pointer;border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;display:inline-flex;gap:.4rem;align-items:center;font-family:inherit}
+  .sp-tab:hover{color:var(--white)}
+  .sp-tab.on{color:var(--champagne-lt);border-bottom-color:var(--champagne)}
+  .sp-pane{display:none;animation:spRise .35s ease both}
+  .sp-pane.on{display:block}
+  .sp-kv{display:grid;grid-template-columns:150px 1fr;gap:.55rem 1rem;font-size:.86rem}
+  .sp-kv dt{color:var(--slate2)}
+  .sp-kv dd{margin:0;color:var(--white)}
+  .tl{position:relative;margin:0;padding:0 0 0 1.6rem;list-style:none}
+  .tl:before{content:'';position:absolute;left:.62rem;top:.3rem;bottom:.3rem;width:2px;background:linear-gradient(var(--rim2),transparent)}
+  .tl li{position:relative;padding:.15rem 0 1.15rem}
+  .tl .dot{position:absolute;left:-1.6rem;top:.05rem;width:1.3rem;height:1.3rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.68rem;background:var(--surface2);border:1px solid var(--rim2)}
+  .tl .gold .dot,.tl .dot.gold{color:var(--champagne-lt);border-color:rgba(244,210,31,.5)}
+  .tl .dot.green{color:var(--green);border-color:var(--green-border)}
+  .tl .dot.amber{color:var(--amber);border-color:var(--amber-border)}
+  .tl .dot.red{color:var(--red);border-color:var(--red-border)}
+  .tl .dot.blue{color:#8fb4ff;border-color:rgba(143,180,255,.35)}
+  .tl b{font-size:.88rem;color:var(--white);font-weight:600}
+  .tl .when{font-size:.72rem;color:var(--slate);margin-left:.4rem}
+  .tl .d{font-size:.78rem;color:var(--slate2);margin-top:.15rem}
+  .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:.45rem}
+  .bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--champagne),var(--champagne-lt))}
+  .sp-form{display:grid;gap:.7rem}
+  .sp-form label{font-size:.74rem;color:var(--slate2);display:block;margin-bottom:.25rem;font-weight:600}
+  .sp-form input,.sp-form select{width:100%;padding:.6rem .75rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.86rem}
+  .sp-form select option{background:var(--surface2)}
+  .sib{display:flex;gap:.6rem;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--rim);text-decoration:none;color:var(--white)}
+  .sib:hover b{color:var(--champagne-lt)}
+  .sib img,.sib .ini{width:34px;height:34px;border-radius:10px;object-fit:cover;flex:none}
+  .gd{padding:.8rem 0;border-bottom:1px solid var(--rim)}
+  .gd:last-child{border-bottom:0}
+  .gd-top{display:flex;justify-content:space-between;gap:.6rem;align-items:flex-start}
+  .gd b{color:var(--white);font-size:.9rem}
+  .gd-tags{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.35rem}
+  .gd-tags span{font-size:.68rem;padding:.12rem .5rem;border-radius:999px;border:1px solid var(--rim2);color:var(--slate2)}
+  details.sp-more>summary{cursor:pointer;list-style:none;color:var(--champagne-lt);font-size:.8rem;font-weight:600;margin-top:.6rem}
+  details.sp-more>summary::-webkit-details-marker{display:none}
+  .sp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+  @media(max-width:520px){.sp-grid2{grid-template-columns:1fr}}
+  .sp-check{display:flex;gap:.45rem;align-items:center;font-size:.8rem;color:var(--slate2)}
+  .sp-check input{width:auto!important}
+  .doc{display:flex;gap:.8rem;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--rim)}
+  .doc i.ic{font-size:1.4rem;color:var(--champagne-lt);width:28px;text-align:center}
+  .sib .ini{display:flex;align-items:center;justify-content:center;background:rgba(244,210,31,.14);color:var(--champagne-lt);font-weight:700;font-size:.78rem}
+</style>
+
+<div class="sp-hero">
+  <div class="sp-photo-wrap">
+  {% if student.passport %}
+    <img class="sp-photo" id="sp-photo" src="{{ student.passport.url }}" alt="{{ student.full_name }}">
+  {% else %}
+    <div class="sp-initials" id="sp-photo">{{ student.full_name|slice:":1"|upper }}</div>
+  {% endif %}
+  {% if can_manage %}<button type="button" class="sp-photo-btn" id="sp-photo-btn" title="Change photo"><i class="bi bi-camera"></i></button>{% endif %}
+  </div>
+  <div>
+    <div class="fin-eyebrow">Student profile</div>
+    <h1 class="sp-name">{{ student.full_name }}</h1>
+    <div class="sp-meta">
+      <span><i class="bi bi-hash"></i>{{ student.admission_number }}</span>
+      {% if student.class_assigned %}<span><i class="bi bi-easel2"></i>{{ student.class_assigned.name }}</span>{% endif %}
+      {% if student.house %}<span><i class="bi bi-flag-fill" style="color:{{ student.house.colour }}"></i>{{ student.house.name }}</span>{% endif %}
+      {% if student.gender %}<span><i class="bi bi-person"></i>{{ student.gender }}</span>{% endif %}
+      {% if student.age is not None %}<span><i class="bi bi-cake2"></i>{{ student.age }} years</span>{% endif %}
+      <span><i class="bi bi-calendar-check"></i>Joined {{ student.created_at|date:"M Y" }}</span>
+    </div>
+    <span class="sp-status st-{{ student.status }}">
+      {% if student.status == 'Active' %}<i class="bi bi-check-circle-fill"></i>{% elif student.status == 'Suspended' %}<i class="bi bi-pause-circle-fill"></i>{% elif student.status == 'Graduated' %}<i class="bi bi-mortarboard-fill"></i>{% else %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+      {{ student.status }}{% if student.status_changed_on and student.status != 'Active' %} · since {{ student.status_changed_on|date:"j M Y" }}{% endif %}
+    </span>
+    {% if student.status_reason and student.status != 'Active' %}<div class="hint" style="margin-top:.4rem">{{ student.status_reason }}</div>{% endif %}
+    {% for r in roles %}{% if r.is_current %}<span class="sp-status" style="background:rgba(244,210,31,.12);color:var(--champagne-lt);border:1px solid rgba(244,210,31,.35);margin-left:.3rem"><i class="bi bi-star-fill"></i> {{ r.title }}</span>{% endif %}{% endfor %}
+    {% if support.adjustments %}<div class="hint" style="margin-top:.45rem;color:var(--amber)"><i class="bi bi-heart-pulse"></i> {{ support.adjustments|join:" · " }}</div>{% endif %}
+    {% if can_manage and pending_corrections %}<div style="margin-top:.45rem"><a href="{% url 'users:change_requests' %}" class="chip amber" style="text-decoration:none">{{ pending_corrections }} correction{{ pending_corrections|pluralize }} from the parent waiting</a></div>{% endif %}
+  </div>
+  <div class="sp-actions">
+    {% if can_manage %}<a class="fin-btn fin-btn-gold" href="{% url 'users:edit_student' student.id %}"><i class="bi bi-pencil"></i> Edit details</a>{% endif %}
+    {% if session and term and student.class_assigned %}<a class="fin-btn" href="{% url 'results:term_results' %}?class={{ student.class_assigned.id }}&student={{ student.id }}&term={{ term.id }}&session={{ session.id }}"><i class="bi bi-journal-text"></i> This term's result</a>{% endif %}
+    <a class="fin-btn" href="{% url 'users:all_students' %}"><i class="bi bi-arrow-left"></i> All students</a>
+  </div>
+</div>
+
+<div class="fin-stats" style="margin-top:1rem">
+  <div class="fin-stat"><small>Attendance{% if attendance.term %} this term{% endif %}</small>
+    {% with a=attendance.term|default:attendance.overall %}
+    <b>{% if a.rate is not None %}{{ a.rate }}%{% else %}—{% endif %}</b>
+    <span class="hint">{% if a.days %}{{ a.present }} of {{ a.days }} days{% else %}no register taken yet{% endif %}</span>
+    {% endwith %}
+  </div>
+  <div class="fin-stat"><small>Latest average</small>
+    {% with r=results.0 %}<b>{% if r %}{{ r.average }}{% else %}—{% endif %}</b><span class="hint">{% if r %}{{ r.term.name }}, {{ r.session }}{% else %}no results yet{% endif %}</span>{% endwith %}
+  </div>
+  {% if fees %}
+  <div class="fin-stat"><small>Fees this term</small>
+    {% if fees.billing and fees.billing.amount_due %}<b style="color:{% if fees.billing.balance %}var(--amber){% else %}var(--green){% endif %}">{% if fees.billing.balance %}₦{{ fees.billing.balance|floatformat:0|intcomma }} owing{% else %}Paid{% endif %}</b>
+    <span class="hint">₦{{ fees.billing.paid|floatformat:0|intcomma }} of ₦{{ fees.billing.amount_due|floatformat:0|intcomma }}</span>
+    {% elif fees.billing %}<b>—</b><span class="hint">no fee set for this class</span>
+    {% else %}<b>—</b><span class="hint">no bill this term</span>{% endif %}
+  </div>
+  <div class="fin-stat"><small>Family wallet</small><b style="color:var(--champagne-lt)">{% if fees.wallet %}₦{{ fees.wallet.balance|floatformat:0|intcomma }}{% else %}—{% endif %}</b>
+    <span class="hint">{% if fees.shared_wallet %}shared with siblings{% elif fees.wallet %}&nbsp;{% else %}not opened yet{% endif %}</span></div>
+  {% else %}
+  <div class="fin-stat"><small>Siblings at school</small><b>{{ siblings|length }}</b></div>
+  {% endif %}
+</div>
+
+<div class="sp-tabs" role="tablist">
+  <button class="sp-tab on" data-tab="overview"><i class="bi bi-person-lines-fill"></i> Overview</button>
+  <button class="sp-tab" data-tab="timeline"><i class="bi bi-clock-history"></i> Timeline <span class="hint">({{ timeline|length }})</span></button>
+  <button class="sp-tab" data-tab="details"><i class="bi bi-card-list"></i> More details</button>
+  <button class="sp-tab" data-tab="awards"><i class="bi bi-award"></i> Awards &amp; roles <span class="hint">({{ awards|length }})</span></button>
+  <button class="sp-tab" data-tab="support"><i class="bi bi-heart-pulse"></i> Support{% if support.adjustments %} <span class="chip amber" style="padding:.05rem .4rem">{{ support.adjustments|length }}</span>{% endif %}</button>
+  <button class="sp-tab" data-tab="results"><i class="bi bi-journal-check"></i> Results</button>
+  <button class="sp-tab" data-tab="attendance"><i class="bi bi-calendar2-week"></i> Attendance</button>
+  {% if fees %}<button class="sp-tab" data-tab="fees"><i class="bi bi-cash-coin"></i> Fees</button>{% endif %}
+  {% if can_manage %}<button class="sp-tab" data-tab="documents"><i class="bi bi-folder2-open"></i> Documents <span class="hint">({{ documents|length }})</span></button>
+  <button class="sp-tab" data-tab="status"><i class="bi bi-toggles"></i> Status</button>
+  <button class="sp-tab" data-tab="history"><i class="bi bi-pencil-square"></i> Change history</button>{% endif %}
+</div>
+
+<!-- Overview -->
+<div class="sp-pane on" id="pane-overview">
+  <div class="fin-grid">
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-person-badge"></i> Details</h3></div>
+      <div class="panel-b">
+        <dl class="sp-kv">
+          <dt>Full name</dt><dd>{{ student.full_name }}</dd>
+          <dt>Admission no.</dt><dd>{{ student.admission_number }}</dd>
+          <dt>Date of birth</dt><dd>{% if student.date_of_birth %}{{ student.date_of_birth|date:"j F Y" }}{% else %}—{% endif %}</dd>
+          <dt>Gender</dt><dd>{{ student.gender|default:"—" }}</dd>
+          <dt>Class</dt><dd>{{ student.class_assigned.name|default:"—" }}{% if student.class_assigned.form_teacher %}<span class="hint"> · form teacher {{ student.class_assigned.form_teacher.full_name }}</span>{% endif %}</dd>
+          <dt>House</dt><dd>{% if student.house %}<span style="color:{{ student.house.colour }}">●</span> {{ student.house.name }}{% else %}—{% endif %}</dd>
+          <dt>Term</dt><dd>{{ student.current_term }}{% if student.current_session %} · {{ student.current_session }}{% endif %}</dd>
+          <dt>Address</dt><dd>{{ student.address|default:"—"|linebreaksbr }}</dd>
+          {% if student.left_on %}<dt>Left on</dt><dd>{{ student.left_on|date:"j F Y" }}{% if student.leaving_class %} from {{ student.leaving_class }}{% endif %}</dd>{% endif %}
+          {% if student.destination %}<dt>Went on to</dt><dd>{{ student.destination }}</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-h"><h3><i class="bi bi-people"></i> Parents &amp; guardians</h3><span class="hint">{{ guardians|length|add:1 }}</span></div>
+        <div class="panel-b" style="padding-top:.4rem">
+          <div class="gd">
+            <div class="gd-top"><div><b>{{ student.parent_name|default:"Main contact" }}</b><div class="hint">Main contact · used for the parent login and sibling matching</div></div></div>
+            <div class="hint" style="margin-top:.35rem">
+              {% if student.parent_phone %}<a href="tel:{{ student.parent_phone }}" style="color:var(--champagne-lt)">{{ student.parent_phone }}</a>{% endif %}
+              {% if student.parent_email %}{% if student.parent_phone %} · {% endif %}<a href="mailto:{{ student.parent_email }}" style="color:var(--champagne-lt)">{{ student.parent_email }}</a>{% endif %}
+              {% if not student.parent_phone and not student.parent_email %}No phone or email recorded{% endif %}
+            </div>
+            <div class="gd-tags"><span>all messages</span><span>fee reminders</span></div>
+          </div>
+          {% for g in guardians %}
+          <div class="gd">
+            <div class="gd-top">
+              <div style="display:flex;gap:.6rem;align-items:center">{% if g.photo %}<img src="{{ g.photo.url }}" alt="" style="width:40px;height:48px;object-fit:cover;border-radius:8px">{% endif %}<div><b>{{ g.full_name }}</b> <span class="hint">· {{ g.get_relationship_display }}</span>{% if g.occupation %}<div class="hint">{{ g.occupation }}</div>{% endif %}</div></div>
+              {% if can_manage %}
+              <form method="post" action="{% url 'users:student_guardians' student.id %}" onsubmit="return confirm('Remove {{ g.full_name|escapejs }}?')">{% csrf_token %}
+                <input type="hidden" name="action" value="delete"><input type="hidden" name="guardian_id" value="{{ g.id }}">
+                <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit" title="Remove"><i class="bi bi-x"></i></button>
+              </form>{% endif %}
+            </div>
+            <div class="hint" style="margin-top:.35rem">
+              {% if g.phone %}<a href="tel:{{ g.phone }}" style="color:var(--champagne-lt)">{{ g.phone }}</a>{% endif %}
+              {% if g.email %}{% if g.phone %} · {% endif %}<a href="mailto:{{ g.email }}" style="color:var(--champagne-lt)">{{ g.email }}</a>{% endif %}
+            </div>
+            <div class="gd-tags">
+              <span>{{ g.get_contact_by_display }}</span>
+              {% if g.gets_fee_messages %}<span>fee reminders</span>{% endif %}
+              {% if g.can_pick_up %}<span style="color:var(--green);border-color:var(--green-border)">may collect child</span>{% else %}<span style="color:var(--red);border-color:var(--red-border)">may NOT collect child</span>{% endif %}
+              {% if g.emergency_contact %}<span style="color:var(--amber);border-color:var(--amber-border)">emergency contact</span>{% endif %}
+            </div>
+            {% if g.note %}<div class="hint" style="margin-top:.3rem">{{ g.note }}</div>{% endif %}
+            {% if can_manage %}
+            <details class="sp-more"><summary><i class="bi bi-pencil"></i> Edit</summary>
+              <form method="post" enctype="multipart/form-data" action="{% url 'users:student_guardians' student.id %}" class="sp-form" style="margin-top:.6rem">{% csrf_token %}
+                <input type="hidden" name="action" value="edit"><input type="hidden" name="guardian_id" value="{{ g.id }}">
+                {% include "students/_guardian_fields.html" with g=g %}
+                <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Save</button>
+              </form>
+            </details>{% endif %}
+          </div>
+          {% endfor %}
+          {% if can_manage %}
+          <details class="sp-more"{% if not guardians %} open{% endif %}><summary><i class="bi bi-person-plus"></i> Add a parent or guardian</summary>
+            <form method="post" enctype="multipart/form-data" action="{% url 'users:student_guardians' student.id %}" class="sp-form" style="margin-top:.6rem">{% csrf_token %}
+              <input type="hidden" name="action" value="add">
+              {% include "students/_guardian_fields.html" %}
+              <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Add</button>
+            </form>
+          </details>
+          <p class="hint" style="margin-top:.6rem">To change the main contact, use <a href="{% url 'users:edit_student' student.id %}" style="color:var(--champagne-lt)">Edit details</a>.</p>
+          {% endif %}
+        </div>
+      </div>
+      <div class="panel" style="margin-top:1rem">
+        <div class="panel-h"><h3><i class="bi bi-diagram-3"></i> Siblings</h3></div>
+        <div class="panel-b" style="padding-top:.3rem">
+          {% for s in siblings %}
+            <a class="sib" href="{% url 'users:student_profile' s.id %}">
+              {% if s.passport %}<img src="{{ s.passport.url }}" alt="">{% else %}<span class="ini">{{ s.full_name|slice:":1"|upper }}</span>{% endif %}
+              <span><b>{{ s.full_name }}</b><br><span class="hint">{{ s.class_assigned.name|default:"no class" }} · {{ s.status }}</span></span>
+            </a>
+          {% empty %}<p class="hint">No siblings recorded — siblings are matched by the parent's email.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline -->
+<div class="sp-pane" id="pane-timeline">
+  <div class="panel"><div class="panel-b">
+    <ul class="tl">
+      {% for e in timeline %}
+      <li><span class="dot {{ e.tone }}"><i class="bi {{ e.icon }}"></i></span>
+        <b>{% if e.url %}<a href="{{ e.url }}" style="color:inherit">{{ e.title }}</a>{% else %}{{ e.title }}{% endif %}</b><span class="when">{{ e.when|date:"j M Y" }}</span>
+        {% if e.detail %}<div class="d">{{ e.detail }}</div>{% endif %}
+      </li>
+      {% empty %}<li class="hint">Nothing recorded yet.</li>{% endfor %}
+    </ul>
+  </div></div>
+</div>
+
+<!-- More details -->
+<div class="sp-pane" id="pane-details">
+  <div style="max-width:760px">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-card-list"></i> More details</h3>
+      {% if can_manage %}<a class="fin-btn fin-btn-sm" href="{% url 'users:student_fields' %}"><i class="bi bi-sliders"></i> Set up fields</a>{% endif %}</div>
+      <div class="panel-b">
+      {% if can_manage %}
+        <form method="post" action="{% url 'users:student_details' student.id %}" class="sp-form">{% csrf_token %}
+          <div><label>NIN <span class="hint">(11 digits, optional)</span></label>
+            <input name="nin" value="{{ student.nin }}" inputmode="numeric" maxlength="13" placeholder="National Identification Number" autocomplete="off"></div>
+          {% for f, value in answers %}
+          <div><label>{{ f.label }}{% if f.required %} *{% endif %}{% if f.sensitive %} <i class="bi bi-lock-fill" title="Only administrators can see this" style="color:var(--amber)"></i>{% endif %}</label>
+            {% if f.field_type == 'CHOICE' %}
+              <select name="field_{{ f.id }}"{% if f.required %} required{% endif %}><option value="">—</option>{% for o in f.options %}<option{% if o == value %} selected{% endif %}>{{ o }}</option>{% endfor %}</select>
+            {% elif f.field_type == 'YES_NO' %}
+              <select name="field_{{ f.id }}"{% if f.required %} required{% endif %}><option value="">—</option><option{% if value == 'Yes' %} selected{% endif %}>Yes</option><option{% if value == 'No' %} selected{% endif %}>No</option></select>
+            {% elif f.field_type == 'DATE' %}<input type="date" name="field_{{ f.id }}" value="{{ value }}"{% if f.required %} required{% endif %}>
+            {% elif f.field_type == 'NUMBER' %}<input type="number" step="any" name="field_{{ f.id }}" value="{{ value }}"{% if f.required %} required{% endif %}>
+            {% else %}<input name="field_{{ f.id }}" value="{{ value }}" maxlength="2000"{% if f.required %} required{% endif %}>{% endif %}
+            {% if f.help_text %}<div class="hint" style="margin-top:.2rem">{{ f.help_text }}</div>{% endif %}
+          </div>
+          {% empty %}
+          <p class="hint">No extra fields yet. <a href="{% url 'users:student_fields' %}" style="color:var(--champagne-lt)">Add your school's own</a> — state of origin, LGA, blood group and more.</p>
+          {% endfor %}
+          <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save details</button>
+        </form>
+      {% else %}
+        <dl class="sp-kv">
+          <dt>NIN</dt><dd>{{ nin_display|default:"—" }}</dd>
+          {% for f, value in answers %}<dt>{{ f.label }}</dt><dd>{{ value|default:"—" }}</dd>{% endfor %}
+        </dl>
+      {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if can_manage %}
+<!-- Documents -->
+<div class="sp-pane" id="pane-documents">
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-cloud-arrow-up"></i> Upload a document</h3></div><div class="panel-b">
+      <form method="post" enctype="multipart/form-data" action="{% url 'users:student_documents' student.id %}" class="sp-form">{% csrf_token %}
+        <input type="hidden" name="action" value="upload">
+        <div><label>What is it</label><select name="doc_type">{% for v, l in document_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+        <div><label>Title <span class="hint">(optional)</span></label><input name="title" maxlength="160" placeholder="e.g. Yellow fever vaccination"></div>
+        <div class="sp-grid2">
+          <div><label>Issued on</label><input type="date" name="issued_on"></div>
+          <div><label>Expires on</label><input type="date" name="expires_on"></div>
+        </div>
+        <div><label>File (PDF or photo, up to 10 MB)</label><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" required></div>
+        <div><label>Note</label><input name="note" maxlength="255"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-upload"></i> Upload</button>
+        <p class="hint">Documents are private: they have no public link and only administrators can open them.</p>
+      </form>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-folder2-open"></i> On file</h3></div><div class="panel-b" style="padding-top:.2rem">
+      {% for d in documents %}
+      <div class="doc">
+        <i class="bi {% if '.pdf' in d.file.name %}bi-file-earmark-pdf{% else %}bi-file-earmark-image{% endif %} ic"></i>
+        <div style="flex:1;min-width:0">
+          <b style="color:var(--white);font-size:.88rem">{{ d.display_name }}</b>
+          <div class="hint">{{ d.get_doc_type_display }}{% if d.issued_on %} · issued {{ d.issued_on|date:"j M Y" }}{% endif %} · {{ d.size|filesizeformat }}</div>
+          {% if d.expires_on %}<div class="hint">{% if d.is_expired %}<span class="chip red">expired {{ d.expires_on|date:"j M Y" }}</span>{% elif d.expires_soon %}<span class="chip amber">expires {{ d.expires_on|date:"j M Y" }}</span>{% else %}expires {{ d.expires_on|date:"j M Y" }}{% endif %}</div>{% endif %}
+          {% if d.note %}<div class="hint">{{ d.note }}</div>{% endif %}
+        </div>
+        <a class="fin-btn fin-btn-sm" href="{% url 'users:document_file' d.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+        <a class="fin-btn fin-btn-sm" href="{% url 'users:document_file' d.id %}?download=1"><i class="bi bi-download"></i></a>
+        <form method="post" action="{% url 'users:student_documents' student.id %}" onsubmit="return confirm('Delete {{ d.display_name|escapejs }}? This cannot be undone.')">{% csrf_token %}
+          <input type="hidden" name="action" value="delete"><input type="hidden" name="document_id" value="{{ d.id }}">
+          <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>
+      {% empty %}<div class="empty"><i class="bi bi-folder2"></i><p>No documents yet.</p></div>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Awards & roles -->
+<div class="sp-pane" id="pane-awards">
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-award"></i> Awards &amp; achievements</h3></div>
+      <div class="panel-b" style="padding-top:.3rem">
+        {% for a in awards %}
+        <div class="gd"><div class="gd-top">
+          <div><b>{{ a.title }}</b>{% if a.position %} <span class="chip gold">{{ a.position }}</span>{% endif %}
+            <div class="hint">{{ a.get_category_display }} · {{ a.get_level_display }} · {{ a.awarded_on|date:"j M Y" }}{% if a.show_on_report %} · printed on that term's report{% endif %}</div>
+            {% if a.description %}<div class="hint">{{ a.description }}</div>{% endif %}</div>
+          {% if can_manage or a.recorded_by_id == request.user.id %}
+          <form method="post" action="{% url 'users:student_awards' student.id %}" onsubmit="return confirm('Remove this award?')">{% csrf_token %}
+            <input type="hidden" name="action" value="delete"><input type="hidden" name="award_id" value="{{ a.id }}">
+            <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit"><i class="bi bi-x"></i></button></form>{% endif %}
+        </div></div>
+        {% empty %}<p class="hint">No awards yet.</p>{% endfor %}
+        <details class="sp-more"{% if not awards %} open{% endif %}><summary><i class="bi bi-plus-circle"></i> Record an award</summary>
+          <form method="post" action="{% url 'users:student_awards' student.id %}" class="sp-form" style="margin-top:.6rem">{% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <div><label>Title</label><input name="title" maxlength="160" required placeholder="Best in Mathematics"></div>
+            <div class="sp-grid2">
+              <div><label>Category</label><select name="category">{% for v, l in award_categories %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+              <div><label>Level</label><select name="level">{% for v, l in award_levels %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+            </div>
+            <div class="sp-grid2">
+              <div><label>Position</label><input name="position" maxlength="40" placeholder="1st, Gold, Finalist"></div>
+              <div><label>Date</label><input type="date" name="awarded_on" value="{{ today|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}"></div>
+            </div>
+            <div><label>Details</label><input name="description" maxlength="255" placeholder="Lagos State Mathematics Olympiad"></div>
+            <label class="sp-check"><input type="checkbox" name="show_on_report" value="1" checked> Print on this term's report card</label>
+            <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Record</button>
+          </form>
+        </details>
+      </div>
+    </div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-star"></i> Leadership roles</h3></div>
+      <div class="panel-b" style="padding-top:.3rem">
+        {% for r in roles %}
+        <div class="gd"><div class="gd-top">
+          <div><b>{{ r.title }}</b>{% if r.is_current %} <span class="chip green">current</span>{% endif %}
+            <div class="hint">{{ r.get_kind_display }}{% if r.group %} · {{ r.group }}{% endif %} · {{ r.start_date|date:"M Y" }} – {% if r.end_date %}{{ r.end_date|date:"M Y" }}{% else %}now{% endif %}</div>
+            {% if r.note %}<div class="hint">{{ r.note }}</div>{% endif %}</div>
+          {% if can_manage %}<div style="display:flex;gap:.3rem">
+            {% if r.is_current %}<form method="post" action="{% url 'users:student_roles' student.id %}">{% csrf_token %}<input type="hidden" name="action" value="end"><input type="hidden" name="role_id" value="{{ r.id }}"><button class="fin-btn fin-btn-sm" type="submit">End</button></form>{% endif %}
+            <form method="post" action="{% url 'users:student_roles' student.id %}" onsubmit="return confirm('Remove this role from the record?')">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="role_id" value="{{ r.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" type="submit"><i class="bi bi-x"></i></button></form>
+          </div>{% endif %}
+        </div></div>
+        {% empty %}<p class="hint">No leadership roles.</p>{% endfor %}
+        {% if can_manage %}
+        <details class="sp-more"><summary><i class="bi bi-plus-circle"></i> Appoint to a role</summary>
+          <form method="post" action="{% url 'users:student_roles' student.id %}" class="sp-form" style="margin-top:.6rem">{% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <div class="sp-grid2">
+              <div><label>Role</label><input name="title" maxlength="100" required placeholder="Head Girl"></div>
+              <div><label>Kind</label><select name="kind">{% for v, l in role_kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+            </div>
+            <div><label>Class, house or club <span class="hint">(if it applies)</span></label><input name="group" maxlength="100" placeholder="JSS 3A · Debate club"></div>
+            <div class="sp-grid2">
+              <div><label>From</label><input type="date" name="start_date" value="{{ today|date:'Y-m-d' }}"></div>
+              <div><label>Until <span class="hint">(optional)</span></label><input type="date" name="end_date"></div>
+            </div>
+            <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Appoint</button>
+          </form>
+        </details>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Support -->
+<div class="sp-pane" id="pane-support">
+  <div style="max-width:760px"><div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-heart-pulse"></i> Support needs</h3>{% if support.review_on %}<span class="hint">review {{ support.review_on|date:"j M Y" }}</span>{% endif %}</div>
+    <div class="panel-b">
+    {% if can_manage %}
+      <form method="post" action="{% url 'users:student_support' student.id %}" class="sp-form">{% csrf_token %}
+        <div><label>Extra time in exams</label><select name="extra_time_percent">{% for v, l in extra_time_choices %}<option value="{{ v }}"{% if support.extra_time_percent == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+          <div class="hint" style="margin-top:.2rem">CBT exams give this automatically, and let the student finish after the scheduled end by the same margin.</div></div>
+        <div class="sp-grid2">
+          <label class="sp-check"><input type="checkbox" name="large_print" value="1"{% if support.large_print %} checked{% endif %}> Large print (CBT text is enlarged)</label>
+          <label class="sp-check"><input type="checkbox" name="reader" value="1"{% if support.reader %} checked{% endif %}> Reader</label>
+          <label class="sp-check"><input type="checkbox" name="scribe" value="1"{% if support.scribe %} checked{% endif %}> Scribe</label>
+          <label class="sp-check"><input type="checkbox" name="rest_breaks" value="1"{% if support.rest_breaks %} checked{% endif %}> Rest breaks</label>
+          <label class="sp-check"><input type="checkbox" name="seat_near_front" value="1"{% if support.seat_near_front %} checked{% endif %}> Seat near the front</label>
+          <label class="sp-check"><input type="checkbox" name="separate_room" value="1"{% if support.separate_room %} checked{% endif %}> Separate room</label>
+        </div>
+        <div><label>What teachers should do <span class="hint">(all staff see this)</span></label><input name="classroom_notes" maxlength="255" value="{{ support.classroom_notes }}" placeholder="Give written instructions as well as spoken ones"></div>
+        <div><label>Private notes <i class="bi bi-lock-fill" style="color:var(--amber)"></i> <span class="hint">(administrators only)</span></label><textarea name="private_notes" rows="3" style="width:100%;padding:.6rem .75rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">{{ support.private_notes }}</textarea></div>
+        <div><label>Review on</label><input type="date" name="review_on" value="{{ support.review_on|date:'Y-m-d' }}"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save</button>
+      </form>
+    {% elif support.adjustments or support.classroom_notes %}
+      <div class="gd-tags">{% for a in support.adjustments %}<span style="color:var(--amber);border-color:var(--amber-border)">{{ a }}</span>{% endfor %}</div>
+      {% if support.classroom_notes %}<p style="margin-top:.7rem;color:var(--white)">{{ support.classroom_notes }}</p>{% endif %}
+    {% else %}<p class="hint">No support needs recorded.</p>{% endif %}
+    </div>
+  </div></div>
+</div>
+
+<!-- Results -->
+<div class="sp-pane" id="pane-results">
+  <div style="display:flex;justify-content:flex-end;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
+    <a class="fin-btn fin-btn-sm" href="{% url 'results:progress' student.id %}"><i class="bi bi-graph-up"></i> Progress</a>
+    {% if can_manage %}<a class="fin-btn fin-btn-sm" href="{% url 'results:transcript' student.id %}"><i class="bi bi-file-earmark-text"></i> Transcript</a>{% endif %}
+  </div>
+  <div class="panel"><div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Term</th><th>Class</th><th>Subjects</th><th>Average</th><th>Strongest</th><th>Weakest</th><th></th></tr></thead>
+    <tbody>{% for r in results %}
+      <tr><td><b>{{ r.term.name }}</b><br><span class="hint">{{ r.session }}</span></td>
+        <td>{{ r.class_name }}</td><td>{{ r.subjects }}</td>
+        <td style="min-width:120px"><b class="money">{{ r.average }}</b><div class="bar"><span style="width:{{ r.average|floatformat:0 }}%"></span></div></td>
+        <td>{{ r.best.subject.name }}<br><span class="hint">{{ r.best.total_score|floatformat:0 }}{% if r.best.grade %} · {{ r.best.grade }}{% endif %}</span></td>
+        <td>{{ r.worst.subject.name }}<br><span class="hint">{{ r.worst.total_score|floatformat:0 }}{% if r.worst.grade %} · {{ r.worst.grade }}{% endif %}</span></td>
+        <td>{% if not r.published %}<span class="chip amber">not published</span>{% endif %}{% if r.url %} <a class="fin-btn fin-btn-sm" href="{{ r.url }}">Open</a>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="7" class="empty"><i class="bi bi-journal"></i><p>No results recorded yet.</p></td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+
+<!-- Attendance -->
+<div class="sp-pane" id="pane-attendance">
+  {% include "attendance/_heat_styles.html" %}
+  {% if heat_weeks %}
+  {% if can_manage %}<div style="display:flex;justify-content:flex-end;margin-bottom:.6rem"><a class="fin-btn fin-btn-sm" href="{% url 'users:attendance_certificate' student.id %}"><i class="bi bi-award"></i> Attendance certificate</a></div>{% endif %}
+  <div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3><i class="bi bi-grid-3x3-gap"></i> {{ term.name }} at a glance</h3>
+    {% if term_counts %}<span class="hint">{{ term_counts.present }} present · {{ term_counts.absent }} absent{% if term_counts.excused %} ({{ term_counts.excused }} excused){% endif %} · {{ term_counts.late }} late</span>{% endif %}</div>
+    <div class="panel-b">
+      <div style="display:flex">
+        <div class="heat-days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
+        <div class="heat">{% for week in heat_weeks %}<div class="heat-week">{% for d in week %}<div class="heat-day {{ d.state }}" title="{{ d.title }}"></div>{% endfor %}</div>{% endfor %}</div>
+      </div>
+      <div class="heat-legend"><span><i style="background:#22c55e"></i>present</span><span><i style="background:#fbbf24"></i>late</span><span><i style="background:#ef4444"></i>absent</span><span><i style="background:#60a5fa"></i>absent, excused</span><span><i style="background:rgba(255,255,255,.08)"></i>not marked</span></div>
+    </div></div>
+  {% endif %}
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar2-check"></i> Register</h3></div><div class="panel-b">
+      {% if attendance.term %}
+        <div class="hint">This term ({{ term.name }})</div>
+        <div style="font-size:1.6rem;font-family:'Cormorant Garamond',serif;color:var(--white)">{% if attendance.term.rate is not None %}{{ attendance.term.rate }}%{% else %}—{% endif %}</div>
+        <div class="bar"><span style="width:{{ attendance.term.rate|default:0 }}%"></span></div>
+        <div class="hint" style="margin-top:.4rem">{{ attendance.term.present }} present · {{ attendance.term.absent }} absent</div>
+        <hr style="border:0;border-top:1px solid var(--rim);margin:1rem 0">
+      {% endif %}
+      <div class="hint">Since joining</div>
+      <div style="font-size:1.6rem;font-family:'Cormorant Garamond',serif;color:var(--white)">{% if attendance.overall.rate is not None %}{{ attendance.overall.rate }}%{% else %}—{% endif %}</div>
+      <div class="bar"><span style="width:{{ attendance.overall.rate|default:0 }}%"></span></div>
+      <div class="hint" style="margin-top:.4rem">{{ attendance.overall.present }} present · {{ attendance.overall.absent }} absent</div>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-x"></i> Latest absences</h3></div><div class="panel-b">
+      {% for d in attendance.recent_absences %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)">{{ d|date:"l j F Y" }}</div>
+      {% empty %}<p class="hint">No absences recorded.</p>{% endfor %}
+      {% if attendance.planned %}<div class="hint" style="margin-top:.9rem;text-transform:uppercase;letter-spacing:.06em;font-size:.68rem">Coming up — told in advance</div>
+      {% for m in attendance.planned %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)">{{ m.date|date:"l j F" }} <span class="hint">· {{ m.get_absence_reason_display }}{% if m.reason_note %} — {{ m.reason_note }}{% endif %}</span></div>{% endfor %}{% endif %}
+    </div></div>
+  </div>
+</div>
+
+{% if fees %}
+<!-- Fees -->
+<div class="sp-pane" id="pane-fees">
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-receipt"></i> This term</h3>{% if fees.arrears %}<span class="chip red">₦{{ fees.arrears_total|floatformat:0|intcomma }} from earlier terms</span>{% endif %}</div><div class="panel-b">
+      {% if fees.billing %}
+      <dl class="sp-kv">
+        <dt>Fee</dt><dd>₦{{ fees.billing.gross_fee|default:fees.billing.total_fee|floatformat:0|intcomma }}</dd>
+        {% if fees.billing.discount %}<dt>Discount</dt><dd>−₦{{ fees.billing.discount|floatformat:0|intcomma }}<br><span class="hint">{{ fees.billing.discount_note }}</span></dd>{% endif %}
+        {% if fees.billing.late_fee %}<dt>Late charges</dt><dd>₦{{ fees.billing.late_fee|floatformat:0|intcomma }}</dd>{% endif %}
+        <dt>Paid</dt><dd style="color:var(--green)">₦{{ fees.billing.paid|floatformat:0|intcomma }}</dd>
+        <dt>Balance</dt><dd style="color:{% if fees.billing.balance %}var(--amber){% else %}var(--green){% endif %}"><b>₦{{ fees.billing.balance|floatformat:0|intcomma }}</b></dd>
+      </dl>
+      {% else %}<p class="hint">No bill for this term yet.</p>{% endif %}
+      {% for b in fees.arrears %}<div class="hint" style="margin-top:.5rem">{{ b.parent_billing.term.name }} {{ b.parent_billing.session }} — ₦{{ b.balance|floatformat:0|intcomma }} outstanding</div>{% endfor %}
+      <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
+        <a class="fin-btn fin-btn-sm" href="{% url 'finance:debtor_history' student.id %}"><i class="bi bi-telephone"></i> Follow-up log</a>
+        <a class="fin-btn fin-btn-sm" href="{% url 'finance:refunds' %}?q={{ student.full_name|urlencode }}"><i class="bi bi-arrow-counterclockwise"></i> Refunds</a>
+      </div>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Recent payments{% if fees.shared_wallet %} <span class="hint">(family wallet)</span>{% endif %}</h3></div>
+      <div style="overflow-x:auto"><table class="tbl"><tbody>
+        {% for p in fees.payments %}<tr><td>{{ p.created_at|date:"j M Y" }}<br><span class="hint">{{ p.reference }}</span></td><td>{{ p.get_method_display }}</td>
+          <td>{% if p.status == 'APPROVED' %}<span class="chip green">approved</span>{% elif p.status == 'PENDING' %}<span class="chip amber">pending</span>{% else %}<span class="chip red">rejected</span>{% endif %}</td>
+          <td class="money" style="text-align:right">₦{{ p.amount|floatformat:0|intcomma }}</td></tr>
+        {% empty %}<tr><td class="empty"><i class="bi bi-inbox"></i><p>No payments yet.</p></td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if can_manage %}
+<!-- Status -->
+<div class="sp-pane" id="pane-status">
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-toggles"></i> Change status</h3></div><div class="panel-b">
+      <form method="post" action="{% url 'users:change_student_status' student.id %}" class="sp-form" id="status-form">{% csrf_token %}
+        <div><label>New status</label>
+          <select name="status" id="st-new" required>
+            <option value="">— choose —</option>
+            {% for v, l in statuses %}<option value="{{ v }}">{% if v == 'Active' and student.status != 'Suspended' %}Re-admit (Active){% else %}{{ l }}{% endif %}</option>{% endfor %}
+          </select></div>
+        <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+          <div><label>From</label><input type="date" name="effective_on" value="{{ today|date:'Y-m-d' }}"></div>
+          <div id="st-until"><label>Return on (suspension)</label><input type="date" name="until"></div>
+        </div>
+        <div><label>Reason</label><input name="reason" maxlength="255" id="st-reason" placeholder="Required for suspension, withdrawal or death"></div>
+        <div id="st-dest"><label>Going on to</label><input name="destination" maxlength="255" placeholder="Next school, university or work (optional)" value="{{ student.destination }}"></div>
+        <label style="display:flex;gap:.4rem;align-items:center;font-size:.85rem"><input type="checkbox" name="library_override" style="width:auto"> Leave anyway, even if library books or charges are outstanding</label>
+        <p class="hint" style="margin:.2rem 0 .6rem"><a href="{% url 'library:clearance' student.id %}"><i class="bi bi-book"></i> Library clearance</a></p>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save status</button>
+        <p class="hint" id="st-note">A student who withdraws, graduates or dies is taken off the roll and their own login is switched off. Their record, results and payments are kept.</p>
+      </form>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-ul"></i> Status history</h3></div>
+      <div style="overflow-x:auto"><table class="tbl"><tbody>
+        {% for c in status_history %}<tr><td style="white-space:nowrap">{{ c.effective_on|date:"j M Y" }}</td>
+          <td><b>{{ c.from_status }} → {{ c.to_status }}</b>{% if c.reason %}<br><span class="hint">{{ c.reason }}</span>{% endif %}{% if c.until %}<br><span class="hint">until {{ c.until|date:"j M Y" }}</span>{% endif %}</td>
+          <td class="hint">{% if c.changed_by %}{% if c.changed_by.get_full_name %}{{ c.changed_by.get_full_name }}{% else %}{{ c.changed_by.username }}{% endif %}{% endif %}</td></tr>
+        {% empty %}<tr><td class="empty"><i class="bi bi-inbox"></i><p>Status has never been changed.</p></td></tr>{% endfor %}
+      </tbody></table></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-file-earmark-zip"></i> Everything we hold about this child</h3></div><div class="panel-b">
+    <form method="post" action="{% url 'users:student_export' student.id %}" class="sp-form" style="max-width:620px">{% csrf_token %}
+      <div><label>Why is it being exported?</label><input name="reason" required minlength="5" maxlength="255" placeholder="Parent's request of 2 Oct · transfer to Greenfield School"></div>
+      <button class="fin-btn" type="submit"><i class="bi bi-download"></i> Download ZIP</button>
+      <p class="hint">Personal details, guardians, results, attendance, payments, messages, documents and photo — for a parent's data-protection request or a transfer. Every export is logged.</p>
+    </form>
+    {% if exports %}<div style="margin-top:.8rem">{% for e in exports %}<div class="hint" style="padding:.25rem 0;border-top:1px solid var(--rim)">{{ e.created_at|date:"j M Y, H:i" }} · {% if e.exported_by.get_full_name %}{{ e.exported_by.get_full_name }}{% else %}{{ e.exported_by.username }}{% endif %} — {{ e.reason }}</div>{% endfor %}</div>{% endif %}
+  </div></div>
+</div>
+
+<!-- Change history -->
+<div class="sp-pane" id="pane-history">
+  <div class="panel"><div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>When</th><th>What changed</th><th>Before</th><th>After</th><th>By</th></tr></thead>
+    <tbody>{% for c in changes %}
+      <tr><td style="white-space:nowrap">{{ c.changed_at|date:"j M Y, H:i" }}<br><span class="hint">{{ c.source }}</span></td>
+        <td><b>{{ c.label }}</b></td>
+        <td class="hint" style="max-width:220px">{{ c.old_value|default:"—" }}</td>
+        <td style="max-width:220px">{{ c.new_value|default:"—" }}</td>
+        <td class="hint">{% if c.changed_by %}{% if c.changed_by.get_full_name %}{{ c.changed_by.get_full_name }}{% else %}{{ c.changed_by.username }}{% endif %}{% else %}system{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty"><i class="bi bi-pencil-square"></i><p>No changes recorded since history began.</p></td></tr>{% endfor %}</tbody>
+  </table></div></div>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var tabs = document.querySelectorAll('.sp-tab');
+  function show(name) {
+    tabs.forEach(function (t) { t.classList.toggle('on', t.dataset.tab === name); });
+    document.querySelectorAll('.sp-pane').forEach(function (p) { p.classList.toggle('on', p.id === 'pane-' + name); });
+    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.tab); }); });
+  var start = (location.hash || '').slice(1);
+  if (start && document.getElementById('pane-' + start)) show(start);
+
+  var sel = document.getElementById('st-new');
+  if (sel) {
+    var until = document.getElementById('st-until'), dest = document.getElementById('st-dest'),
+        reason = document.getElementById('st-reason');
+    function sync() {
+      var v = sel.value;
+      until.style.display = v === 'Suspended' ? '' : 'none';
+      dest.style.display = (v === 'Withdrawn' || v === 'Graduated') ? '' : 'none';
+      reason.required = (v === 'Suspended' || v === 'Withdrawn' || v === 'Deceased');
+    }
+    sel.addEventListener('change', sync); sync();
+    document.getElementById('status-form').addEventListener('submit', function (e) {
+      var v = sel.value;
+      if ((v === 'Withdrawn' || v === 'Graduated' || v === 'Deceased') &&
+          !confirm('Mark {{ student.full_name|escapejs }} as ' + v.toLowerCase() + '? They will be taken off the roll and their own login switched off.')) e.preventDefault();
+    });
+  }
+})();
+</script>
+{% if can_manage %}
+<div class="crop-modal" id="crop-modal" role="dialog" aria-modal="true" aria-label="Change photo">
+  <div class="crop-box">
+    <div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--white)">Passport photo</b><button type="button" class="fin-btn fin-btn-sm" id="crop-close"><i class="bi bi-x-lg"></i></button></div>
+    <input type="file" id="crop-file" accept="image/jpeg,image/png,image/webp" style="margin-top:.7rem;color:var(--slate2)">
+    <div class="crop-stage" id="crop-stage" hidden><img id="crop-img" alt=""></div>
+    <div class="hint" id="crop-msg">Choose a photo, then drag and zoom so the face fills the frame. It will be saved in the ID-card shape.</div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:.8rem">
+      <button type="button" class="fin-btn fin-btn-sm" id="crop-rotate" disabled><i class="bi bi-arrow-clockwise"></i> Rotate</button>
+      <button type="button" class="fin-btn fin-btn-gold" id="crop-save" disabled><i class="bi bi-check2"></i> Save photo</button>
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+<script>
+(function () {
+  var modal = document.getElementById('crop-modal'), file = document.getElementById('crop-file'),
+      img = document.getElementById('crop-img'), stage = document.getElementById('crop-stage'),
+      msg = document.getElementById('crop-msg'), save = document.getElementById('crop-save'),
+      rotate = document.getElementById('crop-rotate'), cropper = null, chosen = null;
+  // An animated ancestor in the page shell would trap a fixed dialog inside it;
+  // living directly under <body> keeps it centred on the screen.
+  document.body.appendChild(modal);
+  function open() { modal.classList.add('on'); }
+  function close() { modal.classList.remove('on'); }
+  document.getElementById('sp-photo-btn').addEventListener('click', open);
+  document.getElementById('crop-close').addEventListener('click', close);
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  file.addEventListener('change', function () {
+    chosen = file.files[0]; if (!chosen) return;
+    if (chosen.size > 8 * 1024 * 1024) { msg.textContent = 'That photo is larger than 8 MB.'; return; }
+    var url = URL.createObjectURL(chosen);
+    img.src = url; stage.hidden = false;
+    if (cropper) cropper.destroy();
+    img.onload = function () {
+      cropper = (typeof Cropper !== 'undefined') ? new Cropper(img, { aspectRatio: 3 / 4, viewMode: 1, autoCropArea: 0.9, background: false }) : null;
+      save.disabled = false; rotate.disabled = !cropper;
+      msg.textContent = cropper ? 'Drag and zoom so the face fills the frame.' : 'The photo will be centred automatically.';
+    };
+  });
+  rotate.addEventListener('click', function () { if (cropper) cropper.rotate(90); });
+  save.addEventListener('click', function () {
+    if (!chosen) return;
+    save.disabled = true; msg.textContent = 'Saving…';
+    function send(blob, box) {
+      var data = new FormData();
+      data.append('photo', blob, 'photo.jpg');
+      if (box) { ['x', 'y', 'w', 'h'].forEach(function (k, i) { data.append(k, box[i]); }); }
+      data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fetch('{% url "users:student_photo" student.id %}', { method: 'POST', body: data, credentials: 'same-origin' })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (!res.ok) { msg.textContent = res.error; save.disabled = false; return; }
+          var el = document.getElementById('sp-photo'), fresh = document.createElement('img');
+          fresh.className = 'sp-photo'; fresh.id = 'sp-photo'; fresh.src = res.url + '?v=' + Date.now(); fresh.alt = '';
+          el.replaceWith(fresh);
+          msg.textContent = res.warnings.length ? 'Saved — but the photo ' + res.warnings.join(' and ') + '. Consider retaking it.' : 'Saved.';
+          setTimeout(function () { if (!res.warnings.length) close(); save.disabled = false; }, res.warnings.length ? 0 : 700);
+        })
+        .catch(function () { msg.textContent = 'Could not save — check your connection.'; save.disabled = false; });
+    }
+    if (cropper) {
+      // Crop in the browser so only the face area is uploaded — small and quick on mobile data.
+      cropper.getCroppedCanvas({ width: 600, height: 800, imageSmoothingQuality: 'high' })
+        .toBlob(function (blob) { send(blob, null); }, 'image/jpeg', 0.9);
+    } else { send(chosen, null); }
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,712 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Promote Students{% endblock %}
+
+{% block content %}
+<div style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;padding:.8rem 1rem;margin-bottom:1rem;border-radius:14px;border:1px solid rgba(244,210,31,.35);background:rgba(244,210,31,.08);font-size:.86rem">
+  <i class="bi bi-stars" style="color:#ffe066"></i><span style="flex:1">End of session? <b>Promotion &amp; graduation</b> works out who is promoted, promoted on condition or repeats from your results and rules, then moves everyone and graduates final-year students.</span>
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}<a href="{% url 'curriculum:promotion' %}" style="color:#ffe066;font-weight:700;text-decoration:none">Open it →</a>{% endif %}
+</div>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.ps-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 100%;
+  padding: 2rem 2.5rem 4rem;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  padding: 2rem 2.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.hero::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--champagne) 35%, var(--champagne-lt) 55%, transparent 100%);
+}
+.hero-canvas { position: absolute; inset: 0; pointer-events: none; }
+.hero-canvas svg { width: 100%; height: 100%; }
+
+.hero-left { position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem;
+}
+.hero-eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--champagne); }
+.hero-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 500; line-height: 1.1; color: var(--white);
+  margin-bottom: .45rem;
+}
+.hero-title em { font-style: italic; color: var(--champagne); }
+.hero-sub { font-size: .83rem; color: var(--slate); line-height: 1.5; }
+
+.hero-session-info {
+  position: relative; z-index: 1;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  padding: .9rem 1.2rem;
+  display: flex; flex-direction: column; gap: .45rem;
+  font-size: .8rem;
+}
+.session-row {
+  display: flex; align-items: center; gap: .5rem;
+  color: var(--slate2);
+}
+.session-row i { color: var(--champagne); font-size: .9rem; }
+.session-row strong { color: var(--white); }
+
+/* ── MESSAGES ── */
+.msg-list { margin-bottom: 1.25rem; }
+.msg {
+  display: flex; align-items: flex-start; gap: .65rem;
+  padding: .85rem 1.1rem; border-radius: var(--radius-sm);
+  font-size: .83rem; border: 1px solid; margin-bottom: .5rem;
+  line-height: 1.5;
+}
+.msg i { font-size: 1rem; flex-shrink: 0; margin-top: .08rem; }
+.msg-success { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+.msg-error   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red); }
+.msg-warning { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+.msg-info    { background: var(--blue-dim);  border-color: var(--blue-border);  color: var(--blue); }
+.msg-sub     { font-size: .77rem; margin-top: .3rem; opacity: .85; }
+
+/* ── PANEL BASE ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  overflow: hidden; position: relative;
+  margin-bottom: 1.25rem;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel-head {
+  padding: 1rem 1.4rem .85rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; gap: .65rem;
+}
+.panel-head-right { margin-left: auto; display: flex; align-items: center; gap: .6rem; }
+.panel-head-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .88rem; flex-shrink: 0;
+}
+.phi-gold   { background: var(--champagne-dim); color: var(--champagne); }
+.phi-blue   { background: var(--blue-dim);      color: var(--blue); }
+.phi-green  { background: var(--green-dim);     color: var(--green); }
+.phi-amber  { background: var(--amber-dim);     color: var(--amber); }
+.panel-head h3 {
+  font-size: .88rem; font-weight: 600; color: var(--white); margin: 0;
+}
+
+/* ── FILTER CARD ── */
+.filter-body { padding: 1.25rem 1.4rem 0; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+  gap: .9rem 1rem;
+}
+.field-label {
+  font-size: .67rem; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate);
+  margin-bottom: .4rem; display: flex; align-items: center; gap: .35rem;
+}
+.field-label i { font-size: .8rem; color: var(--champagne); }
+.styled-select, .styled-input {
+  width: 100%; padding: .72rem 1rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: var(--radius-xs); font-size: .84rem; color: var(--white);
+  font-family: "Outfit", inherit; outline: none; appearance: none;
+  transition: border-color .17s, box-shadow .17s;
+}
+.styled-select { cursor: pointer; }
+.styled-select.has-val, .styled-input.has-val { border-color: rgba(244,210,31,.4); }
+.styled-select:focus, .styled-input:focus {
+  border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.styled-select option, .styled-input option { background: #172f5c; color: var(--white); }
+.styled-input::placeholder { color: rgba(255,255,255,.2); }
+
+.filter-actions {
+  padding: 1rem 1.4rem 1.25rem;
+  display: flex; gap: .6rem; flex-wrap: wrap;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .65rem 1.15rem;
+  border-radius: var(--radius-sm);
+  font-size: .82rem; font-weight: 600; font-family: "Outfit", inherit;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: transform .14s, box-shadow .14s, background .14s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn:disabled, .btn[disabled] { opacity: .4; cursor: not-allowed; transform: none; pointer-events: none; }
+
+.btn-apply {
+  background: linear-gradient(135deg, var(--champagne) 0%, #d1ad00 100%);
+  color: #0a1f44; box-shadow: 0 4px 16px rgba(244,210,31,.22);
+}
+.btn-apply:hover { box-shadow: 0 6px 22px rgba(244,210,31,.3); }
+
+.btn-reset {
+  background: var(--surface2); border: 1px solid var(--rim2);
+  color: var(--slate2);
+}
+.btn-reset:hover { background: var(--surface3); border-color: var(--rim3); color: var(--white); }
+
+.btn-promote {
+  background: linear-gradient(135deg, #3aa86a 0%, #2d8054 100%);
+  color: #fff; box-shadow: 0 4px 16px rgba(58,168,106,.22);
+}
+.btn-promote:hover { box-shadow: 0 6px 22px rgba(58,168,106,.3); }
+
+.btn-force {
+  background: var(--amber-dim); border: 1px solid var(--amber-border);
+  color: var(--amber);
+}
+.btn-force:hover { background: rgba(245,158,11,.2); }
+
+.btn-sm { padding: .45rem .85rem; font-size: .76rem; }
+
+/* ── SELECTION BANNER ── */
+.selection-banner {
+  display: none; align-items: center; gap: .7rem;
+  margin: 0 1.4rem .85rem;
+  padding: .7rem 1rem;
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  border-radius: var(--radius-sm);
+  font-size: .82rem; font-weight: 600; color: var(--blue);
+}
+.selection-banner.visible { display: flex; }
+.selection-banner i { font-size: 1rem; }
+
+/* ── TABLE ── */
+.table-scroll { overflow-x: auto; }
+.students-table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.students-table thead tr { border-bottom: 1px solid var(--rim2); }
+.students-table th {
+  padding: .72rem 1.1rem;
+  text-align: left;
+  font-size: .63rem; font-weight: 600; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--slate);
+  white-space: nowrap;
+}
+.students-table th:first-child { width: 46px; text-align: center; padding: .72rem .75rem; }
+.students-table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .13s;
+}
+.students-table tbody tr:last-child { border-bottom: none; }
+.students-table tbody tr:hover { background: rgba(255,255,255,.025); }
+.students-table td { padding: .82rem 1.1rem; vertical-align: middle; }
+.students-table td:first-child { text-align: center; padding: .82rem .75rem; }
+
+input[type="checkbox"] {
+  width: 16px; height: 16px; cursor: pointer;
+  accent-color: var(--champagne);
+}
+input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
+
+.student-name-cell { display: flex; align-items: center; gap: .7rem; }
+.stu-avatar {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700;
+}
+.stu-name-text { font-size: .84rem; font-weight: 600; color: var(--white); }
+.stu-adm-text  { font-size: .69rem; color: var(--slate); }
+
+.row-num { font-size: .72rem; color: var(--slate); font-variant-numeric: tabular-nums; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .24rem .7rem; border-radius: 50px;
+  font-size: .7rem; font-weight: 600; border: 1px solid;
+}
+.badge-class  { background: var(--blue-dim);   color: var(--blue);   border-color: var(--blue-border); }
+.badge-term   { background: var(--amber-dim);  color: var(--amber);  border-color: var(--amber-border); }
+.badge-active { background: var(--green-dim);  color: var(--green);  border-color: var(--green-border); }
+.badge-other  { background: var(--surface3);   color: var(--slate2); border-color: var(--rim2); }
+.badge-locked { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border); }
+
+/* ── EMPTY STATE ── */
+.table-empty {
+  padding: 3.5rem 2rem;
+  display: flex; flex-direction: column; align-items: center; gap: .8rem;
+  text-align: center;
+}
+.empty-icon {
+  width: 54px; height: 54px; border-radius: 14px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: var(--slate);
+}
+.empty-title { font-size: .92rem; font-weight: 600; color: var(--slate2); }
+.empty-sub   { font-size: .77rem; color: var(--slate); }
+
+/* ── PROMOTE PANEL ── */
+.promote-panel {
+  margin: 0 1.4rem 1.4rem;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem 1.4rem;
+}
+.promote-panel-head {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .84rem; font-weight: 600; color: var(--green);
+  margin-bottom: 1rem;
+}
+.promote-panel-head i { font-size: 1rem; }
+.promote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+.promote-label {
+  font-size: .67rem; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: rgba(94,203,142,.7);
+  margin-bottom: .4rem; display: flex; align-items: center; gap: .35rem;
+}
+.promote-select {
+  width: 100%; padding: .72rem 1rem;
+  background: var(--surface2); border: 1px solid var(--green-border);
+  border-radius: var(--radius-xs); font-size: .84rem; color: var(--white);
+  font-family: "Outfit", inherit; outline: none; appearance: none;
+  transition: border-color .17s, box-shadow .17s;
+}
+.promote-select:focus {
+  border-color: var(--green); box-shadow: 0 0 0 3px rgba(94,203,142,.12);
+}
+.promote-select.locked { opacity: .4; pointer-events: none; }
+.promote-select option { background: #172f5c; color: var(--white); }
+
+/* ── LOCK PANEL ── */
+.lock-panel {
+  background: var(--red-dim); border: 1px solid var(--red-border);
+  border-radius: var(--radius-sm); padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex; align-items: flex-start; gap: .75rem;
+}
+.lock-icon { font-size: 1.2rem; color: var(--red); flex-shrink: 0; margin-top: .1rem; }
+.lock-title { font-size: .85rem; font-weight: 700; color: var(--red); margin-bottom: .25rem; }
+.lock-sub { font-size: .77rem; color: rgba(232,112,112,.8); line-height: 1.5; }
+.lock-action { margin-top: .75rem; }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Stagger panels */
+.panel:nth-child(1) { animation-delay: .0s; }
+.panel:nth-child(2) { animation-delay: .07s; }
+.panel:nth-child(3) { animation-delay: .14s; }
+
+@media(max-width: 900px) {
+  .promote-grid { grid-template-columns: 1fr 1fr; }
+  .promote-grid > *:last-child { grid-column: 1 / -1; }
+}
+@media(max-width: 640px) {
+  .ps-wrap { padding: 1.25rem 1rem 3rem; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .promote-grid { grid-template-columns: 1fr; }
+  .hero { flex-direction: column; align-items: flex-start; }
+  .students-table thead { display: none; }
+  .students-table tbody tr {
+    display: block; margin-bottom: .75rem;
+    border: 1px solid var(--rim2) !important;
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
+  }
+  .students-table td {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .4rem 0 !important; border: none !important;
+    border-bottom: 1px solid var(--rim) !important; font-size: .8rem;
+  }
+  .students-table td:last-child { border-bottom: none !important; }
+  .students-table td::before {
+    content: attr(data-label);
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    color: var(--slate); flex: 0 0 38%;
+  }
+  .students-table td:first-child { justify-content: flex-start; gap: .5rem; }
+  .students-table td:first-child::before { content: "Select"; }
+}
+</style>
+
+<div class="ps-wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-canvas" aria-hidden="true">
+      <svg viewBox="0 0 1200 140" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hg1" cx="20%" cy="50%" r="55%">
+            <stop offset="0%" stop-color="#f4d21f" stop-opacity=".1"/>
+            <stop offset="100%" stop-color="#f4d21f" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="hg2" cx="88%" cy="50%" r="45%">
+            <stop offset="0%" stop-color="#5ecb8e" stop-opacity=".08"/>
+            <stop offset="100%" stop-color="#5ecb8e" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="1200" height="140" fill="url(#hg1)"/>
+        <rect width="1200" height="140" fill="url(#hg2)"/>
+        <circle cx="990" cy="70" r="95" fill="none" stroke="rgba(244,210,31,.05)" stroke-width="1"/>
+        <circle cx="990" cy="70" r="55" fill="none" stroke="rgba(244,210,31,.06)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="hero-left">
+      <div class="hero-eyebrow">Academic Management</div>
+      <h1 class="hero-title"><em>Promote</em> Students</h1>
+      <p class="hero-sub">Move students to a new class and term. Use filters to narrow your list before promoting.</p>
+    </div>
+    {% if active_session or active_term %}
+    <div class="hero-session-info">
+      {% if active_session %}
+      <div class="session-row">
+        <i class="bi bi-calendar3"></i>
+        <span><strong>Session:</strong> {{ active_session.name }}</span>
+      </div>
+      {% endif %}
+      {% if active_term %}
+      <div class="session-row">
+        <i class="bi bi-bookmark-fill"></i>
+        <span><strong>Term:</strong> {{ active_term.name }}</span>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── MESSAGES ── -->
+  {% if messages %}
+  <div class="msg-list">
+    {% for message in messages %}
+    <div class="msg {% if message.tags == 'error' %}msg-error{% elif message.tags == 'success' %}msg-success{% elif message.tags == 'warning' %}msg-warning{% else %}msg-info{% endif %}">
+      <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% elif message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+      <div>{{ message }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── LOCK ALERT ── -->
+  {% if promotion_locked %}
+  <div class="lock-panel">
+    <i class="bi bi-lock-fill lock-icon"></i>
+    <div>
+      <div class="lock-title">Promotion Locked</div>
+      <div class="lock-sub">
+        An active session and term are currently running. End the active term first, or use the force override if you must promote now.
+      </div>
+      {% if can_force %}
+      <div class="lock-action">
+        <a href="?force=1{% if filter_class %}&class_assigned={{ filter_class }}{% endif %}{% if filter_term %}&current_term={{ filter_term }}{% endif %}{% if filter_status %}&status={{ filter_status }}{% endif %}{% if query %}&q={{ query }}{% endif %}"
+           class="btn btn-force btn-sm"
+           onclick="return confirm('Force-promote despite active term? This cannot be undone.');">
+          <i class="bi bi-unlock-fill"></i> Force Override
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if force_override %}
+  <div class="msg msg-warning" style="margin-bottom:1.25rem;">
+    <i class="bi bi-exclamation-circle-fill"></i>
+    <div><strong>Override active</strong> — promotion lock bypassed. The promotion form is now enabled.</div>
+  </div>
+  {% endif %}
+
+  <!-- ── FILTER PANEL ── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-icon phi-gold"><i class="bi bi-funnel-fill"></i></div>
+      <h3>Filter Students</h3>
+    </div>
+    <form method="GET" id="filterForm">
+      {% if force_override %}<input type="hidden" name="force" value="1">{% endif %}
+      <div class="filter-body">
+        <div class="filter-grid">
+
+          <div>
+            <label class="field-label"><i class="bi bi-building"></i> Class</label>
+            <select name="class_assigned"
+                    class="styled-select {% if filter_class %}has-val{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— All Classes —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == filter_class %}selected{% endif %}>
+                {{ cls.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label"><i class="bi bi-bookmark-fill"></i> Current Term</label>
+            <select name="current_term"
+                    class="styled-select {% if filter_term %}has-val{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— All Terms —</option>
+              {% for code, label in terms %}
+              <option value="{{ code }}" {% if filter_term == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label"><i class="bi bi-toggles"></i> Status</label>
+            <select name="status"
+                    class="styled-select {% if filter_status %}has-val{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— All Statuses —</option>
+              {% for code, label in statuses %}
+              <option value="{{ code }}" {% if filter_status == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="field-label"><i class="bi bi-search"></i> Search</label>
+            <input type="text" name="q"
+                   class="styled-input {% if query %}has-val{% endif %}"
+                   placeholder="Name or admission no…"
+                   value="{{ query|default:'' }}">
+          </div>
+
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-apply btn-sm">
+          <i class="bi bi-search"></i> Apply Filters
+        </button>
+        <a href="{% url 'users:promote_students' %}{% if force_override %}?force=1{% endif %}" class="btn btn-reset btn-sm">
+          <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── STUDENTS TABLE + PROMOTE FORM ── -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-head-icon phi-purple" style="background:var(--purple-dim);color:var(--purple);">
+        <i class="bi bi-people-fill"></i>
+      </div>
+      <h3>Students</h3>
+      <div class="panel-head-right">
+        <span style="font-size:.75rem;color:var(--slate);font-weight:600;">
+          {{ student_count }} student{{ student_count|pluralize }} shown
+        </span>
+      </div>
+    </div>
+
+    <!-- Selection banner -->
+    <div id="selectionBanner" class="selection-banner">
+      <i class="bi bi-check2-square"></i>
+      <span id="selectionText">0 students selected</span>
+    </div>
+
+    <form method="POST" id="promoteForm">
+      {% csrf_token %}
+
+      <div class="table-scroll">
+        <table class="students-table">
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" id="selectAll"
+                       title="Select all visible"
+                       {% if promotion_locked %}disabled{% endif %}>
+              </th>
+              <th>#</th>
+              <th>Full Name</th>
+              <th>Admission No.</th>
+              <th>Class</th>
+              <th>Term</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td data-label="Select">
+                <input type="checkbox" name="student_ids" value="{{ student.id }}"
+                       class="student-cb"
+                       {% if promotion_locked %}disabled{% endif %}>
+              </td>
+              <td data-label="#">
+                <span class="row-num">{{ forloop.counter }}</span>
+              </td>
+              <td data-label="Name">
+                <div class="student-name-cell">
+                  <div class="stu-avatar">{{ student.full_name|slice:":2"|upper }}</div>
+                  <div>
+                    <div class="stu-name-text">{{ student.full_name }}</div>
+                  </div>
+                </div>
+              </td>
+              <td data-label="Admission No.">
+                <span class="stu-adm-text">{{ student.admission_number }}</span>
+              </td>
+              <td data-label="Class">
+                <span class="badge badge-class">
+                  <i class="bi bi-building"></i>
+                  {{ student.class_assigned|default:"Unassigned" }}
+                </span>
+              </td>
+              <td data-label="Term">
+                <span class="badge badge-term">{{ student.current_term|default:"—" }}</span>
+              </td>
+              <td data-label="Status">
+                {% if student.status == 'Active' %}
+                  <span class="badge badge-active">
+                    <i class="bi bi-check-circle-fill"></i> Active
+                  </span>
+                {% else %}
+                  <span class="badge badge-other">{{ student.status }}</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="border:none; padding:0;">
+                <div class="table-empty">
+                  <div class="empty-icon"><i class="bi bi-people"></i></div>
+                  <div class="empty-title">No Students Found</div>
+                  <div class="empty-sub">
+                    {% if filter_class or filter_term or filter_status or query %}
+                      Try adjusting or resetting your filters.
+                    {% else %}
+                      No students are registered yet.
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Promote panel -->
+      {% if students %}
+      <div class="promote-panel">
+        <div class="promote-panel-head">
+          <i class="bi bi-arrow-up-circle-fill"></i>
+          Promote Selected Students To:
+        </div>
+        <div class="promote-grid">
+          <div>
+            <div class="promote-label"><i class="bi bi-building"></i> New Class</div>
+            <select name="new_class"
+                    class="promote-select{% if promotion_locked %} locked{% endif %}"
+                    required>
+              <option value="">— Select Class —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.id }}">{{ cls.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <div class="promote-label"><i class="bi bi-bookmark-fill"></i> New Term</div>
+            <select name="new_term"
+                    class="promote-select{% if promotion_locked %} locked{% endif %}"
+                    required>
+              <option value="">— Select Term —</option>
+              {% for code, label in terms %}
+              <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <div class="promote-label">&nbsp;</div>
+            <button type="submit" class="btn btn-promote"
+                    id="promoteBtn"
+                    {% if promotion_locked %}disabled{% endif %}
+                    onclick="return confirmPromotion()">
+              <i class="bi bi-arrow-up-circle-fill"></i> Promote
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </form>
+  </div>
+
+</div>
+
+<script>
+const allCheckboxes = () => document.querySelectorAll('.student-cb:not([disabled])');
+const checkedBoxes  = () => document.querySelectorAll('.student-cb:checked');
+
+document.getElementById('selectAll')?.addEventListener('change', function () {
+  allCheckboxes().forEach(cb => cb.checked = this.checked);
+  updateBanner();
+});
+
+document.querySelectorAll('.student-cb').forEach(cb => {
+  cb.addEventListener('change', updateBanner);
+});
+
+function updateBanner() {
+  const n      = checkedBoxes().length;
+  const banner = document.getElementById('selectionBanner');
+  const text   = document.getElementById('selectionText');
+  if (n > 0) {
+    banner.classList.add('visible');
+    text.textContent = `${n} student${n !== 1 ? 's' : ''} selected`;
+  } else {
+    banner.classList.remove('visible');
+  }
+  const total = allCheckboxes().length;
+  const sa = document.getElementById('selectAll');
+  if (sa) sa.checked = n === total && total > 0;
+}
+
+function confirmPromotion() {
+  const n    = checkedBoxes().length;
+  const cls  = document.querySelector('select[name="new_class"]');
+  const term = document.querySelector('select[name="new_term"]');
+  if (n === 0)    { alert('Please select at least one student to promote.'); return false; }
+  if (!cls.value) { alert('Please select a destination class.'); return false; }
+  if (!term.value){ alert('Please select a destination term.');  return false; }
+  const clsName  = cls.options[cls.selectedIndex].text;
+  const termName = term.options[term.selectedIndex].text;
+  return confirm(`Promote ${n} student${n !== 1 ? 's' : ''} to ${clsName} — ${termName}?\n\nThis will update their class and term records.`);
+}
+</script>
+{% endblock %}

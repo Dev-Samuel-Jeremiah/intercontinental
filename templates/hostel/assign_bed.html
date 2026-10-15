@@ -1,0 +1,643 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Assign Bed{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+/* Header */
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.2rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:700;
+  margin-bottom:.85rem;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.72rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+}
+
+/* Panels */
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:1.25rem;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel:nth-child(2){animation-delay:.08s;}
+.panel:nth-child(3){animation-delay:.14s;}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.15rem 1.35rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.2);
+  color:var(--champagne);
+  font-size:.95rem;
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.82rem 1rem;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.83rem;
+  font-weight:600;
+  transition:.2s ease;
+  cursor:pointer;
+  font-family:'Outfit',sans-serif;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+  border:none;
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+/* Alerts */
+.alert{
+  padding:1rem 1.1rem;
+  border-radius:12px;
+  margin-bottom:1rem;
+  border:1px solid;
+  font-size:.86rem;
+  font-weight:600;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.alert-info{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+/* Form */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:1rem;
+  align-items:end;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select{
+  width:100%;
+  padding:.95rem 1rem;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  color:var(--white);
+  font-size:.88rem;
+  font-family:'Outfit',sans-serif;
+  outline:none;
+  transition:.2s ease;
+}
+
+.fg input:focus,
+.fg select:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* Tables */
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl th{
+  padding:1rem 1.2rem;
+  text-align:left;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-size:.72rem;
+  color:var(--slate2);
+  font-weight:700;
+  background:rgba(255,255,255,.015);
+}
+
+.tbl td{
+  padding:1rem 1.2rem;
+  border-top:1px solid var(--rim);
+  color:var(--white);
+  font-size:.86rem;
+  vertical-align:middle;
+}
+
+.tbl tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.42rem .78rem;
+  border-radius:999px;
+  border:1px solid;
+  font-size:.73rem;
+  font-weight:700;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+/* Empty State */
+.empty-state{
+  padding:3rem 1.5rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--champagne);
+  font-size:1.7rem;
+}
+
+.empty-state h4{
+  margin:0 0 .35rem;
+  font-size:1rem;
+  color:var(--white);
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.88rem;
+}
+
+/* Feature tags */
+.feature-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem;
+}
+
+.feature-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--rim2);
+  color:var(--slate2);
+  font-size:.72rem;
+}
+
+/* Animation */
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:768px){
+
+  .your-wrap{
+    padding:1.2rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.2rem;
+  }
+
+  .panel-head{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert
+        {% if m.tags == 'success' %}alert-success
+        {% elif m.tags == 'error' %}alert-error
+        {% else %}alert-info{% endif %}">
+
+        {{ m }}
+
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Header -->
+  <div class="page-head">
+
+    <div>
+      <div class="eyebrow">
+        Hostel Allocation
+      </div>
+
+      <h1 class="page-title">
+        Assign <em>Bed</em>
+      </h1>
+    </div>
+
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
+
+      <div class="context-badge">
+        <i class="bi bi-grid-3x3-gap-fill"></i>
+        {{ available_beds|length }} Available Bed{{ available_beds|length|pluralize }}
+      </div>
+
+      <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+
+    </div>
+
+  </div>
+
+  <!-- Assignment Form -->
+  <div class="panel">
+
+    <div class="panel-head">
+
+      <div class="panel-title">
+        <div class="icon-badge">
+          <i class="bi bi-person-check-fill"></i>
+        </div>
+
+        <h3>Student Bed Assignment</h3>
+      </div>
+
+    </div>
+
+    <div style="padding:1.4rem;">
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <div class="fg">
+
+            <label>Student *</label>
+
+            <select name="student_id" required>
+              <option value="">— Select student —</option>
+
+              {% for s in students %}
+              <option value="{{ s.id }}">
+                {{ s.full_name }} ({{ s.admission_number }}) — {{ s.class_assigned.name|default:"No class" }}
+              </option>
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+          <div class="fg">
+
+            <label>Available Bed *</label>
+
+            <select name="bed_id" required>
+              <option value="">— Select bed —</option>
+
+              {% for bed in available_beds %}
+              <option value="{{ bed.id }}">
+                {{ bed.room.hostel.name }} — Room {{ bed.room.room_number }} — Bed {{ bed.bed_number }}{% if bed.room.floor %} ({{ bed.room.floor.name }}){% endif %}
+              </option>
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+          <div>
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-check-lg"></i>
+              Assign Bed
+            </button>
+          </div>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <!-- Available Beds -->
+  <div class="panel">
+
+    <div class="panel-head">
+
+      <div class="panel-title">
+
+        <div class="icon-badge">
+          <i class="bi bi-grid-3x3-gap-fill"></i>
+        </div>
+
+        <h3>
+          Available Beds ({{ available_beds|length }})
+        </h3>
+
+      </div>
+
+    </div>
+
+    {% if available_beds %}
+
+    <div class="table-wrap">
+
+      <table class="tbl">
+
+        <thead>
+          <tr>
+            <th>Hostel</th>
+            <th>Room</th>
+            <th>Bed</th>
+            <th>Room Type</th>
+            <th>Floor</th>
+            <th>Features</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for bed in available_beds %}
+          <tr>
+
+            <td>
+              <strong>{{ bed.room.hostel.name }}</strong>
+            </td>
+
+            <td>
+              Room {{ bed.room.room_number }}
+            </td>
+
+            <td>
+              <span class="badge badge-green">
+                <i class="bi bi-check-circle-fill"></i>
+                Bed {{ bed.bed_number }}
+              </span>
+            </td>
+
+            <td>
+              {{ bed.room.get_room_type_display }}
+            </td>
+
+            <td>
+              {{ bed.room.floor.name|default:"—" }}
+            </td>
+
+            <td>
+
+              <div class="feature-tags">
+
+                {% if bed.room.has_ac %}
+                <span class="feature-tag">
+                  <i class="bi bi-snow"></i>
+                  A/C
+                </span>
+                {% endif %}
+
+                {% if bed.room.has_bathroom %}
+                <span class="feature-tag">
+                  <i class="bi bi-droplet-half"></i>
+                  Bathroom
+                </span>
+                {% endif %}
+
+                {% if not bed.room.has_ac and not bed.room.has_bathroom %}
+                <span style="color:var(--slate2);">
+                  —
+                </span>
+                {% endif %}
+
+              </div>
+
+            </td>
+
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        <i class="bi bi-house-x"></i>
+      </div>
+
+      <h4>No Available Beds</h4>
+
+      <p>
+        All hostel beds are currently occupied. New availability will appear here automatically.
+      </p>
+
+    </div>
+
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

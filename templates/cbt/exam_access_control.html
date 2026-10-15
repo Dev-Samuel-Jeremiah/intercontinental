@@ -1,0 +1,999 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Exam Access Control{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════════ */
+.ac-wrap {
+  max-width: 1400px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+}
+.eyebrow span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 6px;
+  letter-spacing: -.02em;
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+.page-subtitle  { font-size: 0.85rem; color: var(--slate2); margin: 0; }
+
+.context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 14px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-bdr);
+  text-align: center;
+  align-self: flex-start;
+  margin-top: 14px;
+}
+.context-pill .num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  line-height: 1;
+  display: block;
+}
+.context-pill .lbl {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--champagne);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  display: block;
+}
+
+.page-divider {
+  height: 1px;
+  background: var(--rim2);
+  margin-bottom: 2rem;
+  position: relative;
+}
+.page-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ALERTS / MESSAGES
+═══════════════════════════════════════════════════════════════ */
+.msg {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  border: 1px solid;
+  animation: riseUp .3s ease;
+}
+.msg-success { background: var(--green-dim);  color: var(--green);  border-color: var(--green-border); }
+.msg-error   { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border); }
+.msg-warning { background: var(--amber-dim);  color: var(--amber);  border-color: var(--amber-border); }
+.msg-info    { background: var(--blue-dim);   color: var(--blue);   border-color: var(--blue-border); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TWO-COLUMN LAYOUT
+═══════════════════════════════════════════════════════════════ */
+.ac-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+@media(max-width:900px) { .ac-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL BASE
+═══════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--rim);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.panel-hdr i { font-size: 0.88rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LEFT PANEL — FILTER BAR
+═══════════════════════════════════════════════════════════════ */
+.filter-bar {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fg label {
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate2);
+  display: block;
+  margin-bottom: 6px;
+}
+.fg select,
+.fg input[type="text"] {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--rim2);
+  border-radius: 9px;
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.84rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.fg select:focus, .fg input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.fg select.active {
+  border-color: var(--champagne-bdr);
+  background: rgba(244,210,31,.05);
+}
+.fg select option { background: var(--surface2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   EXAM LIST
+═══════════════════════════════════════════════════════════════ */
+.exam-scroll {
+  max-height: calc(100vh - 340px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rim3) transparent;
+}
+.exam-scroll::-webkit-scrollbar { width: 4px; }
+.exam-scroll::-webkit-scrollbar-thumb { background: var(--rim3); border-radius: 2px; }
+
+.exam-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rim);
+  cursor: pointer;
+  transition: background .15s;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+  display: block;
+}
+.exam-item-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.exam-item:hover { background: rgba(255,255,255,.03); }
+.exam-item.selected {
+  background: var(--champagne-dim);
+  border-left: 3px solid var(--champagne);
+}
+.exam-item:last-child { border-bottom: none; }
+
+.exam-item-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+}
+.exam-item-body { flex: 1; min-width: 0; }
+.exam-item-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.exam-item-meta { font-size: 0.71rem; color: var(--slate); }
+.exam-item-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+}
+.badge-pub        { background: var(--green-dim);      border: 1px solid var(--green-border);    color: var(--green); }
+.badge-draft      { background: var(--rim);            border: 1px solid var(--rim2);            color: var(--slate2); }
+.badge-restricted { background: var(--red-dim);        border: 1px solid var(--red-border);      color: var(--red); }
+.badge-open       { background: var(--blue-dim);       border: 1px solid var(--blue-border);     color: var(--blue); }
+.badge-gray       { background: var(--rim);            border: 1px solid var(--rim2);            color: var(--slate2); }
+.badge-purple     { background: var(--purple-dim);     border: 1px solid var(--purple-border);   color: var(--purple); }
+.badge-champ      { background: var(--champagne-dim);  border: 1px solid var(--champagne-bdr);   color: var(--champagne-lt); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RIGHT PANEL — EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.rp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+.rp-empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: var(--slate);
+  margin-bottom: 16px;
+}
+.rp-empty h4 { font-size: 0.95rem; font-weight: 600; color: var(--slate2); margin: 0 0 6px; }
+.rp-empty p  { font-size: 0.82rem; color: var(--slate); margin: 0; }
+
+/* ═══════════════════════════════════════════════════════════════
+   EXAM DETAIL HEADER
+═══════════════════════════════════════════════════════════════ */
+.exam-detail-hdr {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--rim);
+}
+.edh-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.edh-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.edh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--slate2);
+}
+.edh-chip i { font-size: 0.7rem; color: var(--slate); }
+
+/* ═══════════════════════════════════════════════════════════════
+   STATUS BAR
+═══════════════════════════════════════════════════════════════ */
+.status-bar {
+  padding: 12px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.status-restricted-on {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.status-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CLASS FILTER PILLS
+═══════════════════════════════════════════════════════════════ */
+.class-filter {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.cf-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--slate);
+  margin-right: 4px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.cf-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  border: 1px solid var(--rim2);
+  background: transparent;
+  color: var(--slate2);
+  cursor: pointer;
+  transition: all .18s;
+  text-decoration: none;
+  display: inline-block;
+}
+.cf-pill:hover {
+  border-color: var(--champagne-bdr);
+  color: var(--champagne-lt);
+}
+.cf-pill.active {
+  background: var(--champagne-dim);
+  border-color: var(--champagne-bdr);
+  color: var(--champagne-lt);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STUDENT SECTION
+═══════════════════════════════════════════════════════════════ */
+.stu-section { padding: 0 20px 20px; }
+
+.stu-class-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 10px;
+  border-bottom: 1px solid var(--rim);
+  margin-bottom: 10px;
+}
+.stu-class-hdr h4 {
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: var(--white);
+  flex: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Select-all row */
+.stu-sel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 9px;
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  margin-bottom: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--slate2);
+}
+.stu-sel-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Student rows */
+.stu-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  transition: background .15s, border-color .15s;
+  border: 1px solid transparent;
+}
+.stu-row:hover { background: rgba(255,255,255,.03); border-color: var(--rim); }
+.stu-row.restricted {
+  background: var(--red-dim);
+  border-color: var(--red-border);
+}
+.stu-row.restricted .stu-name { color: var(--red); }
+
+.stu-avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple), #6366f1);
+  letter-spacing: .02em;
+}
+.stu-body { flex: 1; min-width: 0; }
+.stu-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--white);
+  transition: color .15s;
+}
+.stu-adm { font-size: 0.71rem; color: var(--slate); }
+
+.stu-status {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.stu-restricted-tag { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
+.stu-allowed-tag    { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+
+input[type="checkbox"] {
+  width: 15px; height: 15px;
+  accent-color: var(--champagne);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.empty-class {
+  text-align: center;
+  padding: 24px;
+  font-size: 0.82rem;
+  color: var(--slate);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STICKY ACTION BAR
+═══════════════════════════════════════════════════════════════ */
+.action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  background: var(--surface2);
+  border-top: 1px solid var(--rim2);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 -6px 24px rgba(0,0,0,.3);
+}
+.ab-left {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--slate2);
+}
+.ab-left strong {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+}
+.ab-left .ab-hint {
+  color: var(--slate);
+  font-size: 0.74rem;
+  font-weight: 400;
+  margin-left: 6px;
+}
+.ab-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); }
+
+.btn-restrict {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-restrict:hover { box-shadow: 0 6px 26px rgba(244,210,31,.38); filter: brightness(1.08); }
+
+.btn-allow {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.btn-allow:hover { background: rgba(74,222,128,.18); }
+
+.btn-danger-soft {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-danger-soft:hover { background: rgba(248,113,113,.18); }
+
+.btn-clear {
+  background: transparent;
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-clear:hover {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red-border);
+}
+
+.btn-sm { padding: 6px 12px; font-size: 0.76rem; border-radius: 8px; }
+
+/* Left panel stagger */
+.panel:nth-child(1) { animation-delay: .06s; }
+.panel:nth-child(2) { animation-delay: .12s; }
+</style>
+
+<div class="ac-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow"><span>CBT Module · Access Management</span></div>
+      <h1 class="page-title">Exam <em>Access Control</em></h1>
+      <p class="page-subtitle">Restrict specific exams to selected students. By default all students in assigned classes can see a published exam.</p>
+    </div>
+    <div class="context-pill">
+      <span class="num">{{ exams|length }}</span>
+      <span class="lbl">Total Exams</span>
+    </div>
+  </div>
+  <div class="page-divider"></div>
+
+  <!-- ══ MESSAGES ══════════════════════════════════════════════ -->
+  {% for message in messages %}
+  <div class="msg {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% elif message.tags == 'warning' %}msg-warning{% else %}msg-info{% endif %}">
+    <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'error' %}bi-exclamation-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  <div class="ac-grid">
+
+    <!-- ══ LEFT: Exam Selector ════════════════════════════════════ -->
+    <div class="panel">
+      <div class="panel-hdr">
+        <i class="bi bi-journal-text" style="color:var(--blue);"></i>
+        Select Exam
+      </div>
+
+      <form method="GET" id="filterForm">
+        {% if sel_exam_id %}<input type="hidden" name="exam" value="{{ sel_exam_id }}">{% endif %}
+        <div class="filter-bar">
+          <div class="fg">
+            <label>Session</label>
+            <select name="session" onchange="this.form.submit()">
+              <option value="">All Sessions</option>
+              {% for sess in all_sessions %}
+              <option value="{{ sess.id }}" {% if sel_session == sess.id|stringformat:"s" %}selected{% endif %}>
+                {{ sess.name }}{% if sess.is_active %} ✓{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label>Status</label>
+            <select name="status" onchange="this.form.submit()">
+              <option value="">All</option>
+              <option value="published" {% if sel_status == "published" %}selected{% endif %}>Published</option>
+              <option value="draft"     {% if sel_status == "draft"     %}selected{% endif %}>Draft</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <div class="exam-scroll">
+        {% if exams %}
+          {% for exam in exams %}
+          {% with r_count=exam.student_restrictions.count %}
+          <a href="?exam={{ exam.id }}{% if sel_session %}&session={{ sel_session }}{% endif %}{% if sel_status %}&status={{ sel_status }}{% endif %}"
+             class="exam-item {% if sel_exam_id == exam.id|stringformat:'s' %}selected{% endif %}"
+             style="text-decoration:none;">
+            <div class="exam-item-inner">
+              <div class="exam-item-icon"
+                style="background:{% if exam.published %}var(--green-dim){% else %}var(--rim){% endif %};
+                       border:1px solid {% if exam.published %}var(--green-border){% else %}var(--rim2){% endif %};">
+                <i class="bi {% if exam.published %}bi-send-check-fill{% else %}bi-file-earmark-text{% endif %}"
+                   style="color:{% if exam.published %}var(--green){% else %}var(--slate){% endif %};"></i>
+              </div>
+              <div class="exam-item-body">
+                <div class="exam-item-title">{{ exam.title }}</div>
+                <div class="exam-item-meta">
+                  {{ exam.subject.name }}
+                  {% if exam.session %}&middot; {{ exam.session.name }}{% endif %}
+                  {% if exam.term %} / {{ exam.term.name }}{% endif %}
+                </div>
+              </div>
+              <div class="exam-item-badges">
+                {% if exam.published %}
+                  <span class="badge badge-pub">Published</span>
+                {% else %}
+                  <span class="badge badge-draft">Draft</span>
+                {% endif %}
+                {% if r_count > 0 %}
+                  <span class="badge badge-restricted"><i class="bi bi-lock-fill"></i> {{ r_count }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+          {% endwith %}
+          {% endfor %}
+        {% else %}
+          <div class="empty-class" style="padding:32px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:var(--surface3);border:1px solid var(--rim2);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;">
+              <i class="bi bi-inbox" style="color:var(--slate);font-size:1rem;"></i>
+            </div>
+            No exams found.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ══ RIGHT: Student Access Panel ═══════════════════════════ -->
+    <div class="panel">
+
+      {% if not selected_exam %}
+        <div class="rp-empty">
+          <div class="rp-empty-icon"><i class="bi bi-arrow-left-square"></i></div>
+          <h4>Select an exam</h4>
+          <p>Choose an exam from the left panel to manage student access.</p>
+        </div>
+
+      {% else %}
+
+        <!-- Exam Detail Header -->
+        <div class="exam-detail-hdr">
+          <div class="edh-title">{{ selected_exam.title }}</div>
+          <div class="edh-meta">
+            <span class="edh-chip"><i class="bi bi-book"></i> {{ selected_exam.subject.name }}</span>
+            {% if selected_exam.session %}
+            <span class="edh-chip"><i class="bi bi-calendar3"></i> {{ selected_exam.session.name }}</span>
+            {% endif %}
+            {% if selected_exam.term %}
+            <span class="edh-chip"><i class="bi bi-bookmark-fill"></i> {{ selected_exam.term.name }}</span>
+            {% endif %}
+            {% for cls in selected_exam.classes.all %}
+            <span class="edh-chip"><i class="bi bi-building"></i> {{ cls.name }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+          <div>
+            {% with total_restricted=selected_exam.student_restrictions.count %}
+            {% if total_restricted > 0 %}
+              <span class="status-restricted-on">
+                <i class="bi bi-lock-fill"></i>
+                Restricted to <strong>{{ total_restricted }}</strong> student{{ total_restricted|pluralize }}
+              </span>
+              <span style="font-size:.77rem;color:var(--slate);margin-left:8px;">Other students cannot see this exam.</span>
+            {% else %}
+              <span class="status-open">
+                <i class="bi bi-unlock-fill"></i>
+                Open to all students in assigned classes
+              </span>
+            {% endif %}
+            {% endwith %}
+          </div>
+          <form method="POST" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="exam_id" value="{{ selected_exam.id }}">
+            <input type="hidden" name="action" value="allow_all">
+            <button type="submit" class="btn btn-allow btn-sm"
+                    onclick="return confirm('Remove all restrictions and allow everyone to see this exam?')">
+              <i class="bi bi-unlock-fill"></i> Open to All
+            </button>
+          </form>
+        </div>
+
+        <!-- Class Filter Pills -->
+        {% if exam_classes.count > 1 %}
+        <div class="class-filter">
+          <span class="cf-label"><i class="bi bi-filter"></i> Class:</span>
+          <a href="?exam={{ selected_exam.id }}{% if sel_session %}&session={{ sel_session }}{% endif %}{% if sel_status %}&status={{ sel_status }}{% endif %}"
+             class="cf-pill {% if not sel_class_ids %}active{% endif %}">All</a>
+          {% for cls in exam_classes %}
+          <a href="?exam={{ selected_exam.id }}&classes={{ cls.id }}{% if sel_session %}&session={{ sel_session }}{% endif %}{% if sel_status %}&status={{ sel_status }}{% endif %}"
+             class="cf-pill {% if cls.id in sel_class_ids %}active{% endif %}">{{ cls.name }}</a>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Student Selection Form -->
+        <form method="POST" id="accessForm">
+          {% csrf_token %}
+          <input type="hidden" name="exam_id" value="{{ selected_exam.id }}">
+          <input type="hidden" name="action" value="restrict">
+
+          <div class="stu-section">
+            {% if class_student_data %}
+              {% for group in class_student_data %}
+
+              <div class="stu-class-hdr">
+                <h4>
+                  <i class="bi bi-building" style="color:var(--purple);"></i>
+                  {{ group.cls.name }}
+                </h4>
+                <span class="badge badge-purple">{{ group.students.count }} student{{ group.students.count|pluralize }}</span>
+              </div>
+
+              <!-- Select-all for this class -->
+              <div class="stu-sel-row">
+                <label>
+                  <input type="checkbox" class="class-select-all" data-class="{{ group.cls.id }}"
+                         onchange="toggleClass('{{ group.cls.id }}', this.checked)">
+                  Select all in {{ group.cls.name }}
+                </label>
+                <span style="font-size:.73rem;color:var(--slate);">
+                  <span class="class-count" id="cnt_{{ group.cls.id }}">0</span> selected
+                </span>
+              </div>
+
+              {% for student in group.students %}
+              <div class="stu-row {% if group.has_restriction and student.id in group.restricted_ids %}restricted{% endif %}"
+                   id="row_{{ student.id }}">
+                <input type="checkbox"
+                       name="student_ids"
+                       value="{{ student.id }}"
+                       class="stu-cb"
+                       data-class="{{ group.cls.id }}"
+                       {% if group.has_restriction and student.id in group.restricted_ids %}checked{% endif %}
+                       onchange="updateCounts()">
+                <div class="stu-avatar">{{ student.full_name|slice:":2"|upper }}</div>
+                <div class="stu-body">
+                  <div class="stu-name">{{ student.full_name }}</div>
+                  <div class="stu-adm">{{ student.admission_number }}</div>
+                </div>
+                {% if group.has_restriction %}
+                  {% if student.id in group.restricted_ids %}
+                    <span class="stu-status stu-restricted-tag"><i class="bi bi-lock-fill"></i> Restricted</span>
+                  {% else %}
+                    <span class="stu-status stu-allowed-tag"><i class="bi bi-x-circle"></i> Blocked</span>
+                  {% endif %}
+                {% else %}
+                  <span class="stu-status stu-allowed-tag"><i class="bi bi-check-circle-fill"></i> Open</span>
+                {% endif %}
+              </div>
+              {% empty %}
+              <div class="empty-class">No active students in {{ group.cls.name }}.</div>
+              {% endfor %}
+
+              {% endfor %}
+
+            {% else %}
+              <div class="rp-empty" style="padding:48px 20px;">
+                <div class="rp-empty-icon"><i class="bi bi-people"></i></div>
+                <h4>No students found</h4>
+                <p>No active students are enrolled in the classes assigned to this exam.</p>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Sticky Action Bar -->
+          <div class="action-bar">
+            <div class="ab-left">
+              <strong id="totalSelected">0</strong>
+              <span> student{{ selected_exam.student_restrictions.count|pluralize }} selected</span>
+              <span class="ab-hint">— only checked students will see this exam after saving</span>
+            </div>
+            <div class="ab-btns">
+              <button type="button" class="btn btn-clear btn-sm" onclick="clearAll()">
+                <i class="bi bi-x-lg"></i> Clear All
+              </button>
+              <button type="button" class="btn btn-allow btn-sm" onclick="selectAll()">
+                <i class="bi bi-check2-all"></i> Select All
+              </button>
+              <button type="submit" class="btn btn-restrict" onclick="return confirmSave()">
+                <i class="bi bi-shield-lock-fill"></i> Save Restrictions
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+      {% endif %}
+    </div>
+
+  </div>
+</div><!-- /.ac-wrap -->
+
+<script>
+function updateCounts() {
+  const allCbs = document.querySelectorAll('.stu-cb');
+  let total = 0;
+  const classCounts = {};
+
+  allCbs.forEach(cb => {
+    const cls = cb.dataset.class;
+    classCounts[cls] = (classCounts[cls] || 0) + (cb.checked ? 1 : 0);
+    if (cb.checked) total++;
+
+    const row = cb.closest('.stu-row');
+    if (row) {
+      row.classList.toggle('restricted', cb.checked);
+      const tag = row.querySelector('.stu-status');
+      if (tag) {
+        tag.className = cb.checked ? 'stu-status stu-restricted-tag' : 'stu-status stu-allowed-tag';
+        tag.innerHTML = cb.checked
+          ? '<i class="bi bi-lock-fill"></i> Will restrict'
+          : '<i class="bi bi-check-circle-fill"></i> Will open';
+      }
+    }
+  });
+
+  document.getElementById('totalSelected').textContent = total;
+
+  Object.entries(classCounts).forEach(([cls, cnt]) => {
+    const el = document.getElementById('cnt_' + cls);
+    if (el) el.textContent = cnt;
+    const allInClass = document.querySelectorAll(`.stu-cb[data-class="${cls}"]`);
+    const masterCb = document.querySelector(`.class-select-all[data-class="${cls}"]`);
+    if (masterCb) {
+      masterCb.indeterminate = cnt > 0 && cnt < allInClass.length;
+      masterCb.checked = cnt > 0 && cnt === allInClass.length;
+    }
+  });
+}
+
+function toggleClass(clsId, checked) {
+  document.querySelectorAll(`.stu-cb[data-class="${clsId}"]`).forEach(cb => {
+    cb.checked = checked;
+  });
+  updateCounts();
+}
+
+function selectAll() {
+  document.querySelectorAll('.stu-cb').forEach(cb => cb.checked = true);
+  document.querySelectorAll('.class-select-all').forEach(cb => {
+    cb.checked = true; cb.indeterminate = false;
+  });
+  updateCounts();
+}
+
+function clearAll() {
+  document.querySelectorAll('.stu-cb').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.class-select-all').forEach(cb => {
+    cb.checked = false; cb.indeterminate = false;
+  });
+  updateCounts();
+}
+
+function confirmSave() {
+  const n = document.querySelectorAll('.stu-cb:checked').length;
+  if (n === 0) {
+    return confirm('No students selected. This will REMOVE all restrictions and make the exam visible to everyone. Continue?');
+  }
+  return confirm(`Restrict this exam to ${n} selected student${n === 1 ? '' : 's'} only? Students not checked will not see the exam.`);
+}
+
+// Init on load
+updateCounts();
+</script>
+{% endblock %}

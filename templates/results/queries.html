@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Result questions{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.qf{display:flex;gap:.4rem;flex-wrap:wrap;align-items:flex-start;margin-top:.6rem}.qf textarea{flex:1 1 260px;padding:.5rem .65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.84rem;min-height:60px}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Result <em>questions</em></h1>
+  <p class="fin-sub">Families who think a score is wrong. Check the script, correct the score in score entry if needed, then reply — the family is emailed.</p>
+</div></div>
+{% include "results/_msgs.html" %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-inbox"></i> Waiting ({{ open|length }})</h3></div>
+  {% for q in open %}<div class="panel-b" style="border-bottom:1px solid var(--rim)">
+    <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap"><b>{{ q.student.full_name }} · {{ q.subject.name }}</b><span class="hint">{{ q.student.class_assigned.name }} · {{ q.term.name }} · {{ q.created_at|timesince }} ago</span></div>
+    <p style="margin:.4rem 0;color:var(--slate2)">"{{ q.message }}"</p>
+    <span class="hint">Score when asked: <b>{{ q.score_when_raised|floatformat:"-1" }}</b> · now: <b>{{ q.current|floatformat:"-1" }}</b>{% if q.current != q.score_when_raised %} <span class="chip green">changed</span>{% endif %}</span>
+    <a class="fin-btn fin-btn-sm" style="margin-left:.4rem" href="{% url 'results:manual_score_entry' %}?class={{ q.student.class_assigned_id }}&subject={{ q.subject_id }}&term={{ q.term_id }}"><i class="bi bi-pencil-square"></i> Score entry</a>
+    <form method="post" class="qf">{% csrf_token %}<input type="hidden" name="id" value="{{ q.id }}"><textarea name="response" required placeholder="We checked the script…"></textarea>
+      <div style="display:flex;flex-direction:column;gap:.35rem"><button class="fin-btn fin-btn-sm" name="corrected" value="0">No change needed</button><button class="fin-btn fin-btn-gold fin-btn-sm" name="corrected" value="1">Score corrected</button></div></form>
+  </div>{% empty %}<div class="empty"><i class="bi bi-check2-all"></i><p>No questions waiting.</p></div>{% endfor %}
+</div>
+{% if done %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Answered</h3></div><table class="tbl"><tbody>
+  {% for q in done %}<tr><td class="name">{{ q.student.full_name }}<div class="hint">{{ q.subject.name }} · {{ q.term.name }}</div></td><td class="hint">{{ q.response|truncatechars:90 }}</td>
+    <td>{% if q.status == 'CORRECTED' %}<span class="chip green">{{ q.score_when_raised|floatformat:"-1" }} → {{ q.score_after|floatformat:"-1" }}</span>{% else %}<span class="chip">no change</span>{% endif %}</td><td class="hint">{{ q.responded_by.get_full_name|default:q.responded_by.username }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% endblock %}

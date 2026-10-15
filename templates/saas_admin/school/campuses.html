@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Sections{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Administration</div>
+  <h1 class="fin-title"><em>Sections</em></h1>
+  <p class="fin-sub">The school's sections — Nursery &amp; Primary, Secondary and Darun. Put each class and staff member in a section to see headcounts per section. A class belongs to one section; a staff member can teach in several.</p>
+</div></div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b"><table class="tbl"><thead><tr><th>Section</th><th class="num">Classes</th><th class="num">Students</th><th class="num">Staff</th></tr></thead><tbody>
+      {% for r in rows %}<tr><td class="name">{{ r.campus.name }}{% if r.campus.code %} <span class="chip">{{ r.campus.code }}</span>{% endif %}<br><small class="hint">{{ r.campus.address }}{% if r.campus.head %} · head: {{ r.campus.head.full_name }}{% endif %}</small></td><td class="num">{{ r.classes }}</td><td class="num">{{ r.students }}</td><td class="num">{{ r.staff }}</td></tr>{% empty %}<tr><td class="empty">No sections yet. Add one on the right.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if rows %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="assign">
+      <h3 style="margin:0 0 .6rem">Put classes and staff in a section</h3>
+      <div><label>Section</label><select name="campus">{% for r in rows %}<option value="{{ r.campus.pk }}">{{ r.campus.name }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Classes</label><select name="classes" multiple size="8">{% for c in classes %}<option value="{{ c.pk }}">{{ c.name }}{% for cp in c.campuses.all %} ({{ cp.name }}){% endfor %}</option>{% endfor %}</select></div>
+      <div><label>Staff</label><select name="staff" multiple size="8">{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div></div>
+      <div><label>Head of section</label><select name="head"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button></form>{% endif %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a section</h3>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="120" placeholder="Darun"></div><div><label>Short code</label><input name="code" maxlength="10"></div></div>
+    <div><label>Address</label><input name="address" maxlength="255"></div>
+    <div><label>Phone</label><input name="phone" maxlength="20"></div>
+    <button class="fin-btn" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

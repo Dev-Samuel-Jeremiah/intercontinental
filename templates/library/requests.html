@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Book requests{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Book requests</em></h1>
+  <p class="fin-sub">Teachers ask for new titles; the library approves, orders and receives them, and the teacher is emailed at each step.</p>
+</div></div>
+{% if lib %}{% include "library/_nav.html" %}{% else %}{% include "finance/_fin_styles.html" %}{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+    {% for pr in items %}<tr><td class="name">{{ pr.copies }} × {{ pr.title }}<br><small class="hint">{{ pr.authors }}{% if pr.isbn %} · {{ pr.isbn }}{% endif %} · {{ pr.reason }}{% if lib %} · {{ pr.requested_by.get_full_name|default:pr.requested_by.username }}{% endif %}{% if pr.est_price %} · about ₦{{ pr.est_price|floatformat:0 }} each{% endif %}{% if pr.note %} · {{ pr.note }}{% endif %}</small></td>
+      <td>{% if lib %}<form method="post" class="fin-form" style="display:flex;gap:.25rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="decide"><input type="hidden" name="id" value="{{ pr.pk }}"><select name="status" style="width:auto">{% for k, v in statuses %}{% if k != 'PENDING' %}<option value="{{ k }}" {% if k == pr.status %}selected{% endif %}>{{ v }}</option>{% endif %}{% endfor %}</select><input name="note" placeholder="Note" style="width:110px"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form>{% endif %}
+        <span class="chip{% if pr.status == 'RECEIVED' %} ok{% elif pr.status == 'DECLINED' %} red{% else %} gold{% endif %}">{{ pr.get_status_display }}</span></td></tr>
+    {% empty %}<tr><td class="empty">No requests yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="new">
+    <h3 style="margin:0 0 .6rem">Ask for a book</h3>
+    <div><label>Title</label><input name="title" required maxlength="255"></div>
+    <div class="row2"><div><label>Author(s)</label><input name="authors" maxlength="255"></div><div><label>ISBN</label><input name="isbn" maxlength="17"></div></div>
+    <div class="row2"><div><label>Copies</label><input name="copies" value="1" inputmode="numeric"></div><div><label>Price each (if known)</label><input name="est_price" inputmode="decimal"></div></div>
+    <div><label>Why</label><input name="reason" required maxlength="255" placeholder="e.g. New SS2 Literature text"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send</button>
+  </form>
+</div>
+{% endblock %}

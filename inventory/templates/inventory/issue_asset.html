@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Issue Asset{% endblock %}
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+<div class="inv-page">
+  <div class="inv-header">
+    <h1>📤 Issue Asset</h1>
+    <p>Assign an asset to a staff member or location</p>
+  </div>
+  <div class="inv-card" style="max-width:700px;">
+    <div class="inv-card-header"><h2>📋 Issue Details</h2></div>
+    <div class="inv-card-body">
+      <div class="alert-inv alert-inv-info" style="margin-bottom:16px;">ℹ️ Assign to either a <strong>User</strong> or a <strong>Location</strong> — not both.</div>
+      <form method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div style="color:var(--inv-danger);font-size:.82rem;margin-top:4px;">{{ field.errors|join:", " }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+        <div class="alert-inv alert-inv-danger">{{ form.non_field_errors|join:", " }}</div>
+        {% endif %}
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button type="submit" class="btn-inv btn-inv-warning">📤 Issue Asset</button>
+          <a href="{% url 'inventory:asset_list' %}" class="btn-inv btn-inv-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,743 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Invoices{% endblock %}
+{% block content %}
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:#0f2348;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* Header */
+
+.page-head{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  flex-wrap:wrap;
+  margin-bottom:28px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--rim);
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+  font-size:.72rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--champagne);
+  font-weight:700;
+}
+
+.eyebrow::before{
+  content:"";
+  width:38px;
+  height:1px;
+  background:var(--champagne);
+  opacity:.8;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:.95;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.page-sub{
+  margin-top:12px;
+  color:var(--slate2);
+  font-size:.92rem;
+  max-width:760px;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.24);
+  color:var(--champagne-lt);
+  font-size:.8rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+/* Panels */
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:22px;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(2){animation-delay:.04s;}
+.panel:nth-child(3){animation-delay:.08s;}
+.panel:nth-child(4){animation-delay:.12s;}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-body{
+  padding:22px;
+}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.88rem;
+  flex-shrink:0;
+}
+
+.icon-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.panel-head h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* Alerts */
+
+.alert{
+  padding:14px 16px;
+  border-radius:14px;
+  margin-bottom:16px;
+  font-size:.88rem;
+  font-weight:600;
+  border:1px solid;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+/* Forms */
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  align-items:end;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  color:var(--white);
+  padding:13px 14px;
+  font-size:.92rem;
+  font-family:'Outfit',sans-serif;
+  transition:.2s ease;
+}
+
+.fg input:focus,
+.fg select:focus,
+textarea:focus{
+  outline:none;
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* Buttons */
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border:none;
+  cursor:pointer;
+  text-decoration:none;
+  font-family:'Outfit',sans-serif;
+  transition:.2s ease;
+  font-weight:700;
+  border-radius:12px;
+  padding:12px 18px;
+  font-size:.85rem;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+.btn-danger{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#fca5a5;
+}
+
+/* Table */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
+}
+
+.tbl th{
+  text-align:left;
+  padding:14px 14px;
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+  color:var(--slate2);
+  font-weight:700;
+  border-bottom:1px solid var(--rim);
+}
+
+.tbl td{
+  padding:16px 14px;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+  color:var(--white);
+  font-size:.88rem;
+}
+
+.tbl tbody tr{
+  transition:.18s ease;
+}
+
+.tbl tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+/* Avatar */
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  color:#0a1f44;
+  font-weight:800;
+  font-size:.8rem;
+  flex-shrink:0;
+}
+
+.student-cell{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.student-meta{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.student-meta strong{
+  font-size:.9rem;
+}
+
+.muted{
+  color:var(--slate);
+  font-size:.76rem;
+}
+
+/* Badges */
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  border:1px solid;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:#fcd34d;
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:#93c5fd;
+}
+
+.badge-neutral{
+  background:rgba(255,255,255,.05);
+  border-color:var(--rim2);
+  color:var(--slate2);
+}
+
+/* Empty */
+
+.empty-state{
+  padding:48px 20px;
+  text-align:center;
+}
+
+.empty-icon{
+  width:70px;
+  height:70px;
+  margin:auto auto 16px;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.6rem;
+  color:var(--champagne);
+}
+
+.empty-state h4{
+  margin:0 0 8px;
+  font-size:1.05rem;
+  color:var(--white);
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate);
+  font-size:.88rem;
+}
+
+.money-green{
+  color:#86efac;
+  font-weight:700;
+}
+
+.money-red{
+  color:#fca5a5;
+  font-weight:700;
+}
+
+.invoice-no{
+  font-family:monospace;
+  color:var(--champagne-lt);
+  font-size:.82rem;
+}
+
+.action-link{
+  color:var(--champagne-lt);
+  text-decoration:none;
+  font-size:.8rem;
+  font-weight:600;
+}
+
+.action-link:hover{
+  color:white;
+}
+
+@media(max-width:768px){
+
+  .your-wrap{
+    padding:1.3rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.2rem;
+  }
+
+  .panel-body{
+    padding:18px;
+  }
+
+}
+</style>
+
+<div class="your-wrap">
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert {% if m.tags == 'success' %}alert-success{% else %}alert-error{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Header -->
+  <div class="page-head">
+
+    <div>
+      <div class="eyebrow">
+        Finance Suite
+      </div>
+
+      <h1 class="page-title">
+        Student <em>Invoices</em>
+      </h1>
+
+      <div class="page-sub">
+        Generate, manage and review all billing invoices across students,
+        sessions and academic terms.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div class="context-badge">
+        <i class="bi bi-receipt-cutoff"></i>
+        {{ invoices|length }} Invoice{{ invoices|length|pluralize }}
+      </div>
+
+      <a href="{% url 'finance:admin_dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Generate Invoice -->
+  <div class="panel">
+
+    <div class="panel-body">
+
+      <div class="panel-head">
+        <div class="icon-badge icon-green">
+          <i class="bi bi-file-earmark-plus"></i>
+        </div>
+        <h3>Generate Invoice</h3>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="generate">
+
+        <div class="form-grid">
+
+          <div class="fg">
+            <label>Student</label>
+            <select name="student_id" required>
+              <option value="">— Select —</option>
+              {% for s in students %}
+              <option value="{{ s.id }}">
+                {{ s.full_name }} ({{ s.admission_number }})
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Term</label>
+            <select name="term_id" required>
+              <option value="">— Select —</option>
+              {% for t in terms %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Session</label>
+            <select name="session_id" required>
+              <option value="">— Select —</option>
+              {% for s in sessions %}
+              <option value="{{ s.id }}">{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-lightning-charge-fill"></i>
+            Generate Invoice
+          </button>
+
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Invoice Table -->
+  <div class="panel">
+
+    <div class="panel-body">
+
+      <div class="panel-head">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-table"></i>
+        </div>
+        <h3>Invoice Records</h3>
+      </div>
+
+      {% if invoices %}
+
+      <div class="table-wrap">
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Invoice No.</th>
+              <th>Student</th>
+              <th>Term / Session</th>
+              <th>Total</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for inv in invoices %}
+            <tr>
+
+              <td>
+                <span class="invoice-no">{{ inv.invoice_no }}</span>
+              </td>
+
+              <td>
+                <div class="student-cell">
+
+                  <div class="avatar">
+                    {{ inv.student.full_name|slice:":2"|upper }}
+                  </div>
+
+                  <div class="student-meta">
+                    <strong>{{ inv.student.full_name }}</strong>
+                    <span class="muted">
+                      {{ inv.student.admission_number }}
+                    </span>
+                  </div>
+
+                </div>
+              </td>
+
+              <td>
+                {{ inv.term|default:"—" }}
+                <br>
+                <span class="muted">
+                  {{ inv.session|default:"—" }}
+                </span>
+              </td>
+
+              <td>
+                ₦{{ inv.total|floatformat:2 }}
+              </td>
+
+              <td class="money-green">
+                ₦{{ inv.amount_paid|floatformat:2 }}
+              </td>
+
+              <td class="{% if inv.balance_due > 0 %}money-red{% else %}money-green{% endif %}">
+                ₦{{ inv.balance_due|floatformat:2 }}
+              </td>
+
+              <td>
+                {% if inv.status == 'PAID' %}
+                  <span class="badge badge-green">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Paid
+                  </span>
+
+                {% elif inv.status == 'PARTIAL' %}
+                  <span class="badge badge-amber">
+                    <i class="bi bi-dash-circle-fill"></i>
+                    Partial
+                  </span>
+
+                {% elif inv.status == 'OVERDUE' %}
+                  <span class="badge badge-red">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    Overdue
+                  </span>
+
+                {% elif inv.status == 'DRAFT' %}
+                  <span class="badge badge-blue">
+                    <i class="bi bi-pencil-square"></i>
+                    Draft
+                  </span>
+
+                {% else %}
+                  <span class="badge badge-neutral">
+                    {{ inv.status }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td>
+                <a href="{% url 'finance:view_invoice' inv.id %}" class="action-link">
+                  <i class="bi bi-eye"></i>
+                  View
+                </a>
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-receipt"></i>
+        </div>
+
+        <h4>No invoices available</h4>
+
+        <p>
+          Generate a new invoice to begin tracking student billing records.
+        </p>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

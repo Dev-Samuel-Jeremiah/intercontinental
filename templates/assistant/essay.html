@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Essay feedback{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">AI help</div>
+  <h1 class="fin-title">Feedback on my <em>draft</em></h1>
+  <p class="fin-sub">Paste your essay before you hand it in. You'll get comments on what works and what to improve — no marks, and it won't rewrite it for you.{% if not readonly %} {{ left }} left today.{% endif %}</p>
+</div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
+  {% if readonly %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-file-text"></i> {{ result.title|default:"Draft" }}</h3><span class="hint">{{ result.created_at|date:"j M Y" }}</span></div><div class="panel-b" style="white-space:pre-wrap">{{ text }}</div></div>
+  {% else %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div class="row2"><div><label>For an assignment? <span class="hint">(optional)</span></label><select name="assignment"><option value="">— not for an assignment —</option>{% for a in assignments %}<option value="{{ a.id }}" {% if request.POST.assignment == a.id|stringformat:"s" %}selected{% endif %}>{{ a.section.course.name }}: {{ a.title }}</option>{% endfor %}</select></div>
+      <div><label>Title <span class="hint">(optional)</span></label><input name="title" maxlength="200" value="{{ request.POST.title }}"></div></div>
+    <div><label>Your draft</label><textarea name="text" rows="16" required placeholder="Paste your essay here…">{{ text }}</textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit" {% if not left %}disabled{% endif %}><i class="bi bi-stars"></i> Get feedback</button>
+  </form>{% endif %}
+  <div>
+    {% if result %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-hand-thumbs-up"></i> What works</h3></div><div class="panel-b"><ul style="margin:0;padding-left:1.1rem;line-height:1.65">{% for x in result.feedback.strengths %}<li>{{ x }}</li>{% endfor %}</ul></div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-wrench-adjustable"></i> To improve</h3></div><div class="panel-b"><ul style="margin:0;padding-left:1.1rem;line-height:1.65">{% for x in result.feedback.improve %}<li>{{ x }}</li>{% endfor %}</ul></div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-question-circle"></i> Think about</h3></div><div class="panel-b"><ul style="margin:0;padding-left:1.1rem;line-height:1.65">{% for x in result.feedback.questions %}<li>{{ x }}</li>{% endfor %}</ul>
+      {% if result.feedback.next_step %}<p style="margin-bottom:0"><b>Next step:</b> {{ result.feedback.next_step }}</p>{% endif %}</div></div>
+    {% else %}<div class="panel"><div class="empty"><i class="bi bi-pencil-square"></i><p>Your feedback appears here.</p></div></div>{% endif %}
+    {% if history %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Earlier feedback</h3></div><div class="panel-b">{% for h in history %}<div style="padding:.25rem 0"><a href="{% url 'assistant:essay_view' h.id %}" style="color:inherit">{{ h.title|default:h.text|truncatechars:50 }}</a> <span class="hint">{{ h.created_at|date:"j M" }}</span></div>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

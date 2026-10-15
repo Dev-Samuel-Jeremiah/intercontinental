@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}HR records{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">People &amp; HR</div>
+  <h1 class="fin-title">HR <em>records</em></h1>
+  <p class="fin-sub">Onboarding, contracts, training, discipline and exits for every member of staff.</p>
+</div></div>
+{% include "hr/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Staff</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Contracts ending (60 days)</small><b>{{ expiring|length }}</b></div>
+  <div class="fin-stat"><small>Open disciplinary cases</small><b>{{ open_cases|length }}</b></div>
+  <div class="fin-stat"><small>Exits in progress</small><b>{{ open_exits|length }}</b></div>
+  <div class="fin-stat"><small>New job applications</small><b>{{ new_applications }}</b></div>
+</div>
+{% if expiring or open_cases or open_exits %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3><i class="bi bi-bell"></i> Needs attention</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>
+  {% for c in expiring %}<tr><td class="name"><a href="{% url 'hr:staff_file' c.staff_id %}">{{ c.staff.full_name }}</a></td><td>{{ c.get_kind_display }} contract ends {{ c.end|date:"j M Y" }}</td><td><span class="chip amber">Renew or exit</span></td></tr>{% endfor %}
+  {% for c in open_cases %}<tr><td class="name"><a href="{% url 'hr:case' c.pk %}">{{ c.staff.full_name }}</a></td><td>{{ c.get_kind_display }} of {{ c.date|date:"j M Y" }}</td><td>{% if c.responded_at %}<span class="chip gold">Replied</span>{% else %}<span class="chip">Waiting for reply</span>{% endif %}</td></tr>{% endfor %}
+  {% for e in open_exits %}<tr><td class="name"><a href="{% url 'hr:exit' e.pk %}">{{ e.staff.full_name }}</a></td><td>{{ e.get_kind_display }} — last day {{ e.last_day|date:"j M Y" }}</td><td><span class="chip red">Exit</span></td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endif %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Staff</h3></div><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Onboarding</th><th>Contract</th><th></th></tr></thead><tbody>
+  {% for r in rows %}<tr>
+    <td class="name">{{ r.staff.full_name }}</td><td>{{ r.staff.get_role_display }}</td>
+    <td>{% if r.progress.1 %}{% if r.progress.0 == r.progress.1 %}<span class="chip green">Complete</span>{% else %}{{ r.progress.0 }} of {{ r.progress.1 }}{% endif %}{% else %}—{% endif %}</td>
+    <td>{% if r.contract %}{{ r.contract.get_kind_display }}{% if r.contract.end %} to {{ r.contract.end|date:"j M Y" }}{% endif %}{% else %}<span class="chip">None on file</span>{% endif %}</td>
+    <td><a class="fin-btn fin-btn-sm" href="{% url 'hr:staff_file' r.staff.pk %}">Open file</a></td>
+  </tr>{% empty %}<tr><td colspan="5" class="empty">No staff yet.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

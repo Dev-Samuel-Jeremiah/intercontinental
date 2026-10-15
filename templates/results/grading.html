@@ -1,0 +1,66 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Grading &amp; deadlines{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .bands td{padding:.35rem .5rem}
+  .bands input{width:100%;padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.84rem}
+  .bands input.g{width:70px;text-transform:uppercase;font-weight:700}
+  .bands input.m{width:90px}
+  .preset{display:flex;justify-content:space-between;gap:.6rem;align-items:center;padding:.55rem 0;border-bottom:1px solid var(--rim)}
+  .dl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem;align-items:center;padding:.8rem 0;border-bottom:1px solid var(--rim)}
+  .dl:last-child{border-bottom:0}
+  .dl form{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
+  .dl input{padding:.4rem .55rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem}
+  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--rim2)}
+  .msgs .success{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+  .msgs .error{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Grading &amp; <em>deadlines</em></h1>
+  <p class="fin-sub">Your grade boundaries, whether report cards show positions, and when score entry closes each term.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><a class="fin-btn fin-btn-sm" href="{% url 'results:assessment' %}"><i class="bi bi-ui-checks-grid"></i> CA structure</a><a class="fin-btn fin-btn-sm" href="{% url 'results:broadsheet' %}"><i class="bi bi-table"></i> Broadsheet</a></div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-award"></i> Grade boundaries</h3>{% if not has_bands %}<span class="chip red">not set — report cards show no grades</span>{% endif %}</div><div class="panel-b">
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="bands">
+      <table class="bands" style="width:100%"><thead><tr><th class="hint" style="text-align:left">Grade</th><th class="hint" style="text-align:left">From mark</th><th class="hint" style="text-align:left">Remark</th></tr></thead><tbody>
+        {% for r in rows %}<tr><td><input class="g" name="grade_{{ forloop.counter0 }}" value="{{ r.grade }}" maxlength="2"></td>
+          <td><input class="m" type="number" step="0.5" min="0" max="100" name="min_{{ forloop.counter0 }}" value="{{ r.min|floatformat:'-1' }}"></td>
+          <td><input name="desc_{{ forloop.counter0 }}" value="{{ r.desc }}" maxlength="255"></td></tr>{% endfor %}
+      </tbody></table>
+      <p class="hint">A score gets the grade of the highest band it reaches. The lowest band must start at 0. Leave rows empty to drop them. Saving regrades results already entered.</p>
+      <button class="fin-btn fin-btn-gold" type="submit">Save grading scale</button>
+    </form>
+  </div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-lightning"></i> Common scales</h3></div><div class="panel-b">
+      {% for key, p in presets.items %}<form method="post" class="preset">{% csrf_token %}<input type="hidden" name="action" value="preset"><span>{{ p.0 }}</span>
+        <button class="fin-btn fin-btn-sm" name="preset" value="{{ key }}" onclick="return confirm('Replace your grade boundaries with {{ p.0|escapejs }}?')">Use</button></form>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-trophy"></i> Positions on report cards</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="positions">
+        <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="show_position" style="width:auto" {% if settings.show_position %}checked{% endif %}> Position in class (by average)</label>
+        <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="show_subject_position" style="width:auto" {% if settings.show_subject_position %}checked{% endif %}> Position in each subject</label>
+        <p class="hint" style="margin:0">Equal scores share a position (1st, 2nd, 2nd, 4th). Students not offering a subject aren't ranked in it.</p>
+        <button class="fin-btn fin-btn-sm" type="submit">Save</button></form>
+    </div></div>
+  </div>
+</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-lock"></i> Score entry deadlines{% if session %} — {{ session.name }}{% endif %}</h3></div><div class="panel-b">
+  {% for row in terms %}<div class="dl">
+    <div><b>{{ row.term.name }}</b>
+      {% if row.lock %}{% if row.lock.is_locked %}<span class="chip red"><i class="bi bi-lock-fill"></i> closed since {{ row.lock.locks_on|date:"j M" }}</span>
+        {% elif row.lock.reopened_until %}<span class="chip amber">reopened until {{ row.lock.reopened_until|date:"j M H:i" }}</span> <span class="hint">{{ row.lock.reopen_reason }}</span>
+        {% else %}<span class="chip gold">closes after {{ row.lock.locks_on|date:"j M Y" }}</span>{% endif %}
+      {% else %}<span class="hint">no deadline</span>{% endif %}</div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;justify-content:flex-end">
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="deadline"><input type="hidden" name="term" value="{{ row.term.id }}">
+        <input type="date" name="locks_on" value="{{ row.lock.locks_on|date:'Y-m-d' }}"><button class="fin-btn fin-btn-sm" type="submit">Set</button></form>
+      {% if row.lock and row.lock.is_locked %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="reopen"><input type="hidden" name="term" value="{{ row.term.id }}">
+        <input name="reason" required maxlength="255" placeholder="Why reopen?"><input type="number" name="hours" value="48" min="1" max="336" style="width:70px" title="Hours"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Reopen</button></form>
+      {% elif row.lock and row.lock.reopened_until %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><input type="hidden" name="term" value="{{ row.term.id }}"><button class="fin-btn fin-btn-sm" type="submit">Close now</button></form>{% endif %}
+    </div>
+  </div>{% empty %}<p class="hint" style="margin:0">Set up the current session's terms first.</p>{% endfor %}
+</div></div>
+{% endblock %}

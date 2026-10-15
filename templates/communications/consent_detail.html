@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ f.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'communications:consent_manage' %}" style="color:inherit">Consent forms</a></div>
+  <h1 class="fin-title">{{ f.title }}</h1>
+  <p class="fin-sub">Reply by {{ f.deadline|date:"j M Y" }}{% if f.cost %} · ₦{{ f.cost|floatformat:"2g" }}{% endif %} · {% if open %}open{% else %}closed{% endif %}</p>
+</div>
+<div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="fin-btn" type="submit">{% if f.closed %}Reopen{% else %}Close replies{% endif %}</button></form>
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Consent given</small><b>{{ sm.yes }}</b></div>
+  <div class="fin-stat"><small>Refused</small><b>{{ sm.no }}</b></div>
+  <div class="fin-stat"><small>No reply yet</small><b>{{ sm.waiting }}</b></div>
+</div>
+{% if sm.waiting and open %}
+<form method="post" class="fin-form" style="display:flex;gap:.6rem;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="remind">
+  <select name="channel" style="max-width:200px"><option value="BOTH">SMS and email</option><option value="EMAIL">Email only</option><option value="SMS">SMS only</option></select>
+  <button class="fin-btn fin-btn-gold" type="submit">Remind the {{ sm.waiting }} who have not replied</button>
+</form>
+{% endif %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-b"><p style="margin:0">{{ f.details|linebreaksbr }}</p></div></div>
+<div class="panel"><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Student</th><th>Class</th><th>Answer</th><th>Signed</th><th>Note</th></tr></thead><tbody>
+  {% for r in sm.rows %}<tr><td class="name">{{ r.student.full_name }}</td><td>{{ r.student.class_assigned.name|default:"" }}</td>
+    <td>{% if r.reply %}{% if r.reply.answer == 'YES' %}<span class="chip green">Yes</span>{% else %}<span class="chip red">No</span>{% endif %}{% else %}<span class="chip">Waiting</span>{% endif %}</td>
+    <td>{% if r.reply %}{{ r.reply.signed_name }}<br><small class="hint">{{ r.reply.created_at|date:"j M H:i" }}</small>{% endif %}</td><td>{{ r.reply.note|default:"" }}</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Wellbeing resources{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Care</div>
+  <h1 class="fin-title"><em>Wellbeing resources</em></h1>
+  <p class="fin-sub">Short, practical guidance that students see on "My wellbeing" and parents see on their portal. A few starters are provided — edit them, and add local helplines and clinics you trust.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    {% for r in items %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim){% if not r.published %};opacity:.5{% endif %}"><b>{{ r.title }}</b> <span class="hint">{{ r.get_topic_display }} · {{ r.get_audience_display }}</span>
+      <div style="font-size:.88rem">{{ r.body|truncatechars:200 }}</div>{% if r.contact %}<div class="hint">{{ r.contact }}</div>{% endif %}
+      <form method="post" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if r.published %}Hide{% else %}Show{% endif %}</button></form></div>
+    {% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a resource</h3>
+    <div><label>Title</label><input name="title" required maxlength="160"></div>
+    <div class="row2"><div><label>Topic</label><select name="topic">{% for k, v in topics %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>For</label><select name="audience">{% for k, v in audiences %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Text</label><textarea name="body" rows="5" required></textarea></div>
+    <div class="row2"><div><label>Link</label><input type="url" name="link"></div><div><label>Phone / who to speak to</label><input name="contact" maxlength="160"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

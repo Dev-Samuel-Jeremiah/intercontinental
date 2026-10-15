@@ -1,0 +1,33 @@
+from django.urls import path
+
+from . import views
+
+app_name = 'security'
+
+urlpatterns = [
+    # Everyone signed in
+    path('me/', views.me, name='me'),
+    path('2fa/setup/', views.setup, name='setup'),
+    path('2fa/verify/', views.verify, name='verify'),
+    path('2fa/backup-codes/', views.backup_codes, name='backup_codes'),
+    path('sessions/', views.sessions, name='sessions'),
+    # School administrators
+    path('', views.overview, name='overview'),
+    path('settings/', views.settings_page, name='settings'),
+    path('people/', views.people, name='people'),
+    path('audit/', views.audit, name='audit'),
+    path('roles/', views.roles, name='roles'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('consents/', views.consents, name='consents'),
+    path('requests/', views.requests_list, name='requests'),
+    path('requests/<int:pk>/', views.request_detail, name='request'),
+    path('requests/<int:pk>/file/', views.request_file, name='request_file'),
+    path('breaches/', views.breaches, name='breaches'),
+    path('breaches/<int:pk>/', views.breach_detail, name='breach'),
+    path('retention/', views.retention, name='retention'),
+    path('compliance/', views.compliance, name='compliance'),
+    # Parents
+    path('family/', views.family, name='family'),
+    # Public
+    path('disclosure/', views.disclosure, name='disclosure'),
+]

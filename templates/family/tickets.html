@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Feedback and complaints{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Parent experience</div>
+  <h1 class="fin-title">Feedback &amp; <em>complaints</em></h1>
+  <p class="fin-sub">From parents, each with a reference. Target: resolved within {{ days }} days.{% if not admin %} Showing those assigned to you.{% endif %}</p>
+</div>
+<div style="display:flex;gap:.4rem"><a class="fin-btn{% if show == 'open' %} fin-btn-gold{% endif %}" href="?show=open">Open</a><a class="fin-btn{% if show == 'all' %} fin-btn-gold{% endif %}" href="?show=all">All</a></div></div>
+{% include "family/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Showing</small><b>{{ items|length }}</b></div>
+  <div class="fin-stat"><small>Past the target</small><b>{{ late_count }}</b></div>
+  <div class="fin-stat"><small>Parents' rating of our replies</small><b>{% if avg_rating %}{{ avg_rating }} ★{% else %}—{% endif %}</b></div>
+</div>
+<div class="panel"><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Ref</th><th>Subject</th><th>Type</th><th>Child</th><th>Assigned</th><th>Status</th></tr></thead><tbody>
+  {% for t in items %}<tr><td><a href="{% url 'family:ticket_detail' t.pk %}">{{ t.reference }}</a></td><td class="name">{{ t.subject }}<br><small class="hint">{{ t.get_category_display }} · {{ t.created_at|date:"j M" }}</small></td><td>{{ t.get_kind_display }}</td><td>{{ t.student.full_name|default:"" }}</td><td>{{ t.assigned_to.full_name|default:"—" }}</td>
+    <td>{% if t.late %}<span class="chip red">Overdue</span>{% elif t.status == 'RESOLVED' or t.status == 'CLOSED' %}<span class="chip green">{{ t.get_status_display }}</span>{% else %}<span class="chip">{{ t.get_status_display }}</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">Nothing here.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

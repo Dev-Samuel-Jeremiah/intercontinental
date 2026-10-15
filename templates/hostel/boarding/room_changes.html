@@ -1,0 +1,19 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Room change requests{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Room change <em>requests</em></h1>
+  <p class="fin-sub">From families. Approving moves the boarder to the bed you choose.</p>
+</div></div>
+{% include "hostel/boarding/_nav.html" %}
+{% for r in pending %}<div class="panel" style="margin-bottom:1rem"><div class="panel-b">
+  <b>{{ r.boarder.student.full_name }}</b> <small class="hint">now {% if r.boarder.bed %}{{ r.boarder.bed.room }}{% else %}no bed{% endif %} · asked {{ r.created_at|date:"j M" }}{% if r.preferred_room %} · prefers {{ r.preferred_room }}{% endif %}</small>
+  <p>{{ r.reason|linebreaksbr }}</p>
+  <form method="post" class="fin-form" style="display:flex;gap:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}">
+    <select name="bed" style="max-width:260px"><option value="">New bed…</option>{% for b in beds %}<option value="{{ b.pk }}">{{ b.room }} — bed {{ b.bed_number }}</option>{% endfor %}</select>
+    <input name="note" placeholder="Note to the family" style="flex:1;min-width:150px">
+    <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve and move</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form>
+</div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No requests waiting.</p></div></div>{% endfor %}
+{% if done %}<div class="panel"><div class="panel-h"><h3>Decided</h3></div><div class="panel-b">{% for r in done %}<p style="margin:.25rem 0">{{ r.boarder.student.full_name }} — <span class="chip">{{ r.get_status_display }}</span> {{ r.note }}</p>{% endfor %}</div></div>{% endif %}
+{% endblock %}

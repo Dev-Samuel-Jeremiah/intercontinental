@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Merits and demerits{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Conduct · this term</div>
+  <h1 class="fin-title"><em>Merits &amp; demerits</em></h1>
+  <p class="fin-sub">Merits come from teachers' praise points; demerits from concern points and incident demerits. When a student reaches a threshold the family and form teacher are told, and it appears below until you mark it done.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Thresholds reached</h3><form method="post">{% csrf_token %}<input type="hidden" name="action" value="recheck"><button class="fin-btn fin-btn-sm" type="submit">Check everyone now</button></form></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for h in hits %}<tr{% if h.done %} style="opacity:.55"{% endif %}><td class="name">{{ h.student.full_name }}<br><small class="hint">{{ h.student.class_assigned|default:"" }} · {{ h.reached_at|date:"j M" }}</small></td><td><span class="chip{% if h.threshold.kind == 'MERIT' %} ok{% else %} red{% endif %}">{{ h.threshold.name }} · {{ h.total }}</span><br><small class="hint">{{ h.threshold.action }}</small></td><td>{% if not h.done %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="id" value="{{ h.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Done</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="fin-grid" style="grid-template-columns:1fr 1fr">
+      <div class="panel"><div class="panel-h"><h3>Most merits</h3></div><div class="panel-b">{% for s, n in merits %}<p style="margin:.15rem 0">{{ s.full_name }} <span class="hint">{{ s.class_assigned|default:"" }}</span> — <b>{{ n }}</b></p>{% empty %}<p class="empty">None yet.</p>{% endfor %}</div></div>
+      <div class="panel"><div class="panel-h"><h3>Most demerits</h3></div><div class="panel-b">{% for s, n in demerits %}<p style="margin:.15rem 0">{{ s.full_name }} <span class="hint">{{ s.class_assigned|default:"" }}</span> — <b>{{ n }}</b></p>{% empty %}<p class="empty">None.</p>{% endfor %}</div></div>
+    </div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Thresholds</h3></div><div class="panel-b">
+      {% for th in thresholds %}<form method="post" style="display:flex;justify-content:space-between;gap:.4rem;padding:.3rem 0;border-bottom:1px solid var(--rim)">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ th.pk }}"><span><b>{{ th.get_kind_display }} {{ th.points }}</b> — {{ th.name }}<br><small class="hint">{{ th.action }}{% if th.tell_parents %} · family told{% endif %}</small></span><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form>
+      {% empty %}<p class="hint">No thresholds yet. Try: merits 25 → Certificate of merit; demerits 10 → Detention; demerits 20 → Parent meeting.</p>{% endfor %}
+    </div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="threshold">
+      <h3 style="margin:0 0 .6rem">Add a threshold</h3>
+      <div class="row2"><div><label>When</label><select name="kind"><option value="MERIT">Merit points reach</option><option value="DEMERIT">Demerit points reach</option></select></div><div><label>Points</label><input name="points" required inputmode="numeric"></div></div>
+      <div><label>Name</label><input name="name" required maxlength="80" placeholder="e.g. Certificate of merit"></div>
+      <div><label>What happens next</label><input name="then" maxlength="255" placeholder="e.g. Presented at assembly"></div>
+      <label class="pill"><input type="checkbox" name="tell_parents" checked> Tell the family</label>
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,589 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 1100px;
+  padding: 2rem 2.5rem 4rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 28px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em { color: var(--champagne); font-style: italic; font-weight: 400; }
+
+/* Action buttons group */
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-gold:hover { box-shadow: 0 6px 24px rgba(244,210,31,.32); }
+.btn-blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.btn-blue:hover { background: rgba(96,165,250,.18); transform: none; }
+.btn-teal {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border: 1px solid var(--teal-border);
+}
+.btn-teal:hover { background: rgba(45,212,191,.18); transform: none; }
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--white); border-color: var(--rim3); transform: none; }
+.btn-sm { padding: 6px 13px; font-size: .77rem; }
+.btn-red {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-red:hover { background: rgba(248,113,113,.18); transform: none; }
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 22px;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--rim);
+}
+.panel-hdr-left { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.panel-hdr h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--white);
+}
+
+/* ─── FILTER PANEL ─── */
+.filter-panel { animation: riseUp .45s ease both; animation-delay: .08s; }
+.filter-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+}
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fg label {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--slate2);
+}
+.fg input[type="date"] {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  color-scheme: dark;
+}
+.fg input[type="date"]:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* ─── STAT PILLS ─── */
+.stat-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 22px;
+  border-bottom: 1px solid var(--rim);
+  background: var(--surface2);
+}
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 13px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 700;
+  border: 1px solid;
+}
+.stat-pill.total   { background: var(--blue-dim);  color: var(--blue);  border-color: var(--blue-border);  }
+.stat-pill.present { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+.stat-pill.absent  { background: var(--red-dim);   color: var(--red);   border-color: var(--red-border);   }
+
+/* ─── TABLE ─── */
+.table-panel { animation: riseUp .45s ease both; animation-delay: .14s; }
+.table-responsive { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+table thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 13px 16px;
+  text-align: left;
+  color: var(--slate2);
+  font-weight: 700;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
+}
+table th.center { text-align: center; }
+table tbody tr { border-bottom: 1px solid var(--rim); transition: background .15s; }
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table td {
+  padding: 13px 16px;
+  font-size: .86rem;
+  color: var(--slate2);
+  font-family: 'Outfit', sans-serif;
+  vertical-align: middle;
+}
+table td.center { text-align: center; }
+
+/* Serial number */
+.sno {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  color: var(--slate);
+  font-size: .75rem;
+  font-weight: 700;
+}
+
+/* Student cell */
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.student-avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.student-name { font-weight: 600; color: var(--white); }
+
+/* Date chip */
+.date-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--slate2);
+  font-family: 'Outfit', monospace;
+}
+
+/* Status badges */
+.status-present {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 700;
+}
+.status-absent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+/* Action buttons cell */
+.action-cell {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 30px;
+  text-align: center;
+}
+.empty-icon {
+  width: 72px; height: 72px;
+  border-radius: 16px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  color: var(--slate);
+  margin-bottom: 18px;
+}
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin-bottom: 6px;
+}
+.empty-sub { font-size: .83rem; color: var(--slate); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .your-wrap { padding: 1.2rem 1.2rem 3rem; }
+  .action-buttons { width: 100%; }
+  .action-buttons .btn { flex: 1; justify-content: center; }
+  .filter-form { flex-direction: column; align-items: flex-start; }
+
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: 1px solid var(--rim2);
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    text-align: right;
+    font-size: .84rem;
+    gap: 8px;
+  }
+  table td:last-child { border-bottom: none; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--slate);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    flex: 0 0 auto;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .student-cell { justify-content: flex-end; }
+  .action-cell { justify-content: flex-end; }
+}
+@media (max-width: 480px) {
+  .action-buttons .btn { font-size: .75rem; padding: 8px 12px; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>Attendance &nbsp;·&nbsp; Records</span>
+      </div>
+      <h1 class="header-title">
+        <em>{{ school_class.name }}</em> — Records
+      </h1>
+    </div>
+    <div class="action-buttons">
+      <a href="{% url 'users:select_class_mark' %}" class="btn btn-gold">
+        <i class="bi bi-pencil-square"></i> Mark Another Class
+      </a>
+      <a href="{% url 'users:select_class_view' %}" class="btn btn-teal">
+        <i class="bi bi-arrow-repeat"></i> Change Class
+      </a>
+      <a href="{% url 'users:attendance_home' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i> Attendance Home
+      </a>
+    </div>
+  </div>
+
+  <!-- ─── FILTER PANEL ─── -->
+  <div class="panel filter-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--blue-dim);color:var(--blue);">
+          <i class="bi bi-calendar-range-fill"></i>
+        </div>
+        <h3>Filter by Date</h3>
+      </div>
+    </div>
+    <form method="get" class="filter-form">
+      <div class="fg">
+        <label for="filter-date">Select Date</label>
+        <input type="date" id="filter-date" name="date" value="{{ date_filter }}">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px;">
+        <button type="submit" class="btn btn-gold">
+          <i class="bi bi-search"></i> Filter
+        </button>
+        {% if date_filter %}
+        <a href="?" class="btn btn-ghost">
+          <i class="bi bi-x-lg"></i> Clear
+        </a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- ─── RECORDS TABLE ─── -->
+  <div class="panel table-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--champagne-dim);color:var(--champagne);">
+          <i class="bi bi-table"></i>
+        </div>
+        <h3>Attendance Records</h3>
+      </div>
+    </div>
+
+    <!-- Stat pills -->
+    {% if records %}
+    <div class="stat-pills">
+      <span class="stat-pill total">
+        <i class="bi bi-people-fill"></i>
+        <span id="pill-total">{{ records|length }}</span> Record{{ records|length|pluralize }}
+      </span>
+      <span class="stat-pill present">
+        <i class="bi bi-check-circle-fill"></i>
+        <span id="pill-present">0</span> Present
+      </span>
+      <span class="stat-pill absent">
+        <i class="bi bi-x-circle-fill"></i>
+        <span id="pill-absent">0</span> Absent
+      </span>
+    </div>
+    {% endif %}
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:44px;">#</th>
+            <th>Student</th>
+            <th>Date</th>
+            <th class="center">Status</th>
+            <th class="center">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in records %}
+          <tr data-status="{{ record.status }}">
+            <td data-label="#">
+              <span class="sno">{{ forloop.counter }}</span>
+            </td>
+            <td data-label="Student">
+              <div class="student-cell">
+                <div class="student-avatar">{{ record.student.full_name|slice:":2"|upper }}</div>
+                <span class="student-name">{{ record.student.full_name }}</span>
+              </div>
+            </td>
+            <td data-label="Date">
+              <span class="date-chip">
+                <i class="bi bi-calendar3"></i> {{ record.date }}
+              </span>
+            </td>
+            <td data-label="Status" class="center">
+              {% if record.status == "P" %}
+              <span class="status-present">
+                <i class="bi bi-check-lg"></i> Present
+              </span>
+              {% else %}
+              <span class="status-absent">
+                <i class="bi bi-x-lg"></i> Absent
+              </span>
+              {% endif %}
+            </td>
+            <td data-label="Actions" class="center">
+              <div class="action-cell">
+                <a href="{% url 'users:edit_attendance' class_id=school_class.id date=record.date %}"
+                   class="btn btn-blue btn-sm">
+                  <i class="bi bi-pencil-fill"></i> Edit
+                </a>
+                <a href="{% url 'users:delete_attendance' class_id=school_class.id student_id=record.student.id date=record.date %}"
+                   class="btn btn-red btn-sm"
+                   onclick="return confirm('Are you sure you want to delete this record?');">
+                  <i class="bi bi-trash-fill"></i> Delete
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+                <div class="empty-title">No Records Found</div>
+                <p class="empty-sub">
+                  {% if date_filter %}No attendance records for {{ date_filter }}.{% else %}No attendance records found for this class.{% endif %}
+                </p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /your-wrap -->
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('tbody tr[data-status]');
+  let present = 0, absent = 0;
+  rows.forEach(r => {
+    r.dataset.status === 'P' ? present++ : absent++;
+  });
+  const pp = document.getElementById('pill-present');
+  const pa = document.getElementById('pill-absent');
+  if (pp) pp.textContent = present;
+  if (pa) pa.textContent = absent;
+});
+</script>
+
+{% endblock %}

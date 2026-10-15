@@ -1,0 +1,48 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Locations{% endblock %}
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+<div class="inv-page">
+  <div class="inv-header">
+    <h1>📍 Locations</h1>
+    <p>Define physical locations where assets can be assigned</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+    <div class="inv-card">
+      <div class="inv-card-header"><h2>➕ Add Location</h2></div>
+      <div class="inv-card-body">
+        <form method="POST">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div style="color:var(--inv-danger);font-size:.82rem;margin-top:4px;">{{ field.errors|join:", " }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn-inv btn-inv-primary">➕ Add Location</button>
+        </form>
+      </div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-card-header"><h2>📋 Locations ({{ locations|length }})</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="inv-table">
+          <thead><tr><th>Name</th><th>Type</th><th></th></tr></thead>
+          <tbody>
+          {% for loc in locations %}
+          <tr>
+            <td data-label="Name"><strong>{{ loc.name }}</strong>{% if loc.description %}<br><small style="color:#6b7280;">{{ loc.description }}</small>{% endif %}</td>
+            <td data-label="Type"><span class="badge badge-info">{{ loc.get_location_type_display }}</span></td>
+            <td><a href="{% url 'inventory:delete_location' loc.id %}" class="btn-inv btn-inv-danger btn-inv-sm" onclick="return confirm('Delete this location?')">Delete</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;padding:30px;color:#9ca3af;">No locations yet</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

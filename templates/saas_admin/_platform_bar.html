@@ -1,0 +1,22 @@
+{% if brand and brand.primary or brand and brand.accent %}<style>:root{ {% if brand.primary %}--champagne:{{ brand.primary }};--accent:{{ brand.primary }};{% endif %}{% if brand.accent %}--champagne-lt:{{ brand.accent }};{% endif %} }</style>{% endif %}
+{% for n in platform_notices %}<div class="platform-notice" style="background:{% if n.level == 'DANGER' %}#b42318{% elif n.level == 'WARNING' %}#b54708{% elif n.level == 'SUCCESS' %}#067647{% else %}#1d4ed8{% endif %};color:#fff;padding:.45rem 1rem;font-size:.85rem;display:flex;justify-content:space-between;align-items:center;gap:1rem">
+  <span>{{ n.message }}{% if n.link %} <a href="{{ n.link }}" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline">More</a>{% endif %}</span>
+  {% if n.dismissible %}<form method="post" action="{% url 'platform_school:dismiss_notice' n.pk %}" style="margin:0">{% csrf_token %}<button type="submit" aria-label="Dismiss" style="background:none;border:0;color:#fff;cursor:pointer;font-size:1rem">&times;</button></form>{% endif %}</div>{% endfor %}
+{% if tour %}<div id="ptour" style="position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px">
+  <div style="max-width:420px;width:100%;background:var(--surface,#142b54);color:var(--white,#f2f5fb);border:1px solid var(--champagne,#f4d21f);border-radius:16px;padding:1.2rem 1.3rem;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+    <div style="font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:var(--champagne,#f4d21f)">{{ tour.title }} · <span id="ptour-n">1</span> / {{ tour.steps|length }}</div>
+    <h3 id="ptour-t" style="margin:.3rem 0"></h3><p id="ptour-x" style="margin:0 0 1rem;line-height:1.5"></p>
+    <div style="display:flex;justify-content:space-between;gap:.5rem"><button type="button" id="ptour-skip" style="background:none;border:1px solid rgba(255,255,255,.25);color:inherit;border-radius:10px;padding:.45rem .8rem;cursor:pointer">Skip</button>
+      <button type="button" id="ptour-next" style="background:var(--champagne,#f4d21f);border:0;color:#0a1f44;border-radius:10px;padding:.45rem 1rem;font-weight:700;cursor:pointer">Next</button></div>
+  </div></div>
+{{ tour.steps|json_script:"ptour-steps" }}
+<script>
+(function(){
+  var steps=JSON.parse(document.getElementById('ptour-steps').textContent||'[]'),i=0,box=document.getElementById('ptour');
+  function show(){document.getElementById('ptour-n').textContent=i+1;document.getElementById('ptour-t').textContent=steps[i].title||'';document.getElementById('ptour-x').textContent=steps[i].text||'';document.getElementById('ptour-next').textContent=i===steps.length-1?'Done':'Next';}
+  function done(){box.remove();var t=document.querySelector('input[name=csrfmiddlewaretoken]');fetch("{% url 'platform_school:tour_seen' tour.pk %}",{method:'POST',headers:{'X-CSRFToken':t?t.value:'{{ csrf_token }}','X-Requested-With':'fetch'}});}
+  document.getElementById('ptour-next').onclick=function(){if(i<steps.length-1){i++;show();}else{done();}};
+  document.getElementById('ptour-skip').onclick=done;
+  if(steps.length){show();}else{done();}
+})();
+</script>{% endif %}

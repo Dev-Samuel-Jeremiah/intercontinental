@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Passport photos{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Passport <em>photos</em></h1>
+    <p class="fin-sub">Upload many photos at once. Name each file with the admission number — <b>ICS-2024-015.jpg</b> — and it goes to the right student.</p>
+  </div>
+  <a class="fin-btn" href="{% url 'idcards:bulk_print_cards' %}"><i class="bi bi-person-badge"></i> ID cards</a>
+</div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Students on the roll</small><b>{{ stats.total }}</b></div>
+  <div class="fin-stat"><small>Without a photo</small><b style="color:{% if stats.missing %}var(--amber){% else %}var(--green){% endif %}">{{ stats.missing }}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-images"></i> Upload</h3></div><div class="panel-b">
+    <form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}
+      <div><label>Photos (JPG or PNG, up to {{ limit }} at a time)</label><input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple required></div>
+      <label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" name="replace" value="1" style="width:auto"> Replace photos students already have</label>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-cloud-arrow-up"></i> Upload and match</button>
+      <p class="hint">Each photo is cropped to the ID-card shape (3:4) and resized to 600 × 800. Photos that look too dark, washed out or blurred are saved but flagged, so you can retake them.</p>
+    </form>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard-check"></i> Result</h3></div><div class="panel-b">
+    {% if report %}
+      <p><b style="color:var(--green)">{{ report.saved|length }}</b> saved · <b>{{ report.kept|length }}</b> kept (already had one) · <b style="color:var(--amber)">{{ report.unmatched|length }}</b> not matched · <b style="color:var(--red)">{{ report.failed|length }}</b> failed</p>
+      {% for s, warnings in report.saved %}{% if warnings %}<div class="hint" style="padding:.25rem 0"><i class="bi bi-exclamation-triangle" style="color:var(--amber)"></i> <a href="{% url 'users:student_profile' s.id %}" style="color:var(--white)">{{ s.full_name }}</a> — photo {{ warnings|join:", " }}</div>{% endif %}{% endfor %}
+      {% if report.unmatched %}<div style="margin-top:.6rem"><div class="hint">No student with these admission numbers:</div><div class="hint" style="color:var(--amber)">{{ report.unmatched|join:", " }}</div></div>{% endif %}
+      {% for name, why in report.failed %}<div class="hint" style="color:var(--red)">{{ name }}: {{ why }}</div>{% endfor %}
+    {% else %}<p class="hint">Upload photos to see which students they matched.</p>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

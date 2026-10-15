@@ -1,0 +1,74 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ course.name }} — announcements &amp; live classes{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .an{padding:1rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .an.pin{background:var(--champagne-dim)}
+  .lv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.8rem;align-items:center;padding:.9rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .lv form{display:inline-flex;gap:.3rem}
+  .lv input{padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ course.class_assigned.name|default:"Course" }}</div>
+  <h1 class="fin-title">{{ course.name }}</h1>
+  <p class="fin-sub">Announcements and live classes{% if is_teacher %} · {{ class_size }} student{{ class_size|pluralize }}{% endif %}.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn fin-btn-sm" href="{% url 'classroom:discussion' course.id %}"><i class="bi bi-chat-dots"></i> Discussion</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'assistant:tutor' course.id %}"><i class="bi bi-robot"></i> AI tutor</a>
+  {% if is_teacher %}<a class="fin-btn fin-btn-sm" href="{% url 'classroom:completion' course.id %}"><i class="bi bi-bar-chart-steps"></i> Student progress</a>
+  {% else %}<a class="fin-btn fin-btn-sm" href="{% url 'classroom:certificate' course.id %}"><i class="bi bi-award"></i> My progress &amp; certificate</a>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% if is_teacher %}{% url 'classroom:teacher_course_detail' course.id %}{% else %}{% url 'classroom:student_course_content' course.id %}{% endif %}"><i class="bi bi-journal-bookmark"></i> Course content</a></div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-camera-video"></i> Live classes</h3></div>
+      {% for l in upcoming %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, H:i" }} · {{ l.minutes }} min · {% if l.platform == 'JITSI' %}Jitsi{% else %}meeting link{% endif %}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
+          {% if not l.open and not is_teacher %}<div class="hint">{{ l.why }}</div>{% endif %}</div>
+        <div style="display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end">
+          {% if l.open or is_teacher %}<a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'classroom:join_live' l.id %}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {% if is_teacher %}Start{% else %}Join{% endif %}</a>{% endif %}
+          {% if is_teacher %}<a class="fin-btn fin-btn-sm" href="{% url 'classroom:live_attendance' l.id %}"><i class="bi bi-people"></i></a>
+          <form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ l.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete_live" onclick="return confirm('Remove this live class?')"><i class="bi bi-trash"></i></button></form>{% endif %}
+        </div></div>
+      {% empty %}<div class="empty" style="padding:1.4rem"><p>No live classes coming up.</p></div>{% endfor %}
+      {% if past %}<details style="padding:.6rem 1.2rem"><summary class="hint" style="cursor:pointer">Earlier live classes ({{ past|length }})</summary>
+        {% for l in past %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, H:i" }}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
+            {% if l.recording_url %}<a href="{{ l.recording_url }}" target="_blank" rel="noopener" style="color:var(--champagne-lt);font-size:.85rem"><i class="bi bi-play-circle"></i> Watch the recording</a>{% endif %}</div>
+          <div>{% if is_teacher %}<a class="fin-btn fin-btn-sm" href="{% url 'classroom:live_attendance' l.id %}"><i class="bi bi-people"></i></a>
+            <form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ l.id }}"><input name="recording_url" value="{{ l.recording_url }}" placeholder="Recording link"><button class="fin-btn fin-btn-sm" name="action" value="recording">Save</button></form>{% endif %}</div></div>{% endfor %}
+      </details>{% endif %}
+    </div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-megaphone"></i> Announcements</h3></div>
+      {% for a in announcements %}<div class="an{% if a.pinned %} pin{% endif %}"><div style="display:flex;justify-content:space-between;gap:.6rem"><b>{% if a.pinned %}<i class="bi bi-pin-angle-fill" style="color:var(--champagne-lt)"></i> {% endif %}{{ a.title }}</b>
+          <span class="hint">{{ a.created_at|date:"j M, H:i" }}{% if is_teacher %} <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ a.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete_announcement" style="padding:.15rem .4rem" onclick="return confirm('Remove?')"><i class="bi bi-x"></i></button></form>{% endif %}</span></div>
+        <div style="margin-top:.35rem;color:var(--slate2)">{{ a.body|linebreaksbr }}</div></div>
+      {% empty %}<div class="empty" style="padding:1.4rem"><p>No announcements yet.</p></div>{% endfor %}
+    </div>
+  </div>
+  {% if is_teacher %}<div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-camera-video"></i> Schedule a live class</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="live">
+        <div><label>Title</label><input name="title" required maxlength="160" placeholder="Revision: quadratic equations"></div>
+        <div class="row2"><div><label>Starts</label><input type="datetime-local" name="starts_at" required></div><div><label>Minutes</label><input type="number" name="minutes" value="40" min="10" max="240"></div></div>
+        <div><label>Platform</label><select name="platform" id="plat"><option value="JITSI">Jitsi — free, nothing to install</option><option value="LINK">Zoom / Google Meet link</option></select></div>
+        <div id="urlbox" style="display:none"><label>Meeting link</label><input name="url" type="url" placeholder="https://us02web.zoom.us/j/…"></div>
+        <button class="fin-btn fin-btn-gold" type="submit">Schedule</button>
+        <p class="hint" style="margin:0">Students join from this page, which records who attended.</p>
+      </form></div></div>
+    {% if sections %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-camera"></i> Board photo</h3></div><div class="panel-b">
+      <form method="post" action="{% url 'classroom:board_photo' course.id %}" enctype="multipart/form-data" class="fin-form">{% csrf_token %}
+        <div><label>Section</label><select name="section">{% for s in sections %}<option value="{{ s.id }}">{{ s.title }}</option>{% endfor %}</select></div>
+        <div><label>Photo of the board</label><input type="file" name="photo" accept="image/*" capture="environment" required></div>
+        <div><label>Title <span class="hint">(optional)</span></label><input name="title" maxlength="255" placeholder="Today's notes"></div>
+        <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-upload"></i> Add to lesson materials</button>
+        <p class="hint" style="margin:0">On a phone this opens the camera.</p></form></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-megaphone"></i> Post an announcement</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="announce">
+        <div><label>Title</label><input name="title" required maxlength="160"></div>
+        <div><label>Message</label><textarea name="body" rows="4" required></textarea></div>
+        <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="pinned" style="width:auto"> Pin to the top</label>
+        <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="email_parents" style="width:auto"> Also email parents</label>
+        <button class="fin-btn fin-btn-gold" type="submit">Post</button></form></div></div>
+  </div>{% endif %}
+</div>
+<script>(function(){var p=document.getElementById('plat');if(!p)return;function s(){document.getElementById('urlbox').style.display=p.value==='LINK'?'':'none';}p.addEventListener('change',s);s();})();</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% include "hr/_public_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'hr:careers' %}"><i class="bi bi-arrow-left"></i> All jobs at {{ school.name }}</a>
+  <h1>{{ v.title }}</h1>
+  <p class="sub">{% if v.department %}{{ v.department }} · {% endif %}Closes {{ v.closing_date|date:"j F Y" }}</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  <div class="card job">
+    <h2>About the job</h2><p>{{ v.description|linebreaksbr }}</p>
+    {% if v.requirements %}<h2>Requirements</h2><p>{{ v.requirements|linebreaksbr }}</p>{% endif %}
+  </div>
+  {% if done %}
+  <div class="msg success">Thank you — your application has been received. The school will contact you by email if you are shortlisted.</div>
+  {% elif not open %}
+  <div class="card"><p class="sub" style="margin:0">Applications for this job have closed.</p></div>
+  {% else %}
+  <div class="card">
+    <h2><i class="bi bi-send" style="color:var(--champagne-lt)"></i> Apply</h2>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <label>Full name</label><input name="full_name" required maxlength="160" value="{{ request.POST.full_name }}">
+      <label>Email address</label><input type="email" name="email" required value="{{ request.POST.email }}">
+      <label>Phone number</label><input name="phone" required maxlength="20" value="{{ request.POST.phone }}">
+      <label>CV <span class="hint">(PDF, up to 10 MB)</span></label><input type="file" name="cv" accept="application/pdf" required>
+      <label>Cover letter <span class="hint">(optional)</span></label><textarea name="cover_letter" rows="6">{{ request.POST.cover_letter }}</textarea>
+      <button type="submit">Send application</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

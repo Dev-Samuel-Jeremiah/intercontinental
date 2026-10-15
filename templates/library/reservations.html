@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Reservations{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Reservations</em></h1>
+  <p class="fin-sub">When a reserved book comes back it is set aside and the reader is told. Holds not collected in time pass to the next person.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Ready at the desk</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for r in ready %}<tr><td class="name">{{ r.book.title }}<br><small class="hint">{{ r.copy.barcode }} · for {{ r.borrower_name }}</small></td><td>until {{ r.hold_until|date:"D j M" }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form></td></tr>
+    {% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <div class="panel"><div class="panel-h"><h3>Waiting for a copy</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for r in waiting %}<tr><td class="name">{{ r.book.title }}<br><small class="hint">{{ r.borrower_name }}{% if r.student %} · {{ r.student.class_assigned|default:"" }}{% endif %} · since {{ r.created_at|date:"j M" }}</small></td><td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form></td></tr>
+    {% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

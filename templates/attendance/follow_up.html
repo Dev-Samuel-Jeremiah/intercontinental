@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Attendance follow-up{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Children to <em>follow up</em></h1>
+  <p class="fin-sub">{% if term %}{{ term }} — {% endif %}below {{ cfg.chronic_rate }}% attendance, or absent {{ cfg.chronic_streak }}+ school days running without an accepted reason.</p>
+</div><a class="fin-btn" href="{% url 'users:attendance_settings' %}"><i class="bi bi-sliders"></i> Thresholds</a></div>
+{% if not term or not term.start_date %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>Set the current term's start date to see follow-up.</p></div></div>{% else %}
+<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th><th>Class</th><th style="text-align:right">Attendance</th><th style="text-align:right">Absent</th><th>Why flagged</th><th>Parent</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{% url 'users:student_profile' r.student.id %}#attendance" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a><br><span class="hint">{{ r.student.admission_number }}</span></td>
+      <td>{{ r.student.class_assigned.name|default:"—" }}</td>
+      <td class="money" style="text-align:right;color:{% if r.rate < 80 %}var(--red){% else %}var(--amber){% endif %}">{{ r.rate }}%</td>
+      <td style="text-align:right">{{ r.absent }} <span class="hint">of {{ r.days }}</span></td>
+      <td>{% for reason in r.reasons %}<span class="chip {% if 'running' in reason %}red{% else %}amber{% endif %}" style="display:inline-block;margin:.1rem">{{ reason }}</span>{% endfor %}</td>
+      <td class="hint">{{ r.student.parent_name|default:"" }}{% if r.student.parent_phone %}<br><a href="tel:{{ r.student.parent_phone }}" style="color:var(--champagne-lt)">{{ r.student.parent_phone }}</a>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-check2-circle"></i><p>No child needs attendance follow-up right now.</p></td></tr>{% endfor %}</tbody>
+</table></div></div>{% endif %}
+{% endblock %}

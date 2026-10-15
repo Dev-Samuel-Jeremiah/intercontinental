@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}SMS units{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.spark{display:flex;align-items:flex-end;gap:3px;height:90px}.spark i{flex:1;background:linear-gradient(180deg,#ffe066,#f4d21f);border-radius:3px 3px 0 0;min-height:2px}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">SMS <em>units</em></h1>
+  <p class="fin-sub">One unit is one SMS page (160 letters; 70 if the message has emoji or special letters). {% if metering %}SMS stops when units run out.{% else %}Usage is counted; units are not required on this platform yet.{% endif %}</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Units left</small><b>{{ w.balance|floatformat:"0g" }}</b></div>
+  <div class="fin-stat"><small>Used in 30 days</small><b>{{ month_units|floatformat:"0g" }}</b></div>
+  <div class="fin-stat"><small>Used ever</small><b>{{ w.used_total|floatformat:"0g" }}</b></div>
+  <div class="fin-stat"><small>Price per unit</small><b>₦{{ price }}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-cart"></i> Buy units</h3></div><div class="panel-b">
+    {% for units, cost in bundles %}<form method="post" style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rim)">{% csrf_token %}<input type="hidden" name="units" value="{{ units }}"><span><b>{{ units|floatformat:"0g" }} units</b> · ₦{{ cost|floatformat:"2g" }}</span><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Pay with Paystack</button></form>{% endfor %}
+    <p class="hint">You return here after paying and the units are added straight away.</p>
+  </div></div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Last 30 days</h3></div><div class="panel-b">
+      {% if days %}<div class="spark">{% for d in days reversed %}<i style="height:{% widthratio d.units peak 100 %}%" title="{{ d.date|date:'j M' }}: {{ d.units }} units, {{ d.messages }} SMS"></i>{% endfor %}</div>{% else %}<p class="empty">No SMS sent yet.</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Top-ups</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for t in history %}<tr><td>{{ t.created_at|date:"j M Y" }}</td><td>{{ t.units|floatformat:"0g" }} units</td><td>{% if t.kind == 'GRANT' %}Free{% else %}₦{{ t.amount|floatformat:"2g" }}{% endif %}</td><td>{% if t.status == 'PAID' %}<span class="chip green">Added</span>{% elif t.status == 'FAILED' %}<span class="chip red">Failed</span>{% else %}<span class="chip">Not paid</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'dashboard/student_base.html' %}
+{% load static %}
+{% block title %}My Courses |Student Dashboard{% endblock %}
+{% block extra_head %}
+<style>
+        /* ---------- Base Styles ---------- */
+        #content{font-family: 'Inter', Arial, sans-serif;color:var(--white);}
+
+        a { text-decoration: none; }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ---------- Top Navigation ---------- */
+        .top-nav {
+            margin-bottom: 20px;
+        }
+
+        .top-nav a {
+            font-weight: 600;
+            color:var(--blue);
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .top-nav a:hover {
+            color:var(--blue);
+            transform: translateX(-3px);
+        }
+
+        /* ---------- Courses Grid ---------- */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* ---------- Course Card ---------- */
+        .course-card {
+            background:rgba(255,255,255,.03);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
+        }
+
+        .course-card:hover {
+            transform: translateY(-6px) rotateX(2deg);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        .course-card h3 {
+            font-size: 1.3em;
+            color:var(--blue);
+            margin-bottom: 12px;
+        }
+
+        .course-card p {
+            font-size: 0.95em;
+            color:var(--slate2);
+            margin-bottom: 18px;
+        }
+
+        /* ---------- Buttons ---------- */
+        .course-card a {
+            background:linear-gradient(135deg, #2563eb, #1d4ed8);
+            color:#fff;
+            text-align: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .course-card a:hover {
+            background:linear-gradient(135deg, #1d4ed8, #1e40af);
+            transform: translateY(-2px);
+        }
+
+        /* ---------- Empty State ---------- */
+        .empty {
+            background:rgba(255,255,255,.03);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            color:var(--slate2);
+            font-size: 1em;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="eyebrow">My Learning</div>
+    <h1 class="page-title" style="margin:.4rem 0 1.6rem">My <em>Courses</em></h1>
+
+    {% if courses %}
+        <div class="courses-grid">
+            {% for course in courses %}
+                <div class="course-card">
+                    <div>
+                        <h3>{{ course.name }}</h3>
+                        <p>{{ course.description|truncatewords:25 }}</p>
+                    </div>
+                    <a href="{% url 'classroom:student_course_content' course.id %}">
+                        Continue Course
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <p>You are not enrolled in any course yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

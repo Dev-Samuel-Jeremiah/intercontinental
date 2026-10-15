@@ -1,0 +1,76 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Medical record — {{ st.full_name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health · medical record (nurses only)</div>
+  <h1 class="fin-title"><em>{{ st.full_name }}</em></h1>
+  <p class="fin-sub">{{ st.admission_number }} · {{ st.class_assigned|default:"" }}{% if p.blood_group %} · blood {{ p.blood_group }}{% endif %}{% if p.genotype %} · genotype {{ p.genotype }}{% endif %}</p>
+  {% for a in p.alerts %}<span class="alert-chip">{{ a }}</span>{% endfor %}
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Emergency contacts</h3></div><div class="panel-b">{% for name, rel, phone in card.phones %}<p style="margin:.2rem 0"><b>{{ name }}</b> <span class="hint">{{ rel }}</span> — <a href="tel:{{ phone }}">{{ phone }}</a></p>{% empty %}<p class="empty">No phone numbers on file.</p>{% endfor %}</div></div>
+    <div class="panel"><div class="panel-h"><h3>Vaccinations</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for j in jabs %}<tr><td class="name">{{ j.name }} {{ j.dose }}</td><td>{% if j.given_on %}{{ j.given_on|date:"j M Y" }}{% endif %}{% if j.next_due %}<br><small class="hint">next {{ j.next_due|date:"j M Y" }}</small>{% endif %}</td>
+        <td>{% if j.proof %}<a href="{% url 'welfare:immunisation_file' j.pk %}">Card</a>{% endif %} {% if not j.verified %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="verify"><input type="hidden" name="id" value="{{ j.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Verify</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">None recorded.</td></tr>{% endfor %}
+    </tbody></table>
+    <details style="margin-top:.5rem"><summary>Add a vaccination</summary>
+      <form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="jab">
+        <div class="row2"><div><label>Vaccine</label><select name="vaccine">{% for k, v in vaccines %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Other name</label><input name="other_name" maxlength="80"></div></div>
+        <div class="row2"><div><label>Dose</label><input name="dose" maxlength="30"></div><div><label>Given on</label><input type="date" name="given_on"></div></div>
+        <div class="row2"><div><label>Next due</label><input type="date" name="next_due"></div><div><label>Card (PDF/photo)</label><input type="file" name="proof"></div></div>
+        <button class="fin-btn" type="submit">Add</button></form></details></div></div>
+    <div class="panel"><div class="panel-h"><h3>Medication</h3><a class="fin-btn fin-btn-sm" href="{% url 'welfare:medication' %}">Give a dose</a></div><div class="panel-b">
+      {% for m in plans %}<p style="margin:.2rem 0{% if not m.active %};opacity:.5{% endif %}"><b>{{ m.medicine }}</b> {{ m.dose }} · {{ m.times }} · from {{ m.starts|date:"j M" }}{% if m.ends %} to {{ m.ends|date:"j M" }}{% endif %}{% if not m.parent_consent %} <span class="chip red">No consent</span>{% endif %}
+        {% if m.active %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="plan_stop"><input type="hidden" name="id" value="{{ m.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Stop</button></form>{% endif %}</p>{% endfor %}
+      <details><summary>Add a medicine to give at school</summary>
+        <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="plan">
+          <div class="row2"><div><label>Medicine</label><input name="medicine" required maxlength="120"></div><div><label>Dose</label><input name="dose" required maxlength="60"></div></div>
+          <div class="row2"><div><label>When</label><input name="times" required maxlength="60" placeholder="12:00 / when needed"></div><div><label>Reason</label><input name="reason" maxlength="160"></div></div>
+          <div class="row2"><div><label>From</label><input type="date" name="starts" value="{{ today|date:'Y-m-d' }}"></div><div><label>Until</label><input type="date" name="ends"></div></div>
+          <label class="pill"><input type="checkbox" name="parent_consent"> Signed parent consent received</label>
+          <button class="fin-btn" type="submit">Add</button></form></details>
+      <table class="tbl" data-no-export style="margin-top:.5rem"><tbody>{% for d in doses %}<tr><td>{{ d.given_at|date:"j M H:i" }}</td><td>{{ d.medicine }} {{ d.dose }}{% if d.refused %} <span class="chip">refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Health checks</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for s in screens %}<tr><td>{{ s.date|date:"j M Y" }}</td><td>{% if s.height_cm %}{{ s.height_cm }} cm{% endif %} {% if s.weight_kg %}{{ s.weight_kg }} kg{% endif %}{% if s.bmi %} · BMI {{ s.bmi }}{% endif %}<br><small class="hint">Eyes {{ s.vision_left|default:"–" }}/{{ s.vision_right|default:"–" }}{% if s.hearing_ok is False %} · hearing concern{% endif %}{% if s.dental_ok is False %} · dental concern{% endif %} {{ s.notes }}</small></td><td>{% if s.refer %}<span class="chip red">Referred</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No checks yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Sick bay and accidents</h3></div><div class="panel-b">
+      {% for v in visits %}<p style="margin:.15rem 0;font-size:.88rem">{{ v.admitted_at|date:"j M Y" }} — {{ v.complaint }} <span class="hint">{{ v.get_outcome_display }}</span></p>{% endfor %}
+      {% for a in accidents %}<p style="margin:.15rem 0;font-size:.88rem"><i class="bi bi-bandaid"></i> {{ a.happened_at|date:"j M Y" }} — {{ a.injury }} <span class="hint">{{ a.get_place_display }}</span></p>{% endfor %}
+      {% if not visits and not accidents %}<p class="empty">None.</p>{% endif %}
+    </div></div>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="profile">
+    <h3 style="margin:0 0 .6rem">Medical profile</h3>
+    <div class="row2"><div><label>Blood group</label><select name="blood_group">{% for k, v in blood %}<option value="{{ k }}" {% if k == p.blood_group %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+    <div><label>Genotype</label><select name="genotype">{% for k, v in genotypes %}<option value="{{ k }}" {% if k == p.genotype %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Allergies</label><input name="allergies" value="{{ p.allergies }}" maxlength="255"></div>
+    <div><label>Conditions</label><textarea name="conditions" rows="2">{{ p.conditions }}</textarea></div>
+    <div><label>Emergency medication</label><input name="emergency_medication" value="{{ p.emergency_medication }}" maxlength="255"></div>
+    <div><label>Diet</label><input name="diet" value="{{ p.diet }}" maxlength="160"></div>
+    <div class="row2"><div><label>Doctor</label><input name="doctor_name" value="{{ p.doctor_name }}" maxlength="160"></div><div><label>Doctor's phone</label><input name="doctor_phone" value="{{ p.doctor_phone }}" maxlength="20"></div></div>
+    <div><label>Hospital / clinic</label><input name="hospital" value="{{ p.hospital }}" maxlength="200"></div>
+    <label class="pill"><input type="checkbox" name="consent_first_aid" {% if p.consent_first_aid %}checked{% endif %}> First aid and paracetamol</label>
+    <label class="pill"><input type="checkbox" name="consent_hospital" {% if p.consent_hospital %}checked{% endif %}> Emergency hospital treatment</label>
+    <h3 style="margin:.8rem 0 .4rem">Health cover</h3>
+    <div class="row2"><div><label>School plan</label><select name="plan"><option value="">—</option>{% for hp in health_plans %}<option value="{{ hp.pk }}" {% if hp.pk == p.plan_id %}selected{% endif %}>{{ hp }}</option>{% endfor %}</select></div><div><label>Member number</label><input name="member_number" value="{{ p.member_number }}" maxlength="60"></div></div>
+    <div class="row2"><div><label>Cover expires</label><input type="date" name="cover_expires" value="{{ p.cover_expires|date:'Y-m-d' }}"></div><div><label>Family's own HMO</label><input name="other_insurance" value="{{ p.other_insurance }}" maxlength="160"></div></div>
+    <div><label>Nurse's notes (private)</label><textarea name="notes" rows="3">{{ p.notes }}</textarea></div>
+    {% if p.updated_at %}<p class="hint" style="margin:0">Last updated {{ p.updated_at|date:"j M Y" }}{% if p.updated_by %} by {{ p.updated_by.get_full_name|default:p.updated_by.username }}{% endif %}</p>{% endif %}
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;margin-top:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="screening">
+  <h3 style="margin:0 0 .6rem">Health check</h3>
+  <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div class="row2"><div><label>Height (cm)</label><input name="height_cm" inputmode="decimal"></div><div><label>Weight (kg)</label><input name="weight_kg" inputmode="decimal"></div></div></div>
+  <div class="row2"><div class="row2"><div><label>Left eye</label><input name="vision_left" maxlength="10" placeholder="6/6"></div><div><label>Right eye</label><input name="vision_right" maxlength="10"></div></div>
+  <div class="row2"><div><label>Hearing</label><select name="hearing_ok"><option value="">—</option><option value="1">OK</option><option value="0">Concern</option></select></div><div><label>Teeth</label><select name="dental_ok"><option value="">—</option><option value="1">OK</option><option value="0">Concern</option></select></div></div></div>
+  <div><label>Notes</label><input name="notes" maxlength="255"></div>
+  <label class="pill"><input type="checkbox" name="refer"> Advise the family to see a doctor (they are emailed)</label>
+  <button class="fin-btn" type="submit">Save check</button>
+</form>
+{% endblock %}

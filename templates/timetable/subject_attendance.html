@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% load dict_filters %}
+{% block title %}Attendance by subject{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Attendance by <em>subject</em></h1>
+  <p class="fin-sub">{{ start|date:"j M" }} – {{ end|date:"j M Y" }} — share of lessons each child attended, from lesson registers.</p>
+</div><form method="get"><select name="class" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">— choose a class —</option>{% for c in classes %}<option value="{{ c.id }}"{% if cls and cls.id == c.id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></form></div>
+{% if cls %}<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th>{% for s in subjects %}<th style="text-align:right">{{ s }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for st in students %}{% with row=table|get_item:st.id %}
+    <tr><td>{{ st.full_name }}</td>{% for s in subjects %}{% with v=row|get_item:s %}<td class="money" style="text-align:right;color:{% if v is None %}var(--slate){% elif v < 80 %}var(--red){% elif v < 95 %}var(--amber){% else %}var(--green){% endif %}">{% if v is None %}—{% else %}{{ v }}%{% endif %}</td>{% endwith %}{% endfor %}</tr>
+  {% endwith %}{% empty %}<tr><td class="hint" style="padding:1rem">No students.</td></tr>{% endfor %}</tbody>
+</table></div>{% if not subjects %}<p class="hint" style="padding:1rem">No lesson registers taken for this class yet.</p>{% endif %}</div>{% endif %}
+{% endblock %}

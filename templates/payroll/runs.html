@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Payroll runs{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'payroll:dashboard' %}" style="color:inherit">Payroll</a></div>
+  <h1 class="fin-title">Payroll <em>runs</em></h1>
+  <p class="fin-sub">Each run works out pay, PAYE, pension, NHF, loans and unpaid leave for everyone on payroll, then goes from the bursary to the principal for approval before payment is released.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><a class="fin-btn fin-btn-sm" href="{% url 'payroll:settings' %}"><i class="bi bi-sliders"></i> Settings</a><a class="fin-btn fin-btn-sm" href="{% url 'payroll:change_requests' %}"><i class="bi bi-inbox"></i> Detail changes</a></div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> New run</h3><span class="hint">{{ on_payroll }} staff on payroll</span></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Kind</label><select name="kind" id="kind">{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Month</label><select name="month">{% for n, name in months %}<option value="{{ n }}" {% if n == month %}selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+        <div><label>Year</label><input type="number" name="year" value="{{ year }}" min="2020" max="2100"></div></div>
+      <div id="bonusbox" hidden><label>Bonus (% of monthly basic)</label><input name="bonus_percent" inputmode="decimal" placeholder="50"></div>
+      <div><label>Title <span class="hint">(optional)</span></label><input name="title" maxlength="120" placeholder="e.g. End-of-year bonus"></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-calculator"></i> Prepare run</button>
+    </form>
+    {% if missing %}<p class="hint" style="margin:.9rem 0 .3rem">Not on payroll yet:</p>{% for st in missing %}<a class="chip" href="{% url 'payroll:staff_pay' st.id %}" style="margin:0 .25rem .3rem 0;text-decoration:none">{{ st.full_name }}</a>{% endfor %}{% endif %}
+    <script>(function(){var k=document.getElementById('kind'),b=document.getElementById('bonusbox');function s(){b.hidden=k.value!=='BONUS';}k.addEventListener('change',s);s();})();</script>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Runs</h3></div>
+    {% if runs %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Run</th><th>Staff</th><th>Net pay</th><th>Cost to school</th><th>Status</th></tr></thead><tbody>
+    {% for r in runs %}<tr><td class="name"><a href="{% url 'payroll:run' r.id %}" style="color:inherit">{{ r }}</a><div class="hint">{{ r.get_kind_display }}{% if r.prepared_by %} · {{ r.prepared_by.get_full_name|default:r.prepared_by.username }}{% endif %}</div></td>
+      <td>{{ r.count }}</td><td class="money">₦{{ r.money.net|floatformat:2|intcomma }}</td><td class="money">₦{{ r.money.cost|floatformat:2|intcomma }}</td>
+      <td><span class="chip {% if r.status == 'PAID' %}green{% elif r.status == 'APPROVED' %}gold{% elif r.status == 'SUBMITTED' %}amber{% elif r.status == 'CANCELLED' %}red{% endif %}">{{ r.get_status_display }}</span></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-calculator"></i><p>No runs yet.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-event"></i> Coming up at school</h3></div><div class="panel-b">
+  {% for e in events %}<div style="display:flex;gap:.6rem;align-items:center;padding:.4rem 0">
+    <span style="width:10px;height:10px;border-radius:3px;background:{{ e.colour }};flex-shrink:0"></span>
+    <span style="flex:1"><a href="{% url 'curriculum:event' e.id %}" style="color:inherit">{{ e.title }}</a>{% if e.rsvp and e.rsvp_open %} <a href="{% url 'curriculum:event' e.id %}" class="chip" style="color:var(--champagne-lt);text-decoration:none">Reply</a>{% endif %}{% if e.description %}<span class="hint" style="display:block">{{ e.description|truncatechars:90 }}</span>{% endif %}</span>
+    <span class="hint" style="white-space:nowrap">{{ e.start_date|date:"j M" }}{% if e.end_date %} – {{ e.end_date|date:"j M" }}{% endif %}</span></div>
+  {% empty %}<p class="hint" style="margin:0">Nothing announced yet.</p>{% endfor %}
+</div></div>
+{% if holidays %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-flag"></i> Public holidays</h3></div><div class="panel-b">
+  {% for h in holidays %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ h.name }}</span><span class="hint">{{ h.date|date:"D j M" }}</span></div>{% endfor %}
+</div></div>{% endif %}

@@ -1,0 +1,15 @@
+{% extends base %}
+{% block title %}Backup codes{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Your account</div>
+  <h1 class="fin-title">Your backup <em>codes</em></h1>
+  <p class="fin-sub">If you lose your phone, each of these lets you sign in once. Print them or write them down and keep them somewhere safe. They will not be shown again.</p>
+</div></div>
+<div class="panel" style="max-width:520px"><div class="panel-b">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;font-family:ui-monospace,Menlo,monospace;font-size:1.15rem;letter-spacing:1px">{% for c in codes %}<div>{{ c }}</div>{% endfor %}</div>
+  <p style="margin-top:1.2rem;display:flex;gap:.5rem" class="no-print"><button class="fin-btn fin-btn-sm" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button><a class="fin-btn fin-btn-gold" href="{{ home }}">I have saved them</a></p>
+</div></div>
+<style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}</style>
+{% endblock %}

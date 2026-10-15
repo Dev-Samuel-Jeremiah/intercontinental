@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Message approvals{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Message <em>approvals</em></h1>
+  <p class="fin-sub">Campaigns written by staff who are not administrators wait here. Approving sends them now, or at their scheduled time.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+{% for c in pending %}
+<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>{{ c.title }}</h3></div><div class="panel-b">
+  <p class="hint">By {{ c.created_by.get_full_name|default:c.created_by.username }} · {{ c.get_channel_display }} · {{ c.get_audience_display }}{% if c.school_class %} ({{ c.school_class.name }}){% endif %} · reaches {{ c.reach }} student{{ c.reach|pluralize }}' families{% if c.scheduled_at %} · scheduled {{ c.scheduled_at|date:"j M Y H:i" }}{% endif %}</p>
+  {% if c.channel != 'SMS' %}<p><b>{{ c.subject }}</b></p><div style="border:1px solid var(--rim);border-radius:12px;padding:.8rem;max-height:260px;overflow:auto">{{ c.body_email|striptags|linebreaksbr }}</div>{% endif %}
+  {% if c.channel != 'EMAIL' %}<p style="margin-top:.6rem"><b>SMS:</b> {{ c.body_sms }} <span class="hint">({{ c.body_sms|length }} characters)</span></p>{% endif %}
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;align-items:flex-end">
+    <form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}"><input type="hidden" name="action" value="approve"><button class="fin-btn fin-btn-gold" type="submit">Approve</button></form>
+    <form method="post" class="fin-form" style="display:flex;gap:.5rem;flex:1;min-width:260px">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}"><input type="hidden" name="action" value="reject">
+      <input name="note" placeholder="What needs changing?" required maxlength="255"><button class="fin-btn fin-btn-danger" type="submit">Send back</button></form>
+  </div>
+</div></div>
+{% empty %}<div class="panel"><div class="panel-b"><p class="empty">Nothing waiting for approval.</p></div></div>{% endfor %}
+{% if recent %}
+<div class="panel" style="margin-top:1.2rem"><div class="panel-h"><h3>Recently reviewed</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>{% for c in recent %}<tr><td class="name"><a href="{% url 'communications:campaign_detail' c.pk %}">{{ c.title }}</a></td><td>{{ c.created_by.get_full_name|default:c.created_by.username }}</td><td>{{ c.get_status_display }}</td><td>{{ c.approved_by.get_full_name|default:c.approved_by.username }}</td></tr>{% endfor %}</tbody></table>
+</div></div>
+{% endif %}
+{% endblock %}

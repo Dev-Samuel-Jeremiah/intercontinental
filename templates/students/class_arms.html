@@ -1,0 +1,68 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Classes & arms{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .lv{margin-bottom:1rem}
+  .lv-h{display:flex;align-items:baseline;gap:.7rem;margin:0 0 .6rem}
+  .lv-h h3{font-family:'Cormorant Garamond',serif;font-size:1.45rem;color:var(--white);margin:0}
+  .arms{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.8rem}
+  .arm{padding:.95rem 1rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(255,255,255,.02)}
+  .arm-top{display:flex;justify-content:space-between;align-items:center}
+  .arm-top b{font-size:1rem;color:var(--white)}
+  .arm .count{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--champagne-lt)}
+  .arm form{display:grid;grid-template-columns:1fr 70px;gap:.4rem;margin-top:.6rem}
+  .arm input,.arm select{padding:.4rem .55rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem;width:100%}
+  .arm select{grid-column:1/-1}
+  .arm button{grid-column:1/-1}
+</style>
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Academics</div>
+    <h1 class="fin-title">Classes &amp; <em>arms</em></h1>
+    <p class="fin-sub">Year groups and their arms — JSS 1A, 1B, 1C — each with a form teacher.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    {% if unlevelled %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="fill">
+      <button class="fin-btn" type="submit"><i class="bi bi-magic"></i> Work out levels for {{ unlevelled }} class{{ unlevelled|pluralize:"es" }}</button></form>{% endif %}
+    <a class="fin-btn" href="{% url 'users:manage_classes' %}"><i class="bi bi-building"></i> Manage classes</a>
+    <a class="fin-btn" href="{% url 'users:class_register' %}"><i class="bi bi-printer"></i> Print registers</a>
+  </div>
+</div>
+
+<div class="panel" style="margin-bottom:1.2rem">
+  <div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add arms to a level</h3></div>
+  <div class="panel-b">
+    <form method="post" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end" class="fin-form">{% csrf_token %}
+      <input type="hidden" name="action" value="arms">
+      <div style="flex:1 1 180px"><label>Level</label><input name="level" placeholder="JSS 1" required maxlength="40"></div>
+      <div style="flex:2 1 260px"><label>Arms</label><input name="arms" placeholder="A, B, C — or Gold, Diamond" required></div>
+      <button class="fin-btn fin-btn-gold" type="submit" style="height:42px"><i class="bi bi-check2"></i> Create</button>
+    </form>
+    <p class="hint" style="margin-top:.6rem">“JSS 1” with “A, B, C” creates JSS 1A, JSS 1B and JSS 1C. Classes that already exist are left as they are.</p>
+  </div>
+</div>
+
+{% for level, classes in levels %}
+<div class="lv">
+  <div class="lv-h"><h3>{{ level }}</h3><span class="hint">{{ classes|length }} arm{{ classes|length|pluralize }}</span></div>
+  <div class="arms">
+    {% for c in classes %}
+    <div class="arm">
+      <div class="arm-top"><b>{{ c.name }}</b><span class="count">{{ c.enrolled }}</span></div>
+      <div class="hint">{% if c.form_teacher %}Form teacher: {{ c.form_teacher.full_name }}{% else %}No form teacher{% endif %}</div>
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="update"><input type="hidden" name="class_id" value="{{ c.id }}">
+        <input name="level" value="{{ c.level }}" placeholder="Level" maxlength="40">
+        <input name="arm" value="{{ c.arm }}" placeholder="Arm" maxlength="10">
+        <select name="form_teacher"><option value="">— form teacher —</option>{% for s in staff %}<option value="{{ s.id }}"{% if c.form_teacher_id == s.id %} selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select>
+        <button class="fin-btn fin-btn-sm" type="submit">Save</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% empty %}
+<div class="panel"><div class="empty"><i class="bi bi-building"></i><p>No classes yet. Add a level and its arms above.</p></div></div>
+{% endfor %}
+{% endblock %}

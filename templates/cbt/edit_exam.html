@@ -1,0 +1,821 @@
+{% extends 'dashboard/base.html' %}
+{% block title %}Edit Exam{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+}
+
+.ex-wrap {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+}
+
+@keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.ex-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rim2);
+    position: relative;
+}
+
+.ex-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 80px;
+    height: 2px;
+    background: var(--champagne);
+}
+
+.ex-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.ex-eyebrow-rule {
+    width: 28px;
+    height: 1px;
+    background: var(--champagne);
+    flex-shrink: 0;
+}
+
+.ex-eyebrow-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.ex-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.ex-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+}
+
+.ex-title em {
+    font-style: italic;
+    color: var(--champagne);
+}
+
+.ex-subtitle {
+    margin-top: 8px;
+    font-size: 0.9rem;
+    color: var(--slate2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.ex-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    flex-shrink: 0;
+    align-self: center;
+}
+
+.ex-badge.published {
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+}
+
+.ex-badge.draft {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    color: var(--amber);
+}
+
+/* ── BREADCRUMB ── */
+.ex-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.8rem;
+    color: var(--slate);
+}
+
+.ex-breadcrumb a {
+    color: var(--slate2);
+    text-decoration: none;
+    transition: color .2s;
+}
+
+.ex-breadcrumb a:hover { color: var(--champagne); }
+.ex-breadcrumb .bi { font-size: 0.7rem; }
+
+/* ── MESSAGES ── */
+.ex-messages { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 10px; }
+
+.ex-alert {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 18px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.ex-alert.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.ex-alert.error   { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red);   }
+.ex-alert.warning { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+.ex-alert.info    { background: var(--blue-dim);  border: 1px solid var(--blue-border);  color: var(--blue);  }
+.ex-alert .bi { font-size: 1.1rem; flex-shrink: 0; }
+
+/* ── LAYOUT ── */
+.ex-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ── PANEL ── */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    animation: riseUp .45s ease both;
+}
+
+.panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 28px 18px;
+    border-bottom: 1px solid var(--rim);
+}
+
+.panel-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.panel-icon.blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border); }
+.panel-icon.green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.panel-icon.amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.panel-icon.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+.panel-icon.red    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border); }
+.panel-icon.teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border); }
+
+.panel-header-text h3 {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--white);
+    margin-bottom: 2px;
+}
+
+.panel-header-text p {
+    font-size: 0.78rem;
+    color: var(--slate);
+}
+
+.panel-body { padding: 28px; }
+
+/* ── FORM INSIDE DJANGO ── */
+.form-container p {
+    margin-bottom: 22px;
+}
+
+.form-container p label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate2);
+    margin-bottom: 8px;
+}
+
+.form-container input[type="text"],
+.form-container input[type="number"],
+.form-container input[type="date"],
+.form-container input[type="time"],
+.form-container input[type="email"],
+.form-container select,
+.form-container textarea {
+    width: 100%;
+    padding: 11px 15px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.93rem;
+    transition: border-color .2s, box-shadow .2s;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.form-container input:focus,
+.form-container select:focus,
+.form-container textarea:focus {
+    outline: none;
+    border-color: var(--champagne);
+    box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+
+.form-container input::placeholder,
+.form-container textarea::placeholder {
+    color: var(--slate);
+}
+
+.form-container select option {
+    background: var(--surface2);
+    color: var(--white);
+}
+
+.form-container textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Checkbox row */
+.form-container p:has(input[type="checkbox"]) {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1px solid var(--rim);
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+}
+
+.form-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--champagne);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.form-container p:has(input[type="checkbox"]) label {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--slate2);
+    cursor: pointer;
+}
+
+/* Help text */
+.form-container .helptext {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--slate);
+    margin-top: 5px;
+    padding-left: 2px;
+}
+
+/* Error list */
+.form-container .errorlist {
+    list-style: none;
+    margin-top: 6px;
+}
+
+.form-container .errorlist li {
+    font-size: 0.8rem;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-container .errorlist li::before {
+    content: "\F330";
+    font-family: "bootstrap-icons";
+}
+
+/* Multi-select */
+.form-container select[multiple] {
+    min-height: 110px;
+    padding: 8px;
+}
+
+/* ── FORM FOOTER ── */
+.form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    border-top: 1px solid var(--rim);
+    background: var(--surface2);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ── BUTTONS ── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all .2s ease;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+    padding: 12px 28px;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(244,210,31,.32);
+    color: #0a1f44;
+}
+
+.btn-save.loading {
+    position: relative;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+.btn-save.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    top: 50%; left: 50%;
+    margin: -8px 0 0 -8px;
+    border: 2px solid rgba(0,0,0,.3);
+    border-top-color: #0a1f44;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn-ghost {
+    background: transparent;
+    color: var(--slate2);
+    border: 1px solid var(--rim2);
+}
+
+.btn-ghost:hover {
+    background: var(--rim);
+    border-color: var(--rim3);
+    color: var(--white);
+}
+
+.btn-action {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 18px;
+    font-size: 0.85rem;
+}
+
+.btn-action.champagne {
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.25);
+    color: var(--champagne-lt);
+}
+
+.btn-action.champagne:hover {
+    background: rgba(244,210,31,.18);
+    color: var(--champagne-lt);
+}
+
+.btn-action.outline {
+    background: transparent;
+    border: 1px solid var(--rim2);
+    color: var(--slate2);
+}
+
+.btn-action.outline:hover {
+    background: var(--rim);
+    color: var(--white);
+}
+
+/* ── SIDEBAR PANEL ── */
+.sidebar-panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    position: sticky;
+    top: 20px;
+    animation: riseUp .45s ease both;
+    animation-delay: .08s;
+}
+
+.sidebar-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.sidebar-section {
+    padding: 22px 22px;
+    border-bottom: 1px solid var(--rim);
+}
+
+.sidebar-section:last-child { border-bottom: none; }
+
+.sidebar-section-title {
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--champagne);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* ── INFO ROW ── */
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rim);
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-row-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.info-row-icon.blue   { background: var(--blue-dim);   color: var(--blue);   }
+.info-row-icon.green  { background: var(--green-dim);  color: var(--green);  }
+.info-row-icon.amber  { background: var(--amber-dim);  color: var(--amber);  }
+.info-row-icon.purple { background: var(--purple-dim); color: var(--purple); }
+
+.info-row-body { flex: 1; min-width: 0; }
+
+.info-row-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate);
+    margin-bottom: 2px;
+}
+
+.info-row-value {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── QUICK ACTIONS ── */
+.quick-actions { display: flex; flex-direction: column; gap: 9px; }
+
+/* ── WARNING BOX ── */
+.warn-box {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.warn-box-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--amber);
+    margin-bottom: 7px;
+}
+
+.warn-box p {
+    font-size: 0.8rem;
+    color: rgba(251,191,36,.7);
+    line-height: 1.5;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+    .ex-layout { grid-template-columns: 1fr; }
+    .sidebar-panel { position: relative; top: 0; }
+}
+
+@media (max-width: 680px) {
+    .ex-wrap { padding: 1.25rem 1rem 3rem; }
+    .ex-title { font-size: 2rem; }
+    .form-footer { flex-direction: column-reverse; }
+    .btn-save { width: 100%; justify-content: center; }
+    .btn-ghost { width: 100%; justify-content: center; }
+}
+</style>
+
+<div class="ex-wrap">
+
+    <!-- Page Header -->
+    <header class="ex-header">
+        <div class="ex-breadcrumb">
+            <a href="{% url 'cbt:admin_exam_list' %}"><i class="bi bi-house"></i> Exams</a>
+            <i class="bi bi-chevron-right"></i>
+            <span>Edit</span>
+        </div>
+
+        <div class="ex-eyebrow">
+            <span class="ex-eyebrow-rule"></span>
+            <span class="ex-eyebrow-label">Computer-Based Testing</span>
+        </div>
+
+        <div class="ex-header-row">
+            <div>
+                <h1 class="ex-title">Edit <em>Exam</em></h1>
+                <div class="ex-subtitle">
+                    <i class="bi bi-file-earmark-text"></i>
+                    {{ exam.title }}
+                </div>
+            </div>
+
+            {% if exam.published %}
+                <span class="ex-badge published">
+                    <i class="bi bi-check-circle-fill"></i> Published
+                </span>
+            {% else %}
+                <span class="ex-badge draft">
+                    <i class="bi bi-clock"></i> Draft
+                </span>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="ex-messages">
+        {% for message in messages %}
+        <div class="ex-alert {{ message.tags }}">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}x-circle-fill{% elif message.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Layout -->
+    <div class="ex-layout">
+
+        <!-- Form Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-icon blue"><i class="bi bi-pencil-square"></i></div>
+                <div class="panel-header-text">
+                    <h3>Exam Details</h3>
+                    <p>Update basic exam information</p>
+                </div>
+            </div>
+
+            <form method="POST" id="editExamForm">
+                {% csrf_token %}
+
+                <div class="panel-body">
+                    <div class="form-container">
+                        {{ form.as_p }}
+                    </div>
+                </div>
+
+                <div class="form-footer">
+                    <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-ghost" id="cancelBtn">
+                        <i class="bi bi-x-lg"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-save" id="saveBtn">
+                        <i class="bi bi-floppy2-fill"></i>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar-panel">
+
+            <!-- Exam Info -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <i class="bi bi-info-circle"></i> Exam Information
+                </div>
+
+                <div class="info-row">
+                    <div class="info-row-icon blue"><i class="bi bi-calendar3"></i></div>
+                    <div class="info-row-body">
+                        <div class="info-row-label">Created</div>
+                        <div class="info-row-value">{{ exam.created_at|date:"M d, Y" }}</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-row-icon green"><i class="bi bi-person"></i></div>
+                    <div class="info-row-body">
+                        <div class="info-row-label">Created By</div>
+                        <div class="info-row-value">
+                            {% if exam.created_by %}
+                                {{ exam.created_by.full_name|default:exam.created_by.user.get_full_name|default:"—" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-row-icon amber"><i class="bi bi-clock-history"></i></div>
+                    <div class="info-row-body">
+                        <div class="info-row-label">Last Modified</div>
+                        <div class="info-row-value">{{ exam.updated_at|date:"M d, Y · H:i" }}</div>
+                    </div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-row-icon purple"><i class="bi bi-shield-check"></i></div>
+                    <div class="info-row-body">
+                        <div class="info-row-label">Status</div>
+                        <div class="info-row-value">
+                            {% if exam.published %}Published{% else %}Draft{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">
+                    <i class="bi bi-lightning-charge"></i> Quick Actions
+                </div>
+                <div class="quick-actions">
+                    <a href="{% url 'cbt:cbt_add_question' %}" class="btn btn-action champagne">
+                        <i class="bi bi-plus-circle"></i>
+                        Add Questions
+                    </a>
+                    <a href="{% url 'cbt:questions_overview' %}" class="btn btn-action outline">
+                        <i class="bi bi-list-ul"></i>
+                        View Questions
+                    </a>
+                    {% if exam.published %}
+                    <a href="{% url 'cbt:exam_results' %}?exam_id={{ exam.id }}" class="btn btn-action outline">
+                        <i class="bi bi-bar-chart-line"></i>
+                        View Results
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Warning -->
+            <div class="sidebar-section">
+                <div class="warn-box">
+                    <div class="warn-box-title">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Important Notice
+                    </div>
+                    <p>Changes will affect all assigned classes. Students who haven't started will see the updated version immediately.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<script>
+(function () {
+    const form = document.getElementById('editExamForm');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const original = new URLSearchParams(new FormData(form)).toString();
+
+    form.addEventListener('submit', () => {
+        saveBtn.classList.add('loading');
+        saveBtn.disabled = true;
+    });
+
+    cancelBtn.addEventListener('click', function (e) {
+        const current = new URLSearchParams(new FormData(form)).toString();
+        if (current !== original) {
+            e.preventDefault();
+            Swal.fire({
+                background: '#172f5c',
+                color: '#f2f5fb',
+                title: '<span style="font-family:Cormorant Garamond,serif;font-size:1.5rem">Unsaved Changes</span>',
+                html: '<span style="font-family:Outfit,sans-serif;font-size:.9rem;color:rgba(255,255,255,.58)">You have unsaved changes. Are you sure you want to leave?</span>',
+                icon: 'warning',
+                iconColor: '#fbbf24',
+                showCancelButton: true,
+                confirmButtonColor: '#f87171',
+                cancelButtonColor: '#254478',
+                confirmButtonText: 'Leave',
+                cancelButtonText: 'Stay'
+            }).then(r => {
+                if (r.isConfirmed) window.location.href = cancelBtn.getAttribute('href');
+            });
+        }
+    });
+
+    {% if messages %}
+    {% for message in messages %}
+    {% if message.tags == 'success' %}
+    Swal.fire({
+        background: '#172f5c',
+        color: '#f2f5fb',
+        icon: 'success',
+        iconColor: '#4ade80',
+        title: '<span style="font-family:Cormorant Garamond,serif">Success</span>',
+        text: '{{ message }}',
+        timer: 3000,
+        showConfirmButton: false
+    });
+    {% elif message.tags == 'error' %}
+    Swal.fire({
+        background: '#172f5c',
+        color: '#f2f5fb',
+        icon: 'error',
+        iconColor: '#f87171',
+        title: '<span style="font-family:Cormorant Garamond,serif">Error</span>',
+        text: '{{ message }}',
+        confirmButtonColor: '#f4d21f'
+    });
+    {% endif %}
+    {% endfor %}
+    {% endif %}
+})();
+</script>
+
+{% endblock %}

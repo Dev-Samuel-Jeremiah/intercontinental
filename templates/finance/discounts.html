@@ -1,0 +1,130 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Discounts &amp; scholarships{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Discounts &amp; <em>scholarships</em></h1>
+    <p class="fin-sub">Sibling rebates, staff discounts and awards are taken off automatically when a term's bill is worked out.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:discount_preview' %}"><i class="bi bi-calculator"></i> Check a student</a>
+    <a class="fin-btn" href="{% url 'finance:manage_fees' %}"><i class="bi bi-file-earmark-text"></i> Fee structures</a>
+  </div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add a discount</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div><label>Name</label><input type="text" name="name" placeholder="Third child rebate" required></div>
+        <div><label>Who gets it</label>
+          <select name="applies_to" id="appliesTo" onchange="toggleFields()">
+            {% for value, label in applies_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div id="studentRow"><label>Student</label>
+          <select name="student_id">
+            <option value="">— choose a student —</option>
+            {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}
+          </select>
+        </div>
+        <div id="classRow" style="display:none"><label>Class</label>
+          <select name="class_id">
+            <option value="">— choose a class —</option>
+            {% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div id="siblingRow" style="display:none"><label>Applies from which child</label>
+          <input type="number" name="sibling_from" value="3" min="2" max="10">
+          <span class="hint">3 means the third child in a family onward.</span>
+        </div>
+        <div class="row2">
+          <div><label>Type</label>
+            <select name="value_type">
+              {% for value, label in value_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+            </select>
+          </div>
+          <div><label>Amount</label><input type="number" name="value" step="0.01" min="0.01" placeholder="10" required></div>
+        </div>
+        <div><label>Reason (optional)</label><textarea name="reason" rows="2" placeholder="Approved by the board, 2026 session"></textarea></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Add discount</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-diagram-3"></i> Automatic rules</h3><span class="chip gold">{{ active_count }} active</span></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Rule</th><th>Applies to</th><th>Value</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for d in rules %}
+            <tr>
+              <td class="name">{{ d.name }}{% if d.reason %}<br><span class="hint">{{ d.reason|truncatechars:60 }}</span>{% endif %}</td>
+              <td>{{ d.get_applies_to_display }}{% if d.applies_to == 'SIBLING' %} (from child {{ d.sibling_from }}){% endif %}{% if d.school_class %} — {{ d.school_class.name }}{% endif %}</td>
+              <td class="money">{{ d.label }}</td>
+              <td>{% if d.is_active %}<span class="chip green">Active</span>{% else %}<span class="chip">Paused</span>{% endif %}</td>
+              <td style="white-space:nowrap">
+                <form method="post" style="display:inline">{% csrf_token %}
+                  <input type="hidden" name="action" value="toggle"><input type="hidden" name="discount_id" value="{{ d.id }}">
+                  <button class="fin-btn fin-btn-sm" type="submit">{% if d.is_active %}Pause{% else %}Resume{% endif %}</button>
+                </form>
+                <form method="post" style="display:inline" onsubmit="return confirm('Remove “{{ d.name|escapejs }}”?')">{% csrf_token %}
+                  <input type="hidden" name="action" value="delete"><input type="hidden" name="discount_id" value="{{ d.id }}">
+                  <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5"><div class="empty"><i class="bi bi-diagram-3"></i>No rules yet. A common one: 10% off from the third child.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-award"></i> Scholarships &amp; bursaries</h3></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Student</th><th>Award</th><th>Value</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for d in awards %}
+            <tr>
+              <td class="name">{{ d.student.full_name|default:"—" }}<br><span class="hint">{{ d.student.admission_number }}</span></td>
+              <td>{{ d.name }}{% if d.reason %}<br><span class="hint">{{ d.reason|truncatechars:60 }}</span>{% endif %}</td>
+              <td class="money">{{ d.label }}</td>
+              <td>{% if d.is_active %}<span class="chip green">Active</span>{% else %}<span class="chip">Paused</span>{% endif %}</td>
+              <td style="white-space:nowrap">
+                <form method="post" style="display:inline">{% csrf_token %}
+                  <input type="hidden" name="action" value="toggle"><input type="hidden" name="discount_id" value="{{ d.id }}">
+                  <button class="fin-btn fin-btn-sm" type="submit">{% if d.is_active %}Pause{% else %}Resume{% endif %}</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5"><div class="empty"><i class="bi bi-award"></i>No scholarships awarded yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleFields(){
+  var v=document.getElementById('appliesTo').value;
+  document.getElementById('studentRow').style.display = v==='STUDENT' ? '' : 'none';
+  document.getElementById('classRow').style.display   = v==='CLASS'   ? '' : 'none';
+  document.getElementById('siblingRow').style.display = v==='SIBLING' ? '' : 'none';
+}
+toggleFields();
+</script>
+{% endblock %}

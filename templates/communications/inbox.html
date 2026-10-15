@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Replies inbox{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Replies <em>inbox</em></h1>
+  <p class="fin-sub">SMS and WhatsApp replies from parents, matched to the child where the number is on file. Anyone on the communications team can answer.</p>
+</div>
+<div style="display:flex;gap:.4rem"><a class="fin-btn{% if show == 'open' %} fin-btn-gold{% endif %}" href="?show=open">Waiting ({{ open_count }})</a><a class="fin-btn{% if show == 'all' %} fin-btn-gold{% endif %}" href="?show=all">All</a></div></div>
+{% include "communications/_engage_nav.html" %}
+{% for m in items %}
+<div class="panel" style="margin-bottom:1rem"><div class="panel-b">
+  <p style="margin:0 0 .3rem"><span class="chip{% if m.channel == 'WA' %} green{% endif %}">{{ m.get_channel_display }}</span> <b>{{ m.from_number }}</b>{% if m.student %} · {{ m.student.parent_name|default:"Parent" }} of {{ m.student.full_name }}{% else %} · <span class="hint">number not on file</span>{% endif %} · <span class="hint">{{ m.received_at|date:"j M H:i" }}</span>{% if m.handled %} · <span class="chip">Done{% if m.handled_by %} by {{ m.handled_by.get_full_name|default:m.handled_by.username }}{% endif %}</span>{% endif %}</p>
+  <p>{{ m.body|linebreaksbr }}</p>
+  {% for r in m.replies.all %}<div style="border-left:3px solid var(--rim2);padding:.2rem .8rem;margin:.4rem 0"><small class="hint">Reply {{ r.sent_at|date:"j M H:i" }}{% if not r.ok %} — not sent: {{ r.error }}{% endif %}</small><br>{{ r.body }}</div>{% endfor %}
+  <form method="post" class="fin-form" style="display:flex;gap:.5rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ m.pk }}"><input type="hidden" name="action" value="reply">
+    <input name="body" placeholder="Reply by {{ m.get_channel_display }}" style="flex:1;min-width:220px" maxlength="900"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Send</button></form>
+  <form method="post" style="margin-top:.4rem">{% csrf_token %}<input type="hidden" name="id" value="{{ m.pk }}"><input type="hidden" name="action" value="toggle"><button class="fin-btn fin-btn-sm" type="submit">{% if m.handled %}Mark as waiting{% else %}Mark as done{% endif %}</button></form>
+</div></div>
+{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No replies waiting.</p></div></div>{% endfor %}
+{% endblock %}

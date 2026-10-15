@@ -1,0 +1,522 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ action }} Day Override{% endblock %}
+
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+  /* design tokens come from dashboard/base.html */
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Wrap ── */
+  .do-form-wrap {
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── Breadcrumb ── */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--slate);
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumb a {
+    color: var(--slate2);
+    text-decoration: none;
+    transition: color .18s;
+  }
+  .breadcrumb a:hover { color: var(--champagne); }
+  .breadcrumb i { font-size: .6rem; color: var(--slate); }
+  .breadcrumb span { color: var(--slate); }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 2rem; }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--champagne);
+    margin-bottom: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px; height: 1px;
+    background: var(--champagne);
+    opacity: .7;
+  }
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--white);
+    margin: 0;
+  }
+  .page-title em { font-style: italic; color: var(--champagne); }
+  .context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.22);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: var(--champagne-lt);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .header-divider {
+    position: relative;
+    height: 1px;
+    background: var(--rim);
+    margin-top: 16px;
+  }
+  .header-divider::after {
+    content: '';
+    position: absolute;
+    left: 0; top: -0.5px;
+    width: 80px; height: 2px;
+    background: var(--champagne);
+    border-radius: 2px;
+  }
+
+  /* ── Flash messages ── */
+  .flash-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+    animation: riseUp .35s ease both;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: riseUp .45s ease both;
+    animation-delay: .07s;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--rim);
+  }
+  .panel-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--amber);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .panel-header h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    margin: 0;
+  }
+  .panel-body { padding: 24px; }
+
+  /* ── Form fields ── */
+  .field-group {
+    margin-bottom: 20px;
+  }
+  .field-label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate2);
+    margin-bottom: 7px;
+  }
+  .field-label .label-hint {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: .72rem;
+    color: var(--slate);
+    margin-left: 4px;
+  }
+  .required-star { color: var(--champagne); margin-left: 2px; }
+
+  /* Inputs / selects / textarea */
+  .do-form input[type="text"],
+  .do-form input[type="time"],
+  .do-form select,
+  .do-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    color: var(--white);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .do-form input::placeholder,
+  .do-form textarea::placeholder { color: var(--slate); }
+  .do-form input[type="time"] { width: auto; min-width: 160px; }
+
+  .do-form input[type="text"]:focus,
+  .do-form input[type="time"]:focus,
+  .do-form select:focus,
+  .do-form textarea:focus {
+    border-color: var(--champagne);
+    box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+  }
+
+  .do-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f4d21f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  .do-form select option { background: var(--surface2); color: var(--white); }
+  .do-form textarea { resize: vertical; }
+
+  /* Locked day display (edit mode) */
+  .day-locked {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--slate2);
+  }
+  .day-locked i { color: var(--amber); }
+
+  /* All-days-taken warning */
+  .days-warning {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    color: var(--amber);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-top: 7px;
+  }
+
+  /* ── Active checkbox row ── */
+  .active-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    transition: border-color .2s;
+  }
+  .active-row:hover { border-color: var(--rim3); }
+  .active-row input[type="checkbox"] {
+    width: 17px; height: 17px;
+    accent-color: var(--champagne);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 1px;
+    margin-right: 10px;
+  }
+  .active-row-text label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    cursor: pointer;
+    margin-bottom: 2px;
+  }
+  .active-row-text p {
+    font-size: 0.775rem;
+    color: var(--slate);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  /* ── Divider ── */
+  .form-divider {
+    height: 1px;
+    background: var(--rim);
+    margin: 4px 0 22px;
+  }
+
+  /* ── Actions ── */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    padding: 11px 26px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+    transition: transform .18s, box-shadow .18s, filter .18s;
+    letter-spacing: .2px;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(244,210,31,.32);
+    filter: brightness(1.07);
+  }
+  .btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--slate2);
+    padding: 11px 20px;
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .18s, color .18s, background .18s;
+  }
+  .btn-cancel:hover {
+    border-color: var(--rim3);
+    color: var(--white);
+    background: var(--surface3);
+  }
+  .btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: auto;
+    transition: background .18s, border-color .18s, transform .15s;
+  }
+  .btn-delete:hover {
+    background: rgba(248,113,113,.18);
+    border-color: rgba(248,113,113,.4);
+    transform: translateY(-1px);
+    color: var(--red);
+  }
+</style>
+
+<div class="do-form-wrap">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="{% url 'timetable:admin_index' %}">Timetable Admin</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'timetable:config_detail' pk=config.pk %}">{{ config.name }}</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'timetable:day_override_list' config_pk=config.pk %}">Day Overrides</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>{{ action }}</span>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">Day Overrides · {{ config.name }}</div>
+    <div class="header-row">
+      <h1 class="page-title">{{ action }} <em>Day Override</em></h1>
+      <span class="context-badge">
+        <i class="bi bi-calendar-event"></i>
+        {{ action }}
+      </span>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash-msg">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Form Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon"><i class="bi bi-calendar-week"></i></div>
+      <h3>Override Configuration</h3>
+    </div>
+    <div class="panel-body">
+      <form method="post" class="do-form">
+        {% csrf_token %}
+
+        <!-- Day field -->
+        <div class="field-group">
+          <label class="field-label">
+            Day <span class="required-star">*</span>
+          </label>
+          {% if action == 'Create' %}
+            <select name="day" required>
+              <option value="">— Select a day —</option>
+              {% for code, label_ in available_days %}
+                <option value="{{ code }}">{{ label_ }}</option>
+              {% endfor %}
+            </select>
+            {% if not available_days %}
+              <div class="days-warning">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                All active days already have overrides.
+              </div>
+            {% endif %}
+          {% else %}
+            <div class="day-locked">
+              <i class="bi bi-lock-fill"></i>
+              {{ override.get_day_display }}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Label -->
+        <div class="field-group">
+          <label class="field-label">
+            Label <span class="required-star">*</span>
+          </label>
+          <input type="text" name="label" required maxlength="100"
+                 value="{{ override.label|default:'' }}"
+                 placeholder='e.g. "Friday – Computer Club Day"'>
+        </div>
+
+        <!-- Lessons end time -->
+        <div class="field-group">
+          <label class="field-label">
+            Regular Lessons End Time <span class="required-star">*</span>
+            <span class="label-hint">(e.g. 12:20 on Fridays)</span>
+          </label>
+          <input type="time" name="lessons_end_time" required
+                 value="{{ override.lessons_end_time|time:'H:i'|default:'' }}">
+        </div>
+
+        <!-- Description -->
+        <div class="field-group">
+          <label class="field-label">
+            Description
+            <span class="label-hint">(optional)</span>
+          </label>
+          <textarea name="description" rows="3"
+                    placeholder="Describe this override for students and teachers...">{{ override.description|default:'' }}</textarea>
+        </div>
+
+        <!-- Active toggle -->
+        <div class="active-row">
+          <input type="checkbox" name="is_active" id="is_active"
+                 {% if override.is_active or action == 'Create' %}checked{% endif %}>
+          <div class="active-row-text">
+            <label for="is_active">Active</label>
+            <p>Inactive overrides are saved but won't appear in the timetable.</p>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">
+            <i class="bi bi-check2-circle"></i>
+            {{ action }} Override
+          </button>
+          <a href="{% url 'timetable:day_override_list' config_pk=config.pk %}" class="btn-cancel">
+            <i class="bi bi-x"></i>
+            Cancel
+          </a>
+          {% if action == 'Edit' %}
+          <a href="{% url 'timetable:day_override_delete' config_pk=config.pk pk=override.pk %}" class="btn-delete">
+            <i class="bi bi-trash3"></i>
+            Delete Override
+          </a>
+          {% endif %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

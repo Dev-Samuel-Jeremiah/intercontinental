@@ -1,0 +1,202 @@
+{% extends 'dashboard/base.html' %}
+{% load dict_filters %}
+{% load static %}
+{% block title %}{{ course.name }} | Course Dashboard{% endblock %}
+{% block extra_css %}
+<script>
+        function toggleSection(sectionId) {
+            const el = document.getElementById('section-' + sectionId);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+<style>
+        #content{font-family: 'Inter', Arial, sans-serif;}
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 40px auto;
+        }
+
+        h1 { color:#1f3a5f; font-size: 32px; margin-bottom: 5px; }
+        p.description { font-size: 16px; color:var(--slate2); margin-bottom: 20px; }
+
+        .add-btn {
+            display: inline-block;
+            background:linear-gradient(135deg, #4f46e5, #3b82f6);
+            color:#fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 10px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            background:linear-gradient(135deg, #6366f1, #2563eb);
+        }
+
+        .section {
+            background:rgba(255,255,255,.03);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            perspective: 1000px;
+        }
+
+        .section:hover {
+            transform: translateY(-5px) rotateX(2deg);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .section-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 18px;
+            background:linear-gradient(to right, rgba(255,255,255,.045), #e5e7eb);
+            border-radius: 12px 12px 0 0;
+            user-select: none;
+        }
+
+        .section-header span {
+            font-weight: 400;
+            font-size: 14px;
+            color:var(--white);
+        }
+
+        .section-content {
+            padding: 16px 20px;
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-10px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .item {
+            padding: 10px 0;
+            border-bottom:1px solid var(--rim2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .item:hover { background:rgba(255,255,255,.045); }
+
+        h2 { color:var(--blue); margin-bottom: 12px; font-size: 24px; }
+        h3 { color:var(--white); margin-bottom: 10px; font-size: 20px; }
+
+        a.edit-link, a.detail-link {
+            font-size: 13px;
+            color:var(--blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a.edit-link:hover, a.detail-link:hover { text-decoration: underline; }
+
+    </style>
+{% endblock %}
+{% block content %}
+<div class="container">
+
+
+
+    <a href="{% url 'classroom:teacher_courses' %}" class="add-btn">Back to courses</a>
+    <h1>{{ course.name }}</h1>
+    <p class="description">{{ course.description }}</p>
+
+    <a href="{% url 'classroom:add_section' course.id %}" class="add-btn">+ Add New Section</a>
+    <a href="{% url 'classroom:course_hub' course.id %}" class="add-btn"><i class="bi bi-megaphone"></i> Announcements &amp; live classes</a>
+    <a href="{% url 'assistant:tutor_admin' course.id %}" class="add-btn"><i class="bi bi-robot"></i> AI tutor</a>
+    <a href="{% url 'classroom:clone_course' course.id %}" class="add-btn"><i class="bi bi-files"></i> Copy to a new term</a>
+
+    <!-- ================= SECTIONS ================= -->
+    <h2>Course Sections</h2>
+    {% for section in sections %}
+    <div class="section">
+        <div class="section-header" onclick="toggleSection({{ section.id }})">
+            <span>{{ section.title }}</span>
+            <span>{{ section.lessons.count }} lessons</span>
+        </div>
+
+        <div class="section-content" id="section-{{ section.id }}">
+            <!-- Lessons -->
+            <h3>Lessons</h3>
+            {% for lesson in section.lessons.all %}
+                <div class="item">
+                    <span>{{ lesson.title }}</span>
+                    <a href="{% url 'classroom:edit_lesson' lesson.id %}" class="edit-link">Edit</a>
+                </div>
+            {% empty %}
+                <p>No lessons yet.</p>
+            {% endfor %}
+            <a href="{% url 'classroom:add_lesson' section.id %}" class="add-btn">+ Add Lesson (Video)</a>
+
+            <!-- Materials -->
+            <h3>Materials</h3>
+            {% for material in section.materials.all %}
+                <div class="item">{{ material.title }}</div>
+            {% empty %}
+                <p>No materials yet.</p>
+            {% endfor %}
+            <a href="{% url 'classroom:add_material' section.id %}" class="add-btn">+ Add Material</a>
+
+            <!-- Assignments -->
+            <h3>Assignments</h3>
+            {% for assignment in section.assignments.all %}
+                <div class="item">
+                    <a href="{% url 'classroom:assignment_detail' assignment.id %}" class="detail-link">{{ assignment.title }}</a>
+                    — Due: {{ assignment.due_date }}
+                    <a href="{% url 'classroom:add_assignment_question' assignment.id %}" class="edit-link">+ Add Task</a>
+                    <!-- NEW: Grade Assignment Button -->
+                    <a href="{% url 'classroom:grade_assignment' assignment.id %}" class="edit-link ms-2">Grade</a>
+                </div>
+            {% empty %}
+                <p>No assignments yet.</p>
+            {% endfor %}
+            <a href="{% url 'classroom:add_assignment' section.id %}" class="add-btn">+ Add Assignment</a>
+
+            <!-- Quizzes -->
+            <h3>Quizzes</h3>
+            {% for quiz in section.quizzes.all %}
+                <div class="item">
+                    <!-- Quiz title and duration -->
+                    <a href="{% url 'classroom:quiz_detail' quiz.id %}" class="detail-link">{{ quiz.title }}</a>
+                    ({{ quiz.duration_minutes }} mins)
+
+                    <!-- Add new question link -->
+                    <a href="{% url 'classroom:add_quiz_question' quiz.id %}" class="edit-link">+ Add Question</a>
+
+                    <!-- View quiz results per section -->
+                    <a href="{% url 'classroom:teacher_course_quiz_results' course.id %}?section_id={{ section.id }}" class="edit-link ms-2">
+                        View Results
+                    </a>
+                </div>
+            {% empty %}
+                <p>No quizzes yet.</p>
+            {% endfor %}
+
+            <!-- Add new quiz button -->
+            <a href="{% url 'classroom:add_quiz' section.id %}" class="add-btn">+ Add Quiz</a>
+
+        </div>
+    </div>
+    {% empty %}
+    <p>No sections yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

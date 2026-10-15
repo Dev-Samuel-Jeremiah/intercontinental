@@ -1,0 +1,20 @@
+{% extends "admissions/public_base.html" %}
+{% block title %}Application fee{% endblock %}
+{% block body %}
+<div style="text-align:center;padding:2rem 0">
+  <div style="width:72px;height:72px;margin:0 auto 1.4rem;border-radius:20px;display:grid;place-items:center;font-size:1.8rem;
+              color:var(--amber);background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.35)"><i class="bi bi-cash-coin"></i></div>
+  <div class="eyebrow" style="margin-bottom:.7rem">Application fee</div>
+  <h1>Payment <em>not completed</em></h1>
+  <p class="lead" style="margin:0 auto">{{ error }}</p>
+  <div class="card" style="max-width:420px;margin:1.8rem auto 0">
+    <p class="hint" style="margin-bottom:.4rem">Your application is still saved under</p>
+    <div style="font-family:ui-monospace,Menlo,monospace;font-size:1.3rem;color:var(--gold-lt)">{{ application.reference }}</div>
+    <p class="help" style="margin-top:.8rem">You can pay at the school office instead — your application is not lost.</p>
+  </div>
+  <div style="margin-top:1.4rem;display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
+    <a class="btn" href="{% url 'pay_fee' application.reference %}"><i class="bi bi-arrow-repeat"></i> Try again</a>
+    <a class="btn ghost" href="{% url 'applied' application.reference %}"><i class="bi bi-arrow-left"></i> Back</a>
+  </div>
+</div>
+{% endblock %}

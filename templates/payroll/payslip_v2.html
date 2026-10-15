@@ -1,0 +1,9 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Payslip — {{ slip.staff_payroll.staff.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>@media print{body *{visibility:hidden!important}.slipcard,.slipcard *{visibility:visible!important}.slipcard{position:absolute;left:0;top:0;width:100%}}</style>
+<div class="fin-head"><div><div class="fin-eyebrow">Payslip</div><h1 class="fin-title">{{ run }}</h1></div><button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print / PDF</button></div>
+<div class="slipcard" style="background:#fff;color:#1c1917;border-radius:10px;padding:1.4rem;max-width:760px">{% include "payroll/_payslip_body.html" %}</div>
+{% endblock %}

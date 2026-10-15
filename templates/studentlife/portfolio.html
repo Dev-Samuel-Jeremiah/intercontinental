@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Portfolio — {{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{% if own %}<a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a>{% else %}Portfolio{% endif %}</div>
+  <h1 class="fin-title">{% if own %}My <em>portfolio</em>{% else %}{{ student.full_name }}{% endif %}</h1>
+  <p class="fin-sub">Your best work across the years — projects, writing, art, certificates and service. Teachers can see it{% if own %}; you choose what your family sees{% endif %}.</p>
+</div></div>
+<div class="fin-grid">
+  {% if own %}
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a piece</h3>
+    <div><label>Title</label><input name="title" required maxlength="160"></div>
+    <div class="row2"><div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+    <div><label>About it</label><textarea name="description" rows="3"></textarea></div>
+    <div><label>File <span class="hint">PDF or photo, up to 10 MB</span></label><input type="file" name="file"></div>
+    <div><label>Or a link</label><input name="link" placeholder="https://"></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="share_with_family" value="1" checked style="width:auto"> My family can see this</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+  {% endif %}
+  <div style="display:grid;gap:1rem">
+  {% for i in items %}
+    <div class="panel"><div class="panel-h"><h3>{% if i.featured %}⭐ {% endif %}{{ i.title }} <span class="chip">{{ i.get_kind_display }}</span></h3></div><div class="panel-b">
+      <small class="hint">{{ i.date|date:"j M Y" }}{% if own and not i.share_with_family %} · private from family{% endif %}</small>
+      {% if i.description %}<p>{{ i.description|linebreaksbr }}</p>{% endif %}
+      {% if i.file %}<a href="{% url 'studentlife:portfolio_file' i.pk %}" target="_blank"><i class="bi bi-paperclip"></i> Open file</a> {% endif %}{% if i.link %}<a href="{{ i.link }}" target="_blank" rel="noopener"><i class="bi bi-link-45deg"></i> Link</a>{% endif %}
+      {% if i.teacher_comment %}<p style="border-left:3px solid var(--champagne,#f4d21f);padding-left:.6rem;margin-top:.6rem"><b>{{ i.commented_by.full_name }}:</b> {{ i.teacher_comment }}</p>{% endif %}
+      {% if own %}<div style="display:flex;gap:.4rem;margin-top:.5rem"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="feature"><input type="hidden" name="id" value="{{ i.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if i.featured %}Unstar{% else %}Star{% endif %}</button></form><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ i.pk }}"><button class="fin-btn fin-btn-sm" type="submit" onclick="return confirm('Remove this piece?')">Remove</button></form></div>{% endif %}
+      {% if staff %}<form method="post" class="fin-form" style="display:flex;gap:.4rem;margin-top:.5rem">{% csrf_token %}<input type="hidden" name="action" value="comment"><input type="hidden" name="id" value="{{ i.pk }}"><input name="comment" value="{{ i.teacher_comment }}" placeholder="Teacher's comment"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form>{% endif %}
+    </div></div>
+  {% empty %}<div class="panel"><div class="panel-b"><p class="empty">Nothing here yet.</p></div></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

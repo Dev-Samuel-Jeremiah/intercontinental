@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Patrol points</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;margin:12mm;color:#000;background:#fff}.sheet{display:grid;grid-template-columns:repeat(2,1fr);gap:8mm}
+.card{border:2px solid #000;padding:6mm;text-align:center;page-break-inside:avoid}.card svg{width:55mm;height:55mm}.card h2{margin:2mm 0}.bar{margin-bottom:6mm}@media print{.bar{display:none}}</style></head>
+<body><div class="bar"><button onclick="window.print()">Print</button></div>
+<div class="sheet">{% for it in items %}<div class="card"><div>{{ school }} — security patrol</div>{{ it.qr|safe }}<h2>{{ it.p.name }}</h2><div>Scan to check in</div></div>{% empty %}<p>No patrol points yet.</p>{% endfor %}</div>
+</body></html>

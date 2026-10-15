@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Servicing schedule{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Site</div>
+  <h1 class="fin-title"><em>Servicing schedule</em></h1>
+  <p class="fin-sub">Regular jobs — generator servicing, AC cleaning, fire-extinguisher checks, tank washing. When one falls due a maintenance job is opened automatically each morning; marking it done sets the next date.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for t in rows %}<tr><td class="name">{{ t.title }}<br><small class="hint">every {{ t.every_days }} days{% if t.space %} · {{ t.space }}{% endif %}{% if t.tag %} · {{ t.tag.code }}{% endif %}{% if t.assigned_to %} · {{ t.assigned_to.full_name }}{% endif %}{% if t.last_done %} · last {{ t.last_done|date:"j M" }}{% endif %}</small></td>
+      <td>{% if t.next_due < today %}<span class="chip red">Overdue {{ t.next_due|date:"j M" }}</span>{% elif t.next_due == today %}<span class="chip gold">Today</span>{% else %}{{ t.next_due|date:"j M Y" }}{% endif %}</td>
+      <td><form method="post" style="display:flex;gap:.25rem">{% csrf_token %}<input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="done">Done</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="stop">Stop</button></form></td></tr>
+      {% if t.checklist %}<tr><td colspan="3" class="hint" style="padding-top:0">{{ t.checklist|linebreaksbr }}</td></tr>{% endif %}
+    {% empty %}<tr><td class="empty">No scheduled jobs yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Schedule a job</h3>
+    <div><label>Job</label><input name="title" required maxlength="160" placeholder="e.g. Service 60 kVA generator"></div>
+    <div class="row2"><div><label>Every (days)</label><input name="every_days" required inputmode="numeric" placeholder="90"></div><div><label>Next due</label><input type="date" name="next_due" required value="{{ today|date:'Y-m-d' }}"></div></div>
+    <div class="row2"><div><label>Kind</label><select name="category">{% for k, v in categories %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Who does it</label><select name="assigned_to"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Room</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div><div><label>Asset</label><select name="tag"><option value="">—</option>{% for t in tags %}<option value="{{ t.pk }}">{{ t }}</option>{% endfor %}</select></div></div>
+    <div><label>Checklist (one step per line)</label><textarea name="checklist" rows="3"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Schedule</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Purchase orders{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Buying</div>
+  <h1 class="fin-title"><em>Purchase orders</em></h1>
+  <p class="fin-sub">Turn approved requisitions into orders, email them to vendors, and record deliveries against them.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Orders</h3><form method="get"><select name="status" onchange="this.form.submit()"><option value="">All</option>{% for k, v in statuses %}<option value="{{ k }}" {% if k == request.GET.status %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></form></div><div class="panel-b"><table class="tbl"><tbody>
+    {% for po in rows %}<tr><td class="name"><a href="{% url 'facilities:order' po.pk %}">{{ po.number }}</a><br><small class="hint">{{ po.vendor }} · {{ po.order_date|date:"j M Y" }}{% if po.requisition %} · {{ po.requisition.title }}{% endif %}</small></td><td class="num">₦{{ po.total|floatformat:2 }}</td><td><span class="chip{% if po.status == 'RECEIVED' %} ok{% elif po.status == 'CANCELLED' %}{% else %} gold{% endif %}">{{ po.get_status_display }}</span></td></tr>
+    {% empty %}<tr><td class="empty">No orders yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">New order</h3>
+    <div><label>Vendor</label><select name="vendor" required>{% for v in vendors %}<option value="{{ v.pk }}">{{ v.name }}</option>{% empty %}<option value="">Add a vendor first</option>{% endfor %}</select></div>
+    <div><label>From approved requisition</label><select name="requisition"><option value="">— none —</option>{% for r in approved %}<option value="{{ r.pk }}" {% if r == pre %}selected{% endif %}>{{ r.title }}</option>{% endfor %}</select></div>
+    <p class="hint" style="margin:0 0 .3rem">Choosing a requisition copies its items — or list items below (with agreed prices).</p>
+    {% include "facilities/_lines.html" %}
+    <div class="row2"><div><label>Expected by</label><input type="date" name="expected_by"></div><div><label>Deliver to</label><input name="deliver_to" maxlength="160" placeholder="Main store"></div></div>
+    <div><label>Notes to the vendor</label><textarea name="notes" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Create order</button>
+  </form>
+</div>
+{% endblock %}

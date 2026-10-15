@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent Portal | {{ tenant.name }}</title>
+<link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/parent.css' %}">
+
+<style>
+/* Layout & Cards */
+.container { max-width:1000px; margin:auto; padding:0 15px; }
+.card { padding:15px; border-radius:12px; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s; }
+.card:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,0.15); }
+.child-profile { display:flex; align-items:center; gap:15px; margin-bottom:15px; flex-wrap:wrap; }
+.avatar img, .avatar div { width:80px; height:80px; border-radius:50%; object-fit:cover; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:600; background:#2575fc; color:#fff; }
+.nav-tabs { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; }
+.nav-btn { padding:8px 12px; border:none; background:#e1e5eb; cursor:pointer; border-radius:6px; font-weight:500; text-align:center; flex:1; min-width:120px; }
+.nav-btn.active { background:#2575fc; color:#fff; }
+.announcement-unread { background:#eaf4ff; }
+.announcement-read { background:#f5f5f5; }
+.announcement-item:hover { background:#d6ebff; cursor:pointer; }
+.card h2 { font-size:1.5rem; margin-bottom:10px; }
+.card p { font-size:1rem; line-height:1.5; }
+#like-btn { margin-right:10px; margin-top:10px; }
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .child-profile { flex-direction:column; align-items:flex-start; }
+    .avatar img, .avatar div { width:60px; height:60px; font-size:20px; }
+    .nav-tabs { flex-direction:column; }
+    .nav-btn { width:100%; text-align:left; }
+    .card { padding:15px 10px; }
+    .container { padding:0 10px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="container header-content" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; padding:15px 0;">
+    <div class="brand" style="display:flex; align-items:center; gap:10px;">
+        <div class="brand-icon"><i class="ph ph-student"></i></div>
+        <div class="brand-text">
+            <span>Student Portal</span>
+            {% if user.is_student %}
+                <h1 style="font-size:1.2rem;">{{ student.full_name }}</h1>
+            {% elif user.is_parent %}
+                <h1 style="font-size:1.2rem;">{{ user.get_full_name }}</h1>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:10px; position:relative; flex-wrap:wrap;">
+        <div style="position:relative;">
+            <i class="ph ph-bell" id="notif-bell" style="font-size:24px; cursor:pointer;"></i>
+            {% if unread_announcements_count > 0 %}
+            <span id="notif-badge" style="position:absolute; top:-5px; right:-5px; background:#ff3b30; color:#fff; border-radius:50%; font-size:12px; padding:2px 6px;">
+                {{ unread_announcements_count }}
+            </span>
+            {% endif %}
+            <div id="notif-dropdown" style="display:none; position:absolute; right:0; top:30px; width:300px; max-height:400px; overflow-y:auto; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:8px; z-index:1000;">
+                {% if announcements %}
+                    {% for ann in announcements %}
+                    <a href="{% url 'announcements:detail' ann.id %}" 
+                       class="announcement-item {% if ann.id not in read_ids %}announcement-unread{% else %}announcement-read{% endif %}"
+                       style="padding:10px; border-radius:6px; margin-bottom:5px; display:flex; gap:10px; text-decoration:none; color:inherit;">
+                        <i class="ph ph-bell"></i>
+                        <div>
+                            <strong>{{ ann.title }}</strong>
+                            <p class="text-sm">{{ ann.message|truncatewords:20 }}</p>
+                            <span style="font-size:10px; color:#999;">{{ ann.published_at|date:"M d, Y" }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <p style="padding:10px; font-size:12px; color:#555;">No announcements available.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="POST" action="{% url 'users:user_logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-logout">
+                <i class="ph ph-sign-out"></i> Sign Out
+            </button>
+        </form>
+    </div>
+</div>
+</header>
+
+<div class="container" style="padding:20px 0;">
+    <!-- CHILD PROFILE -->
+    <div class="card child-profile">
+        <div class="avatar">
+            {% if student.passport %}
+                <img src="{{ student.passport.url }}" alt="{{ student.full_name }}">
+            {% else %}
+                <div>{{ student.full_name|slice:":2"|upper }}</div>
+            {% endif %}
+        </div>
+        <div class="child-info">
+            <h2>{{ student.full_name }}</h2>
+            <p class="text-muted text-sm"><strong>Class:</strong> {{ student.class_assigned.name|default:"Unassigned" }}</p>
+            <p class="text-muted text-sm"><strong>Admission No:</strong> {{ student.admission_number }}</p>
+        </div>
+        {% if students.count > 1 %}
+        <form method="get" style="margin-left:auto;">
+            <select name="student" class="btn-switch" onchange="this.form.submit()">
+                {% for s in students %}
+                    <option value="{{ s.id }}" {% if s.id == student.id %}selected{% endif %}>{{ s.full_name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Back Button -->
+    <nav class="nav-tabs">
+        <a href="{% url 'users:parent_dashboard' %}" class="nav-btn active">Back to Dashboard</a>
+    </nav>
+
+    <!-- ANNOUNCEMENT DETAIL -->
+    <div class="card" style="margin-top:15px;">
+        {% if translations %}<p style="font-size:.85rem;margin:0 0 .6rem;">Read in:
+            <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang=en" style="{% if not chosen %}font-weight:700;{% endif %}">English</a>{% for t in translations %} ·
+            <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang={{ t.language }}" style="{% if chosen and chosen.id == t.id %}font-weight:700;{% endif %}">{{ t.get_language_display }}</a>{% endfor %}</p>{% endif %}
+        <h2>{% if chosen %}{{ chosen.title }}{% else %}{{ announcement.title }}{% endif %}</h2>
+        <p style="color:#666;">Published: {{ announcement.published_at|date:"M d, Y H:i" }}</p>
+        <hr>
+        <p style="white-space:pre-wrap">{% if chosen %}{{ chosen.message }}{% else %}{{ announcement.message }}{% endif %}</p>
+        {% if chosen %}<p style="color:#888;font-size:.8rem;">Translated with AI and checked by the school. <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang=en">Read the English original</a>.</p>{% endif %}
+        <hr>
+        <button id="like-btn" style="padding:8px 12px; border:none; border-radius:6px; cursor:pointer; background:{{ user_liked|yesno:'#2575fc,#e1e5eb' }}; color:{{ user_liked|yesno:'#fff,#000' }};">
+            {{ user_liked|yesno:"Liked,Like" }}
+        </button>
+        <span id="like-count">{{ like_count }}</span> Likes
+    </div>
+</div>
+
+<script>
+// Notifications toggle
+const bell = document.getElementById('notif-bell');
+const dropdown = document.getElementById('notif-dropdown');
+bell.addEventListener('click', () => {
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+});
+
+// Automatically mark announcement as read
+window.addEventListener('DOMContentLoaded', async () => {
+    await fetch("{% url 'announcements:mark_read' announcement.id %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Accept': 'application/json',
+        },
+    });
+});
+
+// Like button
+document.getElementById('like-btn').addEventListener('click', async () => {
+    const response = await fetch("{% url 'announcements:like' announcement.id %}", {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Accept': 'application/json',
+        },
+    });
+    const data = await response.json();
+    if (!data.error) {
+        const btn = document.getElementById('like-btn');
+        btn.innerText = data.liked ? "Liked" : "Like";
+        btn.style.background = data.liked ? "#2575fc" : "#e1e5eb";
+        btn.style.color = data.liked ? "#fff" : "#000";
+        document.getElementById('like-count').innerText = data.total_likes;
+    }
+});
+</script>
+
+</body>
+</html>

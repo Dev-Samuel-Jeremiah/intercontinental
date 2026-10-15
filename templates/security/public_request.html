@@ -1,0 +1,20 @@
+{% include "security/_public_head.html" %}
+<div class="wrap">
+  <h1>Data protection request</h1>
+  <p class="sub">Ask {{ request.tenant.name }} to show you, correct, delete or send you the personal information it holds about you or your child. We reply within one month and may contact you to confirm who you are.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if done %}
+    <div class="card"><h3 style="margin-top:0">Thank you — your request has been sent</h3><p>Your reference is <b>{{ done.reference }}</b>. We will reply by {{ done.due_on|date:"j F Y" }}.</p></div>
+  {% else %}
+  <form method="post" class="card">{% csrf_token %}
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <label>I would like to</label><select name="kind">{% for v, l in kinds %}<option value="{{ v }}" {% if form.kind == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+    <div class="row"><div><label>Your name</label><input name="requester_name" required value="{{ form.requester_name|default:'' }}"></div><div><label>Relationship to the school</label><input name="relationship" placeholder="Parent, former pupil, staff…" value="{{ form.relationship|default:'' }}"></div></div>
+    <div class="row"><div><label>Email</label><input type="email" name="requester_email" value="{{ form.requester_email|default:'' }}"></div><div><label>Phone</label><input name="requester_phone" value="{{ form.requester_phone|default:'' }}"></div></div>
+    <div class="row"><div><label>Pupil's name (if about a pupil)</label><input name="student_name" value="{{ form.student_name|default:'' }}"></div><div><label>Admission number (if known)</label><input name="admission_number" value="{{ form.admission_number|default:'' }}"></div></div>
+    <label>Your request</label><textarea name="details" rows="5" required>{{ form.details|default:'' }}</textarea>
+    <button class="btn" type="submit">Send request</button>
+    <p class="hint">Parents can also send requests from the parent portal. {% if n.dpo_email %}Or email our Data Protection Officer at <a href="mailto:{{ n.dpo_email }}">{{ n.dpo_email }}</a>.{% endif %}</p>
+  </form>
+  {% endif %}
+</div></body></html>

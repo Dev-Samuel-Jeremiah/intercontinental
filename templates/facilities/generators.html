@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Generators{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Power</div>
+  <h1 class="fin-title"><em>Generators &amp; diesel</em></h1>
+  <p class="fin-sub">Log run hours (or the hour-meter reading) and diesel bought each day. See litres per hour, cost per hour and when the next service is due.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% for g, s, logs in rows %}<div class="panel"><div class="panel-h"><h3>{{ g }}</h3>{% if s.service_due %}<span class="chip red">Service due</span>{% endif %}</div><div class="panel-b">
+      <div class="fin-stats" style="margin-bottom:.6rem"><div class="fin-stat"><small>Hours (30 days)</small><b>{{ s.hours|floatformat:"-1" }}</b></div><div class="fin-stat"><small>Diesel</small><b>{{ s.litres|floatformat:"-1" }} L</b></div><div class="fin-stat"><small>Cost</small><b>₦{{ s.cost|floatformat:0 }}</b></div><div class="fin-stat"><small>L / hour</small><b>{{ s.lph|default:"—" }}</b></div><div class="fin-stat"><small>₦ / hour</small><b>{% if s.cost_per_hour %}{{ s.cost_per_hour|floatformat:0 }}{% else %}—{% endif %}</b></div></div>
+      <p class="hint" style="margin:0 0 .4rem">{{ s.since_service|floatformat:"-1" }} hours since the last service (every {{ g.service_every_hours }} h).</p>
+      <table class="tbl" data-no-export><tbody>{% for lg in logs %}<tr><td>{{ lg.date|date:"D j M" }}</td><td>{% if lg.run_hours %}{{ lg.run_hours|floatformat:"-1" }} h{% endif %}{% if lg.hour_meter %} <small class="hint">(meter {{ lg.hour_meter }})</small>{% endif %}</td><td>{% if lg.litres_added %}{{ lg.litres_added|floatformat:"-1" }} L · ₦{{ lg.cost|floatformat:0 }}{% endif %}</td><td class="hint">{{ lg.note }}</td></tr>{% endfor %}</tbody></table>
+      <form method="post" class="fin-form" style="margin-top:.5rem">{% csrf_token %}<input type="hidden" name="generator" value="{{ g.pk }}"><input type="hidden" name="action" value="log">
+        <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div class="row2"><div><label>Hour meter</label><input name="hour_meter" inputmode="decimal"></div><div><label>…or hours run</label><input name="run_hours" inputmode="decimal"></div></div></div>
+        <div class="row2"><div class="row2"><div><label>Diesel added (L)</label><input name="litres_added" inputmode="decimal"></div><div><label>₦ per litre</label><input name="price_per_litre" inputmode="decimal"></div></div><div><label>Note</label><input name="note" maxlength="160"></div></div>
+        <div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold" type="submit">Save</button><button class="fin-btn" type="submit" name="action" value="service" onclick="return confirm('Record a service at the current hours?')">Serviced today</button></div>
+      </form>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No generators yet.</p></div></div>{% endfor %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a generator</h3>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="80" placeholder="Main generator"></div><div><label>kVA</label><input name="kva" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>Service every (hours)</label><input name="service_every_hours" value="250" inputmode="numeric"></div><div><label>Hour meter now</label><input name="meter" inputmode="decimal"></div></div>
+    <button class="fin-btn" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

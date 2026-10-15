@@ -1,0 +1,12 @@
+{% include "family/_top.html" %}
+  {% include "family/_back.html" %}
+  <h1>Fee <em>statement</em></h1>
+  <p class="sub">{{ st.student.full_name }} · {{ st.student.admission_number }}{% if st.student.class_assigned %} · {{ st.student.class_assigned.name }}{% endif %}</p>
+  <div class="card row" style="justify-content:space-between">
+    <div><div class="hint">Billed</div><b>₦{{ st.billed|floatformat:"2g" }}</b></div>
+    <div><div class="hint">Paid</div><b>₦{{ st.paid|floatformat:"2g" }}</b></div>
+    <div><div class="hint">Balance</div><b>₦{{ st.balance|floatformat:"2g" }}</b></div>
+    <a class="btn" href="?pdf=1"><i class="bi bi-download"></i> Download PDF</a>
+  </div>
+  {% include "family/_statement_tables.html" %}
+{% include "family/_end.html" %}

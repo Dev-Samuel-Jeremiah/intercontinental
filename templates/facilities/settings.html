@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Facilities settings{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Facilities</div>
+  <h1 class="fin-title"><em>Settings</em></h1>
+  <p class="fin-sub">Who keeps the store, who fixes things, how much a store keeper may approve, and who gets low-stock alerts on WhatsApp (or SMS if WhatsApp is not set up).</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:760px">{% csrf_token %}
+  <div class="row2">
+    <div><label>Store keepers / bursary</label><select name="store_keepers" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in keepers %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div><label>Maintenance team</label><select name="maintenance_team" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in team %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="row2"><div><label>Store keepers can approve up to ₦</label><input name="approval_limit" value="{{ cfg.approval_limit }}" inputmode="decimal"></div><div><label>Low-stock alert phones (comma separated)</label><input name="alert_phones" value="{{ cfg.alert_phones }}" maxlength="255" placeholder="08030000000, 08090000000"></div></div>
+  <div class="row2"><div><label>Purchase order prefix</label><input name="po_prefix" value="{{ cfg.po_prefix }}" maxlength="10"></div><div><label>Hire invoice prefix</label><input name="invoice_prefix" value="{{ cfg.invoice_prefix }}" maxlength="10"></div></div>
+  <div><label>Bank details for hire invoices</label><textarea name="bank_details" rows="3" placeholder="Bank, account name, account number">{{ cfg.bank_details }}</textarea></div>
+  <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+</form>
+{% endblock %}

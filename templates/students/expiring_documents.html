@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Expiring documents{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Documents <em>expiring</em></h1>
+    <p class="fin-sub">Medical forms, passports and permits for students on the roll that have expired or expire within {{ days }} days.</p>
+  </div>
+  <form method="get" style="display:flex;gap:.5rem;align-items:center">
+    <select name="days" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+      <option value="7"{% if days == 7 %} selected{% endif %}>Next 7 days</option>
+      <option value="30"{% if days == 30 %} selected{% endif %}>Next 30 days</option>
+      <option value="90"{% if days == 90 %} selected{% endif %}>Next 90 days</option>
+    </select>
+  </form>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Already expired</small><b style="color:{% if expired %}var(--red){% else %}var(--green){% endif %}">{{ expired|length }}</b></div>
+  <div class="fin-stat"><small>Expiring soon</small><b style="color:{% if soon %}var(--amber){% else %}var(--green){% endif %}">{{ soon|length }}</b></div>
+</div>
+
+<div class="panel">
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Student</th><th>Document</th><th>Expires</th><th></th></tr></thead>
+    <tbody>
+      {% for d in expired %}
+      <tr><td><a href="{% url 'users:student_profile' d.student.id %}#documents" style="color:var(--white)"><b>{{ d.student.full_name }}</b></a><br><span class="hint">{{ d.student.admission_number }} · {{ d.student.class_assigned.name|default:"no class" }}</span></td>
+        <td>{{ d.display_name }}<br><span class="hint">{{ d.get_doc_type_display }}</span></td>
+        <td><span class="chip red">expired {{ d.expires_on|date:"j M Y" }}</span></td>
+        <td><a class="fin-btn fin-btn-sm" href="{% url 'users:student_profile' d.student.id %}#documents">Open</a></td></tr>
+      {% endfor %}
+      {% for d in soon %}
+      <tr><td><a href="{% url 'users:student_profile' d.student.id %}#documents" style="color:var(--white)"><b>{{ d.student.full_name }}</b></a><br><span class="hint">{{ d.student.admission_number }} · {{ d.student.class_assigned.name|default:"no class" }}</span></td>
+        <td>{{ d.display_name }}<br><span class="hint">{{ d.get_doc_type_display }}</span></td>
+        <td><span class="chip amber">in {{ d.days_to_expiry }} day{{ d.days_to_expiry|pluralize }}</span><br><span class="hint">{{ d.expires_on|date:"j M Y" }}</span></td>
+        <td><a class="fin-btn fin-btn-sm" href="{% url 'users:student_profile' d.student.id %}#documents">Open</a></td></tr>
+      {% endfor %}
+      {% if not expired and not soon %}<tr><td colspan="4" class="empty"><i class="bi bi-check2-circle"></i><p>Nothing has expired or expires in the next {{ days }} days.</p></td></tr>{% endif %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

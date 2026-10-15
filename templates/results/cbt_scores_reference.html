@@ -1,0 +1,744 @@
+{% extends "dashboard/base.html" %}
+{% block title %}CBT Scores Reference{% endblock %}
+
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 1400px;
+  padding: 2rem 2.5rem 4rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── FLASH MESSAGES ─── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: .84rem;
+  font-weight: 600;
+  animation: riseUp .35s ease both;
+}
+.flash.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.flash.error   { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 28px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em { color: var(--champagne); font-style: italic; font-weight: 400; }
+.header-sub {
+  font-size: .84rem;
+  color: var(--slate);
+  margin-top: 6px;
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* ─── BACK LINK ─── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 9px;
+  color: var(--blue);
+  font-size: .82rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  text-decoration: none;
+  transition: all .18s;
+  margin-bottom: 22px;
+  align-self: flex-start;
+}
+.back-link:hover { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 20px;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--rim);
+}
+.panel-hdr-left { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.panel-hdr h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--white);
+}
+
+/* ─── FILTER PANEL ─── */
+.filter-panel { animation: riseUp .45s ease both; animation-delay: .08s; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px 20px;
+  padding: 20px 22px;
+}
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fg label {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--slate2);
+}
+.fg select {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.fg select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.fg select option { background: var(--surface2); }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: .83rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(244,210,31,.32); }
+.btn-blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.btn-blue:hover { background: rgba(96,165,250,.18); }
+.btn-amber {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+}
+.btn-amber:hover { background: rgba(251,191,36,.18); }
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--white); border-color: var(--rim3); }
+
+/* ─── INFO BANNER ─── */
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  animation: riseUp .45s ease both;
+  animation-delay: .12s;
+}
+.info-banner-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  background: rgba(96,165,250,.15);
+  border: 1px solid var(--blue-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.info-banner p {
+  font-size: .82rem;
+  color: var(--blue);
+  line-height: 1.7;
+  margin: 0;
+}
+.info-banner p strong { color: var(--champagne-lt); font-weight: 700; }
+
+/* ─── ACTION BAR ─── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 22px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  animation: riseUp .45s ease both;
+  animation-delay: .16s;
+}
+.action-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.action-bar-info {
+  font-size: .85rem;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.action-bar-info strong { color: var(--champagne-lt); font-weight: 700; font-size: .95rem; }
+.action-bar-info .divider { color: var(--rim3); font-size: 1.1rem; }
+.action-bar-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ─── TABLE ─── */
+.score-panel { animation: riseUp .45s ease both; animation-delay: .20s; }
+.tbl-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+table thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 13px 14px;
+  text-align: center;
+  color: var(--slate2);
+  font-weight: 700;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.4;
+}
+table th.left { text-align: left; padding-left: 20px; }
+table tbody tr { border-bottom: 1px solid var(--rim); transition: background .15s; }
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table td {
+  padding: 13px 14px;
+  font-size: .87rem;
+  color: var(--slate2);
+  text-align: center;
+  vertical-align: middle;
+  font-family: 'Outfit', sans-serif;
+}
+table td.left {
+  text-align: left;
+  padding-left: 20px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* Serial number badge */
+.sno {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: .75rem;
+}
+
+/* ─── SCORE BADGES ─── */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-weight: 800;
+  font-size: .88rem;
+  font-family: 'Cormorant Garamond', serif;
+  border: 1px solid;
+  min-width: 48px;
+}
+.score-high { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+.score-mid  { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-border); }
+.score-low  { background: var(--red-dim);   color: var(--red);   border-color: var(--red-border); }
+.score-zero { background: var(--surface3);  color: var(--slate); border-color: var(--rim2); }
+
+/* ─── SYNC STATUS ─── */
+.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid;
+}
+.sync-badge.synced     { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+.sync-badge.not-synced { background: var(--amber-dim); color: var(--amber); border-color: var(--amber-border); }
+.sync-badge.no-cbt     { background: var(--surface3);  color: var(--slate); border-color: var(--rim); }
+
+/* ─── COPY BUTTON ─── */
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: .76rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  color: var(--slate2);
+  cursor: pointer;
+  transition: all .18s;
+}
+.copy-btn:hover { background: var(--blue-dim); color: var(--blue); border-color: var(--blue-border); }
+.copy-btn.copied { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 70px 30px;
+  text-align: center;
+}
+.empty-icon {
+  width: 72px; height: 72px;
+  border-radius: 16px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  color: var(--slate);
+  margin-bottom: 20px;
+}
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin-bottom: 8px;
+}
+.empty-sub { font-size: .85rem; color: var(--slate); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 900px) {
+  .your-wrap { padding: 1.4rem 1.4rem 3rem; }
+  .filter-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .your-wrap { padding: 1rem 1rem 3rem; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .fg select { font-size: 16px; }
+  .action-bar { flex-direction: column; align-items: flex-start; }
+  .action-bar-buttons { width: 100%; }
+  .action-bar-buttons .btn { flex: 1; }
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    border: 1px solid var(--rim2);
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    text-align: right;
+    font-size: .84rem;
+    gap: 8px;
+  }
+  table td:last-child { border-bottom: none; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--slate);
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    flex: 0 0 auto;
+    text-align: left;
+    white-space: nowrap;
+  }
+  table td.left { font-weight: 600; color: var(--white); text-align: right; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── FLASH MESSAGES ─── -->
+  {% if messages %}
+  {% for msg in messages %}
+  <div class="flash {% if 'error' in msg.tags %}error{% else %}success{% endif %}">
+    <i class="bi bi-{% if 'error' in msg.tags %}x-circle-fill{% else %}check-circle-fill{% endif %}"></i>
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>CBT &nbsp;·&nbsp; Score Reference</span>
+      </div>
+      <h1 class="header-title">CBT Scores <em>Reference</em></h1>
+      <p class="header-sub">View locked computer-based exam scores. Use these to fill in manual score entry, or import directly with one click.</p>
+    </div>
+  </div>
+
+  <!-- ─── BACK LINK ─── -->
+  <a href="{% url 'results:manual_score_entry' %}{% if selected_class %}?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}{% endif %}"
+     class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to Manual Score Entry
+  </a>
+
+  <!-- ─── FILTER PANEL ─── -->
+  <div class="panel filter-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--blue-dim);color:var(--blue);">
+          <i class="bi bi-funnel-fill"></i>
+        </div>
+        <h3>Select Class, Subject &amp; Term</h3>
+      </div>
+    </div>
+
+    <form method="GET" id="filterForm">
+      <div class="filter-grid">
+
+        <div class="fg">
+          <label>Class</label>
+          <select name="class" onchange="this.form.submit()">
+            <option value="">— Select Class —</option>
+            {% for cls in classes %}
+            <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class %}selected{% endif %}>
+              {{ cls.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Subject</label>
+          <select name="subject">
+            <option value="">— Select Subject —</option>
+            {% for subj in subjects %}
+            <option value="{{ subj.id }}" {% if subj.id|stringformat:"s" == selected_subject %}selected{% endif %}>
+              {{ subj.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Term</label>
+          <select name="term">
+            <option value="">— Select Term —</option>
+            {% for term in terms %}
+            <option value="{{ term.id }}" {% if term.id|stringformat:"s" == selected_term %}selected{% endif %}>
+              {{ term }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="fg" style="justify-content:flex-end;">
+          <label style="visibility:hidden;">Load</label>
+          <button type="submit" class="btn btn-gold" style="width:100%;">
+            <i class="bi bi-search"></i> Load Scores
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  {% if rows %}
+
+  <!-- ─── INFO BANNER ─── -->
+  <div class="info-banner">
+    <div class="info-banner-icon"><i class="bi bi-info-circle-fill"></i></div>
+    <p>
+      <strong>CBT Score</strong> — the raw score from computer-based exams (read-only, never modified here).<br>
+      <strong>Current Exam Score</strong> — what is currently saved in the result sheet for exam.<br>
+      Click <strong>Copy</strong> on any row to copy the CBT score to clipboard, then paste it in Manual Score Entry.
+      Or use <strong>Import All CBT → Exam Score</strong> to copy all CBT scores in one click.
+    </p>
+  </div>
+
+  <!-- ─── ACTION BAR + IMPORT FORM ─── -->
+  <form method="POST" id="importForm">
+    {% csrf_token %}
+    <input type="hidden" name="action"  value="import_cbt">
+    <input type="hidden" name="class"   value="{{ selected_class }}">
+    <input type="hidden" name="subject" value="{{ selected_subject }}">
+    <input type="hidden" name="term"    value="{{ selected_term }}">
+
+    <div class="action-bar">
+      <div class="action-bar-info">
+        <i class="bi bi-people-fill" style="color:var(--champagne);"></i>
+        <strong>{{ rows|length }}</strong>
+        <span>student{{ rows|length|pluralize }} loaded</span>
+        <span class="divider">|</span>
+        <span style="color:var(--slate);">CBT scores available — check table for sync status</span>
+      </div>
+      <div class="action-bar-buttons">
+        <a href="{% url 'results:manual_score_entry' %}?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}"
+           class="btn btn-blue">
+          <i class="bi bi-pencil-fill"></i> Manual Score Entry
+        </a>
+        <button type="button" class="btn btn-amber"
+                onclick="if(confirm('Import all CBT scores as exam scores? This will overwrite existing exam scores.')) document.getElementById('importForm').submit()">
+          <i class="bi bi-download"></i> Import All CBT → Exam Score
+        </button>
+      </div>
+    </div>
+  </form>
+
+  <!-- ─── SCORES TABLE ─── -->
+  <div class="panel score-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--champagne-dim);color:var(--champagne);">
+          <i class="bi bi-clipboard-data-fill"></i>
+        </div>
+        <h3>CBT Score Sheet</h3>
+      </div>
+      <span style="font-size:.78rem;color:var(--slate);">
+        <i class="bi bi-lock-fill" style="color:var(--champagne);margin-right:4px;"></i>
+        Read-only — source of truth
+      </span>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">S/N</th>
+            <th class="left">Student Name</th>
+            <th>CBT Score<br><small style="opacity:.65;font-weight:400;font-size:.68rem;">(from system)</small></th>
+            <th>Current Exam<br><small style="opacity:.65;font-weight:400;font-size:.68rem;">(result sheet)</small></th>
+            <th>Sync Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td data-label="S/N"><span class="sno">{{ forloop.counter }}</span></td>
+
+            <td class="left" data-label="Student">{{ row.student.full_name }}</td>
+
+            <!-- CBT Score -->
+            <td data-label="CBT Score">
+              {% if row.cbt_score > 0 %}
+              <span class="score-badge {% if row.cbt_score >= 50 %}score-high{% elif row.cbt_score >= 30 %}score-mid{% else %}score-low{% endif %}">
+                {{ row.cbt_score }}
+              </span>
+              {% else %}
+              <span class="score-badge score-zero">No CBT</span>
+              {% endif %}
+            </td>
+
+            <!-- Current exam score -->
+            <td data-label="Current Exam">
+              <span class="score-badge {% if row.current_exam > 0 %}score-mid{% else %}score-zero{% endif %}">
+                {{ row.current_exam }}
+              </span>
+            </td>
+
+            <!-- Sync status -->
+            <td data-label="Status">
+              {% if row.cbt_score == 0 %}
+              <span class="sync-badge no-cbt"><i class="bi bi-dash-circle"></i> No CBT Data</span>
+              {% elif row.synced %}
+              <span class="sync-badge synced"><i class="bi bi-check-circle-fill"></i> Synced</span>
+              {% else %}
+              <span class="sync-badge not-synced"><i class="bi bi-exclamation-triangle-fill"></i> Not Synced</span>
+              {% endif %}
+            </td>
+
+            <!-- Copy button -->
+            <td data-label="Action">
+              {% if row.cbt_score > 0 %}
+              <button class="copy-btn" data-value="{{ row.cbt_score }}" onclick="copyScore(this)">
+                <i class="bi bi-copy"></i> Copy {{ row.cbt_score }}
+              </button>
+              {% else %}
+              <span style="font-size:.78rem;color:var(--slate);">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /score-panel -->
+
+  {% else %}
+
+  <!-- ─── EMPTY STATE ─── -->
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-bullseye"></i></div>
+      <div class="empty-title">No Scores Loaded Yet</div>
+      <p class="empty-sub">Select a class, subject and term above to view CBT scores.<br>Scores are automatically pulled from completed exam attempts.</p>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div><!-- /your-wrap -->
+
+<script>
+function copyScore(btn) {
+  const val = btn.dataset.value;
+  const icon = btn.querySelector('i');
+
+  navigator.clipboard.writeText(val).then(() => {
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="bi bi-copy"></i> Copy ' + val;
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = val;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '<i class="bi bi-copy"></i> Copy ' + val;
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+</script>
+
+{% endblock %}

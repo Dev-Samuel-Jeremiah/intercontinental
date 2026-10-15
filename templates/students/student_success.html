@@ -1,0 +1,692 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Student Registered — {{ student.full_name }}{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  color: var(--white);
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(.55); opacity: 0; }
+  65%  { transform: scale(1.07); opacity: 1; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes drawCheck {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE WRAPPER
+═══════════════════════════════════════════════════ */
+.sr-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO HEADER
+═══════════════════════════════════════════════════ */
+.sr-hero {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-bottom: none;
+  border-radius: 20px 20px 0 0;
+  padding: 3rem 2.5rem 3.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* dot-grid texture */
+.sr-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(244,210,31,.13) 1px, transparent 1px);
+  background-size: 26px 26px;
+  pointer-events: none;
+}
+
+/* champagne arc cutout at bottom */
+.sr-hero::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 48px;
+  background: var(--surface);
+  clip-path: ellipse(56% 100% at 50% 100%);
+}
+
+/* top-shine */
+.sr-hero .shine {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+/* ── Checkmark ring ── */
+.checkmark-ring {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 2px solid rgba(244,210,31,.4);
+  background: var(--champagne-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  z-index: 1;
+  animation: ringPulse .7s cubic-bezier(.22,.61,.36,1) both;
+  box-shadow: 0 0 0 8px rgba(244,210,31,.06), 0 0 40px rgba(244,210,31,.12);
+}
+
+.checkmark-ring svg {
+  width: 40px; height: 40px;
+  stroke: var(--champagne-lt);
+  stroke-width: 2.5;
+  fill: none;
+  stroke-dasharray: 80;
+  stroke-dashoffset: 80;
+  animation: drawCheck .65s .45s cubic-bezier(.22,.61,.36,1) forwards;
+}
+
+/* ── Hero text ── */
+.sr-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .55rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp .5s .3s both;
+}
+
+.sr-hero-eyebrow::before,
+.sr-hero-eyebrow::after {
+  content: '';
+  display: block;
+  width: 18px; height: 1px;
+  background: var(--champagne);
+  opacity: .6;
+}
+
+.sr-hero h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: .5rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp .55s .35s both;
+}
+
+.sr-hero h1 em {
+  font-style: italic;
+  color: var(--champagne);
+}
+
+.sr-hero-sub {
+  font-size: .88rem;
+  color: var(--slate2);
+  position: relative;
+  z-index: 1;
+  animation: fadeUp .55s .45s both;
+}
+
+/* ═══════════════════════════════════════════════════
+   BODY CARD
+═══════════════════════════════════════════════════ */
+.sr-body {
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 2.2rem 2rem 2rem;
+  position: relative;
+  animation: fadeUp .55s .5s both;
+}
+
+.sr-body::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+/* ═══════════════════════════════════════════════════
+   IDENTITY STRIP
+═══════════════════════════════════════════════════ */
+.identity-strip {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 14px;
+  padding: 1.1rem 1.4rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* shimmer sweep */
+.identity-strip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(244,210,31,.06) 50%, transparent 65%);
+  background-size: 200% 100%;
+  animation: shimmer 3.5s ease infinite;
+  pointer-events: none;
+}
+
+.id-avatar {
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--surface3), #234073);
+  border: 1.5px solid rgba(244,210,31,.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  overflow: hidden;
+}
+
+.id-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+
+.id-info h2 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .3rem;
+}
+
+.id-adm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .2rem .7rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 100px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--champagne-lt);
+}
+
+/* ═══════════════════════════════════════════════════
+   SECTION LABEL
+═══════════════════════════════════════════════════ */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: .9rem;
+}
+
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rim2);
+}
+
+/* ═══════════════════════════════════════════════════
+   CREDENTIAL CARDS
+═══════════════════════════════════════════════════ */
+.cred-card {
+  border-radius: 14px;
+  border: 1px solid;
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.cred-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.cred-card.student-cred {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+}
+
+.cred-card.parent-cred {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+}
+
+.cred-label {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  margin-bottom: .9rem;
+}
+
+.student-cred .cred-label { color: var(--green); }
+.parent-cred  .cred-label { color: var(--amber); }
+
+.cred-body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.cred-info { flex: 1; min-width: 100px; }
+
+.cred-sub {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: .25rem;
+}
+
+.cred-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.cred-value.small {
+  font-size: .95rem;
+  letter-spacing: .03em;
+}
+
+/* ── Copy button ── */
+.copy-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .5rem 1rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--slate2);
+  cursor: pointer;
+  transition: all .18s;
+}
+
+.copy-btn:hover {
+  border-color: var(--champagne);
+  color: var(--champagne-lt);
+  background: var(--champagne-dim);
+}
+
+.copy-btn.copied {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
+/* ═══════════════════════════════════════════════════
+   WARNING BOX
+═══════════════════════════════════════════════════ */
+.warn-box {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 12px;
+  padding: 1rem 1.2rem;
+  margin: 1.25rem 0 1.75rem;
+}
+
+.warn-box-icon {
+  flex-shrink: 0;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: rgba(251,191,36,.18);
+  border: 1px solid var(--amber-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--amber);
+  font-size: 1rem;
+}
+
+.warn-box-text {
+  font-size: .82rem;
+  color: rgba(251,191,36,.8);
+  line-height: 1.6;
+}
+
+.warn-box-text strong {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════
+   ACTION BUTTONS
+═══════════════════════════════════════════════════ */
+.sr-actions {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rim);
+}
+
+.btn {
+  flex: 1;
+  min-width: 175px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  padding: .75rem 1.4rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-champagne:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(244,210,31,.32);
+  color: #fff;
+  text-decoration: none;
+}
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  background: var(--rim);
+  color: var(--white);
+  border-color: var(--rim3);
+  text-decoration: none;
+}
+
+/* ── Print hint ── */
+.print-hint {
+  text-align: center;
+  font-size: .75rem;
+  color: var(--slate);
+  margin-top: 1rem;
+}
+
+.print-hint button {
+  background: none;
+  border: none;
+  color: var(--champagne);
+  font-size: .75rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.print-hint button:hover { color: var(--champagne-lt); }
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  .sr-wrap { padding: 1.25rem 1rem 3rem; }
+  .sr-hero { padding: 2.5rem 1.5rem 3rem; }
+  .sr-hero h1 { font-size: 2rem; }
+  .sr-body { padding: 1.75rem 1.25rem 1.5rem; }
+  .cred-body { flex-direction: column; align-items: flex-start; }
+  .copy-btn { align-self: flex-start; }
+  .sr-actions { flex-direction: column; }
+  .btn { min-width: 0; }
+  .cred-value { font-size: 1.2rem !important; letter-spacing: .1em !important; }
+}
+
+/* ── Print ── */
+@media print {
+  body { background: #fff; color: #000; }
+  .sr-hero, .sr-body { border: 1px solid #ccc !important; background: #fff !important; }
+  .sr-hero::after, .sr-actions, .print-hint { display: none; }
+  .copy-btn { display: none; }
+  .cred-value { color: #000 !important; }
+}
+</style>
+
+<div class="sr-wrap">
+
+  <!-- ══════════════════ HERO ══════════════════ -->
+  <div class="sr-hero">
+    <div class="shine"></div>
+
+    <div class="checkmark-ring">
+      <svg viewBox="0 0 52 52">
+        <polyline points="14,26 22,36 38,18"/>
+      </svg>
+    </div>
+
+    <div class="sr-hero-eyebrow">
+      <i class="bi bi-mortarboard-fill"></i>
+      Student Management
+    </div>
+
+    <h1>Registration <em>Complete</em></h1>
+    <p class="sr-hero-sub">Student account has been created and is ready to use</p>
+  </div>
+
+  <!-- ══════════════════ BODY ══════════════════ -->
+  <div class="sr-body">
+
+    <!-- Identity strip -->
+    <div class="identity-strip">
+      <div class="id-avatar">
+        {% if student.passport %}
+          <img src="{{ student.passport.url }}" alt="{{ student.full_name }}">
+        {% else %}
+          {{ student.full_name|slice:":1"|upper }}
+        {% endif %}
+      </div>
+      <div class="id-info">
+        <h2>{{ student.full_name }}</h2>
+        <span class="id-adm-badge">
+          <i class="bi bi-hash"></i>
+          {{ student.admission_number }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Credentials section label -->
+    <div class="section-label">
+      <i class="bi bi-shield-lock"></i>
+      Login Credentials
+    </div>
+
+    <!-- Student credentials -->
+    <div class="cred-card student-cred">
+      <div class="cred-label">
+        <i class="bi bi-person-fill"></i>
+        Student Login
+      </div>
+      <div class="cred-body">
+        <div class="cred-info">
+          <div class="cred-sub">Username</div>
+          <div class="cred-value small">{{ student.admission_number }}</div>
+        </div>
+        <div class="cred-info">
+          <div class="cred-sub">Password</div>
+          <div class="cred-value" id="studentPwd">{{ student_password }}</div>
+        </div>
+        <button class="copy-btn" onclick="copyText('{{ student_password }}', this)">
+          <i class="bi bi-clipboard"></i>
+          Copy
+        </button>
+      </div>
+    </div>
+
+    {% if parent_password %}
+    <div class="cred-card parent-cred">
+      <div class="cred-label">
+        <i class="bi bi-people-fill"></i>
+        Parent / Guardian Login
+      </div>
+      <div class="cred-body">
+        <div class="cred-info">
+          <div class="cred-sub">Username</div>
+          <div class="cred-value small">{{ student.parent_email }}</div>
+        </div>
+        <div class="cred-info">
+          <div class="cred-sub">Password</div>
+          <div class="cred-value" id="parentPwd">{{ parent_password }}</div>
+        </div>
+        <button class="copy-btn" onclick="copyText('{{ parent_password }}', this)">
+          <i class="bi bi-clipboard"></i>
+          Copy
+        </button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Warning -->
+    <div class="warn-box">
+      <div class="warn-box-icon">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+      </div>
+      <div class="warn-box-text">
+        <strong>Save these credentials now.</strong>
+        Passwords are shown only once and cannot be retrieved later.
+        Please record or share them securely with the student
+        {% if parent_password %}and parent{% endif %} before leaving this page.
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="sr-actions">
+      <a href="{% url 'users:register_student' %}" class="btn btn-champagne">
+        <i class="bi bi-person-plus-fill"></i>
+        Register Another Student
+      </a>
+      <a href="{% url 'users:all_students' %}" class="btn btn-ghost">
+        <i class="bi bi-people"></i>
+        View All Students
+      </a>
+    </div>
+
+    <p class="print-hint">
+      Want a hard copy?
+      <button onclick="window.print()">Print this page</button>
+    </p>
+
+  </div><!-- /.sr-body -->
+</div><!-- /.sr-wrap -->
+
+<script>
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+  });
+}
+</script>
+
+{% endblock %}

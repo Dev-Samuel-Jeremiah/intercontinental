@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Comment bank{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Comment <em>bank</em></h1>
+  <p class="fin-sub">Ready-made report comments. Pick one per student in seconds; {first} becomes the student's first name, and you can edit before saving.</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Write report remarks</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>
+      {% for c in form_classes %}<tr><td class="name">{{ c.name }}</td><td>Class teacher's remark</td><td><a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'teaching:remarks' %}?class={{ c.pk }}">Open</a></td></tr>{% endfor %}
+      {% for p in pairs %}<tr><td class="name">{{ p.school_class.name }}</td><td>{{ p.subject.name }}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'teaching:remarks' %}?class={{ p.school_class_id }}&subject={{ p.subject_id }}">Open</a></td></tr>{% endfor %}
+      </tbody></table>
+    </div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+      <h3 style="margin:0 0 .6rem">Add a comment</h3>
+      <div><label>For</label><select name="band">{% for k, l in bands %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <div><label>Comment</label><input name="text" required maxlength="255" placeholder="{first} works hard and…"></div>
+      {% if user.is_superuser or user.staff.role == 'ADMIN' %}<label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="shared" value="1" style="width:auto"> Share with every teacher</label>{% endif %}
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+    </form>
+  </div>
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for c in items %}<tr><td><span class="chip">{{ c.get_band_display }}</span></td><td>{{ c.text }}<br><small class="hint">{% if c.staff_id %}Mine{% else %}School{% endif %} · used {{ c.uses }}×</small></td>
+      <td>{% if c.staff_id or user.is_superuser or user.staff.role == 'ADMIN' %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ c.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

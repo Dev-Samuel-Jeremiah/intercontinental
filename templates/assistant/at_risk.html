@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Early warning{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">Early <em>warning</em></h1>
+  <p class="fin-sub">Students who may be slipping, from attendance over the last 30 days, last term's results{% if fees %} and this term's fees{% endif %}. The score is simple arithmetic — every reason is listed.</p>
+</div>
+<form method="get" style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <select name="class" onchange="this.form.submit()" style="padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">{% if classes %}All my classes{% else %}—{% endif %}</option>{% for c in classes %}<option value="{{ c.id }}" {% if school_class and school_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <input type="hidden" name="show" value="{{ show }}">
+  <a class="fin-btn fin-btn-sm" href="?{% if school_class %}class={{ school_class.id }}&{% endif %}show={% if show == 'all' %}flagged{% else %}all{% endif %}">{% if show == 'all' %}Only flagged{% else %}Show everyone{% endif %}</a>
+</form></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>High risk</small><b style="color:var(--red)">{{ high }}</b></div>
+  <div class="fin-stat"><small>Worth watching</small><b style="color:var(--amber)">{{ medium }}</b></div>
+  <div class="fin-stat"><small>Students checked</small><b>{{ total }}</b></div>
+</div>
+{% if focus and suggestions %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-stars"></i> Next steps for {{ focus.student.full_name }}</h3><span class="hint">AI suggestions — use your judgement</span></div><div class="panel-b"><ol style="margin:0;padding-left:1.2rem;line-height:1.7">{% for s in suggestions %}<li>{{ s }}</li>{% endfor %}</ol></div></div>{% endif %}
+<div class="panel">
+  {% if rows %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Student</th><th>Class</th><th>Risk</th><th>Why</th><th></th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.student.full_name }}</td><td>{{ r.student.class_assigned.name|default:"—" }}</td>
+    <td><span class="chip {% if r.level == 'high' %}red{% elif r.level == 'medium' %}amber{% endif %}">{{ r.level|capfirst }} · {{ r.score }}</span></td>
+    <td>{% for why in r.reasons %}<div>{{ why }}</div>{% endfor %}{% if r.fee_reason %}<div>{{ r.fee_reason }}</div>{% endif %}{% if not r.reasons and not r.fee_reason %}<span class="hint">No warning signs</span>{% endif %}</td>
+    <td>{% if r.level != 'low' %}<form method="post">{% csrf_token %}<input type="hidden" name="student" value="{{ r.student.id }}">{% if school_class %}<input type="hidden" name="class" value="{{ school_class.id }}">{% endif %}<button class="fin-btn fin-btn-sm" title="AI suggestions for next steps"><i class="bi bi-stars"></i> Next steps</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% elif not classes %}<div class="empty"><i class="bi bi-person-badge"></i><p>You aren't form teacher of a class yet, so there's nobody to show.</p></div>
+  {% else %}<div class="empty"><i class="bi bi-emoji-smile"></i><p>Nobody flagged right now.</p></div>{% endif %}
+</div>
+{% endblock %}

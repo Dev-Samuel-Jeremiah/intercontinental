@@ -1,0 +1,107 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Student ID Card{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+.idc-toolbar{ display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.idc-toolbar h2{ color:var(--white); font-weight:600; font-size:1.3rem; margin:0; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:10px 18px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; white-space:nowrap; }
+.idc-btn.secondary{ background:transparent; border:1px solid var(--rim); color:var(--white); margin-left:10px; }
+
+.idc-wrap{ display:flex; justify-content:center; padding:20px 0; }
+.id-card{
+  width:min(340px, 92vw); min-height:540px; border-radius:20px; overflow:hidden;
+  background:linear-gradient(160deg,var(--surface2),var(--surface));
+  border:1px solid var(--rim); box-shadow:0 20px 50px rgba(0,0,0,.4);
+  font-family:'Outfit',Arial,sans-serif; color:var(--white);
+}
+.id-card .hdr{ background:linear-gradient(120deg,var(--champagne),var(--champagne-lt));
+  color:#112850; padding:14px 18px; text-align:center; }
+.id-card .hdr .school{ font-weight:700; font-size:1.05rem; letter-spacing:.02em; }
+.id-card .hdr .tagline{ font-size:.68rem; opacity:.8; text-transform:uppercase; letter-spacing:.08em; }
+.id-card .photo-wrap{ display:flex; justify-content:center; margin-top:18px; }
+.id-card .photo-wrap img{ width:120px; height:120px; object-fit:cover; border-radius:14px;
+  border:3px solid var(--champagne); background:#333; }
+.id-card .body{ padding:14px 22px 0; text-align:center; }
+.id-card .name{ font-size:1.15rem; font-weight:700; margin:10px 0 2px; }
+.id-card .role{ font-size:.75rem; color:var(--champagne-lt); text-transform:uppercase; letter-spacing:.08em; }
+.id-card .info{ margin-top:14px; text-align:left; font-size:.8rem; }
+.id-card .info div{ display:flex; justify-content:space-between; padding:4px 0;
+  border-bottom:1px dashed var(--rim); }
+.id-card .info span.label{ color:var(--slate); }
+.id-card .qr-wrap{ display:flex; justify-content:center; margin:16px 0 6px; }
+.id-card .qr-wrap img{ width:110px; height:110px; background:#fff; padding:6px; border-radius:8px; }
+.id-card .footer{ text-align:center; font-size:.62rem; color:var(--slate); padding:0 12px 16px; }
+.id-card .card-no{ text-align:center; font-size:.7rem; letter-spacing:.08em; color:var(--champagne-lt);
+  padding-bottom:10px; }
+
+@media print{
+  body *{ visibility:hidden; }
+  .idc-toolbar{ display:none !important; }
+  .idc-wrap, .idc-wrap *{ visibility:visible; }
+  .idc-wrap{ position:absolute; left:0; top:0; padding:0; }
+  .id-card{ box-shadow:none; border:1px solid #ccc; width:3.375in; min-height:2.125in; }
+}
+@media(max-width:480px){
+  .idc-toolbar{ flex-direction:column; align-items:stretch; }
+  .idc-toolbar > div{ display:flex; gap:8px; }
+  .idc-toolbar .idc-btn{ flex:1; text-align:center; margin-left:0; }
+  .idc-wrap{ padding:12px 0; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="idc-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-person-vcard-fill"></i> Student ID Card</h2></div>
+  <div>
+    <button class="idc-btn" onclick="window.print()"><i class="bi bi-printer-fill"></i> Print</button>
+    {% if is_admin_view %}
+      <a href="{% url 'idcards:reissue_card' uid=card.card_uid %}" class="idc-btn secondary"
+         onclick="return confirm('Reissue this card? The old QR code will stop working.')">
+        <i class="bi bi-arrow-repeat"></i> Reissue Card
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="idc-wrap">
+  <div class="id-card">
+    <div class="hdr">
+      <div class="school">{{ tenant.name|default:"School" }}</div>
+      <div class="tagline">Student Identification Card</div>
+    </div>
+    <div class="photo-wrap">
+      {% if student.passport %}
+        <img src="{{ student.passport.url }}" alt="{{ student.full_name }}">
+      {% else %}
+        <img src="{% static 'images/logo.png' %}" alt="No photo">
+      {% endif %}
+    </div>
+    <div class="body">
+      <div class="name">{{ student.full_name }}</div>
+      <div class="role">{{ student.class_assigned.name|default:"Student" }}</div>
+      <div class="info">
+        <div><span class="label">Admission No.</span><span>{{ student.admission_number }}</span></div>
+        <div><span class="label">Session</span><span>{{ student.current_session|default:"—" }}</span></div>
+        <div><span class="label">Term</span><span>{{ student.current_term }}</span></div>
+        {% if student.date_of_birth %}
+        <div><span class="label">Date of Birth</span><span>{{ student.date_of_birth|date:"d M Y" }}</span></div>
+        {% endif %}
+        {% if student.parent_phone %}
+        <div><span class="label">Guardian Phone</span><span>{{ student.parent_phone }}</span></div>
+        {% endif %}
+      </div>
+      <div class="qr-wrap">
+        <img src="{% url 'idcards:qr_image' uid=card.card_uid %}" alt="QR code">
+      </div>
+      <div class="card-no">CARD NO: {{ card.card_number }}</div>
+    </div>
+    <div class="footer">Scan at the school gate for arrival &amp; departure attendance. If found, please return to {{ tenant.name|default:"the school" }}.</div>
+  </div>
+</div>
+{% endblock %}

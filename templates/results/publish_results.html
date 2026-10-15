@@ -1,0 +1,1062 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Publish Results{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.pub-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.page-header-left { flex: 1; min-width: 200px; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--slate2);
+  max-width: 480px;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .85rem;
+  padding-top: .25rem;
+}
+
+.context-pills {
+  display: flex;
+  gap: .55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ctx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem .9rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+
+.ctx-pill.warn {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+
+/* ════════════════════════════════════════════
+   MESSAGES
+════════════════════════════════════════════ */
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem 1.1rem;
+  border-radius: 10px;
+  margin-bottom: .85rem;
+  font-size: .86rem;
+  font-weight: 500;
+  border: 1px solid;
+  animation: riseUp .3s ease both;
+}
+.msg.error   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red);   }
+.msg.success { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+.msg.warning { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+.msg.info    { background: var(--blue-dim);  border-color: var(--blue-border);  color: var(--blue);  }
+
+/* ════════════════════════════════════════════
+   STAT CARDS
+════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  padding: 1.2rem 1.35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: riseUp .45s ease both;
+  transition: border-color .2s, transform .2s;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 4%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+.stat-card:hover { border-color: var(--rim3); transform: translateY(-3px); }
+.stat-card:nth-child(1) { animation-delay: .05s; }
+.stat-card:nth-child(2) { animation-delay: .12s; }
+.stat-card:nth-child(3) { animation-delay: .19s; }
+.stat-card:nth-child(4) { animation-delay: .26s; }
+
+.stat-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.stat-label {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: .35rem;
+}
+
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* ════════════════════════════════════════════
+   FILTER PANEL
+════════════════════════════════════════════ */
+.filter-panel { margin-bottom: 1.5rem; animation-delay: .28s; }
+.filter-body  { padding: 1.25rem 1.5rem; }
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: .85rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+
+.form-group label {
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: .65rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.form-control:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.form-control.active-filter {
+  border-color: rgba(244,210,31,.4);
+  background: rgba(244,210,31,.06);
+}
+.form-control option { background: var(--surface2); }
+
+.filter-actions {
+  display: flex;
+  gap: .6rem;
+  margin-top: 1.1rem;
+  flex-wrap: wrap;
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.15rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn:disabled { opacity: .35; cursor: not-allowed; transform: none !important; }
+
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.34); }
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--rim2); color: var(--white); }
+
+.btn-success {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.btn-success:hover { background: rgba(74,222,128,.18); transform: translateY(-1px); }
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-danger:hover { background: rgba(248,113,113,.18); transform: translateY(-1px); }
+
+.btn-primary {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.btn-primary:hover { background: rgba(96,165,250,.18); transform: translateY(-1px); }
+
+.btn-sm { padding: .38rem .8rem; font-size: .78rem; border-radius: 8px; }
+
+/* ════════════════════════════════════════════
+   SELECTION BANNER
+════════════════════════════════════════════ */
+.sel-banner {
+  display: none;
+  align-items: center;
+  gap: .65rem;
+  margin: 0 1.5rem .9rem;
+  padding: .7rem 1.1rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.2);
+  border-radius: 10px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+.sel-banner.show { display: flex; }
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead tr { border-bottom: 1px solid var(--rim2); }
+
+thead th {
+  padding: .85rem 1rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface2);
+}
+thead th.center { text-align: center; }
+
+thead th:first-child { padding-left: 1.5rem; }
+thead th:last-child  { padding-right: 1.5rem; }
+
+tbody tr { border-bottom: 1px solid var(--rim); transition: background .18s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.025); }
+
+tbody td {
+  padding: .95rem 1rem;
+  font-size: .86rem;
+  color: var(--slate2);
+  vertical-align: middle;
+}
+tbody td.center { text-align: center; }
+tbody td:first-child { padding-left: 1.5rem; }
+tbody td:last-child  { padding-right: 1.5rem; }
+
+/* ── Checkbox ── */
+input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--champagne);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* ════════════════════════════════════════════
+   STUDENT CELL
+════════════════════════════════════════════ */
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.av-champagne { background: linear-gradient(135deg, #f4d21f, #c9a800); }
+.av-blue      { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.av-purple    { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+.av-teal      { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+.av-green     { background: linear-gradient(135deg, #22c55e, #15803d); }
+
+.student-name { font-weight: 600; color: var(--white); font-size: .88rem; }
+
+.warn-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  font-size: .7rem;
+  margin-left: .4rem;
+  flex-shrink: 0;
+}
+
+/* ════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .28rem .7rem;
+  border-radius: 999px;
+  font-size: .73rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red);    }
+.badge-amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber);  }
+.badge-blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue);   }
+.badge-teal   { background: var(--teal-dim);   border: 1px solid var(--teal-border);   color: var(--teal);   }
+.badge-ghost  { background: var(--surface3);   border: 1px solid var(--rim2);          color: var(--slate2); }
+
+/* ════════════════════════════════════════════
+   PROGRESS BAR
+════════════════════════════════════════════ */
+.progress-wrap {
+  width: 72px; height: 6px;
+  background: var(--surface3);
+  border-radius: 999px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--champagne), var(--green));
+  transition: width .4s ease;
+}
+
+/* ════════════════════════════════════════════
+   TABLE PANEL HEADER EXTRAS
+════════════════════════════════════════════ */
+.table-header-tools {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.page-badge {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--slate2);
+  padding: .28rem .75rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 999px;
+}
+
+/* ════════════════════════════════════════════
+   BULK ACTION BAR (sticky)
+════════════════════════════════════════════ */
+.bulk-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background: var(--surface2);
+  border-top: 1px solid var(--rim2);
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .85rem;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.25);
+}
+.bulk-bar.hidden { display: none; }
+
+.bulk-info {
+  font-size: .86rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.bulk-actions { display: flex; gap: .65rem; flex-wrap: wrap; }
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+.empty-icon-box {
+  width: 72px; height: 72px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  color: var(--slate);
+  margin-bottom: 1.25rem;
+}
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.empty-state p {
+  font-size: .88rem;
+  color: var(--slate2);
+  max-width: 340px;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .pub-wrap { padding: 1.5rem 1.25rem 3rem; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-right { align-items: flex-start; }
+  .context-pills { justify-content: flex-start; }
+}
+
+@media (max-width: 768px) {
+  .pub-wrap { padding: 1rem .9rem 2.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  .page-title { font-size: 1.8rem; }
+  .filter-grid { grid-template-columns: 1fr 1fr; }
+  .panel-header { flex-direction: column; align-items: flex-start; }
+  .table-header-tools { width: 100%; }
+
+  /* Card-style mobile rows */
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+
+  table tr {
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: .85rem;
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .55rem 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    font-size: .82rem;
+    gap: .5rem;
+  }
+  table td:last-child { border-bottom: none; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex-shrink: 0;
+  }
+  table td.center { justify-content: space-between; text-align: right; }
+
+  .bulk-bar { flex-direction: column; align-items: stretch; }
+  .bulk-actions { flex-direction: column; }
+  .bulk-actions .btn { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-value  { font-size: 1.7rem; }
+  .filter-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="pub-wrap">
+
+  <!-- ══ PAGE HEADER ═══════════════════════════════ -->
+  <header class="page-header">
+    <div class="page-header-left">
+      <div class="eyebrow">Result Management</div>
+      <h1 class="page-title">Publish <em>Results</em></h1>
+      <p class="page-subtitle">Select a session and term to publish or unpublish student results across classes.</p>
+    </div>
+    <div class="header-right">
+      <div class="context-pills">
+        {% if session and term %}
+          <span class="ctx-pill"><i class="bi bi-calendar3"></i> {{ session.name }}</span>
+          <span class="ctx-pill"><i class="bi bi-bookmark-fill"></i> {{ term.name }}</span>
+        {% else %}
+          <span class="ctx-pill warn"><i class="bi bi-exclamation-triangle-fill"></i> No session selected</span>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ MESSAGES ══════════════════════════════════ -->
+  {% for message in messages %}
+  <div class="msg {% if message.tags == 'error' %}error{% elif message.tags == 'success' %}success{% elif message.tags == 'warning' %}warning{% else %}info{% endif %}">
+    <i class="bi {% if message.tags == 'error' %}bi-exclamation-circle-fill{% elif message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'warning' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  <!-- ══ STAT CARDS ════════════════════════════════ -->
+  {% if session and term %}
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--champagne-dim);">
+        <i class="bi bi-people-fill" style="color:var(--champagne);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value">{{ total_students }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green-dim);">
+        <i class="bi bi-check-circle-fill" style="color:var(--green);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Published</div>
+        <div class="stat-value">{{ published_count }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-dim);">
+        <i class="bi bi-x-circle-fill" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Not Published</div>
+        <div class="stat-value">{{ unpublished_count }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-dim);">
+        <i class="bi bi-slash-circle-fill" style="color:var(--amber);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Partial</div>
+        <div class="stat-value">{{ partial_count }}</div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══ FILTER PANEL ══════════════════════════════ -->
+  <div class="panel filter-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--purple-dim);">
+          <i class="bi bi-funnel-fill" style="color:var(--purple);"></i>
+        </div>
+        <h3>Filter Results</h3>
+      </div>
+    </div>
+    <div class="filter-body">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+          <div class="form-group">
+            <label><i class="bi bi-calendar3"></i> Session</label>
+            <select name="session" id="sessionSelect"
+                    class="form-control {% if selected_session_id %}active-filter{% endif %}"
+                    onchange="document.getElementById('termSelect').value='';this.form.submit()">
+              <option value="">— Select Session —</option>
+              {% for sess in all_sessions %}
+              <option value="{{ sess.id }}" {% if sess.id|stringformat:"s" == selected_session_id %}selected{% endif %}>
+                {{ sess.name }}{% if sess.is_active %} ✓ Active{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="bi bi-bookmark-fill"></i> Term</label>
+            <select name="term" id="termSelect"
+                    class="form-control {% if selected_term_id %}active-filter{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— Select Term —</option>
+              {% for t in session_terms %}
+              <option value="{{ t.id }}" {% if t.id|stringformat:"s" == selected_term_id %}selected{% endif %}>
+                {{ t.name }}{% if t.is_active %} ✓ Active{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="bi bi-building"></i> Class</label>
+            <select name="class"
+                    class="form-control {% if selected_class %}active-filter{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— All Classes —</option>
+              {% for c_id, c_name in classes %}
+              <option value="{{ c_id }}" {% if selected_class == c_id|stringformat:"s" %}selected{% endif %}>{{ c_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label><i class="bi bi-toggles"></i> Status</label>
+            <select name="status"
+                    class="form-control {% if selected_status %}active-filter{% endif %}"
+                    onchange="this.form.submit()">
+              <option value="">— All Statuses —</option>
+              <option value="published"     {% if selected_status == "published" %}selected{% endif %}>Published</option>
+              <option value="not_published" {% if selected_status == "not_published" %}selected{% endif %}>Not Published</option>
+              <option value="partial"       {% if selected_status == "partial" %}selected{% endif %}>Partially Published</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-champagne btn-sm">
+            <i class="bi bi-search"></i> Apply Filters
+          </button>
+          <a href="{% url 'results:publish_results_page' %}" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ TABLE PANEL ═══════════════════════════════ -->
+  <div class="panel" style="animation-delay:.36s;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--teal-dim);">
+          <i class="bi bi-send-check-fill" style="color:var(--teal);font-size:.8rem;"></i>
+        </div>
+        <h3>
+          Students
+          {% if session and term %}— {{ session.name }} / {{ term.name }}{% endif %}
+        </h3>
+      </div>
+      <div class="table-header-tools">
+        <span class="page-badge">{{ total_students }} student{{ total_students|pluralize }}</span>
+        {% if students %}
+        <button class="btn btn-ghost btn-sm" onclick="selectAll()">
+          <i class="bi bi-check2-all"></i> Select All
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAll()">
+          <i class="bi bi-x"></i> Clear
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if students %}
+
+    <!-- Selection banner -->
+    <div class="sel-banner" id="selBanner">
+      <i class="bi bi-check2-square"></i>
+      <span id="selCount">0</span> student(s) selected
+    </div>
+
+    <form method="POST" id="publishForm">
+      {% csrf_token %}
+      <input type="hidden" name="post_session" value="{{ session.id|default:'' }}">
+      <input type="hidden" name="post_term"    value="{{ term.id|default:'' }}">
+      <input type="hidden" name="action"       id="actionInput" value="">
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:48px;text-align:center;">
+                <input type="checkbox" id="masterCb" onchange="toggleAll(this)">
+              </th>
+              <th>Student</th>
+              <th>Class</th>
+              <th class="center">Subjects</th>
+              <th class="center">Status</th>
+              <th class="center">Progress</th>
+              <th class="center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+            <tr>
+              <td class="center" data-label="Select">
+                <input type="checkbox" name="student_ids" value="{{ s.id }}" class="row-cb" onchange="updateBanner()">
+              </td>
+
+              <td data-label="Student">
+                <div class="student-cell">
+                  {% with n=forloop.counter %}
+                  <div class="avatar {% if n|divisibleby:5 %}av-teal{% elif n|divisibleby:4 %}av-green{% elif n|divisibleby:3 %}av-purple{% elif n|divisibleby:2 %}av-blue{% else %}av-champagne{% endif %}">
+                    {{ s.name|slice:":2"|upper }}
+                  </div>
+                  {% endwith %}
+                  <span class="student-name">{{ s.name }}</span>
+                  {% if s.has_incomplete_scores %}
+                  <span class="warn-dot" title="Some scores are missing or zero">
+                    <i class="bi bi-exclamation"></i>
+                  </span>
+                  {% endif %}
+                </div>
+              </td>
+
+              <td data-label="Class">
+                <span class="badge badge-blue">{{ s.class }}</span>
+              </td>
+
+              <td class="center" data-label="Subjects">
+                <span style="font-weight:600;color:var(--white);">{{ s.published_count }}</span>
+                <span style="color:var(--slate);">/{{ s.total_subjects }}</span>
+              </td>
+
+              <td class="center" data-label="Status">
+                {% if s.status == 'Published' %}
+                  <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> Published</span>
+                {% elif s.status == 'Not Published' %}
+                  <span class="badge badge-red"><i class="bi bi-x-circle-fill"></i> Not Published</span>
+                {% else %}
+                  <span class="badge badge-amber"><i class="bi bi-slash-circle-fill"></i> Partial</span>
+                {% endif %}
+              </td>
+
+              <td class="center" data-label="Progress">
+                {% if s.total_subjects > 0 %}
+                <div class="progress-wrap">
+                  <div class="progress-fill" style="width:{% widthratio s.published_count s.total_subjects 100 %}%"></div>
+                </div>
+                {% else %}
+                <span style="color:var(--slate);">—</span>
+                {% endif %}
+              </td>
+
+              <td class="center" data-label="Actions">
+                <div style="display:flex;gap:.5rem;justify-content:center;">
+                  <a href="{% url 'results:term_results' %}?student={{ s.id }}"
+                     class="btn btn-ghost btn-sm" target="_blank" title="View results">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <button type="button"
+                          class="btn btn-sm {% if s.status == 'Published' %}btn-danger{% else %}btn-success{% endif %}"
+                          onclick="quickAction('{{ s.id }}','{% if s.status == 'Published' %}unpublish{% else %}publish{% endif %}')"
+                          title="{% if s.status == 'Published' %}Unpublish{% else %}Publish{% endif %}">
+                    <i class="bi {% if s.status == 'Published' %}bi-eye-slash{% else %}bi-send-check{% endif %}"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bulk action bar -->
+      <div class="bulk-bar hidden" id="bulkBar">
+        <div class="bulk-info">
+          <i class="bi bi-people-fill"></i>
+          <span id="bulkCount">0</span> student(s) selected
+        </div>
+        <div class="bulk-actions">
+          <button type="button" class="btn btn-success" onclick="submitBulk('publish')">
+            <i class="bi bi-send-check-fill"></i> Publish Selected
+          </button>
+          <button type="button" class="btn btn-danger" onclick="submitBulk('unpublish')">
+            <i class="bi bi-eye-slash-fill"></i> Unpublish Selected
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="clearAll()">
+            <i class="bi bi-x"></i> Clear
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box">
+        <i class="bi bi-inbox"></i>
+      </div>
+      <h3>No Students Found</h3>
+      <p>
+        {% if not session or not term %}
+          Select a session and term above to view student results.
+        {% else %}
+          No results exist for {{ session.name }} / {{ term.name }}{% if selected_class %} in the selected class{% endif %}.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </div><!-- /panel -->
+</div><!-- /pub-wrap -->
+
+<script>
+/* ── Selection helpers ───────────────────────── */
+function toggleAll(master) {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = master.checked);
+  updateBanner();
+}
+function selectAll() {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = true);
+  const m = document.getElementById('masterCb');
+  if (m) m.checked = true;
+  updateBanner();
+}
+function clearAll() {
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = false);
+  const m = document.getElementById('masterCb');
+  if (m) m.checked = false;
+  updateBanner();
+}
+function updateBanner() {
+  const checked = document.querySelectorAll('.row-cb:checked').length;
+  const total   = document.querySelectorAll('.row-cb').length;
+  const banner  = document.getElementById('selBanner');
+  const bulk    = document.getElementById('bulkBar');
+
+  document.getElementById('selCount').textContent  = checked;
+  document.getElementById('bulkCount').textContent = checked;
+
+  if (banner) checked > 0 ? banner.classList.add('show')    : banner.classList.remove('show');
+  if (bulk)   checked > 0 ? bulk.classList.remove('hidden') : bulk.classList.add('hidden');
+
+  const m = document.getElementById('masterCb');
+  if (m) {
+    m.indeterminate = checked > 0 && checked < total;
+    m.checked       = checked === total && total > 0;
+  }
+}
+
+/* ── Bulk submit ─────────────────────────────── */
+function submitBulk(action) {
+  const n = document.querySelectorAll('.row-cb:checked').length;
+  if (n === 0) { alert('Select at least one student.'); return; }
+  const label = action === 'publish' ? 'Publish' : 'Unpublish';
+  if (!confirm(`${label} results for ${n} student(s)?`)) return;
+  document.getElementById('actionInput').value = action;
+  document.getElementById('publishForm').submit();
+}
+
+/* ── Quick single action ─────────────────────── */
+function quickAction(studentId, action) {
+  const label = action === 'publish' ? 'Publish' : 'Unpublish';
+  if (!confirm(`${label} result for this student?`)) return;
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = false);
+  const cb = document.querySelector(`.row-cb[value="${studentId}"]`);
+  if (cb) cb.checked = true;
+  document.getElementById('actionInput').value = action;
+  document.getElementById('publishForm').submit();
+}
+</script>
+{% endblock %}

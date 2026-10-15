@@ -1,0 +1,112 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Shop &amp; canteen sales{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .sf input,.sf select{padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .sf label{font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Shop &amp; canteen <em>sales</em></h1>
+    <p class="fin-sub">{% if start == end %}{{ start|date:"l j F Y" }}{% else %}{{ start|date:"j M" }} – {{ end|date:"j M Y" }}{% endif %} — what was sold, how it was paid, and what to reorder.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:till' %}?outlet={{ outlet|default:'SHOP' }}"><i class="bi bi-calculator"></i> Open till</a>
+    <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print report</button>
+  </div>
+</div>
+
+<form method="get" class="panel sf">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div><label>From</label><input type="date" name="start" value="{{ start|date:'Y-m-d' }}"></div>
+    <div><label>To</label><input type="date" name="end" value="{{ end|date:'Y-m-d' }}"></div>
+    <div><label>Where</label><select name="outlet"><option value="">Shop and canteen</option>{% for v, l in outlets %}<option value="{{ v }}"{% if outlet == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div style="flex:1 1 200px"><label>Search</label><input type="search" name="q" value="{{ q }}" placeholder="Receipt, student or customer" style="width:100%"></div>
+    <button class="fin-btn" type="submit"><i class="bi bi-funnel"></i> Show</button>
+  </div>
+</form>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Sales</small><b>{{ summary.count|intcomma }}</b>{% if summary.voided %}<span class="hint">{{ summary.voided }} voided</span>{% endif %}</div>
+  <div class="fin-stat"><small>Total sold</small><b style="color:var(--green)">₦{{ summary.total|floatformat:"-2"|intcomma }}</b></div>
+  <div class="fin-stat"><small>Cash, transfer &amp; card</small><b>₦{{ summary.takings|floatformat:"-2"|intcomma }}</b><span class="hint">new money to bank or cash box</span></div>
+  <div class="fin-stat"><small>Gross profit</small><b style="color:var(--champagne-lt)">₦{{ summary.profit|floatformat:"-2"|intcomma }}</b><span class="hint">sales less cost price</span></div>
+</div>
+
+<div class="fin-grid">
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Paid by</h3></div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>Method</th><th>Sales</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>{% for m in summary.by_method %}
+          <tr><td>{{ m.label }}</td><td>{{ m.count }}</td><td class="money" style="text-align:right">₦{{ m.total|floatformat:"-2"|intcomma }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="empty"><i class="bi bi-inbox"></i><p>No sales in this period.</p></td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" style="margin-top:1rem">
+      <div class="panel-h"><h3><i class="bi bi-person-badge"></i> By staff</h3></div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>Served by</th><th>Sales</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>{% for s in summary.by_staff %}
+          <tr><td>{% if s.sold_by__first_name %}{{ s.sold_by__first_name }} {{ s.sold_by__last_name }}{% else %}{{ s.sold_by__username|default:"—" }}{% endif %}</td><td>{{ s.n }}</td><td class="money" style="text-align:right">₦{{ s.t|floatformat:"-2"|intcomma }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="hint" style="padding:1rem">—</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-trophy"></i> Best sellers</h3></div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>Item</th><th>Sold</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>{% for b in summary.best_sellers %}
+          <tr><td>{{ b.name }}</td><td>{{ b.qty }}</td><td class="money" style="text-align:right">₦{{ b.t|floatformat:"-2"|intcomma }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="hint" style="padding:1rem">—</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+
+    <div class="panel" style="margin-top:1rem">
+      <div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Running low</h3>{% if low_stock %}<span class="chip amber">{{ low_stock|length }}</span>{% endif %}</div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>Item</th><th style="text-align:right">In stock</th><th style="text-align:right">Warn at</th></tr></thead>
+        <tbody>{% for i in low_stock %}
+          <tr><td>{{ i.name }}<br><span class="hint">{{ i.get_item_type_display }}</span></td>
+              <td class="money" style="text-align:right;color:{% if i.stock_qty == 0 %}var(--red){% else %}var(--amber){% endif %}">{{ i.stock_qty }}</td>
+              <td style="text-align:right" class="hint">{{ i.reorder_level }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="empty"><i class="bi bi-check2-circle"></i><p>Everything is well stocked.</p></td></tr>{% endfor %}</tbody>
+      </table></div>
+      {% if low_stock %}<div class="panel-b"><a class="fin-btn fin-btn-sm" href="{% url 'finance:manage_items' %}"><i class="bi bi-box-arrow-in-down"></i> Restock</a></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:1rem">
+  <div class="panel-h"><h3><i class="bi bi-receipt"></i> Sales</h3></div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Receipt</th><th>Customer</th><th>Items</th><th>Paid by</th><th style="text-align:right">Total</th><th></th></tr></thead>
+    <tbody>{% for s in sales %}
+      <tr{% if s.status == 'VOIDED' %} style="opacity:.55"{% endif %}>
+        <td style="white-space:nowrap"><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|date:"j M, H:i" }}</span></td>
+        <td>{{ s.buyer }}{% if s.student %}<br><span class="hint">{{ s.student.admission_number }}</span>{% endif %}</td>
+        <td class="hint" style="max-width:260px">{% for l in s.lines.all %}{{ l.name }} ×{{ l.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+        <td>{{ s.get_method_display }}{% if s.status == 'VOIDED' %}<br><span class="chip red">voided</span><br><span class="hint">{{ s.void_reason }}</span>{% endif %}</td>
+        <td class="money" style="text-align:right">₦{{ s.total|floatformat:"-2"|intcomma }}</td>
+        <td style="white-space:nowrap;text-align:right">
+          {% if s.status == 'COMPLETED' %}
+          <form method="post" style="display:inline-flex;gap:.35rem" onsubmit="return confirm('Void sale {{ s.number }}? Stock goes back{% if s.method == 'WALLET' %} and the wallet is refunded{% endif %}.')">{% csrf_token %}
+            <input type="hidden" name="action" value="void"><input type="hidden" name="sale_id" value="{{ s.id }}">
+            <input name="reason" required maxlength="255" placeholder="Why" style="width:110px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.76rem">
+            <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit">Void</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-inbox"></i><p>No sales in this period.</p></td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}

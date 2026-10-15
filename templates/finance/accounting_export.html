@@ -1,0 +1,128 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Export for accountant{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .exp-dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem}
+  .exp-card{display:flex;flex-direction:column;gap:.45rem;padding:1.1rem 1.15rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(0,0,0,.18);text-decoration:none;color:var(--white);transition:transform .2s,border-color .2s,box-shadow .2s}
+  .exp-card:hover{transform:translateY(-2px);border-color:var(--champagne);box-shadow:0 14px 30px -18px rgba(244,210,31,.7);color:var(--white)}
+  .exp-card i{font-size:1.35rem;color:var(--champagne-lt)}
+  .exp-card b{font-size:.95rem}
+  .exp-card span{font-size:.78rem;color:var(--slate2);line-height:1.45}
+  .exp-codes td input{width:100%;padding:.4rem .55rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem}
+  .exp-codes td input:focus{outline:none;border-color:var(--champagne)}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Books for the <em>accountant</em></h1>
+    <p class="fin-sub">Fees, refunds, spending and petty cash for any period, as balanced double-entry journals in your own account codes.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:bank_reconciliation' %}"><i class="bi bi-bank2"></i> Reconcile first</a>
+    <a class="fin-btn" href="{% url 'finance:income_statement' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}"><i class="bi bi-graph-up-arrow"></i> Income &amp; expenditure</a>
+  </div>
+</div>
+
+<form method="get" class="panel">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">From</label>
+      <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" style="padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"></div>
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">To</label>
+      <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" style="padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"></div>
+    <button class="fin-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Update</button>
+  </div>
+</form>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Journal entries</small><b>{{ entry_count|intcomma }}</b><span class="hint">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</span></div>
+  <div class="fin-stat"><small>Total debits</small><b>₦{{ debit|floatformat:"-2"|intcomma }}</b></div>
+  <div class="fin-stat"><small>Total credits</small><b>₦{{ credit|floatformat:"-2"|intcomma }}</b></div>
+  <div class="fin-stat"><small>Balanced</small><b style="color:{% if balanced %}var(--green){% else %}var(--red){% endif %}">{% if balanced %}Yes{% else %}No{% endif %}</b></div>
+</div>
+
+<div class="panel">
+  <div class="panel-h"><h3><i class="bi bi-download"></i> Download</h3><span class="hint">cash basis — money counts when it moves</span></div>
+  <div class="panel-b">
+    <div class="exp-dl">
+      <a class="exp-card" href="{% url 'finance:export_workbook' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}">
+        <i class="bi bi-file-earmark-excel"></i><b>Excel workbook</b>
+        <span>Summary, fees received, refunds, expenses, petty cash, the journal and a trial balance — one sheet each.</span>
+      </a>
+      {% for key, label in formats.items %}
+      <a class="exp-card" href="{% url 'finance:export_journal_csv' %}?start={{ start|date:'Y-m-d' }}&end={{ end|date:'Y-m-d' }}&format={{ key }}">
+        <i class="bi bi-filetype-csv"></i><b>{% if key == 'generic' %}Journal CSV{% elif key == 'quickbooks' %}QuickBooks Online{% else %}Xero{% endif %}</b>
+        <span>{% if key == 'generic' %}Date, code, account, debit and credit — imports into Sage, Zoho Books, Tally and most others.{% elif key == 'quickbooks' %}Journal entry import layout. QuickBooks matches accounts by name, so keep the names below the same as yours.{% else %}Manual journal import layout, matched by account code, marked tax exempt.{% endif %}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="fin-grid" style="margin-top:1rem">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-list-ol"></i> Account codes</h3></div>
+    <form method="post">{% csrf_token %}
+      <div style="overflow-x:auto">
+        <table class="tbl exp-codes">
+          <thead><tr><th style="width:110px">Code</th><th>Account name</th></tr></thead>
+          <tbody>
+            {% for a in fixed %}
+            <tr><td><input name="{{ a.key }}" value="{{ a.code }}" maxlength="20" required></td>
+                <td><input name="{{ a.key }}_name" value="{{ a.name }}" maxlength="80" required></td></tr>
+            {% endfor %}
+            {% if categories %}
+            <tr><td colspan="2" class="hint" style="padding-top:1rem;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem">Expense categories — blank uses general expenses</td></tr>
+            {% for c in categories %}
+            <tr><td><input name="category_{{ c.id }}" value="{{ c.account_code }}" maxlength="20" placeholder="{{ general_code }}"></td>
+                <td style="vertical-align:middle">{{ c.name }}</td></tr>
+            {% endfor %}
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-b"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save codes</button>
+        <p class="hint" style="margin-top:.6rem">Ask your accountant for the codes in their chart of accounts. The defaults work as a starting chart if you have none.</p></div>
+    </form>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-calculator"></i> Trial balance</h3></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Code</th><th>Account</th><th style="text-align:right">Debit</th><th style="text-align:right">Credit</th></tr></thead>
+          <tbody>
+            {% for r in trial_balance %}
+            <tr><td>{{ r.code }}</td><td>{{ r.account }}</td>
+                <td class="money" style="text-align:right">{% if r.debit %}₦{{ r.debit|floatformat:"-2"|intcomma }}{% else %}—{% endif %}</td>
+                <td class="money" style="text-align:right">{% if r.credit %}₦{{ r.credit|floatformat:"-2"|intcomma }}{% else %}—{% endif %}</td></tr>
+            {% empty %}
+            <tr><td colspan="4" class="empty"><i class="bi bi-journal"></i><p>No money moved in this period.</p></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {% if entries %}
+    <div class="panel" style="margin-top:1rem">
+      <div class="panel-h"><h3><i class="bi bi-journal-text"></i> First journal entries</h3>{% if entry_count > 12 %}<span class="hint">12 of {{ entry_count }}</span>{% endif %}</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Entry</th><th style="text-align:right">Amount</th></tr></thead>
+          <tbody>
+            {% for e in entries %}
+            <tr><td style="white-space:nowrap">{{ e.date|date:"j M" }}<br><span class="hint">{{ e.number }}</span></td>
+                <td>{{ e.description }}<br><span class="hint">Dr {{ e.lines.0.code }} {{ e.lines.0.account }} · Cr {{ e.lines.1.code }} {{ e.lines.1.account }}</span></td>
+                <td class="money" style="text-align:right">₦{{ e.lines.0.debit|floatformat:"-2"|intcomma }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Counselling — {{ c.student.full_name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Counselling · confidential</div>
+  <h1 class="fin-title"><em>{{ c.student.full_name }}</em></h1>
+  <p class="fin-sub">{{ c.student.class_assigned|default:"" }} · {{ c.get_reason_display }} · {{ c.get_status_display }}{% if c.self_referred %} · asked for help themselves{% endif %} · risk {{ c.get_risk_display|lower }}</p>
+</div><form method="post">{% csrf_token %}{% if c.status == 'CLOSED' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="reopen">Reopen</button>{% else %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="close" onclick="return confirm('Close this case?')">Close case</button>{% endif %}</form></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Notes</h3></div><div class="panel-b">
+    {% if c.summary %}<p class="hint">{{ c.summary }}</p>{% endif %}
+    {% for n in notes %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b>{{ n.date|date:"D j M Y" }}</b> <span class="hint">{{ n.author.get_full_name|default:n.author.username }}{% if n.next_session %} · next {{ n.next_session|date:"j M" }}{% endif %}</span><div style="font-size:.9rem">{{ n.text|linebreaksbr }}</div></div>
+    {% empty %}<p class="empty">No notes yet.</p>{% endfor %}
+    {% if others %}<p class="hint" style="margin-top:.6rem">Earlier cases: {% for o in others %}<a href="{% url 'welfare:case' o.pk %}">{{ o.opened_at|date:"M Y" }} ({{ o.get_reason_display }})</a>{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="note">
+    <h3 style="margin:0 0 .6rem">Add a note</h3>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Risk now</label><select name="risk"><option value="">Unchanged</option><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div></div>
+    <div><label>Note</label><textarea name="text" rows="6" required></textarea></div>
+    <div><label>Next session</label><input type="date" name="next_session"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

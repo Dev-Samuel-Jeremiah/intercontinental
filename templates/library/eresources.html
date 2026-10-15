@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}E-library{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>E-library &amp; past questions</em></h1>
+  <p class="fin-sub">E-books the school is licensed to share, and WAEC, NECO, BECE and JAMB past papers by subject and year.</p>
+</div></div>
+{% if lib %}{% include "library/_nav.html" %}{% else %}{% include "library/_usernav.html" %}{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    <form method="get" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
+      <input name="q" value="{{ get.q }}" placeholder="Search titles" style="flex:2;min-width:140px">
+      <select name="kind" style="flex:1"><option value="">Everything</option>{% for k, v in kinds %}<option value="{{ k }}" {% if k == get.kind %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+      <select name="exam" style="flex:1"><option value="">Any exam</option>{% for k, v in exams %}{% if k %}<option value="{{ k }}" {% if k == get.exam %}selected{% endif %}>{{ v }}</option>{% endif %}{% endfor %}</select>
+      <select name="subject" style="flex:1"><option value="">Any subject</option>{% for s in subjects %}<option {% if s == get.subject %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+      <select name="year" style="flex:1"><option value="">Any year</option>{% for y in years %}<option {% if y|stringformat:"s" == get.year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+      <button class="fin-btn" type="submit">Filter</button></form>
+    <table class="tbl"><tbody>
+    {% for r in items %}<tr><td class="name"><a href="{% url 'library:eresource_file' r.pk %}">{{ r.title }}</a><br><small class="hint">{{ r.get_kind_display }}{% if r.exam %} · {{ r.get_exam_display }}{% endif %}{% if r.year %} {{ r.year }}{% endif %}{% if r.paper %} · {{ r.paper }}{% endif %}{% if r.subject %} · {{ r.subject }}{% endif %}{% if r.authors %} · {{ r.authors }}{% endif %}</small></td>
+      <td class="num hint">{{ r.downloads }} open{{ r.downloads|pluralize }}</td>
+      {% if lib %}<td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit" onclick="return confirm('Delete this file?')">Delete</button></form></td>{% endif %}</tr>
+    {% empty %}<tr><td class="empty">Nothing here yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  {% if lib %}<form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Upload</h3>
+    <div><label>Title</label><input name="title" required maxlength="200" placeholder="e.g. WAEC Mathematics 2019 Paper 2"></div>
+    <div class="row2"><div><label>Kind</label><select name="kind">{% for k, v in kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Subject</label><input name="subject" maxlength="80"></div></div>
+    <div class="row2"><div><label>Exam</label><select name="exam">{% for k, v in exams %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Year</label><input name="year" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>Paper</label><input name="paper" maxlength="60"></div><div><label>Level</label><select name="level">{% for k, v in levels %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Author(s)</label><input name="authors" maxlength="200"></div>
+    <div><label>Licence / permission</label><input name="licence_note" maxlength="200" placeholder="e.g. Bought for school use; free under CC BY"></div>
+    <div><label>File (PDF or image)</label><input type="file" name="file" required></div>
+    <label class="pill"><input type="checkbox" name="for_students" checked> Students can open it</label>
+    <p class="hint" style="margin:0">Only upload books and papers the school has the right to share.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Upload</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

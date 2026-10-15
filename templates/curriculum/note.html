@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ note.title }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Lesson note · {% include "curriculum/_status.html" with n=note %}</div>
+  <h1 class="fin-title">{{ note.title }}</h1>
+  <p class="fin-sub">{{ note.subject.name }} · {{ note.school_class.name }} · {{ note.term.session.name }} {{ note.term.name }}, week {{ note.week }} · by {{ note.teacher.full_name }}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if is_owner and note.status == 'DRAFT' or is_owner and note.status == 'RETURNED' %}<a class="fin-btn fin-btn-sm" href="{% url 'curriculum:note_edit' note.id %}"><i class="bi bi-pencil"></i> Edit</a>
+    <form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="submit"><i class="bi bi-send"></i> Send for review</button></form>{% endif %}
+  {% if is_owner and note.status == 'SUBMITTED' %}<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-sm" name="action" value="withdraw">Withdraw</button></form>{% endif %}
+  <button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div></div>
+{% include "curriculum/_nav.html" %}
+{% if note.review_comment %}<div class="panel" style="border-color:{% if note.status == 'RETURNED' %}var(--red-border){% else %}var(--green-border){% endif %}"><div class="panel-b">
+  <b>{{ note.reviewed_by.full_name|default:"Reviewer" }}</b> <span class="hint">{{ note.reviewed_at|date:"j M Y, H:i" }}</span><p style="margin:.4rem 0 0">{{ note.review_comment|linebreaksbr }}</p></div></div>{% endif %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-b" style="line-height:1.7">
+    {% if note.topic %}<p class="hint" style="margin-top:0"><i class="bi bi-link-45deg"></i> Scheme topic: week {{ note.topic.week }} — {{ note.topic.topic }}</p>{% endif %}
+    {% if note.objectives %}<h4 style="margin:.2rem 0 .4rem">Objectives</h4><p style="color:var(--slate2)">{{ note.objectives|linebreaksbr }}</p>{% endif %}
+    <h4 style="margin:.8rem 0 .4rem">Lesson</h4><div style="color:var(--slate2)">{{ note.content|linebreaks }}</div>
+    {% if note.attachment %}<a class="fin-btn fin-btn-sm" href="{% url 'curriculum:note_file' note.id %}" target="_blank"><i class="bi bi-paperclip"></i> Attachment</a>{% endif %}
+  </div></div>
+  {% if can_review and note.status == 'SUBMITTED' %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard-check"></i> Review</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Comment <span class="hint">(required when sending back)</span></label><textarea name="comment" rows="5" placeholder="Good structure. Add an evaluation question for step 3."></textarea></div>
+      <div style="display:flex;gap:.5rem"><button class="fin-btn fin-btn-gold" name="action" value="approve"><i class="bi bi-check2"></i> Approve</button>
+      <button class="fin-btn fin-btn-danger" name="action" value="return"><i class="bi bi-arrow-return-left"></i> Send back</button></div>
+    </form></div></div>{% endif %}
+</div>
+{% endblock %}

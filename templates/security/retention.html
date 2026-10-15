@@ -1,0 +1,19 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Retention{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">How long we <em>keep data</em></h1>
+  <p class="fin-sub">Keep personal data only as long as it is needed. Switched-on rules run every night. Results and payment records are never deleted — for pupils who left, names are removed instead.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<form method="post" class="panel">{% csrf_token %}
+<table class="tbl"><thead><tr><th>Data</th><th>What happens</th><th>On</th><th>Keep for (days)</th><th>Affected today</th><th>Last run</th></tr></thead><tbody>
+{% for r in rules %}<tr><td class="name">{{ r.spec.label }}</td><td>{{ r.spec.action }}</td><td><input type="checkbox" name="on_{{ r.kind }}" {% if r.enabled %}checked{% endif %} style="width:auto"></td>
+<td><input name="days_{{ r.kind }}" value="{{ r.days }}" inputmode="numeric" style="width:90px;padding:.4rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"><br><span class="hint">at least {{ r.spec.min }}</span></td>
+<td>{{ r.preview }}</td><td>{% if r.last_run %}{{ r.last_run|date:"j M Y" }} · {{ r.last_count }}{% else %}—{% endif %}</td></tr>{% endfor %}
+</tbody></table>
+<div class="panel-b" style="display:flex;gap:.5rem"><button class="fin-btn fin-btn-gold" name="op" value="save">Save rules</button>
+<button class="fin-btn" name="op" value="run" onclick="return confirm('Apply the switched-on rules now? Deleted records cannot be brought back (except from a backup).')">Apply now</button></div>
+</form>
+{% endblock %}

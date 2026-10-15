@@ -1,0 +1,8 @@
+{% include "finance/_fin_styles.html" %}
+<style>
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.8rem;margin-bottom:1.2rem}
+  a.tile{display:block;padding:1rem;border:1px solid var(--rim);border-radius:16px;background:rgba(255,255,255,.03);color:inherit;text-decoration:none}
+  a.tile:hover{border-color:var(--champagne,#f4d21f)}a.tile i{font-size:1.35rem;color:var(--champagne-lt,#ffe066)}a.tile b{display:block;margin:.35rem 0 .1rem}a.tile span{font-size:.8rem;color:var(--slate2)}
+  .bar{height:9px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#f4d21f,#ffe066)}
+  .pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .4rem .4rem 0;font-size:.85rem}.pill input{width:auto}
+</style>

@@ -1,0 +1,58 @@
+{% include "communications/_portal_head.html" %}
+<style>table{width:100%;border-collapse:collapse;font-size:.88rem}td{padding:.35rem .2rem;border-bottom:1px solid var(--rim2)}.row{display:flex;gap:.6rem;flex-wrap:wrap}.row>*{flex:1;min-width:140px}</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1><em>Boarding</em></h1>
+  <p class="sub">Exeats, visiting days, the menu and your child's boarding report.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for c in cards %}
+  <div class="card">
+    <h2><i class="bi bi-house-heart" style="color:var(--champagne-lt)"></i> {{ c.b.student.full_name }}</h2>
+    <p class="hint" style="margin:0">{% if c.hostel %}{{ c.hostel.name }} · Room {{ c.b.bed.room.room_number }}{% else %}No bed yet{% endif %} · {{ c.b.get_status_display }}</p>
+
+    {% for r in c.exeats %}{% if r.status == 'PARENT' %}
+    <div class="msg" style="margin-top:.8rem">The school arranged an exeat: {{ r.leave_at|date:"D j M H:i" }} to {{ r.return_by|date:"D j M H:i" }} — {{ r.reason }}, collected by {{ r.pickup_person }}.
+      <form method="post" class="row" style="margin-top:.4rem">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><button type="submit" name="action" value="approve">I approve</button><button type="submit" name="action" value="decline" style="background:transparent;color:var(--white);border:1px solid var(--rim2)">Decline</button></form></div>
+    {% endif %}{% endfor %}
+
+    <h2 style="margin-top:1rem">Exeats</h2>
+    <table>{% for r in c.exeats %}<tr><td>{{ r.leave_at|date:"D j M H:i" }} → {{ r.return_by|date:"D j M H:i" }}<br><small class="hint">{{ r.reason }}{% if r.school_note %} · {{ r.school_note }}{% endif %}</small></td><td><span class="chip{% if r.status == 'APPROVED' or r.status == 'RETURNED' %} ok{% elif r.status == 'DECLINED' %} no{% endif %}">{{ r.get_status_display }}</span>
+      {% if r.status == 'PARENT' or r.status == 'SCHOOL' or r.status == 'APPROVED' %}<form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><input type="hidden" name="action" value="cancel"><button type="submit" style="width:auto;margin:0;padding:.2rem .5rem;font-size:.75rem;background:transparent;color:var(--slate2);border:1px solid var(--rim2)">Cancel</button></form>{% endif %}</td></tr>{% empty %}<tr><td class="hint">None yet.</td></tr>{% endfor %}</table>
+    <details style="margin-top:.6rem"><summary>Ask for an exeat</summary>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="exeat"><input type="hidden" name="boarder" value="{{ c.b.pk }}">
+        <div class="row"><div><label>Leaves</label><input type="datetime-local" name="leave_at" required></div><div><label>Back by</label><input type="datetime-local" name="return_by" required></div></div>
+        <label>Reason</label><input name="reason" required maxlength="255" placeholder="e.g. Family wedding">
+        <div class="row"><div><label>Who collects</label><input name="pickup_person" required maxlength="160"></div><div><label>Their phone</label><input name="pickup_phone" maxlength="20"></div></div>
+        <button type="submit">Send to the housemaster</button></form></details>
+
+    {% if days %}<h2 style="margin-top:1rem">Visiting days</h2>
+    {% for bk in c.bookings %}<p style="margin:.2rem 0">Booked: <b>{{ bk.day.date|date:"l j M" }} at {{ bk.slot|time:"H:i" }}</b> ({{ bk.names }})
+      <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="unvisit"><input type="hidden" name="id" value="{{ bk.pk }}"><button type="submit" style="width:auto;margin:0;padding:.2rem .5rem;font-size:.75rem;background:transparent;color:var(--slate2);border:1px solid var(--rim2)">Cancel</button></form></p>{% endfor %}
+    {% for d, slots in days %}<details><summary>Book {{ d.date|date:"l j F" }}</summary>{% if d.notes %}<p class="hint">{{ d.notes|linebreaksbr }}</p>{% endif %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="visit"><input type="hidden" name="boarder" value="{{ c.b.pk }}"><input type="hidden" name="day" value="{{ d.pk }}">
+        <label>Time</label><select name="slot">{% for s in slots %}<option value="{{ s.time|time:'H:i' }}" {% if not s.left %}disabled{% endif %}>{{ s.time|time:"H:i" }}{% if not s.left %} (full){% else %} — {{ s.left }} left{% endif %}</option>{% endfor %}</select>
+        <div class="row"><div><label>Number of visitors</label><input name="visitors" value="2" inputmode="numeric"></div><div><label>Names</label><input name="names" required maxlength="255"></div></div>
+        <button type="submit">Book visit</button></form></details>{% endfor %}{% endif %}
+
+    {% if c.menu %}<details style="margin-top:1rem"><summary><b>This week's menu</b></summary>{% for day, meals in c.menu %}<p style="margin:.4rem 0 .1rem"><b>{{ day }}</b></p>{% for m in meals %}<div class="hint">{{ m.get_meal_type_display }}: {{ m.menu }}</div>{% endfor %}{% endfor %}</details>{% endif %}
+
+    <details style="margin-top:.6rem"><summary><b>Dietary needs</b> — {{ c.b.get_diet_display }}{% if c.b.diet_note %} ({{ c.b.diet_note }}){% endif %}</summary>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="diet"><input type="hidden" name="boarder" value="{{ c.b.pk }}">
+        <select name="diet">{% for k, l in diets %}<option value="{{ k }}" {% if k == c.b.diet %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+        <label>Details (allergies, foods to avoid)</label><input name="diet_note" value="{{ c.b.diet_note }}" maxlength="255">
+        <button type="submit">Save</button></form></details>
+
+    {% for rep in c.reports %}<details style="margin-top:.6rem" open><summary><b>Boarding report — {{ rep.term }} {{ rep.term.session }}</b></summary>
+      <p class="hint" style="margin:.3rem 0">Conduct: {{ rep.get_conduct_display }} · Neatness: {{ rep.get_neatness_display }} · Getting on with others: {{ rep.get_relationships_display }}</p>
+      {% if rep.comment %}<p style="font-size:.9rem">{{ rep.comment|linebreaksbr }}</p>{% endif %}</details>{% endfor %}
+
+    <details style="margin-top:.6rem"><summary>Ask for a room change</summary>
+      {% for r in c.rooms %}<p class="hint">{{ r.created_at|date:"j M" }}: {{ r.get_status_display }}{% if r.note %} — {{ r.note }}{% endif %}</p>{% endfor %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="room"><input type="hidden" name="boarder" value="{{ c.b.pk }}"><textarea name="reason" rows="3" required placeholder="Why a different room would help"></textarea><button type="submit">Send</button></form></details>
+  </div>
+  {% endfor %}
+</div>
+</body>
+</html>

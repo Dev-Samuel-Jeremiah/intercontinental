@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ t.reference }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'family:tickets' %}" style="color:inherit">Feedback</a></div>
+  <h1 class="fin-title">{{ t.subject }}</h1>
+  <p class="fin-sub">{{ t.reference }} · {{ t.get_kind_display }} · {{ t.get_category_display }} · from {{ t.parent.get_full_name|default:t.student.parent_name|default:"a parent" }}{% if t.student %} ({{ t.student.full_name }}){% endif %} · {{ t.get_status_display }}{% if late %} · <span class="chip red">Overdue</span>{% endif %}{% if t.rating %} · rated {{ t.rating }} ★{% endif %}</p>
+</div></div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1rem">
+    <div class="panel"><div class="panel-b"><small class="hint">{{ t.created_at|date:"j M Y H:i" }}</small><p>{{ t.body|linebreaksbr }}</p></div></div>
+    {% for m in msgs %}<div class="panel" {% if m.internal %}style="border-style:dashed"{% endif %}><div class="panel-b"><small class="hint">{% if m.author_id == t.parent_id %}Parent{% else %}{{ m.author.get_full_name|default:m.author.username }}{% endif %} · {{ m.created_at|date:"j M H:i" }}{% if m.internal %} · staff note{% endif %}</small><p>{{ m.body|linebreaksbr }}</p></div></div>{% endfor %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <div><label>Reply</label><textarea name="body" rows="4"></textarea></div>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="internal" value="1" style="width:auto"> Staff note only (the parent will not see it)</label>
+      <div><label>Status</label><select name="status"><option value="">Leave as it is</option>{% for k, l in statuses %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+    </form>
+  </div>
+  {% if admin %}
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="assign">
+    <h3 style="margin:0 0 .6rem">Assign</h3>
+    <select name="staff"><option value="">Nobody</option>{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk == t.assigned_to_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select>
+    <button class="fin-btn" type="submit">Assign</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

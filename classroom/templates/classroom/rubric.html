@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Rubric — {{ a.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.rr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.5fr);gap:.5rem;margin-bottom:.5rem}@media(max-width:800px){.rr{grid-template-columns:1fr}}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Rubric</div>
+  <h1 class="fin-title">{{ a.title }}</h1>
+  <p class="fin-sub">Students see the rubric on the assignment before they start. When marking, you choose a level for each criterion and the mark out of 10 is worked out.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'classroom:assignment_detail' a.id %}"><i class="bi bi-arrow-left"></i> Assignment</a></div>
+{% if locked %}<div class="panel" style="border-color:var(--amber-border)"><div class="panel-b" style="color:var(--amber)">Work has been marked with this rubric, so it can't be changed now.</div></div>{% endif %}
+<form method="post" class="fin-form panel" style="padding:1.2rem">{% csrf_token %}
+  <div class="rr hint"><span>Criterion</span><span>What it means (optional)</span><span>Levels and points — e.g. "Excellent 4, Good 3, Fair 2, Needs work 1"</span></div>
+  {% for r in rows %}<div class="rr"><input name="name_{{ forloop.counter0 }}" value="{{ r.name }}" maxlength="120"><input name="desc_{{ forloop.counter0 }}" value="{{ r.desc }}" maxlength="255"><input name="levels_{{ forloop.counter0 }}" value="{{ r.levels }}"></div>{% endfor %}
+  <p class="hint" style="margin:0">Leave a row's criterion empty to drop it. Leave them all empty to mark with a single grade instead.</p>
+  {% if not locked %}<button class="fin-btn fin-btn-gold" type="submit">Save rubric</button>{% endif %}
+</form>
+{% endblock %}

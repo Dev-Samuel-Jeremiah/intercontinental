@@ -1,0 +1,26 @@
+{% extends "partials/status_base.html" %}
+{% block title %}Staff Clock {{ log.get_direction_display }}{% endblock %}
+{% block tone %}{% if log.direction == 'IN' %}tone-green{% else %}tone-blue{% endif %}{% endblock %}
+{% block extra_css %}
+<style>
+  .scan-name { font-family:var(--serif); font-size:clamp(2rem,7vw,2.6rem); font-weight:600; line-height:1.1; margin:.2rem 0 .4rem; word-break:break-word; }
+  .scan-sub { color:var(--text-2); font-size:.95rem; }
+  .clock { margin:1.6rem auto .3rem; font-size:clamp(3rem,14vw,4.4rem); font-weight:300; letter-spacing:.02em; font-variant-numeric:tabular-nums; color:var(--text); }
+  .chip { display:inline-flex; align-items:center; gap:.5rem; margin-top:1.4rem; padding:.6rem 1rem; border-radius:99px; font-size:.86rem; font-weight:500; background:rgba(255,255,255,.04); border:1px solid var(--rim2); color:var(--text-2); }
+  .chip.ok { color:#5ecb8e; background:rgba(94,203,142,.1); border-color:rgba(94,203,142,.3); }
+  .chip.warn { color:#f59e0b; background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.3); }
+  .next { margin-top:2rem; font-size:.8rem; color:var(--text-3); display:inline-flex; align-items:center; gap:.5rem; }
+  .next::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--tone); box-shadow:0 0 0 0 rgba(var(--tone-rgb),.6); animation:beacon 1.6s infinite; }
+  @keyframes beacon { to { box-shadow:0 0 0 10px rgba(var(--tone-rgb),0); } }
+</style>
+{% endblock %}
+{% block body %}
+<div class="icon"><i class="bi {% if log.direction == 'IN' %}bi-door-open-fill{% else %}bi-door-closed-fill{% endif %}"></i></div>
+<div class="eyebrow">{% if log.repeat %}Already clocked {% if log.direction == 'IN' %}in{% else %}out{% endif %}{% else %}Clocked {% if log.direction == 'IN' %}in{% else %}out{% endif %}{% endif %}</div>
+<div class="scan-name">{{ staff.full_name }}</div>
+<div class="scan-sub">{{ staff.get_role_display }}</div>
+<div class="clock">{{ log.scanned_at|time:"H:i" }}</div>
+<div class="scan-sub">{{ log.scanned_at|date:"l, j F Y" }}</div>
+{% if log.repeat %}<div class="chip warn"><i class="bi bi-info-circle"></i> You scanned a moment ago — this scan was not counted again</div>{% else %}<div class="chip ok"><i class="bi bi-check2-circle"></i> Recorded to staff attendance</div>{% endif %}
+<div><span class="next">{% if log.direction == 'IN' %}Have a great day{% else %}See you tomorrow{% endif %}</span></div>
+{% endblock %}

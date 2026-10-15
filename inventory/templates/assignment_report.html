@@ -1,0 +1,9 @@
+<h1>Asset Assignments</h1>
+<ul>
+{% for a in assignments %}
+  <li>
+    {{ a.asset.name }} → {{ a.assigned_to_user|default:a.location }}
+    (Qty: {{ a.quantity }})
+  </li>
+{% endfor %}
+</ul>

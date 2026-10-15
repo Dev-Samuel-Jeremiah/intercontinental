@@ -1,0 +1,373 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Transaction History{% endblock %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body, .txn-wrap * { font-family: 'Outfit', sans-serif; color: var(--white); }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.txn-wrap {
+  max-width: 1200px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 2.25rem; animation: riseUp .45s ease both; }
+.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: .7rem; }
+.eyebrow-rule { width: 32px; height: 1px; background: var(--champagne); opacity: .6; }
+.eyebrow-label {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.55rem; font-weight: 600;
+  color: var(--white); line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--champagne); }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: .4rem; }
+.context-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  border-radius: 99px; font-size: .8rem; font-weight: 600;
+  color: var(--champagne-lt); white-space: nowrap;
+}
+.header-divider {
+  margin-top: 1.2rem; height: 1px;
+  background: var(--rim2); position: relative;
+}
+.header-divider::after {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne); border-radius: 2px; margin-top: -0.5px;
+}
+
+/* ── BACK BUTTON ── */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  background: var(--rim); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--slate2);
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 600;
+  text-decoration: none; transition: border-color .18s, color .18s, background .18s;
+  cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--champagne-border); color: var(--champagne-lt); background: var(--champagne-dim); }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: 16px; overflow: hidden; position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap; gap: 8px;
+}
+.panel-title-group { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.ib-teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border); }
+.ib-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border); }
+.panel-title { font-size: .9rem; font-weight: 600; color: var(--white); }
+
+/* ── FILTER PANEL ── */
+.filter-panel {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: 16px; padding: 18px 22px;
+  margin-bottom: 18px; position: relative;
+  animation: riseUp .45s ease both;
+  animation-delay: .08s;
+}
+.filter-panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.filter-row { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--slate2);
+}
+.filter-select {
+  padding: 9px 14px;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .85rem;
+  min-width: 155px;
+}
+.filter-select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.filter-select option { background: var(--surface2); }
+.btn-filter {
+  padding: 9px 22px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; border: none; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-filter:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
+.btn-clear {
+  padding: 9px 18px;
+  background: var(--rim); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--slate2);
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 600;
+  text-decoration: none; transition: border-color .18s, color .18s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-clear:hover { border-color: var(--red-border); color: var(--red); background: var(--red-dim); }
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.tbl th {
+  padding: 10px 14px; text-align: left;
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--slate); border-bottom: 1px solid var(--rim2);
+  background: var(--surface2);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 11px 14px; border-bottom: 1px solid var(--rim);
+  color: var(--slate2); vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.025); }
+.ref { font-family: monospace; font-size: .77rem; color: var(--blue); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: .7rem; font-weight: 700; border: 1px solid;
+}
+.badge-green { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+.badge-red   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red);   }
+
+/* ── RECEIPT LINKS ── */
+.receipt-actions { display: flex; align-items: center; gap: 8px; }
+.receipt-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 9px; border-radius: 7px;
+  font-size: .74rem; font-weight: 600; text-decoration: none;
+  border: 1px solid; transition: background .15s;
+}
+.receipt-view {
+  color: var(--blue); border-color: var(--blue-border);
+  background: var(--blue-dim);
+}
+.receipt-view:hover { background: rgba(96,165,250,.18); }
+.receipt-pdf {
+  color: var(--red); border-color: var(--red-border);
+  background: var(--red-dim);
+}
+.receipt-pdf:hover { background: rgba(248,113,113,.18); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 56px 20px; text-align: center;
+}
+.empty-icon-box {
+  width: 60px; height: 60px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: var(--slate); margin-bottom: 16px;
+}
+.empty-title { font-size: .92rem; font-weight: 600; color: var(--slate2); margin-bottom: 5px; }
+.empty-sub   { font-size: .79rem; color: var(--slate); }
+
+/* ── BALANCE CHIP ── */
+.balance-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .82rem; color: var(--slate2);
+}
+.balance-chip strong { color: var(--green); font-weight: 700; }
+
+/* ── FILTER HEADER ── */
+.filter-eyebrow {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.filter-eyebrow-icon {
+  width: 26px; height: 26px; border-radius: 8px;
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  color: var(--blue); display: flex; align-items: center; justify-content: center;
+  font-size: .78rem;
+}
+.filter-eyebrow-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--slate);
+}
+</style>
+
+<div class="txn-wrap">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">
+      <div class="eyebrow-rule"></div>
+      <span class="eyebrow-label">Finance Portal</span>
+    </div>
+    <div class="header-row">
+      <h1 class="header-title">Transaction <em>History</em></h1>
+      <div class="header-right">
+        <div class="context-badge">
+          <i class="bi bi-person-fill"></i>
+          {{ student.full_name }}
+        </div>
+        <a href="{% url 'finance:parent_wallet' %}" class="btn-ghost">
+          <i class="bi bi-arrow-left"></i> Back to Wallet
+        </a>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Sub-header balance strip -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;padding:10px 16px;
+              background:var(--surface);border:1px solid var(--rim);border-radius:12px;
+              animation:riseUp .45s ease both;animation-delay:.04s;">
+    <i class="bi bi-wallet2" style="color:var(--champagne);font-size:1rem;"></i>
+    <span class="balance-chip">
+      Current Balance: <strong>₦{{ wallet.balance|floatformat:2 }}</strong>
+    </span>
+    <span style="width:4px;height:4px;border-radius:50%;background:var(--rim3);display:inline-block;"></span>
+    <span style="font-size:.79rem;color:var(--slate);">All transactions for this family wallet</span>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-panel">
+    <div class="filter-eyebrow">
+      <div class="filter-eyebrow-icon"><i class="bi bi-funnel-fill"></i></div>
+      <span class="filter-eyebrow-label">Filter Transactions</span>
+    </div>
+    <form method="GET">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="filter-label">Type</label>
+          <select name="type" class="filter-select">
+            <option value="">All Types</option>
+            <option value="CREDIT" {% if txn_type == 'CREDIT' %}selected{% endif %}>Credit</option>
+            <option value="DEBIT"  {% if txn_type == 'DEBIT'  %}selected{% endif %}>Debit</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Category</label>
+          <select name="category" class="filter-select">
+            <option value="">All Categories</option>
+            {% for val,lbl in categories %}
+            <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ lbl }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn-filter">
+          <i class="bi bi-funnel-fill"></i> Apply
+        </button>
+        <a href="{% url 'finance:transaction_history' %}" class="btn-clear">
+          <i class="bi bi-x-circle"></i> Clear
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Transactions Table -->
+  <div class="panel" style="animation-delay:.14s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-teal"><i class="bi bi-clock-history"></i></div>
+        <h3 class="panel-title">All Transactions</h3>
+      </div>
+    </div>
+
+    {% if txns %}
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Reference</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Balance After</th>
+            <th>Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for txn in txns %}
+          <tr>
+            <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y H:i" }}</td>
+            <td style="color:var(--white);max-width:220px;">{{ txn.description }}</td>
+            <td style="color:var(--slate2);">{{ txn.get_category_display }}</td>
+            <td><span class="ref">{{ txn.reference }}</span></td>
+            <td>
+              {% if txn.txn_type == 'CREDIT' %}
+                <span class="badge badge-green">Credit</span>
+              {% else %}
+                <span class="badge badge-red">Debit</span>
+              {% endif %}
+            </td>
+            <td style="font-weight:700;{% if txn.txn_type == 'CREDIT' %}color:var(--green);{% else %}color:var(--red);{% endif %}">
+              {% if txn.txn_type == 'CREDIT' %}+{% else %}−{% endif %}₦{{ txn.amount|floatformat:2 }}
+            </td>
+            <td style="color:var(--slate);">₦{{ txn.balance_after|floatformat:2 }}</td>
+            <td>
+              <div class="receipt-actions">
+                <a href="{% url 'finance:receipt_txn' txn.id %}" class="receipt-link receipt-view">
+                  <i class="bi bi-receipt"></i> View
+                </a>
+                <a href="{% url 'finance:receipt_txn' txn.id %}?pdf=1" class="receipt-link receipt-pdf">
+                  <i class="bi bi-file-pdf-fill"></i> PDF
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box"><i class="bi bi-inbox"></i></div>
+      <div class="empty-title">No Transactions Found</div>
+      <div class="empty-sub">Try adjusting your filters or check back after wallet activity.</div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,408 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add Lesson{% endblock %}
+{% block extra_css %}
+<style>
+    
+
+    #content{color:var(--white);font-family:'Outfit', sans-serif;}
+
+    .your-wrap{
+        max-width:800px;
+        margin:0 auto;
+        padding:2rem 1.2rem 4rem;
+        animation:riseUp .4s ease both;
+    }
+
+    /* ================= HEADER ================= */
+
+    .page-header{
+        margin-bottom:2rem;
+    }
+
+    .page-header-top{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:1rem;
+        margin-bottom:1.2rem;
+    }
+
+    .eyebrow{
+        display:flex;
+        align-items:center;
+        gap:.75rem;
+        color:var(--champagne);
+        text-transform:uppercase;
+        letter-spacing:3px;
+        font-size:.72rem;
+        font-weight:600;
+    }
+
+    .eyebrow::before{
+        content:"";
+        width:42px;
+        height:1px;
+        background:var(--champagne);
+        opacity:.7;
+    }
+
+    .page-title{
+        margin:0;
+        font-family:'Cormorant Garamond', serif;
+        font-size:3rem;
+        font-weight:700;
+        line-height:1.05;
+    }
+
+    .page-title em{
+        color:var(--champagne);
+        font-style:italic;
+    }
+
+    .page-subtitle{
+        margin-top:.5rem;
+        color:var(--slate2);
+        font-size:.95rem;
+    }
+
+    .context-badge{
+        display:inline-flex;
+        align-items:center;
+        gap:.5rem;
+        padding:.6rem 1rem;
+        border-radius:999px;
+        background:var(--champagne-dim);
+        border:1px solid rgba(244,210,31,.22);
+        color:var(--champagne-lt);
+        font-size:.85rem;
+        white-space:nowrap;
+    }
+
+    .header-divider{
+        height:1px;
+        background:var(--rim);
+        margin-top:1.5rem;
+        position:relative;
+    }
+
+    .header-divider::after{
+        content:"";
+        position:absolute;
+        left:0;
+        width:80px;
+        height:1px;
+        background:var(--champagne);
+    }
+
+    /* ================= PANEL ================= */
+
+    .panel{
+        background:var(--surface);
+        border:1px solid var(--rim);
+        border-radius:16px;
+        overflow:hidden;
+        animation:riseUp .45s ease both;
+    }
+
+    .panel-header{
+        padding:1.2rem 1.4rem;
+        border-bottom:1px solid var(--rim);
+        display:flex;
+        align-items:center;
+        gap:.8rem;
+    }
+
+    .icon-badge{
+        width:34px;
+        height:34px;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:var(--blue-dim);
+        border:1px solid var(--blue-border);
+        color:var(--blue);
+    }
+
+    .panel-header h3{
+        margin:0;
+        font-size:1rem;
+        font-weight:600;
+    }
+
+    .panel-body{
+        padding:1.6rem;
+    }
+
+    /* ================= FORM ================= */
+
+    label{
+        display:block;
+        margin:.9rem 0 .5rem;
+        font-size:.73rem;
+        text-transform:uppercase;
+        letter-spacing:.4px;
+        color:var(--slate2);
+        font-weight:600;
+    }
+
+    input, select, textarea{
+        width:100%;
+        padding:.9rem 1rem;
+        border-radius:10px;
+        background:var(--surface2);
+        border:1px solid var(--rim2);
+        color:var(--white);
+        font-family:'Outfit', sans-serif;
+        transition:.25s ease;
+    }
+
+    input:focus, select:focus, textarea:focus{
+        outline:none;
+        border-color:var(--champagne);
+        box-shadow:0 0 0 3px rgba(244,210,31,.1);
+    }
+
+    /* ================= BUTTON ================= */
+
+    .btn{
+        margin-top:1.4rem;
+        width:100%;
+        border:none;
+        border-radius:12px;
+        padding:1rem;
+        font-weight:600;
+        font-size:1rem;
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:.6rem;
+        transition:.3s ease;
+        background:linear-gradient(135deg,#f4d21f,#d1ad00);
+        color:#0a1f44;
+        box-shadow:0 4px 18px rgba(244,210,31,.22);
+    }
+
+    .btn:hover{
+        transform:translateY(-2px);
+        box-shadow:0 10px 28px rgba(244,210,31,.28);
+    }
+
+    .btn:disabled{
+        background:var(--surface3);
+        color:var(--slate);
+        box-shadow:none;
+        cursor:not-allowed;
+        transform:none;
+    }
+
+    /* ================= META ================= */
+
+    .meta{
+        font-size:.85rem;
+        color:var(--slate);
+        margin-bottom:.3rem;
+    }
+
+    /* ================= PROGRESS ================= */
+
+    .progress-wrapper{
+        display:none;
+        margin-top:1.5rem;
+        background:var(--surface);
+        border:1px solid var(--rim);
+        padding:1rem;
+        border-radius:14px;
+    }
+
+    .progress{
+        width:100%;
+        height:14px;
+        background:var(--surface2);
+        border-radius:999px;
+        overflow:hidden;
+    }
+
+    .progress-bar{
+        height:100%;
+        width:0%;
+        background:linear-gradient(135deg,#22c55e,#16a34a);
+        transition:.2s ease;
+    }
+
+    .progress-text{
+        margin-top:.6rem;
+        text-align:center;
+        font-size:.9rem;
+        color:var(--slate2);
+    }
+
+    /* ================= ANIMATION ================= */
+
+    @keyframes riseUp{
+        from{opacity:0;transform:translateY(18px);}
+        to{opacity:1;transform:translateY(0);}
+    }
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:768px){
+        .page-header-top{
+            flex-direction:column;
+        }
+
+        .page-title{
+            font-size:2.2rem;
+        }
+    }
+    </style>
+{% endblock %}
+{% block content %}
+
+<div class="your-wrap">
+
+    <!-- HEADER -->
+    <div class="page-header">
+
+        <div class="page-header-top">
+
+            <div>
+
+                <div class="eyebrow">
+                    Lesson Studio
+                </div>
+
+                <h1 class="page-title">
+                    Add <em>Lesson</em>
+                </h1>
+
+                <div class="page-subtitle">
+                    Upload a new video lesson to your section
+                </div>
+
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-play-circle"></i>
+                Video Upload
+            </div>
+
+        </div>
+
+        <div class="header-divider"></div>
+
+    </div>
+
+    <!-- PANEL -->
+    <div class="panel">
+
+        <div class="panel-header">
+            <div class="icon-badge">
+                <i class="bi bi-cloud-arrow-up"></i>
+            </div>
+            <h3>Lesson Details</h3>
+        </div>
+
+        <div class="panel-body">
+
+            <form id="lessonForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% if form.errors %}
+                    <div style="color:var(--red); margin-bottom:1rem;">
+                        <strong>Errors:</strong>
+                        {{ form.errors }}
+                    </div>
+                {% endif %}
+
+                <div class="meta">
+                    <strong>Course:</strong> {{ section.course.name }}
+                </div>
+
+                <div class="meta">
+                    <strong>Section:</strong> {{ section.title }}
+                </div>
+
+                <label>Lesson Title</label>
+                {{ form.title }}
+
+                <label>Video File</label>
+                {{ form.video }}
+
+                <label>Duration (minutes)</label>
+                {{ form.duration_minutes }}
+
+                <button type="submit" id="submitBtn" class="btn">
+                    <i class="bi bi-upload"></i>
+                    Upload Lesson
+                </button>
+
+            </form>
+
+            <!-- Progress -->
+            <div class="progress-wrapper" id="progressWrapper">
+
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+
+                <div class="progress-text" id="progressText">
+                    Uploading… 0%
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+const form = document.getElementById("lessonForm");
+const progressWrapper = document.getElementById("progressWrapper");
+const progressBar = document.getElementById("progressBar");
+const progressText = document.getElementById("progressText");
+const submitBtn = document.getElementById("submitBtn");
+
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const xhr = new XMLHttpRequest();
+    const formData = new FormData(form);
+
+    xhr.open("POST", "", true);
+
+    progressWrapper.style.display = "block";
+    submitBtn.disabled = true;
+
+    xhr.upload.onprogress = function(e) {
+        if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            progressBar.style.width = percent + "%";
+            progressText.textContent = "Uploading… " + percent + "%";
+        }
+    };
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            progressBar.style.width = "100%";
+            progressText.textContent = "Upload complete…";
+            document.body.innerHTML = xhr.responseText;
+        } else {
+            alert("Upload failed");
+            submitBtn.disabled = false;
+        }
+    };
+
+    xhr.onerror = function() {
+        alert("Network error");
+        submitBtn.disabled = false;
+    };
+
+    xhr.send(formData);
+});
+</script>
+{% endblock %}

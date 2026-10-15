@@ -1,0 +1,642 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hostel Payment Reminders{% endblock %}
+{% block content %}
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.yr-wrap {
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  max-width: 1340px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── FLASH MESSAGES ── */
+.flash-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: .85rem;
+  font-weight: 600;
+  border: 1px solid;
+  animation: riseUp .35s ease both;
+}
+.flash-bar.success {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+.flash-bar.error {
+  background: var(--red-dim);
+  border-color: var(--red-border);
+  color: var(--red);
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.75rem;
+  margin-bottom: 2rem;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 80px; height: 1px;
+  background: var(--champagne);
+  opacity: .55;
+}
+.page-header-divider {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: var(--rim);
+}
+.ph-left {}
+.ph-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: .6rem;
+}
+.ph-eyebrow-rule {
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .6;
+  flex-shrink: 0;
+}
+.ph-eyebrow-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.ph-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.05rem;
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  letter-spacing: -.01em;
+}
+.ph-title em {
+  font-style: italic;
+  color: var(--champagne);
+}
+.ph-sub {
+  margin-top: .45rem;
+  font-size: .8rem;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+.ph-sub-dot { color: var(--slate); }
+.ph-sub-outstanding {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: -.01em;
+}
+.ph-right {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-shrink: 0;
+  padding-top: .25rem;
+}
+.ph-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px 5px 10px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-border);
+  border-radius: 99px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+}
+.ph-badge i { font-size: .8rem; }
+
+/* ── BACK BUTTON ── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--slate2);
+  background: transparent;
+  border: 1px solid var(--rim2);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .2s, color .2s, background .2s;
+}
+.btn-back:hover {
+  border-color: var(--rim3);
+  color: var(--white);
+  background: var(--rim);
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+.panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.panel-icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+.panel-icon-badge.amber {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+}
+.panel-icon-badge.green {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+}
+.panel-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: .93rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.panel-meta {
+  font-size: .76rem;
+  color: var(--slate);
+}
+.panel-body { padding: 0; }
+
+/* ── COUNT CHIP ── */
+.count-chip {
+  font-size: .73rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+  white-space: nowrap;
+}
+
+/* ── TABLE ── */
+.luxury-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.luxury-tbl thead tr {
+  border-bottom: 1px solid var(--rim2);
+}
+.luxury-tbl thead th {
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  font-size: .68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--slate);
+  white-space: nowrap;
+  background: var(--surface2);
+}
+.luxury-tbl tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+}
+.luxury-tbl tbody tr:last-child { border-bottom: none; }
+.luxury-tbl tbody tr:hover { background: rgba(255,255,255,.025); }
+.luxury-tbl td {
+  padding: 11px 14px;
+  vertical-align: middle;
+  color: var(--white);
+}
+
+/* ── AVATAR ── */
+.stu-avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--ink);
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--champagne), #d1ad00);
+  font-family: 'Outfit', sans-serif;
+}
+.stu-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.stu-info strong {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.3;
+}
+.stu-info span {
+  font-size: .7rem;
+  color: var(--slate);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── BADGES ── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: .69rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  border: 1px solid;
+}
+.badge-partial {
+  background: var(--amber-dim);
+  border-color: var(--amber-border);
+  color: var(--amber);
+}
+.badge-unpaid {
+  background: var(--red-dim);
+  border-color: var(--red-border);
+  color: var(--red);
+}
+
+/* ── MONEY CELLS ── */
+.money-total {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .98rem;
+  font-weight: 600;
+  color: var(--slate2);
+  font-variant-numeric: tabular-nums;
+}
+.money-paid {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .98rem;
+  font-weight: 700;
+  color: var(--green);
+  font-variant-numeric: tabular-nums;
+}
+.money-balance {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── ROW INDEX ── */
+.row-index {
+  font-size: .7rem;
+  color: var(--slate);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* ── ROOM/BED CHIP ── */
+.room-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 6px;
+  font-size: .72rem;
+  color: var(--slate2);
+  white-space: nowrap;
+}
+
+/* ── PHONE ── */
+.phone-text {
+  font-family: 'Outfit', sans-serif;
+  font-size: .76rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--slate2);
+  letter-spacing: .01em;
+}
+
+/* ── PAY BUTTON ── */
+.btn-pay {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(244,210,31,.18);
+  transition: transform .18s, box-shadow .18s, opacity .18s;
+  white-space: nowrap;
+}
+.btn-pay:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 22px rgba(244,210,31,.28);
+  opacity: .92;
+}
+.btn-pay i { font-size: .8rem; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+.empty-icon-box {
+  width: 68px; height: 68px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: .25rem;
+}
+.empty-icon-box.success { color: var(--green); }
+.empty-icon-box.warning { color: var(--amber); }
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.empty-sub {
+  font-size: .82rem;
+  color: var(--slate);
+  max-width: 300px;
+}
+
+/* ── OVERFLOW WRAPPER ── */
+.tbl-scroll { overflow-x: auto; }
+.tbl-scroll::-webkit-scrollbar { height: 5px; }
+.tbl-scroll::-webkit-scrollbar-track { background: var(--surface2); }
+.tbl-scroll::-webkit-scrollbar-thumb { background: var(--rim3); border-radius: 99px; }
+</style>
+
+<!-- ===== FLASH MESSAGES ===== -->
+{% if messages %}
+  {% for m in messages %}
+  <div class="flash-bar {% if m.tags == 'success' %}success{% else %}error{% endif %}">
+    <i class="bi {% if m.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %}"></i>
+    {{ m }}
+  </div>
+  {% endfor %}
+{% endif %}
+
+<div class="yr-wrap">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <header class="page-header">
+    <div class="ph-left">
+      <div class="ph-eyebrow">
+        <span class="ph-eyebrow-rule"></span>
+        <span class="ph-eyebrow-label">Hostel Finance</span>
+      </div>
+      <h1 class="ph-title">Payment <em>Reminders</em></h1>
+      <div class="ph-sub">
+        {% if sel_term %}<span>{{ sel_term }}</span>{% endif %}
+        {% if sel_session %}<span class="ph-sub-dot">/</span><span>{{ sel_session }}</span>{% endif %}
+        {% if sel_term or sel_session %}<span class="ph-sub-dot">&middot;</span>{% endif %}
+        <span>Outstanding:</span>
+        <span class="ph-sub-outstanding">&#8358;{{ total_outstanding|floatformat:2 }}</span>
+      </div>
+    </div>
+    <div class="ph-right">
+      {% if unpaid %}
+      <div class="ph-badge">
+        <i class="bi bi-people-fill"></i>
+        {{ unpaid|length }} boarder{{ unpaid|length|pluralize }}
+      </div>
+      {% endif %}
+      <a href="{% url 'hostel:analytics' %}" class="btn-back">
+        <i class="bi bi-arrow-left"></i> Analytics
+      </a>
+    </div>
+    <div class="page-header-divider"></div>
+  </header>
+
+  <!-- ===== MAIN PANEL ===== -->
+  <div class="panel" style="animation-delay:.08s;">
+
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-icon-badge amber">
+          <i class="bi bi-bell-fill"></i>
+        </div>
+        <div>
+          <div class="panel-title">Outstanding Hostel Bills</div>
+          {% if unpaid %}
+          <div class="panel-meta">Boarders requiring payment follow-up</div>
+          {% endif %}
+        </div>
+      </div>
+      {% if unpaid %}
+      <span class="count-chip">
+        <i class="bi bi-exclamation-circle" style="margin-right:3px;"></i>
+        {{ unpaid|length }} pending
+      </span>
+      {% endif %}
+    </div>
+
+    <div class="panel-body">
+      {% if unpaid %}
+
+      <div class="tbl-scroll">
+        <table class="luxury-tbl">
+          <thead>
+            <tr>
+              <th style="text-align:center;width:40px;">#</th>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Hostel</th>
+              <th>Room / Bed</th>
+              <th>Parent</th>
+              <th>Parent Phone</th>
+              <th>Total Fee</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Status</th>
+              <th style="text-align:center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for bill in unpaid %}
+            <tr>
+              <td class="row-index">{{ forloop.counter }}</td>
+
+              <td>
+                <div class="stu-cell">
+                  <div class="stu-avatar">
+                    {{ bill.boarder.student.full_name|slice:":2"|upper }}
+                  </div>
+                  <div class="stu-info">
+                    <strong>{{ bill.boarder.student.full_name }}</strong>
+                    <span>{{ bill.boarder.student.admission_number }}</span>
+                  </div>
+                </div>
+              </td>
+
+              <td style="color:var(--slate2);font-size:.8rem;">
+                {{ bill.boarder.student.class_assigned.name|default:"&mdash;" }}
+              </td>
+
+              <td style="color:var(--slate2);font-size:.8rem;">
+                {{ bill.boarder.hostel.name|default:"&mdash;" }}
+              </td>
+
+              <td>
+                {% if bill.boarder.room %}
+                <span class="room-chip">
+                  <i class="bi bi-door-closed"></i>
+                  Rm {{ bill.boarder.room.room_number }}&nbsp;/&nbsp;Bed {{ bill.boarder.bed.bed_number }}
+                </span>
+                {% else %}
+                <span style="color:var(--slate);">&mdash;</span>
+                {% endif %}
+              </td>
+
+              <td style="font-size:.8rem;color:var(--slate2);">
+                {{ bill.boarder.student.parent_name|default:"&mdash;" }}
+              </td>
+
+              <td>
+                <span class="phone-text">
+                  {{ bill.boarder.student.parent_phone|default:"&mdash;" }}
+                </span>
+              </td>
+
+              <td><span class="money-total">&#8358;{{ bill.total_fee|floatformat:2 }}</span></td>
+
+              <td><span class="money-paid">&#8358;{{ bill.amount_paid|floatformat:2 }}</span></td>
+
+              <td><span class="money-balance">&#8358;{{ bill.balance_due|floatformat:2 }}</span></td>
+
+              <td>
+                {% if bill.status == 'PARTIAL' %}
+                <span class="status-badge badge-partial">
+                  <i class="bi bi-circle-half"></i> Partial
+                </span>
+                {% else %}
+                <span class="status-badge badge-unpaid">
+                  <i class="bi bi-x-circle"></i> Unpaid
+                </span>
+                {% endif %}
+              </td>
+
+              <td style="text-align:center;">
+                <a href="{% url 'finance:admin_student_wallet_id' bill.boarder.student.id %}"
+                   class="btn-pay">
+                  <i class="bi bi-cash-coin"></i> Pay
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+
+      <!-- EMPTY STATE -->
+      <div class="empty-state">
+        {% if sel_session and sel_term %}
+        <div class="empty-icon-box success">
+          <i class="bi bi-patch-check-fill"></i>
+        </div>
+        <div class="empty-title">All Clear</div>
+        <div class="empty-sub">
+          All hostel bills are fully settled for {{ sel_term }} / {{ sel_session }}.
+          No reminders required at this time.
+        </div>
+        {% else %}
+        <div class="empty-icon-box warning">
+          <i class="bi bi-calendar-x"></i>
+        </div>
+        <div class="empty-title">No Active Session</div>
+        <div class="empty-sub">
+          No active academic session or term was found.
+          Please review your Academic Settings to configure the current period.
+        </div>
+        {% endif %}
+      </div>
+
+      {% endif %}
+    </div><!-- /panel-body -->
+  </div><!-- /panel -->
+
+</div><!-- /yr-wrap -->
+{% endblock %}

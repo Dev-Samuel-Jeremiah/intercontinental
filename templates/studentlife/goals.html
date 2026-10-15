@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My goals{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a></div>
+  <h1 class="fin-title">My <em>goals</em></h1>
+  <p class="fin-sub">Set a goal, decide how you will know you got there, and update your progress. Your form teacher can encourage you.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <div><label>My goal</label><input name="title" required maxlength="160" placeholder="e.g. Score 70% in Maths this term"></div>
+    <div class="row2"><div><label>Kind</label><select name="category">{% for k, l in categories %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div><div><label>By</label><input type="date" name="target_date"></div></div>
+    <div><label>How I will know</label><input name="measure" maxlength="255" placeholder="e.g. My end-of-term exam result"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add goal</button>
+  </form>
+  <div style="display:grid;gap:1rem">{% for g in goals %}
+    <div class="panel"><div class="panel-b">
+      <b>{{ g.title }}</b> <span class="chip{% if g.status == 'ACHIEVED' %} green{% endif %}">{{ g.get_status_display }}</span> <span class="hint">{{ g.get_category_display }}{% if g.target_date %} · by {{ g.target_date|date:"j M Y" }}{% endif %}</span>
+      {% if g.measure %}<div class="hint">{{ g.measure }}</div>{% endif %}
+      <div class="bar" style="margin:.5rem 0"><i style="width:{{ g.progress }}%"></i></div>
+      {% if g.teacher_comment %}<p style="margin:.3rem 0"><b>Teacher:</b> {{ g.teacher_comment }}</p>{% endif %}
+      {% if g.status == 'ACTIVE' %}<form method="post" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="progress"><input type="hidden" name="id" value="{{ g.pk }}"><input type="range" name="progress" min="0" max="100" step="10" value="{{ g.progress }}" style="flex:1;min-width:140px"><input name="note" placeholder="What did you do?" style="flex:2;min-width:160px"><button class="fin-btn fin-btn-sm" type="submit">Update</button></form>
+      <form method="post" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="action" value="drop"><input type="hidden" name="id" value="{{ g.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Drop</button></form>{% endif %}
+      {% for u in g.updates.all|slice:":3" %}<div class="hint">{{ u.created_at|date:"j M" }}: {{ u.progress }}%{% if u.note %} — {{ u.note }}{% endif %}</div>{% endfor %}
+    </div></div>
+  {% empty %}<div class="panel"><div class="panel-b"><p class="empty">No goals yet. What would you like to achieve this term?</p></div></div>{% endfor %}</div>
+</div>
+{% endblock %}

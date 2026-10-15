@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Privacy notice &amp; DPO{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Privacy notice &amp; <em>DPO</em></h1>
+  <p class="fin-sub">The Nigeria Data Protection Act 2023 asks the school to say what it collects and why, name a Data Protection Officer, and record the lawful basis for each use. Families see this at <a href="{{ public_url }}" target="_blank">{{ public_url }}</a>.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="op" value="notice">
+    <h3 style="margin:0">Data Protection Officer</h3>
+    <div><label>School's legal name</label><input name="controller" value="{{ n.controller }}"></div>
+    <div class="row2"><div><label>DPO name</label><input name="dpo_name" value="{{ n.dpo_name }}"></div><div><label>DPO email</label><input name="dpo_email" type="email" value="{{ n.dpo_email }}"></div></div>
+    <div class="row2"><div><label>DPO phone</label><input name="dpo_phone" value="{{ n.dpo_phone }}"></div><div><label>Address</label><input name="dpo_address" value="{{ n.dpo_address }}"></div></div>
+    <div><label>Data Protection Compliance Organisation (if any)</label><input name="dpco" value="{{ n.dpco }}" placeholder="The NDPC-licensed firm that audits you"></div>
+    <div><label>Privacy notice</label><textarea name="notice" rows="18">{{ n.notice }}</textarea><p class="hint">## for headings, - for bullet points, a blank line between paragraphs. Purposes and retention periods are added below it automatically.</p></div>
+    <label class="pill"><input type="checkbox" name="published" {% if n.published %}checked{% endif %}> Show the notice publicly</label>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="fin-btn fin-btn-gold" type="submit">Save</button></div>
+    <p class="hint">Last updated {{ n.updated_at|date:"j M Y H:i" }}{% if n.updated_by %} by {{ n.updated_by.username }}{% endif %}.</p>
+  </form>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Why the school uses personal data</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:privacy' %}#purpose">New purpose</a></div>
+      <table class="tbl">{% for p in purposes %}<tr{% if not p.active %} style="opacity:.5"{% endif %}><td class="name"><a href="?purpose={{ p.pk }}#purpose">{{ p.name }}</a><br><span class="hint">{{ p.data_used }}</span></td><td><span class="chip{% if p.needs_consent %} gold{% endif %}">{{ p.get_lawful_basis_display }}</span></td></tr>{% endfor %}</table>
+      <div class="panel-b hint">Purposes based on consent appear on the parent portal, where parents give or withdraw consent for each child.</div>
+    </div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem" id="purpose">{% csrf_token %}<input type="hidden" name="op" value="purpose"><input type="hidden" name="id" value="{{ edit.pk|default:'' }}">
+      <h3 style="margin:0">{% if edit %}Edit purpose{% else %}New purpose{% endif %}</h3>
+      <div><label>Purpose</label><input name="name" required maxlength="120" value="{{ edit.name|default:'' }}"></div>
+      <div><label>What it means for families</label><input name="description" maxlength="500" value="{{ edit.description|default:'' }}"></div>
+      <div class="row2"><div><label>Lawful basis</label><select name="lawful_basis">{% for v, l in bases %}<option value="{{ v }}" {% if edit.lawful_basis == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div><div><label>Data used</label><input name="data_used" maxlength="255" value="{{ edit.data_used|default:'' }}"></div></div>
+      <label class="pill"><input type="checkbox" name="active" {% if not edit or edit.active %}checked{% endif %}> In use</label>
+      <button class="fin-btn" type="submit">Save purpose</button>
+    </form>
+    <form method="post" onsubmit="return confirm('Replace the notice text with the standard wording?')">{% csrf_token %}<input type="hidden" name="op" value="reset_notice"><button class="fin-btn fin-btn-sm">Restore the standard notice wording</button></form>
+  </div>
+</div>
+{% endblock %}

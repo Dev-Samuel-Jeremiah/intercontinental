@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Applications{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">All <em>applications</em></h1>
+    <p class="adm-sub">{{ counts.TOTAL }} application{{ counts.TOTAL|pluralize }} received</p>
+  </div>
+  <div class="adm-actions">
+    <a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-kanban"></i> Pipeline</a>
+    <a class="adm-btn" href="{% url 'admissions:analytics' %}"><i class="bi bi-graph-up"></i> Analytics</a>
+  </div>
+</div>
+
+<form method="get" class="adm-filters">
+  <div><label style="font-size:.7rem;color:var(--slate);display:block;margin-bottom:.3rem">Stage</label>
+    <select name="status" onchange="this.form.submit()">
+      <option value="">All stages</option>
+      {% for value, label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select></div>
+</form>
+
+<div class="panel">
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead><tr><th>Reference</th><th>Applicant</th><th>Class</th><th>Parent</th><th>Stage</th><th>Applied</th></tr></thead>
+      <tbody>
+        {% for a in applications %}
+        <tr>
+          <td><a href="{% url 'admissions:detail' a.pk %}">{{ a.reference }}</a></td>
+          <td>{{ a.full_name }}{% if a.student %} <span class="chip green">{{ a.student.admission_number }}</span>{% endif %}</td>
+          <td>{{ a.applying_for.name|default:"—" }}</td>
+          <td>{{ a.parent_name }}<br><small style="color:var(--slate)">{{ a.parent_phone }}</small></td>
+          <td><span class="chip {% if a.status == 'ENROLLED' %}green{% elif a.status == 'REJECTED' or a.status == 'WITHDRAWN' %}red{% else %}gold{% endif %}">{{ a.get_status_display }}</span></td>
+          <td>{{ a.created_at|date:"j M Y" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="bi bi-inbox"></i>No applications{% if status %} at this stage{% endif %} yet.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

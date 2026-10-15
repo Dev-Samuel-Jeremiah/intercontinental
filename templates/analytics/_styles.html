@@ -1,0 +1,25 @@
+{% include "finance/_fin_styles.html" %}
+<style>
+  .an-nav{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.3rem}
+  .an-nav a{padding:.42rem .8rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);text-decoration:none;font-size:.8rem;font-weight:600}
+  .an-nav a.on,.an-nav a:hover{color:var(--champagne-lt);border-color:var(--champagne-border);background:var(--champagne-dim)}
+  .hbar{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:.6rem;align-items:center;padding:.3rem 0;font-size:.84rem;text-decoration:none;color:inherit}
+  a.hbar:hover .track i{filter:brightness(1.2)}
+  .track{height:12px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+  .track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--champagne),var(--champagne-lt))}
+  .track i.red{background:var(--red)} .track i.green{background:var(--green)} .track i.amber{background:var(--amber)}
+  .vbars{display:flex;align-items:flex-end;gap:4px;height:170px;padding:.4rem 0 0}
+  .vbars .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;height:100%}
+  .vbars .col i{display:block;width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--champagne-lt),var(--champagne));min-height:2px}
+  .vbars .col i.ghost{background:repeating-linear-gradient(45deg,rgba(244,210,31,.25),rgba(244,210,31,.25) 4px,transparent 4px,transparent 8px);border:1px dashed var(--champagne-border)}
+  .vbars .col small{font-size:.6rem;color:var(--slate);margin-top:.3rem;white-space:nowrap}
+  .vbars .col b{font-size:.62rem;color:var(--slate2);margin-bottom:.2rem}
+  .kpi{padding:1rem 1.1rem;border-radius:16px;border:1px solid var(--rim);background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015))}
+  .kpi small{display:block;font-size:.66rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--slate)}
+  .kpi b{display:block;font-family:var(--serif);font-size:1.7rem;line-height:1.25}
+  .kpi .hint{display:block}
+  .kpi a{color:inherit;text-decoration:none}
+  .feed div{display:flex;gap:.6rem;padding:.4rem 0;border-bottom:1px solid var(--rim);font-size:.84rem}
+  .feed i{color:var(--champagne-lt)}
+  .exp{display:inline-flex;gap:.35rem}
+</style>

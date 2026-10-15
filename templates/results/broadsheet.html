@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Broadsheet{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .bs-wrap{overflow:auto;max-height:72vh}
+  .bs{border-collapse:separate;border-spacing:0;font-size:.76rem;min-width:100%}
+  .bs th,.bs td{border-bottom:1px solid var(--rim);border-right:1px solid var(--rim);padding:.4rem .5rem;text-align:center;white-space:nowrap}
+  .bs thead th{position:sticky;top:0;z-index:2;background:var(--surface2,#172f5c);color:var(--slate2);font-size:.66rem}
+  .bs thead th.sub{writing-mode:vertical-rl;transform:rotate(180deg);height:120px;text-align:left;font-weight:600}
+  .bs .nm{position:sticky;left:0;z-index:1;background:var(--surface2,#172f5c);text-align:left;color:var(--white);font-weight:600}
+  .bs thead .nm{z-index:3}
+  .bs td.lo{color:var(--red)} .bs td.hi{color:var(--green)}
+  .bs tfoot td{font-weight:700;color:var(--champagne-lt)}
+  .dist{display:flex;gap:2px;align-items:flex-end;height:34px}
+  .dist span{flex:1;min-width:6px;background:var(--champagne-dim);border:1px solid var(--champagne-border);border-radius:3px 3px 0 0}
+  @media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}.bs-wrap{max-height:none;overflow:visible}
+    .bs th,.bs td{color:#000!important;background:#fff!important;border-color:#999!important}@page{size:A4 landscape;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Class <em>broadsheet</em></h1>
+  <p class="fin-sub">Every student's total in every subject, with averages, positions and subject analysis — for staff meetings and result vetting.</p>
+</div><form method="get" style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <select name="class" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for c in classes %}<option value="{{ c.id }}" {% if c.id == school_class.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="term" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for t in terms %}<option value="{{ t.id }}" {% if t.id == term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select>
+  {% if data and data.subjects %}<a class="fin-btn fin-btn-sm" href="?class={{ school_class.id }}&term={{ term.id }}&format=xlsx"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+  <button type="button" class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / PDF</button>{% endif %}
+</form></div>
+{% if not data or not data.subjects %}<div class="panel"><div class="empty"><i class="bi bi-table"></i><p>No scores for {{ school_class.name }} in {{ term.name }} yet.</p></div></div>
+{% else %}
+<div class="print">
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-table"></i> {{ school_class.name }} — {{ term.session.name }} {{ term.name }}</h3><span class="hint">{{ data.rows|length }} students · {{ data.subjects|length }} subjects</span></div>
+<div class="bs-wrap"><table class="bs"><thead><tr><th>Pos.</th><th class="nm">Student</th>{% for s in data.subjects %}<th class="sub">{{ s.name }}</th>{% endfor %}<th>Subj.</th><th>Total</th><th>Average</th></tr></thead><tbody>
+  {% for r in data.rows %}<tr><td>{% if r.position %}{{ r.position }}{% else %}—{% endif %}</td><td class="nm">{{ r.student.full_name }}</td>
+    {% for c in r.cells %}<td class="{% if c and c.score < 40 %}lo{% elif c and c.score >= 70 %}hi{% endif %}">{% if c %}{{ c.score|floatformat:"-1" }}{% if c.grade %}<div class="hint" style="font-size:.6rem">{{ c.grade }}</div>{% endif %}{% else %}·{% endif %}</td>{% endfor %}
+    <td>{{ r.count }}</td><td>{{ r.total|default:"—" }}</td><td><b>{{ r.average|default:"—" }}</b></td></tr>{% endfor %}
+</tbody><tfoot><tr><td></td><td class="nm">Subject mean</td>{% for a in data.analysis %}<td>{{ a.mean }}</td>{% endfor %}<td colspan="3"></td></tr></tfoot></table></div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Subject performance</h3></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Subject</th><th>Entries</th><th>Mean</th><th>Highest</th><th>Lowest</th><th>Pass rate</th><th>Grades</th></tr></thead><tbody>
+  {% for a in data.analysis %}<tr><td class="name">{{ a.subject.name }}</td><td>{{ a.entries }}</td><td class="money">{{ a.mean }}</td><td>{{ a.highest|floatformat:"-1" }}</td><td>{{ a.lowest|floatformat:"-1" }}</td>
+    <td><span class="chip {% if a.pass_rate >= 70 %}green{% elif a.pass_rate >= 50 %}amber{% else %}red{% endif %}">{{ a.pass_rate }}%</span></td>
+    <td>{% if a.distribution %}<div class="dist" title="{% for g, n in a.distribution %}{{ g }}: {{ n }}  {% endfor %}">{% for g, n in a.distribution %}<span style="height:{% widthratio n a.entries 100 %}%" title="{{ g }}: {{ n }}"></span>{% endfor %}</div>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div></div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Enrolment &amp; leavers{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">Enrolment &amp; <em>leavers</em></h1>
+  <p class="fin-sub">Students on roll month by month for two years, with a simple trend for the next three months, who joined and left, and why students withdraw.</p>
+</div>{% include "analytics/_export.html" %}</div>
+{% include "analytics/_nav.html" %}
+<div class="fin-stats">
+  <div class="kpi"><small>On roll now</small><b>{{ roll }}</b>{% if change is not None %}<span class="hint">{% if change >= 0 %}+{% endif %}{{ change }} on a year ago</span>{% endif %}</div>
+  <div class="kpi"><a href="{% url 'analytics:students' %}?left=12"><small>Left in 12 months</small><b>{{ retention.leavers }}</b><span class="hint"><u>see who</u></span></a></div>
+  <div class="kpi"><a href="{% url 'analytics:students' %}?left=12&amp;status=Withdrawn"><small>Withdrawn</small><b>{{ retention.withdrawn }}</b><span class="hint">{{ retention.withdrawal_rate|default:"0" }}% of the roll</span></a></div>
+  {% if ahead %}<div class="kpi"><small>Trend, {{ ahead.2.month|date:"M Y" }}</small><b>{{ ahead.2.count }}</b><span class="hint">if things carry on as now</span></div>{% endif %}
+</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-graph-up"></i> Students on roll</h3><span class="hint">striped = trend</span></div><div class="panel-b" style="overflow-x:auto">
+  <div class="vbars" style="min-width:640px">{% for p in series %}<div class="col" title="{{ p.month|date:'M Y' }}: {{ p.count }}"><b>{{ p.count }}</b><i style="height:{{ p.height }}%"></i><small>{{ p.month|date:"M y" }}</small></div>{% endfor %}
+    {% for p in ahead %}<div class="col" title="Trend {{ p.month|date:'M Y' }}: {{ p.count }}"><b>{{ p.count }}</b><i class="ghost" style="height:{{ p.height }}%"></i><small>{{ p.month|date:"M y" }}</small></div>{% endfor %}</div>
+</div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-arrow-left-right"></i> Joined and left, last 12 months</h3></div><div class="panel-b">
+    {% for m in movement %}<div class="hbar" style="grid-template-columns:70px 1fr 1fr"><span>{{ m.month|date:"M Y" }}</span>
+      <span class="track" title="{{ m.joined }} joined"><i class="green" style="width:{{ m.jw }}%"></i></span><span class="track" title="{{ m.left }} left"><i class="red" style="width:{{ m.lw }}%"></i></span></div>{% endfor %}
+    <p class="hint" style="margin-bottom:0"><span style="color:var(--green)">■</span> joined · <span style="color:var(--red)">■</span> left</p>
+  </div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-layers"></i> By year group</h3></div><div class="panel-b">
+      {% for name, n in levels %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ name }}</span><b>{{ n }}</b></div>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-door-open"></i> Why students withdrew</h3></div><div class="panel-b">
+      {% for reason, n in retention.reasons %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ reason }}</span><b>{{ n }}</b></div>{% empty %}<p class="hint" style="margin:0">No withdrawals in the last 12 months.</p>{% endfor %}
+      {% if retention.by_class %}<p class="hint" style="margin:.8rem 0 .3rem">From which class</p>{% for c, n in retention.by_class %}<span class="chip">{{ c }} · {{ n }}</span> {% endfor %}{% endif %}
+      {% if retention.destinations %}<p class="hint" style="margin:.8rem 0 .3rem">Where they went</p>{% for d, n in retention.destinations %}<span class="chip">{{ d }} · {{ n }}</span> {% endfor %}{% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

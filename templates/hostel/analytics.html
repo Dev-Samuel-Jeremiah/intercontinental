@@ -1,0 +1,953 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hostel Analytics{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1500px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+/* Header */
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.2rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:700;
+  margin-bottom:.85rem;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.subtext{
+  margin-top:.5rem;
+  color:var(--slate2);
+  font-size:.88rem;
+}
+
+.header-actions{
+  display:flex;
+  gap:.75rem;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.72rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+}
+
+/* Panels */
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel:nth-child(1){animation-delay:.05s;}
+.panel:nth-child(2){animation-delay:.1s;}
+.panel:nth-child(3){animation-delay:.15s;}
+.panel:nth-child(4){animation-delay:.2s;}
+
+.panel-head{
+  padding:1.15rem 1.35rem;
+  border-bottom:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.2);
+  color:var(--champagne);
+  font-size:.95rem;
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.82rem 1rem;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.83rem;
+  font-weight:600;
+  transition:.2s ease;
+  font-family:'Outfit',sans-serif;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+  border:none;
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+/* Grids */
+.g2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.2rem;
+  margin-bottom:1.2rem;
+}
+
+.g3{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:1rem;
+  margin-bottom:1.2rem;
+}
+
+/* Hostel Cards */
+.hostel-card{
+  padding:1.3rem;
+}
+
+.hostel-name{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+  margin-bottom:.25rem;
+}
+
+.hostel-type{
+  color:var(--slate2);
+  font-size:.78rem;
+  margin-bottom:1rem;
+}
+
+.stat-line{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:.45rem;
+  font-size:.82rem;
+}
+
+.progress{
+  height:10px;
+  border-radius:999px;
+  overflow:hidden;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+}
+
+.progress-fill{
+  height:100%;
+  border-radius:999px;
+}
+
+.mini-stats{
+  display:flex;
+  gap:1rem;
+  margin-top:.8rem;
+  font-size:.75rem;
+}
+
+/* Tables */
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl th{
+  padding:1rem 1.2rem;
+  text-align:left;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-size:.72rem;
+  color:var(--slate2);
+  font-weight:700;
+  background:rgba(255,255,255,.015);
+}
+
+.tbl td{
+  padding:1rem 1.2rem;
+  border-top:1px solid var(--rim);
+  color:var(--white);
+  font-size:.86rem;
+}
+
+.tbl tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.42rem .78rem;
+  border-radius:999px;
+  border:1px solid;
+  font-size:.73rem;
+  font-weight:700;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-neutral{
+  background:rgba(255,255,255,.05);
+  border-color:var(--rim2);
+  color:var(--slate2);
+}
+
+/* Chart */
+.chart-wrap{
+  position:relative;
+  height:260px;
+  padding:1rem;
+}
+
+/* Empty States */
+.empty-state{
+  padding:3rem 1.5rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--champagne);
+  font-size:1.7rem;
+}
+
+.empty-state h4{
+  margin:0 0 .35rem;
+  font-size:1rem;
+  color:var(--white);
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.88rem;
+}
+
+/* Student */
+.student-meta{
+  display:flex;
+  flex-direction:column;
+  gap:.2rem;
+}
+
+.student-meta strong{
+  color:var(--white);
+}
+
+.student-meta span{
+  font-size:.74rem;
+  color:var(--slate2);
+}
+
+/* Animation */
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:900px){
+  .g2{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:768px){
+  .your-wrap{
+    padding:1.2rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.25rem;
+  }
+
+  .panel-head{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- Header -->
+  <div class="page-head">
+
+    <div>
+      <div class="eyebrow">
+        Boarding Intelligence
+      </div>
+
+      <h1 class="page-title">
+        Hostel <em>Analytics</em>
+      </h1>
+
+      <div class="subtext">
+        {% if sel_term %}{{ sel_term }}{% endif %}{% if sel_session %} / {{ sel_session }}{% endif %}
+      </div>
+    </div>
+
+    <div class="header-actions">
+
+      <div class="context-badge">
+        <i class="bi bi-buildings"></i>
+        {{ hostel_stats|length }} Hostel{{ hostel_stats|length|pluralize }}
+      </div>
+
+      <a href="{% url 'hostel:payment_reminders' %}" class="btn btn-ghost">
+        <i class="bi bi-bell-fill"></i>
+        Payment Reminders
+      </a>
+
+      <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+
+    </div>
+
+  </div>
+
+  <!-- Hostel Occupancy -->
+  <div class="g3">
+
+    {% for hs in hostel_stats %}
+    <div class="panel hostel-card">
+
+      <div class="hostel-name">
+        {{ hs.hostel.name }}
+      </div>
+
+      <div class="hostel-type">
+        {{ hs.hostel.get_gender_display }}
+      </div>
+
+      <div class="stat-line">
+        <span style="color:var(--slate2);">
+          {{ hs.occupied }} / {{ hs.total }} beds
+        </span>
+
+        <strong style="color:{% if hs.rate > 90 %}var(--red){% elif hs.rate > 70 %}var(--amber){% else %}var(--green){% endif %};">
+          {{ hs.rate }}%
+        </strong>
+      </div>
+
+      <div class="progress">
+        <div class="progress-fill"
+             style="width:{{ hs.rate }}%;background:{% if hs.rate > 90 %}var(--red){% elif hs.rate > 70 %}var(--amber){% else %}var(--green){% endif %};">
+        </div>
+      </div>
+
+      <div class="mini-stats">
+        <span style="color:var(--green);">
+          <strong>{{ hs.available }}</strong> available
+        </span>
+
+        <span style="color:var(--red);">
+          <strong>{{ hs.occupied }}</strong> occupied
+        </span>
+      </div>
+
+    </div>
+
+    {% empty %}
+
+    <div class="panel" style="grid-column:1/-1;">
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-house-door"></i>
+        </div>
+
+        <h4>No Hostel Data</h4>
+
+        <p>
+          Hostel occupancy analytics will appear here once records are available.
+        </p>
+
+      </div>
+    </div>
+
+    {% endfor %}
+
+  </div>
+
+  <!-- Charts -->
+  <div class="g2">
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="icon-badge">
+            <i class="bi bi-pie-chart-fill"></i>
+          </div>
+
+          <h3>Boarder Types</h3>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="typeChart"></canvas>
+      </div>
+
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="icon-badge">
+            <i class="bi bi-bar-chart-fill"></i>
+          </div>
+
+          <h3>Fee Collection by Hostel</h3>
+        </div>
+      </div>
+
+      <div style="padding:1.2rem;">
+
+        {% if billing_stats %}
+
+          {% for bs in billing_stats %}
+          <div style="margin-bottom:1rem;">
+
+            <div class="stat-line">
+              <span style="font-weight:700;">
+                {{ bs.hostel.name }}
+              </span>
+
+              <span style="font-weight:700;color:{% if bs.rate >= 80 %}var(--green){% elif bs.rate >= 50 %}var(--amber){% else %}var(--red){% endif %};">
+                {{ bs.rate }}%
+              </span>
+            </div>
+
+            <div class="progress">
+              <div class="progress-fill"
+                   style="width:{{ bs.rate }}%;background:{% if bs.rate >= 80 %}var(--green){% elif bs.rate >= 50 %}var(--amber){% else %}var(--red){% endif %};">
+              </div>
+            </div>
+
+            <div class="stat-line" style="margin-top:.45rem;font-size:.74rem;color:var(--slate2);">
+              <span>Paid: ₦{{ bs.paid|floatformat:0 }}</span>
+              <span>Expected: ₦{{ bs.expected|floatformat:0 }}</span>
+            </div>
+
+          </div>
+          {% endfor %}
+
+        {% else %}
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+
+          <h4>No Billing Data</h4>
+
+          <p>
+            No hostel billing records exist for the current academic term.
+          </p>
+
+        </div>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Incidents & Movements -->
+  <div class="g2">
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="icon-badge">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+
+          <h3>Incidents (Last 90 Days)</h3>
+        </div>
+      </div>
+
+      {% if incident_breakdown %}
+
+      <div class="table-wrap">
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for ib in incident_breakdown %}
+            <tr>
+
+              <td>
+                {% if ib.severity == 'CRITICAL' %}
+                  <span class="badge badge-red">Critical</span>
+
+                {% elif ib.severity == 'HIGH' %}
+                  <span class="badge badge-amber">High</span>
+
+                {% elif ib.severity == 'MEDIUM' %}
+                  <span class="badge badge-blue">Medium</span>
+
+                {% else %}
+                  <span class="badge badge-neutral">Low</span>
+                {% endif %}
+              </td>
+
+              <td style="font-weight:800;font-size:1rem;">
+                {{ ib.count }}
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-shield-check"></i>
+        </div>
+
+        <h4>No Incident Reports</h4>
+
+        <p>
+          No hostel incidents have been recorded in the last 90 days.
+        </p>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+    <div class="panel">
+
+      <div class="panel-head">
+        <div class="panel-title">
+          <div class="icon-badge">
+            <i class="bi bi-arrow-left-right"></i>
+          </div>
+
+          <h3>Movements (Last 30 Days)</h3>
+        </div>
+      </div>
+
+      {% if movement_counts %}
+
+      <div class="table-wrap">
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Movement Type</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for mv in movement_counts %}
+            <tr>
+              <td>{{ mv.movement_type|title }}</td>
+              <td style="font-weight:800;">{{ mv.count }}</td>
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-arrow-repeat"></i>
+        </div>
+
+        <h4>No Movements Recorded</h4>
+
+        <p>
+          Student hostel movement activities will appear here once available.
+        </p>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <!-- Outstanding Bills -->
+  <div class="panel">
+
+    <div class="panel-head">
+
+      <div class="panel-title">
+        <div class="icon-badge">
+          <i class="bi bi-cash-coin"></i>
+        </div>
+
+        <h3>Outstanding Hostel Bills</h3>
+      </div>
+
+      <a href="{% url 'hostel:payment_reminders' %}" class="btn btn-ghost">
+        <i class="bi bi-eye"></i>
+        View All
+      </a>
+
+    </div>
+
+    {% if unpaid_billings %}
+
+    <div class="table-wrap">
+
+      <table class="tbl">
+
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Hostel</th>
+            <th>Room</th>
+            <th>Total Fee</th>
+            <th>Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for bill in unpaid_billings %}
+          <tr>
+
+            <td>
+              <div class="student-meta">
+                <strong>{{ bill.boarder.student.full_name }}</strong>
+                <span>{{ bill.boarder.student.admission_number }}</span>
+              </div>
+            </td>
+
+            <td>{{ bill.boarder.hostel.name|default:"—" }}</td>
+
+            <td>{{ bill.boarder.room.room_number|default:"—" }}</td>
+
+            <td>₦{{ bill.total_fee|floatformat:2 }}</td>
+
+            <td style="color:var(--green);font-weight:700;">
+              ₦{{ bill.amount_paid|floatformat:2 }}
+            </td>
+
+            <td style="color:var(--red);font-weight:800;">
+              ₦{{ bill.balance_due|floatformat:2 }}
+            </td>
+
+            <td>
+              {% if bill.status == 'PARTIAL' %}
+                <span class="badge badge-amber">Partial</span>
+              {% else %}
+                <span class="badge badge-red">Unpaid</span>
+              {% endif %}
+            </td>
+
+            <td>
+              <a href="{% url 'finance:admin_student_wallet_id' bill.boarder.student.id %}"
+                 class="btn btn-ghost"
+                 style="padding:.45rem .8rem;font-size:.74rem;">
+
+                <i class="bi bi-wallet2"></i>
+                Wallet
+
+              </a>
+            </td>
+
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        <i class="bi bi-check-circle"></i>
+      </div>
+
+      <h4>All Bills Cleared</h4>
+
+      <p>
+        All hostel payments have been successfully completed for this term.
+      </p>
+
+    </div>
+
+    {% endif %}
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+const typeData = {{ type_breakdown|safe }};
+
+if (typeData.length) {
+
+  const labels = {
+    'BOARDER':'Full Boarder',
+    'WEEKLY':'Weekly Boarder',
+    'DAY':'Day Student'
+  };
+
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+
+    data: {
+      labels: typeData.map(t => labels[t.student_type] || t.student_type),
+
+      datasets: [{
+        data: typeData.map(t => t.count),
+
+        backgroundColor: [
+          '#4ade80',
+          '#60a5fa',
+          '#fbbf24'
+        ],
+
+        borderColor:'#112850',
+        borderWidth:4
+      }]
+    },
+
+    options: {
+      responsive:true,
+      maintainAspectRatio:false,
+
+      plugins:{
+        legend:{
+          position:'bottom',
+          labels:{
+            color:'#f2f5fb',
+            padding:18,
+            font:{
+              family:'Outfit'
+            }
+          }
+        }
+      }
+    }
+  });
+
+} else {
+
+  document.getElementById('typeChart').parentElement.innerHTML = `
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        <i class="bi bi-pie-chart"></i>
+      </div>
+
+      <h4>No Boarders Yet</h4>
+
+      <p>
+        Boarder analytics will appear once students are enrolled.
+      </p>
+
+    </div>
+  `;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% include "communications/_portal_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Messages from <em>school</em></h1>
+  <p class="sub">Choose your language, how the school reaches you and which optional messages you get. Applies to {% for c in children %}{{ c.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <div class="card">
+      <h2><i class="bi bi-translate" style="color:var(--champagne-lt)"></i> Language</h2>
+      <select name="language">{% for code, name in languages %}<option value="{{ code }}" {% if code == language %}selected{% endif %}>{{ name }}</option>{% endfor %}</select>
+      <p class="hint">Messages the school has translated come in this language; others stay in English.</p>
+    </div>
+    <div class="card">
+      <h2><i class="bi bi-phone" style="color:var(--champagne-lt)"></i> How to reach me</h2>
+      <label class="opt"><input type="radio" name="channel" value="BOTH" {% if channel == 'BOTH' %}checked{% endif %}> SMS and email</label>
+      <label class="opt"><input type="radio" name="channel" value="EMAIL" {% if channel == 'EMAIL' %}checked{% endif %}> Email only</label>
+      <label class="opt"><input type="radio" name="channel" value="SMS" {% if channel == 'SMS' %}checked{% endif %}> SMS only</label>
+    </div>
+    <div class="card">
+      <h2><i class="bi bi-bell" style="color:var(--champagne-lt)"></i> Optional messages</h2>
+      {% for code, label, on in topics %}<label class="opt"><input type="checkbox" name="topics" value="{{ code }}" {% if on %}checked{% endif %}> {{ label }}</label>{% endfor %}
+      <p class="hint">Fees, results, attendance and safety messages always reach you, and emergencies reach you on every channel.</p>
+    </div>
+    <button type="submit">Save my choices</button>
+  </form>
+</div>
+</body>
+</html>

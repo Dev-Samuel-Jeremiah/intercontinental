@@ -1,0 +1,42 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Absence reasons{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Absence <em>reasons</em></h1>
+  <p class="fin-sub">Parents explain absences from the parent portal. Accept a reason to count the absence as excused.</p>
+</div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> Waiting for review</h3>{% if pending %}<span class="chip amber">{{ pending|length }}</span>{% endif %}</div>
+    <div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for m in pending %}
+      <tr><td style="white-space:nowrap">{{ m.date|date:"D j M" }}{% if m.date > today %}<br><span class="chip gold">in advance</span>{% endif %}</td>
+        <td><a href="{% url 'users:student_profile' m.student.id %}#attendance" style="color:var(--white)"><b>{{ m.student.full_name }}</b></a><br><span class="hint">{{ m.student.class_assigned.name|default:"" }}</span></td>
+        <td>{{ m.get_absence_reason_display }}{% if m.reason_note %}<br><span class="hint">“{{ m.reason_note }}”</span>{% endif %}</td>
+        <td style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="mark_id" value="{{ m.id }}">
+          <button class="fin-btn fin-btn-sm fin-btn-gold" name="action" value="accept">Excuse</button>
+          <button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="decline">Not excused</button></form></td></tr>
+      {% empty %}<tr><td class="empty"><i class="bi bi-check2-circle"></i><p>Nothing waiting.</p></td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-pencil"></i> Record a reason</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="record">
+      <div><label>Student</label><select name="student_id" required><option value="">— choose —</option>{% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+      <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+        <div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" required></div>
+        <div><label>Reason</label><select name="reason">{% for v, l in reasons %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      </div>
+      <div><label>Note</label><input name="note" maxlength="255" placeholder="Mother phoned at 8:10"></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Record (excused)</button>
+    </form>
+  </div></div>
+</div>
+<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recently reviewed</h3></div>
+  <div style="overflow-x:auto"><table class="tbl"><tbody>
+    {% for m in recent %}<tr><td>{{ m.date|date:"j M" }}</td><td>{{ m.student.full_name }}</td><td>{{ m.get_absence_reason_display }}{% if m.reason_note %} <span class="hint">— {{ m.reason_note }}</span>{% endif %}</td>
+      <td><span class="chip {% if m.excused == 'EXCUSED' %}green{% else %}red{% endif %}">{{ m.get_excused_display|lower }}</span> <span class="hint">· from {{ m.get_reason_from_display|lower }}</span></td></tr>
+    {% empty %}<tr><td class="empty"><p class="hint">None yet.</p></td></tr>{% endfor %}
+  </tbody></table></div>
+</div>
+{% endblock %}

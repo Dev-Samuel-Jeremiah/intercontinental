@@ -1,0 +1,63 @@
+{% include "communications/_portal_head.html" %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>table{width:100%;border-collapse:collapse;font-size:.88rem}td{padding:.35rem .2rem;border-bottom:1px solid var(--rim2)}.row{display:flex;gap:.6rem;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.map{height:220px;border-radius:12px;margin-top:.5rem;border:1px solid var(--rim2)}.ghost{width:auto;margin:0;padding:.25rem .6rem;font-size:.78rem;background:transparent;color:var(--white);border:1px solid var(--rim2)}</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1><em>School bus</em></h1>
+  <p class="sub">Route, pickup times, today's trips and transport fees.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for c in cards %}
+  <div class="card">
+    <h2><i class="bi bi-bus-front" style="color:var(--champagne-lt)"></i> {{ c.kid.full_name }}</h2>
+    <p class="hint" style="margin:0">{{ c.rider.route.name }} · {{ c.rider.get_direction_display }}{% if c.rider.route.vehicle %} · {{ c.rider.route.vehicle.name }} ({{ c.rider.route.vehicle.plate }}){% endif %}</p>
+    {% if c.rider.stop %}<p style="margin:.5rem 0 0">Stop: <b>{{ c.rider.stop.name }}</b>{% if c.rider.stop.landmark %} ({{ c.rider.stop.landmark }}){% endif %}
+      {% if c.rider.stop.morning_time %} · pickup about <b>{{ c.rider.stop.morning_time|time:"H:i" }}</b>{% endif %}{% if c.rider.stop.afternoon_time %} · drop-off about <b>{{ c.rider.stop.afternoon_time|time:"H:i" }}</b>{% endif %}</p>{% endif %}
+    {% if c.rider.route.driver %}<p class="hint" style="margin:.2rem 0 0">Driver {{ c.rider.route.driver.name }}{% if c.rider.route.attendant %} · attendant {{ c.rider.route.attendant.name }} ({{ c.rider.route.attendant.phone }}){% endif %}</p>{% endif %}
+
+    <h2 style="margin-top:1rem">Today</h2>
+    {% for t in c.trips %}<div style="margin:.3rem 0"><b>{{ t.get_leg_display }}</b>:
+      {% if t.ended_at %}arrived {{ t.ended_at|time:"H:i" }}{% elif t.started_at %}on the road{% else %}not started{% endif %}
+      {% if t.delay_minutes and not t.ended_at %} — <b style="color:var(--red)">about {{ t.delay_minutes }} min late</b>{% if t.delay_note %} ({{ t.delay_note }}){% endif %}{% endif %}
+      {% if not t.ended_at and t.last_seen %}<div class="map" id="map-{{ t.pk }}" data-url="{% url 'transport:family_position' t.pk %}" data-lat="{{ t.last_lat }}" data-lng="{{ t.last_lng }}"></div><small class="hint" id="seen-{{ t.pk }}">Last seen {{ t.last_seen|time:"H:i" }}</small>{% endif %}
+    </div>{% empty %}<p class="hint">No trip yet today.</p>{% endfor %}
+    {% for s in c.scans %}<div class="hint">{{ s.trip.get_leg_display }}: {% if s.kind == 'ON' %}boarded{% else %}got off{% endif %} at {{ s.at|time:"H:i" }}</div>{% endfor %}
+
+    {% if c.bills %}<h2 style="margin-top:1rem">Transport fees</h2>
+    <table>{% for b in c.bills %}<tr><td>{{ b.period }}</td><td>{{ b.amount|floatformat:2 }}</td><td>{% if b.status == 'PAID' %}<span class="chip ok">Paid</span>{% else %}
+      <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="pay"><input type="hidden" name="student" value="{{ c.kid.pk }}"><input type="hidden" name="id" value="{{ b.pk }}"><button type="submit" class="ghost" onclick="return confirm('Pay {{ b.amount|floatformat:2 }} from your family wallet?')">Pay from wallet</button></form>{% endif %}</td></tr>{% endfor %}</table>{% endif %}
+
+    {% for pc in c.changes %}<p class="hint" style="margin:.4rem 0 0">Pickup change from {{ pc.from_date|date:"j M" }}: <b>{{ pc.get_status_display }}</b>{% if pc.note %} — {{ pc.note }}{% endif %}</p>{% endfor %}
+    <details style="margin-top:.6rem"><summary>Change pickup / drop-off point</summary>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="change"><input type="hidden" name="student" value="{{ c.kid.pk }}">
+        <label>New stop on this route</label><select name="stop"><option value="">— another address (describe below) —</option>{% for s in c.stops %}<option value="{{ s.pk }}">{{ s.name }}{% if s.landmark %} ({{ s.landmark }}){% endif %}</option>{% endfor %}</select>
+        <label>New address</label><input name="new_address" maxlength="255">
+        <div class="row"><div><label>From</label><input type="date" name="from_date" value="{{ today|date:'Y-m-d' }}" required></div><div><label>Reason</label><input name="reason" required maxlength="255"></div></div>
+        <button type="submit">Send to the transport office</button></form></details>
+  </div>
+  {% endfor %}
+</div>
+<script>
+(function(){
+  if(!window.L) return;
+  document.querySelectorAll('.map').forEach(function(el){
+    var lat=parseFloat(el.dataset.lat), lng=parseFloat(el.dataset.lng);
+    if(isNaN(lat)||isNaN(lng)) return;
+    var map=L.map(el).setView([lat,lng],15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(map);
+    var mark=L.marker([lat,lng]).addTo(map), seen=document.getElementById('seen-'+el.id.slice(4));
+    var timer=setInterval(function(){
+      fetch(el.dataset.url).then(function(r){return r.json()}).then(function(j){
+        if(j.lat!==null){mark.setLatLng([j.lat,j.lng]);map.panTo([j.lat,j.lng]);}
+        if(seen) seen.textContent=j.ended?'The trip has ended.':'Last seen '+(j.seen||'')+(j.delay?' · about '+j.delay+' min late':'');
+        if(j.ended) clearInterval(timer);
+      }).catch(function(){});
+    },60000);
+  });
+})();
+</script>
+</body>
+</html>

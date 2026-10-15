@@ -1,0 +1,17 @@
+{% include "family/_top.html" %}
+  {% include "family/_back.html" %}
+  <h1>My children's <em>teachers</em></h1>
+  <p class="sub">Teachers reply to messages during office hours ({{ hours }}).</p>
+  {% for kid, people in rows %}
+  <div class="card">
+    <h2><i class="bi bi-person" style="color:var(--champagne-lt)"></i> {{ kid.full_name }}{% if kid.class_assigned %} · {{ kid.class_assigned.name }}{% endif %}</h2>
+    {% for p in people %}
+    <div style="padding:.6rem 0;border-top:1px solid var(--rim2)">
+      <b>{{ p.staff.full_name }}</b>{% if p.form %} <span class="chip ok">Form teacher</span>{% endif %}
+      <div class="hint">{{ p.subjects|join:", " }}{% if p.email %} · <a href="mailto:{{ p.email }}">{{ p.email }}</a>{% endif %}{% if p.extension %} · ext {{ p.extension }}{% endif %}</div>
+      <div class="row" style="margin-top:.4rem"><a class="btn ghost" href="{% url 'communications:chat' %}">Message</a>{% if p.bookable %}<a class="btn ghost" href="{% url 'family:book' %}?student={{ kid.pk }}&staff={{ p.staff.pk }}">Book a meeting</a>{% endif %}</div>
+    </div>
+    {% empty %}<p class="hint">No teachers are listed for this class yet.</p>{% endfor %}
+  </div>
+  {% endfor %}
+{% include "family/_end.html" %}

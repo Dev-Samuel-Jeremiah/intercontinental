@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Activity{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">What's been <em>happening</em></h1>
+  <p class="fin-sub">Sign-ins, payments, new students, announcements, applications and results approvals over the last 30 days.</p>
+</div></div>
+{% include "analytics/_nav.html" %}
+<div class="panel"><div class="panel-b feed">
+  {% for f in feed %}<div><i class="bi {{ f.icon }}"></i><span style="flex:1">{{ f.text }}</span><span class="hint" title="{{ f.when|date:'j M Y H:i' }}">{{ f.when|naturaltime }}</span></div>{% empty %}<p class="hint" style="margin:0">Nothing in the last 30 days.</p>{% endfor %}
+</div></div>
+{% endblock %}

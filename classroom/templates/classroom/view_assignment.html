@@ -1,0 +1,140 @@
+{% extends "dashboard/student_base.html" %}
+{% load classroom_dict_filters %}
+
+{% block title %}{{ assignment.title }} | Student Dashboard{% endblock %}
+
+{% block extra_head %}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background-color:rgba(255,255,255,.045);
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        max-width: 900px;
+        margin: 30px auto;
+        background:rgba(255,255,255,.03);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+    }
+    h2 { color:#1f3a5f; }
+    h4 { margin-top: 20px; }
+    textarea {
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 10px;
+        border-radius: 6px;
+        border:1px solid var(--rim2);
+    }
+    .btn { margin-top: 10px; }
+    .completed {
+        color:green;
+        font-weight: bold;
+    }
+    .file-section { margin-top: 20px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <h2>{{ assignment.title }}</h2>
+    <p>{{ assignment.description }}</p>
+    <p><strong>Section:</strong> {{ assignment.section.title }}</p>
+    <p><strong>Course:</strong> {{ course.name }}</p>
+    <p><strong>Due:</strong> {{ assignment.due_date }}{% if assignment.grace_minutes %} (plus {{ assignment.grace_minutes }} minutes' grace){% endif %}</p>
+    {% if late.message %}<div style="padding:.7rem .9rem;border-radius:12px;margin:.6rem 0;border:1px solid {% if late.open %}rgba(251,191,36,.4);color:#fbbf24;background:rgba(251,191,36,.08){% else %}rgba(232,112,112,.4);color:#e87070;background:rgba(232,112,112,.08){% endif %}"><i class="bi bi-clock-history"></i> {{ late.message }}</div>
+    {% elif assignment.allow_late %}<p style="opacity:.65;font-size:.85rem">Late work loses {{ assignment.late_penalty_per_day }}% per day, up to {{ assignment.max_late_days }} day{{ assignment.max_late_days|pluralize }} after the deadline.</p>{% endif %}
+
+    <hr>
+
+    {# ================= ALREADY SUBMITTED ================= #}
+    {% if submission and submission.submitted_at %}
+        <div class="alert alert-success">
+            <strong>Submitted!</strong><br>
+            You have already submitted this assignment on
+            {{ submission.submitted_at|date:"M d, Y H:i" }}.
+        </div>
+
+        {% if submission.file %}
+            <p class="completed">
+                Submitted file:
+                <a href="{{ submission.file.url }}" target="_blank">
+                    {{ submission.file.name }}
+                </a>
+            </p>
+        {% endif %}
+
+        <a href="{% url 'classroom:student_home' %}" class="btn btn-primary">
+            Go to Dashboard
+        </a>
+
+    {# ================= NOT SUBMITTED ================= #}
+    {% else %}
+        <h4>Assignment Questions</h4>
+
+        {% if assignment.questions.all %}
+{% if assignment.criteria.exists %}<div style="margin:.8rem 0;padding:.8rem 1rem;border-radius:12px;border:1px solid rgba(244,210,31,.3)">
+  <b><i class="bi bi-ui-checks-grid"></i> How this will be marked</b>
+  <table style="width:100%;border-collapse:collapse;margin-top:.5rem;font-size:.86rem">{% for c in assignment.criteria.all %}<tr style="border-top:1px solid rgba(255,255,255,.08)"><td style="padding:.4rem .3rem;vertical-align:top;width:30%"><b>{{ c.name }}</b>{% if c.description %}<div style="opacity:.6">{{ c.description }}</div>{% endif %}</td>
+    <td style="padding:.4rem .3rem">{% for l in c.levels.all %}<span style="display:inline-block;margin:.1rem .4rem .1rem 0;padding:.12rem .5rem;border-radius:99px;border:1px solid rgba(255,255,255,.12)">{{ l.label }} · {{ l.points }}</span>{% endfor %}</td></tr>{% endfor %}</table></div>{% endif %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {% for question in assignment.questions.all %}
+                    <div class="mb-3">
+                        <label for="answer_{{ question.id }}">
+                            <strong>Q{{ forloop.counter }}:</strong> {{ question.question_text }}
+                        </label>
+                        <textarea
+                            name="answer_{{ question.id }}"
+                            id="answer_{{ question.id }}"
+                            rows="3"
+                            class="form-control"
+                            {% if submission and submission.submitted_at %}readonly{% endif %}
+                        >{% if answers_map|dict_get:question.id %}{{ answers_map|dict_get:question.id }}{% endif %}</textarea>
+                    </div>
+                {% endfor %}
+
+                <!-- File upload -->
+                <div class="file-section mb-3">
+                    <label for="file"><strong>Upload File (optional):</strong></label>
+                    {% if submission and submission.file %}
+                        <p class="completed">
+                            {% if submission.submitted_at %}Submitted{% else %}Draft{% endif %} file:
+                            <a href="{{ submission.file.url }}" target="_blank">{{ submission.file.name }}</a>
+                        </p>
+                    {% endif %}
+                    <input type="file" name="file" class="form-control mt-1"
+                        {% if submission and submission.submitted_at %}disabled{% endif %}>
+                </div>
+
+                <!-- Submit button -->
+                {% if submission and submission.submitted_at %}
+                    <button type="button" class="btn btn-success" disabled>
+                        Already Submitted
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn btn-primary">
+                        Submit Assignment
+                    </button>
+                {% endif %}
+
+            </form>
+        {% else %}
+            <p>No questions for this assignment yet.</p>
+        {% endif %}
+
+
+
+        <a href="{% url 'classroom:student_course_content' course.id %}"
+           class="btn btn-secondary mt-3">
+            Back to Course
+        </a>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework &amp; calendar | {{ request.tenant.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root{--ink:#0a1d40;--surface:#112850;--surface2:#172f5c;--rim:rgba(255,255,255,.06);--rim2:rgba(255,255,255,.10);
+    --champagne:#f4d21f;--champagne-lt:#ffe066;--slate:rgba(255,255,255,.4);--slate2:rgba(255,255,255,.6);--white:#f2f5fb;
+    --green:#4ade80;--red:#e87070;--amber:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 0% 0%,rgba(244,210,31,.10),transparent 55%),var(--ink);color:var(--white);font-family:'Outfit',system-ui,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+  a.back{color:var(--slate2);text-decoration:none;font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center}
+  a.back:hover{color:var(--champagne-lt)}
+  h1{font-family:'Cormorant Garamond',serif;font-size:2.1rem;margin:.8rem 0 .2rem}
+  h1 em{color:var(--champagne-lt)}
+  .sub{color:var(--slate2);font-size:.9rem;margin:0 0 1.4rem;line-height:1.5}
+  .card{border:1px solid var(--rim2);background:var(--surface);border-radius:18px;padding:1.2rem;margin-bottom:1rem}
+  .card h2{font-size:1rem;margin:0 0 .9rem;display:flex;gap:.5rem;align-items:center}
+  label{display:block;font-size:.76rem;color:var(--slate2);font-weight:600;margin:.7rem 0 .3rem}
+  input,select{width:100%;padding:.75rem .85rem;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.95rem}
+  input:focus,select:focus{outline:none;border-color:var(--champagne);box-shadow:0 0 0 3px rgba(244,210,31,.15)}
+  select option{background:var(--surface2)}
+  button{margin-top:1rem;width:100%;padding:.85rem;border:0;border-radius:12px;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .msg{padding:.75rem .9rem;border-radius:12px;margin-bottom:1rem;font-size:.9rem;border:1px solid var(--rim2)}
+  .msg.success{border-color:rgba(74,222,128,.35);color:var(--green);background:rgba(74,222,128,.08)}
+  .msg.error{border-color:rgba(232,112,112,.35);color:var(--red);background:rgba(232,112,112,.08)}
+  .row{display:flex;justify-content:space-between;gap:.8rem;padding:.75rem 0;border-top:1px solid var(--rim)}
+  .row:first-child{border-top:0}
+  .hint{color:var(--slate);font-size:.8rem}
+  .chip{font-size:.72rem;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--rim2);white-space:nowrap;align-self:flex-start}
+  .chip.PENDING{color:var(--amber);border-color:rgba(251,191,36,.35)}
+  .chip.APPROVED{color:var(--green);border-color:rgba(74,222,128,.35)}
+  .chip.REJECTED{color:var(--red);border-color:rgba(232,112,112,.35)}
+  .hw{padding:.85rem 0;border-top:1px solid var(--rim)}
+  .hw:first-of-type{border-top:0}
+  .chip.due{color:var(--champagne-lt);border-color:rgba(244,210,31,.35)}
+  .chip.today{color:var(--amber);border-color:rgba(251,191,36,.35)}
+  .btn-sm{display:inline-flex;gap:.35rem;align-items:center;margin-top:.5rem;padding:.4rem .7rem;border-radius:10px;border:1px solid var(--rim2);color:var(--slate2);text-decoration:none;font-size:.8rem}
+  .panel{border:1px solid var(--rim2);background:var(--surface);border-radius:18px;padding:1.2rem;margin-bottom:1rem}
+  .panel-h{display:flex;justify-content:space-between;align-items:center;margin:-.2rem 0 .6rem}.panel-h h3{font-size:1rem;margin:0;display:flex;gap:.5rem}
+  .panel-h h3 i{color:var(--champagne-lt)} .panel-b{padding:0}
+  .empty{color:var(--slate);text-align:center;padding:1rem} .empty i{font-size:1.4rem;display:block;color:var(--champagne-lt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Homework &amp; <em>calendar</em></h1>
+  <p class="sub">Homework your children's teachers have set, and what's coming up at school.</p>
+  {% for d in diaries %}
+  <div class="card"><h2><i class="bi bi-journal-check" style="color:var(--champagne-lt)"></i> {{ d.child.full_name }} <span class="hint" style="font-weight:400">· {{ d.child.class_assigned.name }}</span></h2>
+    {% for h in d.due %}<div class="hw"><div style="display:flex;justify-content:space-between;gap:.6rem"><b>{{ h.title }}</b>
+        {% if h.due_on == today %}<span class="chip today">due today</span>{% else %}<span class="chip due">due {{ h.due_on|date:"D j M" }}</span>{% endif %}</div>
+      <div class="hint">{{ h.subject.name }}{% if h.set_by %} · {{ h.set_by.full_name }}{% endif %}</div>
+      {% if h.details %}<div style="margin-top:.35rem;color:var(--slate2);font-size:.9rem">{{ h.details|linebreaksbr }}</div>{% endif %}
+      {% if h.attachment %}<a class="btn-sm" href="{% url 'curriculum:homework_file' h.id %}" target="_blank"><i class="bi bi-paperclip"></i> Worksheet</a>{% endif %}</div>
+    {% empty %}<p class="hint" style="margin:0">No homework due.</p>{% endfor %}
+    {% if d.exams %}<p class="hint" style="margin:.8rem 0 .3rem"><i class="bi bi-calendar3-week"></i> Exam timetable</p>{% for e in d.exams|slice:":12" %}<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.3rem 0;border-top:1px solid var(--rim);font-size:.88rem"><span>{{ e.subject.name }}</span><span class="hint">{{ e.date|date:"D j M" }} · {{ e.start_time|time:"H:i" }}</span></div>{% endfor %}{% endif %}
+    {% if d.clubs %}<p class="hint" style="margin:.8rem 0 0"><i class="bi bi-people"></i> Clubs: {% for m in d.clubs %}{{ m.club.name }}{% if m.role != 'MEMBER' %} ({{ m.get_role_display }}){% endif %}{% if m.club.meeting_day %} — {{ m.club.get_meeting_day_display }}{% if m.club.meeting_time %} {{ m.club.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</p>{% endif %}
+    {% if d.past %}<p class="hint" style="margin:.8rem 0 0">Recently due: {% for h in d.past %}{{ h.subject.name }} ({{ h.due_on|date:"j M" }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </div>
+  {% empty %}<div class="card"><p class="hint" style="margin:0">None of your children is in a class yet.</p></div>{% endfor %}
+  {% include "curriculum/_family_calendar.html" %}
+</div>
+</body>
+</html>

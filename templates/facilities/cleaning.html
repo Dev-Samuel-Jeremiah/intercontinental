@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Cleaning{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Site · {{ today|date:"l j F" }}</div>
+  <h1 class="fin-title"><em>Cleaning</em></h1>
+  <p class="fin-sub">Today's cleaning, room by room. Tick each job as it is done; a supervisor can see at a glance what was missed.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:.8rem">
+    {% for r in sheet %}<form method="post" class="panel fin-form" style="padding:1rem">{% csrf_token %}<input type="hidden" name="task" value="{{ r.task.pk }}">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">{{ r.task.label }}</h3>{% if r.check.complete %}<span class="chip ok">Done</span>{% elif r.check %}<span class="chip gold">Partly done</span>{% endif %}</div>
+      <p class="hint" style="margin:.1rem 0 .4rem">{{ r.task.get_frequency_display }}{% if r.task.cleaner %} · {{ r.task.cleaner }}{% endif %}</p>
+      {% for it in r.task.items %}<label class="pill" style="display:flex"><input type="checkbox" name="done" value="{{ it }}" {% if it in r.done %}checked{% endif %}> {{ it }}</label>{% endfor %}
+      <div style="display:flex;gap:.3rem"><input name="note" value="{{ r.check.note|default:'' }}" placeholder="Note (e.g. broken window)" style="flex:1"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Save</button></div>
+    </form>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">Nothing scheduled for today.</p></div></div>{% endfor %}
+  </div>
+  {% if maint %}<div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Last two weeks</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in report %}<tr><td class="name">{{ r.task.label }}<br><small class="hint">{{ r.task.get_frequency_display }}</small></td><td class="num">{{ r.done }} / {{ r.due }}</td><td>{% if r.pct is not None %}<span class="chip{% if r.pct >= 90 %} ok{% elif r.pct >= 60 %} gold{% else %} red{% endif %}">{{ r.pct }}%</span>{% endif %}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="stop"><input type="hidden" name="id" value="{{ r.task.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></td></tr>{% empty %}<tr><td class="empty">No cleaning tasks yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="task">
+      <h3 style="margin:0 0 .6rem">Add a cleaning task</h3>
+      <div class="row2"><div><label>Room</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div><div><label>…or area</label><input name="area" maxlength="120" placeholder="Main gate"></div></div>
+      <div class="row2"><div><label>How often</label><select name="frequency">{% for k, v in freqs %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Cleaner</label><input name="cleaner" maxlength="120"></div></div>
+      <div><label>Jobs (one per line)</label><textarea name="checklist" rows="4" required placeholder="Sweep and mop floor&#10;Empty bins&#10;Wipe desks&#10;Clean windows"></textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+    </form>
+  </div>{% endif %}
+</div>
+{% endblock %}

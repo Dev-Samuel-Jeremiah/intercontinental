@@ -1,0 +1,82 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Bulk Print ID Cards{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+.bp-toolbar{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:24px; }
+.bp-toolbar select{ background:var(--surface2); color:var(--white); border:1px solid var(--rim);
+  border-radius:8px; padding:9px 14px; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:10px 18px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; }
+.bp-grid{ display:flex; flex-wrap:wrap; gap:18px; }
+.mini-card{ width:260px; border-radius:14px; overflow:hidden; background:linear-gradient(160deg,var(--surface2),#112850);
+  border:1px solid var(--rim); color:var(--white); font-family:'Outfit',Arial,sans-serif; }
+.mini-card .hdr{ background:linear-gradient(120deg,var(--champagne),var(--champagne-lt)); color:#112850;
+  padding:8px 12px; text-align:center; font-weight:700; font-size:.85rem; }
+.mini-card .photo{ display:flex; justify-content:center; margin-top:10px; }
+.mini-card .photo img{ width:70px; height:70px; object-fit:cover; border-radius:10px; border:2px solid var(--champagne); background:#333; }
+.mini-card .name{ text-align:center; font-weight:700; font-size:.85rem; margin:8px 0 0; }
+.mini-card .sub{ text-align:center; font-size:.68rem; color:var(--champagne-lt); margin-bottom:8px; }
+.mini-card .qr{ display:flex; justify-content:center; padding-bottom:10px; }
+.mini-card .qr img{ width:70px; height:70px; background:#fff; padding:4px; border-radius:6px; }
+.mini-card .adm{ text-align:center; font-size:.65rem; color:var(--slate); padding-bottom:10px; }
+
+@media print{
+  body *{ visibility:hidden; }
+  .bp-toolbar{ display:none !important; }
+  .bp-grid, .bp-grid *{ visibility:visible; }
+  .bp-grid{ position:absolute; left:0; top:0; }
+  .mini-card{ break-inside:avoid; border:1px solid #ccc; }
+}
+@media(max-width:480px){
+  .bp-toolbar{ flex-direction:column; align-items:stretch; }
+  .bp-toolbar form{ width:100%; }
+  .bp-toolbar select{ width:100%; }
+  .bp-toolbar .idc-btn{ width:100%; text-align:center; }
+  .bp-grid{ justify-content:center; gap:14px; }
+  .mini-card{ width:100%; max-width:300px; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="bp-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-grid-3x3-gap-fill"></i> Bulk Print ID Cards</h2></div>
+  <form method="get" style="display:flex; gap:10px;">
+    <select name="class_id" onchange="this.form.submit()">
+      <option value="">Select a class…</option>
+      {% for c in classes %}
+        <option value="{{ c.id }}" {% if selected_class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+  {% if cards %}
+    <button class="idc-btn" onclick="window.print()"><i class="bi bi-printer-fill"></i> Print All ({{ cards|length }})</button>
+  {% endif %}
+</div>
+
+{% if selected_class_id and not cards %}
+  <p style="color:var(--slate);">No active students found in this class.</p>
+{% endif %}
+
+<div class="bp-grid">
+  {% for card in cards %}
+    <div class="mini-card">
+      <div class="hdr">{{ tenant.name|default:"School" }}</div>
+      <div class="photo">
+        {% if card.student.passport %}
+          <img src="{{ card.student.passport.url }}" alt="{{ card.student.full_name }}">
+        {% else %}
+          <img src="{% static 'images/logo.png' %}" alt="No photo">
+        {% endif %}
+      </div>
+      <div class="name">{{ card.student.full_name }}</div>
+      <div class="sub">{{ card.student.class_assigned.name }}</div>
+      <div class="qr"><img src="{% url 'idcards:qr_image' uid=card.card_uid %}" alt="QR"></div>
+      <div class="adm">{{ card.student.admission_number }}</div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

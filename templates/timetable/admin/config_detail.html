@@ -1,0 +1,915 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ config.name }}{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1400px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+.page-header{
+  margin-bottom:2rem;
+}
+
+.page-header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.55rem .9rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.18);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.header-divider{
+  position:relative;
+  margin-top:1.4rem;
+  border-top:1px solid var(--rim);
+}
+
+.header-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  margin-bottom:2rem;
+  flex-wrap:wrap;
+}
+
+.config-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.7rem;
+  margin-top:1rem;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.45rem .8rem;
+  border-radius:999px;
+  font-size:.75rem;
+  font-weight:600;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.badge-slate{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--slate2);
+}
+
+.header-actions{
+  display:flex;
+  gap:.8rem;
+  flex-wrap:wrap;
+}
+
+.btn-action{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  padding:.85rem 1.1rem;
+  border-radius:12px;
+  text-decoration:none;
+  font-size:.86rem;
+  font-weight:600;
+  transition:.25s ease;
+}
+
+.btn-edit{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+}
+
+.btn-edit:hover{
+  background:var(--surface3);
+  transform:translateY(-2px);
+}
+
+.btn-override{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.btn-override:hover{
+  transform:translateY(-2px);
+}
+
+.btn-generate{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-generate:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(244,210,31,.28);
+}
+
+.grid-layout{
+  display:grid;
+  grid-template-columns:1.2fr .9fr;
+  gap:1.5rem;
+}
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(1){
+  animation-delay:.08s;
+}
+
+.panel:nth-child(2){
+  animation-delay:.16s;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.25rem 1.5rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.panel-icon{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.92rem;
+}
+
+.icon-purple{
+  background:var(--purple-dim);
+  border:1px solid var(--purple-border);
+  color:var(--purple);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.5rem;
+}
+
+.btn-small{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.65rem .95rem;
+  border-radius:10px;
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  text-decoration:none;
+  font-size:.8rem;
+  font-weight:700;
+  transition:.25s ease;
+  box-shadow:0 4px 18px rgba(244,210,31,.18);
+}
+
+.btn-small:hover{
+  transform:translateY(-2px);
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.table thead tr{
+  border-bottom:1px solid var(--rim);
+}
+
+.table th{
+  padding:1rem;
+  text-align:left;
+  color:var(--slate2);
+  font-size:.74rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  font-weight:600;
+}
+
+.table td{
+  padding:1rem;
+  border-bottom:1px solid var(--rim);
+  font-size:.9rem;
+  color:var(--white);
+}
+
+.table tbody tr{
+  transition:.2s ease;
+}
+
+.table tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.user-cell{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  background:linear-gradient(
+    135deg,
+    rgba(139,92,246,.95),
+    rgba(244,210,31,.85)
+  );
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font-size:.82rem;
+  font-weight:700;
+  flex-shrink:0;
+}
+
+.user-name{
+  font-weight:600;
+  color:var(--white);
+}
+
+.period-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:52px;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+  font-size:.78rem;
+  font-weight:700;
+}
+
+.row-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:.5rem;
+}
+
+.action-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.45rem .75rem;
+  border-radius:9px;
+  text-decoration:none;
+  font-size:.76rem;
+  font-weight:600;
+  transition:.25s ease;
+}
+
+.action-edit{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.action-delete{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+}
+
+.action-link:hover{
+  transform:translateY(-1px);
+}
+
+.generated-list{
+  display:flex;
+  flex-direction:column;
+}
+
+.generated-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  padding:1rem 0;
+  border-bottom:1px solid var(--rim);
+  transition:.2s ease;
+}
+
+.generated-item:last-child{
+  border-bottom:none;
+}
+
+.generated-item:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.generated-info{
+  display:flex;
+  flex-direction:column;
+  gap:.55rem;
+}
+
+.generated-title{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:.55rem;
+}
+
+.generated-date{
+  color:var(--white);
+  font-size:.92rem;
+  font-weight:600;
+}
+
+.generated-meta{
+  color:var(--slate2);
+  font-size:.8rem;
+}
+
+.generated-actions{
+  display:flex;
+  gap:.55rem;
+  flex-wrap:wrap;
+}
+
+.btn-preview{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.btn-publish{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.btn-delete{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+}
+
+.btn-mini{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.55rem .8rem;
+  border-radius:9px;
+  text-decoration:none;
+  font-size:.76rem;
+  font-weight:600;
+  transition:.25s ease;
+}
+
+.btn-mini:hover{
+  transform:translateY(-1px);
+}
+
+.empty-state{
+  text-align:center;
+  padding:3rem 1rem;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  background:var(--surface3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--slate2);
+  font-size:1.8rem;
+}
+
+.empty-title{
+  margin:0 0 .45rem;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.empty-subtitle{
+  margin:0;
+  color:var(--slate2);
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.back-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  margin-bottom:1rem;
+  color:var(--champagne);
+  text-decoration:none;
+  font-size:.85rem;
+  font-weight:500;
+}
+
+.back-link:hover{
+  color:var(--champagne-lt);
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (max-width:1100px){
+  .grid-layout{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:768px){
+
+  .your-wrap{
+    padding:1.5rem 1.2rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.3rem;
+  }
+
+  .page-header-top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .top-bar{
+    flex-direction:column;
+  }
+
+  .header-actions{
+    width:100%;
+  }
+
+  .btn-action{
+    flex:1;
+  }
+
+  .panel-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .generated-item{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .generated-actions{
+    width:100%;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <div class="page-header">
+
+    <div class="page-header-top">
+
+      <div class="eyebrow">
+        Timetable Configuration
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-calendar3"></i>
+        {{ assignments|length }} Assignments
+      </div>
+
+    </div>
+
+    <h1 class="page-title">
+      {{ config.name }} <em>Overview</em>
+    </h1>
+
+    <div class="header-divider"></div>
+
+  </div>
+
+  <a href="{% url 'timetable:admin_index' %}" class="back-link">
+    <i class="bi bi-arrow-left"></i>
+    Back to Configurations
+  </a>
+
+  <div class="top-bar">
+
+    <div>
+
+      <div class="config-meta">
+
+        <span class="badge badge-slate">
+          <i class="bi bi-calendar-week"></i>
+          {{ config.active_days|join:", " }}
+        </span>
+
+        {% if config.is_active %}
+        <span class="badge badge-green">
+          <i class="bi bi-check-circle-fill"></i>
+          Active Configuration
+        </span>
+        {% else %}
+        <span class="badge badge-slate">
+          <i class="bi bi-pause-circle"></i>
+          Inactive
+        </span>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <div class="header-actions">
+
+      <a href="{% url 'timetable:config_edit' config.pk %}" class="btn-action btn-edit">
+        <i class="bi bi-pencil-square"></i>
+        Edit Config
+      </a>
+
+      <a href="{% url 'timetable:day_override_list' config_pk=config.pk %}" class="btn-action btn-override">
+        <i class="bi bi-stars"></i>
+        Day Overrides
+      </a>
+
+      <a href="{% url 'timetable:generate' config.pk %}" class="btn-action btn-generate">
+        <i class="bi bi-rocket-takeoff"></i>
+        Generate Timetable
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="grid-layout">
+
+    <!-- Assignments -->
+    <div class="panel">
+
+      <div class="panel-header">
+
+        <div class="panel-title">
+
+          <div class="panel-icon icon-purple">
+            <i class="bi bi-journal-bookmark"></i>
+          </div>
+
+          <h3>Teacher–Subject–Class Assignments</h3>
+
+        </div>
+
+        <a href="{% url 'timetable:availability' config.pk %}" class="btn-small"><i class="bi bi-person-x"></i> Teacher availability</a>
+        <a href="{% url 'timetable:versions' config.pk %}" class="btn-small"><i class="bi bi-clock-history"></i> Version history</a>
+        <a href="{% url 'timetable:assignment_create' config.pk %}" class="btn-small">
+          <i class="bi bi-plus-circle"></i>
+          Add Assignment
+        </a>
+
+      </div>
+
+      <div class="panel-body">
+
+        {% if assignments %}
+
+        <div class="table-wrap">
+
+          <table class="table">
+
+            <thead>
+              <tr>
+                <th>Teacher</th>
+                <th>Subject</th>
+                <th>Class</th>
+                <th>Periods</th>
+                <th style="text-align:right">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for a in assignments %}
+              <tr>
+
+                <td>
+                  <div class="user-cell">
+
+                    <div class="avatar">
+                      {{ a.staff.full_name|slice:":1"|upper }}{{ a.subject.name|slice:":1"|upper }}
+                    </div>
+
+                    <div class="user-name">
+                      {{ a.staff.full_name }}
+                    </div>
+
+                  </div>
+                </td>
+
+                <td>{{ a.subject.name }}</td>
+
+                <td>{{ a.school_class.name }}</td>
+
+                <td>
+                  <span class="period-badge">
+                    {{ a.periods_per_week }}×
+                  </span>
+                </td>
+
+                <td>
+
+                  <div class="row-actions">
+
+                    <a href="{% url 'timetable:assignment_edit' a.pk %}"
+                       class="action-link action-edit">
+                      <i class="bi bi-pencil-square"></i>
+                      Edit
+                    </a>
+
+                    <a href="{% url 'timetable:assignment_delete' a.pk %}"
+                       class="action-link action-delete">
+                      <i class="bi bi-trash3"></i>
+                      Delete
+                    </a>
+
+                  </div>
+
+                </td>
+
+              </tr>
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            <i class="bi bi-journal-x"></i>
+          </div>
+
+          <h4 class="empty-title">
+            No Assignments Yet
+          </h4>
+
+          <p class="empty-subtitle">
+            Create teacher, subject, and class assignments
+            to begin timetable generation.
+          </p>
+
+        </div>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <!-- Generated Timetables -->
+    <div class="panel">
+
+      <div class="panel-header">
+
+        <div class="panel-title">
+
+          <div class="panel-icon icon-blue">
+            <i class="bi bi-collection"></i>
+          </div>
+
+          <h3>Generated Timetables</h3>
+
+        </div>
+
+      </div>
+
+      <div class="panel-body">
+
+        {% if generated %}
+
+        <div class="generated-list">
+
+          {% for t in generated %}
+
+          <div class="generated-item">
+
+            <div class="generated-info">
+
+              <div class="generated-title">
+
+                <span class="generated-date">
+                  {{ t.generated_at|date:"M d, Y H:i" }}
+                </span>
+
+                {% if t.is_published %}
+                <span class="badge badge-green">
+                  <i class="bi bi-broadcast-pin"></i>
+                  Published
+                </span>
+                {% endif %}
+
+              </div>
+
+              <div class="generated-meta">
+                {{ t.slots.count }} slots generated
+              </div>
+
+            </div>
+
+            <div class="generated-actions">
+
+              <a href="{% url 'timetable:preview' t.pk %}"
+                 class="btn-mini btn-preview">
+                <i class="bi bi-eye"></i>
+                Preview
+              </a>
+
+              {% if not t.is_published %}
+              <a href="{% url 'timetable:publish' t.pk %}"
+                 class="btn-mini btn-publish">
+                <i class="bi bi-send-check"></i>
+                Publish
+              </a>
+              {% endif %}
+
+              <a href="{% url 'timetable:delete_generated' t.pk %}"
+                 class="btn-mini btn-delete">
+                <i class="bi bi-trash3"></i>
+                Delete
+              </a>
+
+            </div>
+
+          </div>
+
+          {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+
+          <div class="empty-icon">
+            <i class="bi bi-grid-3x3-gap"></i>
+          </div>
+
+          <h4 class="empty-title">
+            No Generated Timetables
+          </h4>
+
+          <p class="empty-subtitle">
+            Generate a timetable configuration to preview,
+            publish, and manage schedules.
+          </p>
+
+        </div>
+
+        {% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

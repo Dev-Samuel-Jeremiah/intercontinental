@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Student wellbeing{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student experience</div>
+  <h1 class="fin-title">Student <em>wellbeing</em></h1>
+  <p class="fin-sub">{% if lead %}All classes.{% else %}Your form class.{% endif %} Students who asked to talk, felt very low, or have been low for several days appear first.</p>
+</div></div>
+{% include "studentlife/_staffnav.html" %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3><i class="bi bi-flag"></i> Needs a conversation</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>{% for c in flagged %}<tr><td class="name">{{ c.student.full_name }}<br><small class="hint">{{ c.student.class_assigned.name|default:"" }}</small></td><td>{{ c.date|date:"D j M" }} · {{ c.get_mood_display }}{% if c.wants_talk %} · <b>asked to talk</b>{% endif %}<br><small class="hint">{{ c.feelings|join:", " }}{% if c.note %} — "{{ c.note }}"{% endif %}</small></td>
+    <td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Followed up</button></form></td></tr>{% empty %}<tr><td class="empty">Nobody waiting. 🙂</td></tr>{% endfor %}</tbody></table>
+</div></div>
+<div class="panel"><div class="panel-h"><h3>Classes — last 14 days</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><thead><tr><th>Class</th><th>Average mood (1–5)</th><th>Check-ins</th><th>Students often low</th></tr></thead><tbody>
+  {% for cls, w in summary %}<tr><td class="name">{{ cls.name }}</td><td>{{ w.average|default:"—" }}</td><td>{{ w.count }}</td><td>{% for s in w.low %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td></tr>{% empty %}<tr><td class="empty">You are not a form teacher of any class.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Donated books{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Donations</em></h1>
+  <p class="fin-sub">Record each gift, catalogue the books against it, then email the donor a thank-you letter listing the titles.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+    {% for d in items %}<tr><td class="name">{{ d.donor_name }}<br><small class="hint">{{ d.date|date:"j M Y" }} · {{ d.n }} cop{{ d.n|pluralize:"y,ies" }}{% if d.note %} · {{ d.note }}{% endif %}</small></td>
+      <td>{% if d.acknowledged_at %}<span class="chip ok">Thanked {{ d.acknowledged_at|date:"j M" }}</span>{% elif d.donor_email %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="thank"><input type="hidden" name="id" value="{{ d.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Send thank-you</button></form>{% else %}<span class="hint">No email</span>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No donations recorded.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Record a donation</h3>
+    <div><label>Donor</label><input name="donor_name" required maxlength="160" placeholder="Person, family, alumni set or company"></div>
+    <div class="row2"><div><label>Email</label><input type="email" name="donor_email"></div><div><label>Phone</label><input name="donor_phone" maxlength="20"></div></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Note</label><input name="note" maxlength="255"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

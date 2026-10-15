@@ -1,0 +1,66 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Budgets{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Budget vs <em>actual</em></h1>
+    <p class="fin-sub">{% if term %}{{ term }}{% endif %}{% if session %} · {{ session }}{% endif %} — what you planned to spend, against what you have spent.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-receipt-cutoff"></i> Expenses</a>
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:income_statement' %}"><i class="bi bi-graph-up-arrow"></i> Full statement</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Budgeted</small><b>₦{{ report.budget_total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Spent in this period</small><b style="color:var(--red)">₦{{ report.expenses|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Income in period</small><b style="color:var(--green)">₦{{ report.income|floatformat:0|intcomma }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-sliders"></i> Set a budget</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="set">
+        <div><label>Category</label>
+          <select name="category_id" required>
+            <option value="">— choose —</option>
+            {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div><label>Budget for this term (₦)</label><input type="number" name="amount" step="0.01" min="0.01" required placeholder="500000"></div>
+        <div><label>Note</label><input type="text" name="note" placeholder="Approved at the board meeting"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save budget</button>
+      </form>
+      {% if not categories %}<p class="hint" style="margin-top:.8rem">Add expense categories first on the <a href="{% url 'finance:expenses' %}" style="color:var(--champagne-lt)">expenses page</a>.</p>{% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Budget vs spending</h3><span class="hint">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</span></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Left</th><th></th></tr></thead>
+        <tbody>
+          {% for row in report.by_category %}
+          <tr>
+            <td class="name">{{ row.category|default:"Uncategorised" }}<br><span class="hint">{{ row.count }} payment{{ row.count|pluralize }}</span></td>
+            <td class="money">{% if row.budget %}₦{{ row.budget|floatformat:0|intcomma }}{% else %}<span class="hint">not set</span>{% endif %}</td>
+            <td class="money">₦{{ row.total|floatformat:0|intcomma }}</td>
+            <td class="money">{% if row.left is not None %}<span style="color:{% if row.over %}var(--red){% else %}var(--green){% endif %}">{% if row.over %}−₦{{ row.left|floatformat:0|cut:"-"|intcomma }} over{% else %}₦{{ row.left|floatformat:0|intcomma }}{% endif %}</span>{% else %}—{% endif %}</td>
+            <td>{% if row.over %}<span class="chip red">Over budget</span>{% elif row.budget %}<span class="chip green">Within budget</span>{% endif %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty"><i class="bi bi-bar-chart"></i>No spending or budgets for this term yet.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

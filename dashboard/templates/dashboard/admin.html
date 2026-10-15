@@ -1,0 +1,791 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Super Admin Dashboard{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root{
+  --gold: var(--champagne);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.sad-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 8px 56px;
+  color: var(--white);
+}
+
+/* ══════════════════════════════════════
+   HERO
+══════════════════════════════════════ */
+.hero {
+  position: relative;
+  border-radius: 22px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+}
+
+/* SVG atmospheric background */
+.hero-canvas {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.hero-canvas svg { width: 100%; height: 100%; }
+
+/* Thin diagonal accent rule */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--champagne) 30%,
+    var(--champagne-lt) 55%,
+    transparent 100%);
+  z-index: 2;
+}
+
+.hero-inner {
+  position: relative; z-index: 3;
+  display: flex; align-items: center;
+  width: 100%; padding: 2.5rem 3rem;
+  gap: 2rem;
+}
+
+.hero-text { flex: 1; }
+
+.hero-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .55rem;
+  margin-bottom: .9rem;
+}
+.hero-eyebrow::before {
+  content: ""; width: 18px; height: 1px; background: var(--champagne);
+}
+
+.hero-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.9rem, 3.5vw, 2.9rem);
+  font-weight: 500; line-height: 1.1; color: var(--white);
+  margin-bottom: 1.25rem;
+}
+.hero-title em {
+  font-style: italic; color: var(--champagne);
+}
+
+.hero-chips {
+  display: flex; gap: .6rem; flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .38rem .9rem;
+  border-radius: 50px;
+  font-size: .72rem; font-weight: 600;
+  border: 1px solid var(--rim2);
+  background: rgba(255,255,255,.05);
+  color: var(--slate2);
+}
+.chip i { font-size: .85rem; }
+.chip-active {
+  background: var(--green-dim);
+  border-color: rgba(94,203,142,.3);
+  color: var(--green);
+}
+.chip-warn {
+  background: rgba(244,210,31,.1);
+  border-color: rgba(244,210,31,.3);
+  color: #ffe066;
+}
+.chip-admin {
+  background: var(--champagne-dim);
+  border-color: rgba(244,210,31,.3);
+  color: var(--champagne);
+}
+
+/* Right side of hero — decorative school emblem */
+.hero-emblem {
+  flex-shrink: 0;
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.3);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.hero-emblem::before {
+  content: "";
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 1px dashed rgba(244,210,31,.18);
+}
+.hero-emblem-icon {
+  font-size: 2.4rem; line-height: 1;
+}
+
+/* ══════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+@media(max-width:1100px){ .stats-row { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:680px){ .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.1rem 1rem;
+  position: relative; overflow: hidden;
+  transition: transform .22s, border-color .22s, box-shadow .22s;
+  animation: riseUp .5s ease both;
+  cursor: default;
+}
+.stat:hover {
+  transform: translateY(-4px);
+  border-color: var(--rim2);
+  box-shadow: 0 12px 32px rgba(0,0,0,.3);
+}
+
+/* Accent bar on top */
+.stat-bar {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+/* Glow orb behind icon */
+.stat-glow {
+  position: absolute; top: -20px; right: -20px;
+  width: 90px; height: 90px; border-radius: 50%;
+  opacity: .25; pointer-events: none;
+}
+
+.stat-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; margin-bottom: 1rem;
+  position: relative; z-index: 1;
+}
+.stat-value {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2.4rem; font-weight: 600; line-height: 1;
+  color: var(--white); margin-bottom: .3rem;
+  position: relative; z-index: 1;
+}
+.stat-label {
+  font-size: .68rem; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--slate);
+  position: relative; z-index: 1;
+}
+.stat-badge {
+  position: absolute; bottom: .9rem; right: .9rem;
+  font-size: .62rem; font-weight: 600;
+  padding: .25rem .6rem; border-radius: 50px;
+  display: flex; align-items: center; gap: .3rem;
+}
+
+/* Color variants */
+.sc-gold .stat-bar { background: linear-gradient(90deg, var(--champagne), var(--champagne-lt)); }
+.sc-gold .stat-glow { background: var(--champagne); }
+.sc-gold .stat-icon { background: var(--champagne-dim); color: var(--champagne); }
+.sc-gold .stat-badge { background: var(--champagne-dim); color: var(--champagne); }
+
+.sc-green .stat-bar { background: linear-gradient(90deg, #3aa86a, var(--green)); }
+.sc-green .stat-glow { background: var(--green); }
+.sc-green .stat-icon { background: var(--green-dim); color: var(--green); }
+.sc-green .stat-badge { background: var(--green-dim); color: var(--green); }
+
+.sc-blue .stat-bar { background: linear-gradient(90deg, #3a7cbf, var(--blue)); }
+.sc-blue .stat-glow { background: var(--blue); }
+.sc-blue .stat-icon { background: var(--blue-dim); color: var(--blue); }
+.sc-blue .stat-badge { background: var(--blue-dim); color: var(--blue); }
+
+.sc-purple .stat-bar { background: linear-gradient(90deg, #7a6abf, var(--purple)); }
+.sc-purple .stat-glow { background: var(--purple); }
+.sc-purple .stat-icon { background: var(--purple-dim); color: var(--purple); }
+.sc-purple .stat-badge { background: var(--purple-dim); color: var(--purple); }
+
+.sc-teal .stat-bar { background: linear-gradient(90deg, #3aa8a4, var(--teal)); }
+.sc-teal .stat-glow { background: var(--teal); }
+.sc-teal .stat-icon { background: var(--teal-dim); color: var(--teal); }
+.sc-teal .stat-badge { background: var(--teal-dim); color: var(--teal); }
+
+.sc-red .stat-bar { background: linear-gradient(90deg, #bf4040, var(--red)); }
+.sc-red .stat-glow { background: var(--red); }
+.sc-red .stat-icon { background: var(--red-dim); color: var(--red); }
+.sc-red .stat-badge { background: var(--red-dim); color: var(--red); }
+
+/* staggered animations */
+.stat:nth-child(1){animation-delay:.04s}
+.stat:nth-child(2){animation-delay:.1s}
+.stat:nth-child(3){animation-delay:.16s}
+.stat:nth-child(4){animation-delay:.22s}
+.stat:nth-child(5){animation-delay:.28s}
+.stat:nth-child(6){animation-delay:.34s}
+
+/* ══════════════════════════════════════
+   LOWER GRID
+══════════════════════════════════════ */
+.lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+@media(max-width:1024px){ .lower-grid{ grid-template-columns:1fr 1fr; } }
+@media(max-width:620px){ .lower-grid{ grid-template-columns:1fr; } }
+
+/* ══════════════════════════════════════
+   PANEL (shared)
+══════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: riseUp .55s ease both;
+  position: relative;
+}
+.panel::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel:nth-child(1){animation-delay:.38s}
+.panel:nth-child(2){animation-delay:.44s}
+.panel:nth-child(3){animation-delay:.50s}
+
+.panel-head {
+  padding: 1.1rem 1.4rem .8rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-head-left {
+  display: flex; align-items: center; gap: .6rem;
+}
+.panel-head-icon {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+}
+.panel-head h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: .84rem; font-weight: 600; color: var(--white); margin: 0;
+}
+.panel-count {
+  font-size: .67rem; font-weight: 600;
+  padding: .22rem .65rem; border-radius: 50px;
+  background: var(--surface3); color: var(--slate2);
+  border: 1px solid var(--rim);
+}
+
+/* List rows */
+.panel-list { padding: .3rem 0; }
+.panel-row {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .75rem 1.4rem;
+  transition: background .15s;
+  position: relative;
+}
+.panel-row::after {
+  content: "";
+  position: absolute; left: 1.4rem; right: 1.4rem; bottom: 0;
+  height: 1px; background: var(--rim);
+}
+.panel-row:last-child::after { display: none; }
+.panel-row:hover { background: rgba(255,255,255,.025); }
+
+.panel-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Cormorant Garamond", serif;
+  font-size: .95rem; font-weight: 600; flex-shrink: 0;
+  color: var(--white); letter-spacing: .5px;
+}
+.panel-info { flex: 1; min-width: 0; }
+.panel-name {
+  font-size: .83rem; font-weight: 600; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: .1rem;
+}
+.panel-sub {
+  font-size: .7rem; color: var(--slate);
+}
+.panel-pip {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.panel-empty {
+  padding: 2.2rem 1.4rem;
+  text-align: center;
+  font-size: .82rem; color: var(--slate);
+}
+
+/* ══════════════════════════════════════
+   QUICK ACTIONS
+══════════════════════════════════════ */
+.qa-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .55rem; padding: .9rem;
+}
+.qa-btn {
+  display: flex; align-items: center; gap: .55rem;
+  padding: .75rem .85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rim2);
+  background: var(--surface2);
+  font-size: .76rem; font-weight: 600;
+  color: var(--slate2);
+  text-decoration: none;
+  transition: all .18s;
+  position: relative; overflow: hidden;
+}
+.qa-btn::before {
+  content: ""; position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  opacity: 0; transition: opacity .18s;
+}
+.qa-btn i { font-size: .95rem; flex-shrink: 0; }
+.qa-btn:hover {
+  background: var(--surface3);
+  border-color: var(--rim3);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+.qa-btn:hover::before { opacity: 1; }
+
+/* action colour accents */
+.qa-green::before { background: var(--green); }
+.qa-green:hover { border-color: rgba(94,203,142,.3); }
+.qa-green i { color: var(--green); }
+
+.qa-blue::before { background: var(--blue); }
+.qa-blue:hover { border-color: rgba(96,168,232,.3); }
+.qa-blue i { color: var(--blue); }
+
+.qa-purple::before { background: var(--purple); }
+.qa-purple:hover { border-color: rgba(168,144,240,.3); }
+.qa-purple i { color: var(--purple); }
+
+.qa-teal::before { background: var(--teal); }
+.qa-teal:hover { border-color: rgba(94,206,200,.3); }
+.qa-teal i { color: var(--teal); }
+
+.qa-gold::before { background: var(--champagne); }
+.qa-gold:hover { border-color: rgba(244,210,31,.3); }
+.qa-gold i { color: var(--champagne); }
+
+.qa-red::before { background: var(--red); }
+.qa-red:hover { border-color: rgba(232,112,112,.3); }
+.qa-red i { color: var(--red); }
+
+/* ══════════════════════════════════════
+   EXAMS TABLE
+══════════════════════════════════════ */
+.exams-panel {
+  animation: riseUp .55s .56s ease both;
+  margin-bottom: 0;
+}
+.view-all-link {
+  font-size: .75rem; font-weight: 600;
+  color: var(--champagne); text-decoration: none;
+  display: flex; align-items: center; gap: .3rem;
+  transition: color .15s;
+}
+.view-all-link:hover { color: var(--champagne-lt); }
+
+.exam-table {
+  width: 100%; border-collapse: collapse;
+  font-size: .83rem;
+}
+.exam-table thead tr {
+  border-bottom: 1px solid var(--rim2);
+}
+.exam-table th {
+  padding: .75rem 1.4rem;
+  text-align: left;
+  font-size: .65rem; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--slate);
+}
+.exam-table th:last-child,
+.exam-table td:last-child { text-align: center; }
+
+.exam-table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+}
+.exam-table tbody tr:last-child { border-bottom: none; }
+.exam-table tbody tr:hover { background: rgba(255,255,255,.02); }
+
+.exam-table td { padding: .9rem 1.4rem; }
+.exam-title {
+  font-weight: 600; color: var(--white); font-size: .84rem;
+}
+.exam-pill {
+  display: inline-flex; align-items: center;
+  padding: .25rem .75rem; border-radius: 50px;
+  font-size: .71rem; font-weight: 600;
+  background: var(--blue-dim); color: var(--blue);
+  border: 1px solid rgba(96,168,232,.2);
+}
+.status-published {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .25rem .75rem; border-radius: 50px;
+  font-size: .71rem; font-weight: 600;
+  background: var(--green-dim); color: var(--green);
+  border: 1px solid rgba(94,203,142,.2);
+}
+.status-draft {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .25rem .75rem; border-radius: 50px;
+  font-size: .71rem; font-weight: 600;
+  background: rgba(255,255,255,.04); color: var(--slate2);
+  border: 1px solid var(--rim);
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.edit-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .38rem .85rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--rim2);
+  background: var(--surface2);
+  color: var(--slate2); font-size: .73rem; font-weight: 600;
+  text-decoration: none;
+  transition: all .15s;
+}
+.edit-btn:hover {
+  border-color: rgba(244,210,31,.35);
+  background: var(--champagne-dim);
+  color: var(--champagne);
+}
+.exam-empty {
+  padding: 2.5rem; text-align: center; color: var(--slate); font-size: .83rem;
+}
+.exam-empty a {
+  color: var(--champagne); font-weight: 600; text-decoration: none;
+}
+.exam-empty a:hover { color: var(--champagne-lt); }
+
+/* ══════════════════════════════════════
+   ANIMATION
+══════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:768px) {
+  .hero-inner { padding: 1.75rem 1.5rem; flex-direction: column; gap: 1rem; }
+  .hero-emblem { display: none; }
+  .hero-title { font-size: 1.75rem; }
+}
+@media(max-width:480px) {
+  .stats-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .stat-value { font-size: 2rem; }
+  .stat { padding: 1.1rem .9rem .85rem; }
+}
+</style>
+
+<div class="sad-wrap">
+
+  <!-- ════ HERO ════ -->
+  <div class="hero" style="animation: riseUp .45s ease both;">
+    <div class="hero-canvas" aria-hidden="true">
+      <svg viewBox="0 0 1200 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hg1" cx="25%" cy="50%" r="60%">
+            <stop offset="0%" stop-color="#f4d21f" stop-opacity=".1"/>
+            <stop offset="100%" stop-color="#f4d21f" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="hg2" cx="85%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#60a8e8" stop-opacity=".08"/>
+            <stop offset="100%" stop-color="#60a8e8" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="1200" height="200" fill="url(#hg1)"/>
+        <rect width="1200" height="200" fill="url(#hg2)"/>
+        <!-- Decorative lines -->
+        <line x1="0" y1="100" x2="1200" y2="100" stroke="rgba(244,210,31,.04)" stroke-width="1"/>
+        <circle cx="950" cy="100" r="120" fill="none" stroke="rgba(244,210,31,.05)" stroke-width="1"/>
+        <circle cx="950" cy="100" r="75" fill="none" stroke="rgba(244,210,31,.05)" stroke-width="1"/>
+        <circle cx="950" cy="100" r="40" fill="none" stroke="rgba(244,210,31,.06)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-eyebrow">Welcome back, {{ request.user.get_full_name|default:request.user.username }}</div>
+        <h1 class="hero-title">
+          {{ tenant.name }}
+        </h1>
+        <div class="hero-chips">
+          {% if active_session %}
+            <span class="chip chip-active">
+              <i class="bi bi-calendar3"></i> {{ active_session.name }}
+            </span>
+          {% else %}
+            <span class="chip chip-warn">
+              <i class="bi bi-exclamation-circle"></i> No Active Session
+            </span>
+          {% endif %}
+          {% if active_term %}
+            <span class="chip chip-active">
+              <i class="bi bi-bookmark-fill"></i> {{ active_term.name }}
+            </span>
+          {% else %}
+            <span class="chip chip-warn">
+              <i class="bi bi-exclamation-circle"></i> No Active Term
+            </span>
+          {% endif %}
+          <span class="chip chip-admin">
+            <i class="bi bi-shield-fill-check"></i> Super Admin
+          </span>
+        </div>
+      </div>
+      <div class="hero-emblem" aria-hidden="true">
+        <div class="hero-emblem-icon">🎓</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ STAT CARDS ════ -->
+  <div class="stats-row">
+
+    <div class="stat sc-green">
+      <div class="stat-bar"></div>
+      <div class="stat-glow"></div>
+      <div class="stat-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div class="stat-value counter" data-target="{{ total_students }}">0</div>
+      <div class="stat-label">Students</div>
+      <div class="stat-badge"><i class="bi bi-person-check"></i> Enrolled</div>
+    </div>
+
+    <div class="stat sc-gold">
+      <div class="stat-bar"></div>
+      <div class="stat-glow"></div>
+      <div class="stat-icon"><i class="bi bi-person-badge-fill"></i></div>
+      <div class="stat-value counter" data-target="{{ total_staff }}">0</div>
+      <div class="stat-label">Staff Members</div>
+      <div class="stat-badge"><i class="bi bi-star"></i> Active</div>
+    </div>
+
+    <div class="stat sc-purple">
+      <div class="stat-bar"></div>
+      <div class="stat-glow"></div>
+      <div class="stat-icon"><i class="bi bi-journal-text"></i></div>
+      <div class="stat-value counter" data-target="{{ total_exams }}">0</div>
+      <div class="stat-label">Total Exams</div>
+      <div class="stat-badge"><i class="bi bi-clipboard2-check"></i> Created</div>
+    </div>
+
+    <div class="stat sc-teal">
+      <div class="stat-bar"></div>
+      <div class="stat-glow"></div>
+      <div class="stat-icon"><i class="bi bi-book-fill"></i></div>
+      <div class="stat-value counter" data-target="{{ total_subjects }}">0</div>
+      <div class="stat-label">Subjects</div>
+      <div class="stat-badge"><i class="bi bi-layers"></i> Configured</div>
+    </div>
+
+    <div class="stat sc-red">
+      <div class="stat-bar"></div>
+      <div class="stat-glow"></div>
+      <div class="stat-icon"><i class="bi bi-building"></i></div>
+      <div class="stat-value counter" data-target="{{ total_classes }}">0</div>
+      <div class="stat-label">Classes</div>
+      <div class="stat-badge"><i class="bi bi-diagram-3"></i> Total</div>
+    </div>
+
+  </div>
+
+  <!-- ════ LOWER GRID ════ -->
+  <div class="lower-grid">
+
+    <!-- Recent Students -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-head-icon" style="background:var(--green-dim); color:var(--green);">
+            <i class="bi bi-mortarboard-fill"></i>
+          </div>
+          <h3>Recent Students</h3>
+        </div>
+        <span class="panel-count">Last 5</span>
+      </div>
+      <div class="panel-list">
+        {% for student in recent_students %}
+        <div class="panel-row">
+          <div class="panel-avatar"
+               style="background: {% cycle 'linear-gradient(135deg,#3a7cbf,#60a8e8)' 'linear-gradient(135deg,#3aa86a,#5ecb8e)' 'linear-gradient(135deg,#d1ad00,#f4d21f)' 'linear-gradient(135deg,#bf4040,#e87070)' 'linear-gradient(135deg,#7a6abf,#a890f0)' %};">
+            {{ student.full_name|first|upper }}
+          </div>
+          <div class="panel-info">
+            <div class="panel-name">{{ student.full_name }}</div>
+            <div class="panel-sub">{{ student.class_assigned|default:"No class" }} &middot; {{ student.admission_number }}</div>
+          </div>
+          <div class="panel-pip" style="background: var(--green);"></div>
+        </div>
+        {% empty %}
+        <div class="panel-empty">No students registered yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Recent Staff -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-head-icon" style="background:var(--gold-dim); color:var(--champagne);">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+          <h3>Recent Staff</h3>
+        </div>
+        <span class="panel-count">Last 5</span>
+      </div>
+      <div class="panel-list">
+        {% for staff in recent_staff %}
+        <div class="panel-row">
+          <div class="panel-avatar"
+               style="background: {% cycle 'linear-gradient(135deg,#d1ad00,#f4d21f)' 'linear-gradient(135deg,#3a7cbf,#60a8e8)' 'linear-gradient(135deg,#3aa86a,#5ecb8e)' 'linear-gradient(135deg,#7a6abf,#a890f0)' 'linear-gradient(135deg,#bf4040,#e87070)' %};">
+            {{ staff.user.get_full_name|first|upper|default:"S" }}
+          </div>
+          <div class="panel-info">
+            <div class="panel-name">{{ staff.user.get_full_name|default:staff.user.username }}</div>
+            <div class="panel-sub">{{ staff.role|default:"Staff" }} &middot; {{ staff.user.username }}</div>
+          </div>
+          <div class="panel-pip" style="background: var(--champagne);"></div>
+        </div>
+        {% empty %}
+        <div class="panel-empty">No staff members yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-head-icon" style="background:var(--purple-dim); color:var(--purple);">
+            <i class="bi bi-lightning-fill"></i>
+          </div>
+          <h3>Quick Actions</h3>
+        </div>
+      </div>
+      <div class="qa-grid">
+        <a href="{% url 'users:register_student' %}"   class="qa-btn qa-green"><i class="bi bi-person-plus-fill"></i> Add Student</a>
+        <a href="{% url 'users:create_staff' %}"       class="qa-btn qa-blue"><i class="bi bi-person-badge-fill"></i> Add Staff</a>
+        <a href="{% url 'cbt:cbt_create_exam' %}"      class="qa-btn qa-purple"><i class="bi bi-plus-circle-fill"></i> New Exam</a>
+        <a href="{% url 'cbt:bulk_question_upload' %}" class="qa-btn qa-teal"><i class="bi bi-upload"></i> Bulk Upload</a>
+        <a href="{% url 'users:all_students' %}"       class="qa-btn qa-gold"><i class="bi bi-people-fill"></i> All Students</a>
+        <a href="{% url 'cbt:admin_exam_list' %}"      class="qa-btn qa-red"><i class="bi bi-journal-text"></i> All Exams</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ RECENT EXAMS TABLE ════ -->
+  <div class="panel exams-panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-head-icon" style="background:var(--purple-dim); color:var(--purple);">
+          <i class="bi bi-journal-text"></i>
+        </div>
+        <h3>Recent Exams</h3>
+      </div>
+      <a href="{% url 'cbt:admin_exam_list' %}" class="view-all-link">
+        View all <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="exam-table">
+        <thead>
+          <tr>
+            <th>Exam Title</th>
+            <th>Subject</th>
+            <th style="text-align:center;">Status</th>
+            <th style="text-align:center;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exam in recent_exams %}
+          <tr>
+            <td><span class="exam-title">{{ exam.title }}</span></td>
+            <td><span class="exam-pill">{{ exam.subject.name }}</span></td>
+            <td style="text-align:center;">
+              {% if exam.published %}
+                <span class="status-published">
+                  <span class="status-dot" style="background:var(--green);"></span>
+                  Published
+                </span>
+              {% else %}
+                <span class="status-draft">
+                  <span class="status-dot" style="background:var(--slate);"></span>
+                  Draft
+                </span>
+              {% endif %}
+            </td>
+            <td style="text-align:center;">
+              <a href="{% url 'cbt:edit_exam' exam.id %}" class="edit-btn">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="exam-empty">
+              No exams created yet.
+              <a href="{% url 'cbt:cbt_create_exam' %}">Create one &rarr;</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.target, 10) || 0;
+      const duration = 900;
+      const fps = 60;
+      const steps = duration / (1000 / fps);
+      const increment = target / steps;
+      let current = 0;
+      const tick = () => {
+        current = Math.min(current + increment, target);
+        el.textContent = Math.floor(current).toLocaleString();
+        if (current < target) requestAnimationFrame(tick);
+        else el.textContent = target.toLocaleString();
+      };
+      requestAnimationFrame(tick);
+      observer.unobserve(el);
+    });
+  }, { threshold: 0.25 });
+
+  document.querySelectorAll(".counter").forEach(c => observer.observe(c));
+});
+</script>
+{% endblock %}

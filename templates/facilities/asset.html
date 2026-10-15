@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ tag.code }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Asset · {{ tag.get_status_display }}</div>
+  <h1 class="fin-title"><em>{{ tag.code }}</em> {{ tag.name }}</h1>
+  <p class="fin-sub">{{ tag.category }}{% if tag.serial_number %} · S/N {{ tag.serial_number }}{% endif %} · {{ tag.space|default:"no room" }}{% if tag.custodian %} · with {{ tag.custodian.get_full_name|default:tag.custodian.username }}{% endif %} · {{ tag.get_condition_display }}{% if tag.warranty_until %} · warranty to {{ tag.warranty_until|date:"j M Y" }}{% endif %}</p>
+</div><div style="width:110px">{{ qr|safe }}</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Value</h3></div><div class="panel-b">
+      <p style="margin:0 0 .4rem">Cost ₦{{ tag.cost|floatformat:2 }}{% if tag.purchase_date %} on {{ tag.purchase_date|date:"j M Y" }}{% endif %} · <b>worth ₦{{ value|floatformat:2 }} today</b> · {{ tag.get_method_display|lower }}{% if tag.method == 'REDUCING' %} {{ tag.reducing_rate }}%{% else %}, {{ tag.life_years }} years{% endif %}</p>
+      {% if schedule %}<table class="tbl" data-no-export><thead><tr><th>Year</th><th class="num">Opening</th><th class="num">Depreciation</th><th class="num">Closing</th></tr></thead><tbody>{% for n, o, d, c in schedule %}<tr><td>{{ n }}</td><td class="num">{{ o|floatformat:2 }}</td><td class="num">{{ d|floatformat:2 }}</td><td class="num">{{ c|floatformat:2 }}</td></tr>{% endfor %}</tbody></table>{% else %}<p class="hint">Add the purchase date and cost to see depreciation.</p>{% endif %}
+    </div></div>
+    {% if tag.is_ict %}<div class="panel"><div class="panel-h"><h3>Specification</h3></div><div class="panel-b"><p style="margin:0">{{ tag.cpu }} · {{ tag.ram }} RAM · {{ tag.storage }} · {{ tag.os }}{% if tag.mac_address %} · MAC {{ tag.mac_address }}{% endif %}</p></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>History</h3></div><div class="panel-b">
+      {% for e in events %}<p style="margin:.2rem 0;font-size:.9rem"><b>{{ e.at|date:"j M Y" }}</b> {{ e.text }}{% if e.cost %} · ₦{{ e.cost|floatformat:0 }}{% endif %} <span class="hint">{{ e.by.get_full_name|default:e.by.username }}</span></p>{% endfor %}
+      {% for j in jobs %}<p style="margin:.2rem 0;font-size:.9rem"><i class="bi bi-tools"></i> {{ j.created_at|date:"j M Y" }} {{ j.title }} <span class="hint">{{ j.get_status_display }}</span></p>{% endfor %}
+      <form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.4rem">{% csrf_token %}<input type="hidden" name="action" value="note"><input name="text" placeholder="Add a note" style="flex:1"><button class="fin-btn fin-btn-sm" type="submit">Add</button></form>
+    </div></div>
+  </div>
+  {% if tag.status != 'DISPOSED' %}<div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="move">
+      <h3 style="margin:0 0 .6rem">Move or hand over</h3>
+      <div><label>Room</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}" {% if s.pk == tag.space_id %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></div>
+      <div><label>Custodian</label><select name="custodian"><option value="">—</option>{% for u in users %}<option value="{{ u.pk }}" {% if u.pk == tag.custodian_id %}selected{% endif %}>{{ u.get_full_name|default:u.username }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Condition</label><select name="condition">{% for k, v in conditions %}<option value="{{ k }}" {% if k == tag.condition %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div><div><label>Note</label><input name="note" maxlength="120"></div></div>
+      <button class="fin-btn" type="submit">Save</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="status">
+      <div style="display:flex;gap:.3rem"><select name="status"><option value="USE" {% if tag.status == 'USE' %}selected{% endif %}>In use</option><option value="STORE" {% if tag.status == 'STORE' %}selected{% endif %}>In store</option><option value="REPAIR" {% if tag.status == 'REPAIR' %}selected{% endif %}>Under repair</option></select><button class="fin-btn fin-btn-sm" type="submit">Set status</button></div>
+    </form>
+    {% if pending %}<div class="panel"><div class="panel-b"><p>Disposal waiting for approval: {{ pending.get_method_display }} — {{ pending.reason }}</p></div></div>{% else %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="dispose">
+      <h3 style="margin:0 0 .6rem">Dispose of it</h3>
+      <div class="row2"><div><label>How</label><select name="method">{% for k, v in methods %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Sold for ₦</label><input name="proceeds" inputmode="decimal"></div></div>
+      <div><label>Reason</label><input name="reason" required maxlength="255"></div>
+      <p class="hint" style="margin:0">An administrator approves; the book value (₦{{ value|floatformat:2 }}) is written off.</p>
+      <button class="fin-btn" type="submit">Ask for approval</button>
+    </form>{% endif %}
+  </div>{% endif %}
+</div>
+{% endblock %}

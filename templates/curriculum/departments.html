@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Departments{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Departments &amp; <em>heads</em></h1>
+  <p class="fin-sub">Heads of department review lesson notes and approve schemes of work for their subjects.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid">
+  {% if can_manage %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> New department</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Name</label><input name="name" required maxlength="80" placeholder="Sciences"></div>
+      <div><label>Head of department</label><select name="hod"><option value="">— none yet —</option>{% for s in staff %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label>Subjects</label><select name="subjects" multiple size="8">{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select><span class="hint">Hold Ctrl (or ⌘) to pick several.</span></div>
+      <div><label>Note <span class="hint">(optional)</span></label><input name="description" maxlength="255"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Create department</button>
+    </form>
+    {% if unplaced %}<p class="hint" style="margin-top:1rem">Not in any department: {% for s in unplaced %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+  </div></div>{% endif %}
+  <div>
+    {% for d in departments %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-diagram-3"></i> {{ d.name }}</h3>{% if d.hod %}<span class="chip gold">HOD: {{ d.hod.full_name }}</span>{% else %}<span class="chip amber">no head</span>{% endif %}</div><div class="panel-b">
+      {% if d.description %}<p class="hint" style="margin-top:0">{{ d.description }}</p>{% endif %}
+      <div style="display:flex;gap:.35rem;flex-wrap:wrap">{% for s in d.subjects.all %}<span class="chip">{{ s.name }}</span>{% empty %}<span class="hint">No subjects yet.</span>{% endfor %}</div>
+      {% if can_manage %}<details style="margin-top:.9rem"><summary class="hint" style="cursor:pointer">Edit</summary>
+        <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}<input type="hidden" name="id" value="{{ d.id }}">
+          <div class="row2"><div><label>Name</label><input name="name" value="{{ d.name }}" required maxlength="80"></div>
+          <div><label>Head of department</label><select name="hod"><option value="">— none —</option>{% for s in staff %}<option value="{{ s.id }}" {% if s.id == d.hod_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div></div>
+          <div><label>Subjects</label><select name="subjects" multiple size="6">{% for s in subjects %}<option value="{{ s.id }}" {% if s in d.subjects.all %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+          <div><label>Note</label><input name="description" value="{{ d.description }}" maxlength="255"></div>
+          <div style="display:flex;gap:.5rem"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Save</button>
+          <button class="fin-btn fin-btn-danger fin-btn-sm" type="submit" name="action" value="delete" formnovalidate onclick="return confirm('Remove the {{ d.name|escapejs }} department? Schemes and notes are kept.')">Remove</button></div>
+        </form></details>{% endif %}
+    </div></div>
+    {% empty %}<div class="panel"><div class="empty"><i class="bi bi-diagram-3"></i><p>No departments yet.{% if can_manage %} Create one, choose its subjects and its head.{% endif %}</p></div></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

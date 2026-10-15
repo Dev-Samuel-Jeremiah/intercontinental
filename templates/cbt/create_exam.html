@@ -1,0 +1,1344 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Create New Exam{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════════ */
+.exam-wrap {
+  max-width: 1300px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+}
+.eyebrow span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 6px;
+  letter-spacing: -.02em;
+}
+.page-title em {
+  font-style: italic;
+  color: var(--champagne);
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--slate2);
+  margin: 0 0 14px;
+}
+
+.breadcrumb-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--rim);
+  border: 1px solid var(--rim2);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  color: var(--slate2);
+}
+.breadcrumb-bar a {
+  color: var(--champagne-lt);
+  text-decoration: none;
+  font-weight: 500;
+}
+.breadcrumb-bar a:hover { text-decoration: underline; }
+.breadcrumb-bar i { font-size: 0.7rem; color: var(--slate); }
+
+.context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-bdr);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 14px;
+}
+
+.page-divider {
+  height: 1px;
+  background: var(--rim2);
+  margin-bottom: 2rem;
+  position: relative;
+}
+.page-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WIZARD STEPS
+═══════════════════════════════════════════════════════════════ */
+.wizard-panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  animation: riseUp .45s ease both;
+  animation-delay: .05s;
+}
+.wizard-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.steps-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 4px;
+}
+.steps-container::before {
+  content: '';
+  position: absolute;
+  top: 24px; left: 0; right: 0;
+  height: 2px;
+  background: var(--rim2);
+  z-index: 0;
+}
+
+.step-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 80px;
+}
+
+.step-circle {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 2px solid var(--rim2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  color: var(--slate);
+  margin-bottom: 8px;
+  transition: all .3s ease;
+}
+.step-item.active .step-circle {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  border-color: var(--champagne);
+  color: #0a1f44;
+  box-shadow: 0 4px 16px rgba(244,210,31,.32);
+}
+.step-item.completed .step-circle {
+  background: var(--green-dim);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+
+.step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--slate);
+  text-align: center;
+  white-space: nowrap;
+}
+.step-item.active .step-label  { color: var(--champagne-lt); }
+.step-item.completed .step-label { color: var(--green); }
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN LAYOUT
+═══════════════════════════════════════════════════════════════ */
+.exam-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+@media(max-width:1100px) { .exam-layout { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.panel-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panel-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+.panel-head h3 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.panel-head p {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--slate);
+}
+.panel-body { padding: 24px; }
+
+/* Form card stacks sections */
+.form-card { margin-bottom: 0; }
+
+.form-section {
+  padding: 24px;
+  border-bottom: 1px solid var(--rim);
+}
+.form-section:last-of-type { border-bottom: none; }
+
+/* Section headers inside form */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.section-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.section-title h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0 0 2px;
+}
+.section-title p {
+  font-size: 0.76rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════════════════════════ */
+.form-group { margin-bottom: 18px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-label {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: 8px;
+}
+.required-star { color: var(--red); margin-left: 3px; }
+
+.form-control,
+.form-select {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--rim2);
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.form-control::placeholder { color: var(--slate); }
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.form-select option { background: var(--surface2); color: var(--white); }
+input[type="date"].form-control::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+}
+
+.form-helper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--slate);
+  margin-top: 6px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.input-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media(max-width:700px) {
+  .input-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CLASS CHECKBOXES
+═══════════════════════════════════════════════════════════════ */
+.checkbox-container {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  padding: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rim3) transparent;
+}
+
+.checkbox-item {
+  padding: 11px 14px;
+  margin-bottom: 6px;
+  background: var(--surface3);
+  border: 1px solid var(--rim);
+  border-radius: 9px;
+  transition: border-color .2s, background .2s;
+  cursor: pointer;
+}
+.checkbox-item:last-child { margin-bottom: 0; }
+.checkbox-item:hover {
+  border-color: var(--rim3);
+  background: rgba(255,255,255,.04);
+}
+.checkbox-item.checked {
+  border-color: var(--champagne-bdr);
+  background: var(--champagne-dim);
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.form-check-input {
+  width: 16px; height: 16px;
+  cursor: pointer;
+  accent-color: var(--champagne);
+  flex-shrink: 0;
+}
+.form-check-label {
+  cursor: pointer;
+  font-size: 0.87rem;
+  font-weight: 500;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.form-check-label i { color: var(--champagne); font-size: 0.85rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOGGLE SWITCHES
+═══════════════════════════════════════════════════════════════ */
+.toggle-group { display: flex; flex-direction: column; gap: 12px; }
+
+.toggle-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border-radius: 10px;
+  border: 1px solid var(--rim);
+  transition: border-color .2s;
+}
+.toggle-item:hover { border-color: var(--rim3); }
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.toggle-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+}
+.toggle-text h5 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--white);
+  margin: 0 0 2px;
+}
+.toggle-text p {
+  font-size: 0.75rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 46px; height: 24px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--rim2);
+  transition: .3s;
+  border-radius: 34px;
+  border: 1px solid var(--rim3);
+}
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px; width: 16px;
+  left: 3px; bottom: 3px;
+  background: var(--slate2);
+  transition: .3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  border-color: var(--champagne-bdr);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+  background: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.87rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 26px rgba(244,210,31,.38);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.btn-lg { padding: 13px 30px; font-size: 0.95rem; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover {
+  background: var(--rim);
+  color: var(--white);
+  border-color: var(--rim3);
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 1px solid var(--rim);
+  background: var(--surface2);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ALERTS
+═══════════════════════════════════════════════════════════════ */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  animation: riseUp .3s ease;
+  border: 1px solid;
+}
+.alert-success {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+.alert-error {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red-border);
+}
+.alert-warning {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-color: var(--amber-border);
+}
+.alert-info {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-color: var(--blue-border);
+}
+.alert-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  font-size: 1rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.alert-close:hover { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════════════ */
+.sidebar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: border-color .2s;
+}
+.info-item:last-child { margin-bottom: 0; }
+.info-item:hover { border-color: var(--rim3); }
+
+.info-icon {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.info-content h6 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 0 0 3px;
+}
+.info-content p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  margin: 0;
+  line-height: 1;
+}
+
+/* Tips */
+.tips-list {
+  list-style: none;
+  padding: 0; margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.tips-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rim);
+  font-size: 0.82rem;
+  color: var(--slate2);
+}
+.tips-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.tips-list li i { color: var(--green); font-size: 0.8rem; margin-top: 2px; flex-shrink: 0; }
+
+/* Help card */
+.help-card {
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-bdr);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.help-card h5 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.help-card p {
+  font-size: 0.8rem;
+  color: var(--slate2);
+  margin: 0 0 14px;
+}
+.help-card a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--champagne);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1px solid var(--champagne-bdr);
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all .2s;
+}
+.help-card a:hover {
+  background: var(--champagne-dim);
+  color: var(--champagne-lt);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+}
+.empty-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  color: var(--slate);
+  margin-bottom: 12px;
+}
+.empty-state h5 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin: 0 0 4px;
+}
+.empty-state p {
+  font-size: 0.78rem;
+  color: var(--slate);
+  margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPINNER
+═══════════════════════════════════════════════════════════════ */
+.spinner {
+  width: 32px; height: 32px;
+  border: 2.5px solid var(--rim2);
+  border-top-color: var(--champagne);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 0 auto;
+}
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+}
+.loading-state span {
+  font-size: 0.8rem;
+  color: var(--slate);
+}
+
+/* Stagger delays */
+.panel:nth-child(1) { animation-delay: .08s; }
+.panel:nth-child(2) { animation-delay: .13s; }
+.panel:nth-child(3) { animation-delay: .18s; }
+.panel:nth-child(4) { animation-delay: .23s; }
+.panel:nth-child(5) { animation-delay: .28s; }
+</style>
+
+<div class="exam-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow"><span>CBT Module · Examination Management</span></div>
+      <h1 class="page-title">Create <em>New Exam</em></h1>
+      <p class="page-subtitle">Set up a comprehensive examination for your students</p>
+      <div class="breadcrumb-bar">
+        <a href="{% url 'cbt:admin_exam_list' %}"><i class="bi bi-house-fill"></i> Exams</a>
+        <i class="bi bi-chevron-right"></i>
+        <span>Create New</span>
+      </div>
+    </div>
+    <div class="context-pill">
+      <i class="bi bi-journal-plus"></i>
+      New Examination
+    </div>
+  </div>
+  <div class="page-divider"></div>
+
+  <!-- ══ WIZARD STEPS ══════════════════════════════════════════ -->
+  <div class="wizard-panel">
+    <div class="steps-container">
+      <div class="step-item active">
+        <div class="step-circle"><i class="bi bi-info-circle"></i></div>
+        <div class="step-label">Basic Info</div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle"><i class="bi bi-mortarboard"></i></div>
+        <div class="step-label">Academic Setup</div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle"><i class="bi bi-people"></i></div>
+        <div class="step-label">Assign Classes</div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle"><i class="bi bi-clock"></i></div>
+        <div class="step-label">Schedule</div>
+      </div>
+      <div class="step-item">
+        <div class="step-circle"><i class="bi bi-sliders"></i></div>
+        <div class="step-label">Configure</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ALERTS ════════════════════════════════════════════════ -->
+  {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}exclamation-circle-fill{% elif message.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+      <span>{{ message }}</span>
+      <button class="alert-close" onclick="this.parentElement.remove()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ══ MAIN LAYOUT ════════════════════════════════════════════ -->
+  <div class="exam-layout">
+
+    <!-- ── FORM CARD ──────────────────────────────────────────── -->
+    <div class="panel form-card">
+      <form method="POST" id="examForm">
+        {% csrf_token %}
+
+        <!-- SECTION 1: Exam Information -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+              <i class="bi bi-file-earmark-text" style="color:var(--blue);"></i>
+            </div>
+            <div class="section-title">
+              <h4>Exam Information</h4>
+              <p>Basic details about your examination</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Exam Title <span class="required-star">*</span>
+            </label>
+            <input type="text"
+                   name="title"
+                   class="form-control"
+                   placeholder="e.g., First Term Mathematics Exam 2024"
+                   required>
+            <div class="form-helper">
+              <i class="bi bi-info-circle"></i>
+              Enter a clear, descriptive title for your exam
+            </div>
+          </div>
+
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Exam Type <span class="required-star">*</span>
+              </label>
+              <select name="exam_type" class="form-select" required>
+                <option value="">— Select Type —</option>
+                <option value="CA1">First Continuous Assessment</option>
+                <option value="CA2">Second Continuous Assessment</option>
+                <option value="EXAM">Final Examination</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                Question Format <span class="required-star">*</span>
+              </label>
+              <select name="part_type" class="form-select" required>
+                <option value="">— Select Format —</option>
+                <option value="CBT">CBT (Computer Based Test)</option>
+                <option value="ESSAY">Essay / Theory</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: Academic Setup -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+              <i class="bi bi-book" style="color:var(--green);"></i>
+            </div>
+            <div class="section-title">
+              <h4>Academic Setup</h4>
+              <p>Link exam to subject, session, and term</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Subject <span class="required-star">*</span>
+            </label>
+            <select name="subject" id="subject" class="form-select" required>
+              <option value="">— Select Subject —</option>
+              {% for subject in subjects %}
+                <option value="{{ subject.id }}">{{ subject.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-helper">
+              <i class="bi bi-info-circle"></i>
+              Classes will load based on selected subject
+            </div>
+          </div>
+
+          <div class="input-grid">
+            <div class="form-group">
+              <label class="form-label">
+                Academic Session <span class="required-star">*</span>
+              </label>
+              <select name="session" class="form-select" required>
+                <option value="">— Select Session —</option>
+                {% for session in sessions %}
+                  <option value="{{ session.id }}" {% if session == sessions.0 %}selected{% endif %}>
+                    {{ session.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                Term <span class="required-star">*</span>
+              </label>
+              <select name="term" class="form-select" required>
+                <option value="">— Select Term —</option>
+                {% for term in terms %}
+                  <option value="{{ term.id }}" {% if term == terms.0 %}selected{% endif %}>
+                    {{ term.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: Assign Classes -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+              <i class="bi bi-people" style="color:var(--amber);"></i>
+            </div>
+            <div class="section-title">
+              <h4>Assign Classes</h4>
+              <p>Select which classes can take this exam</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Target Classes <span class="required-star">*</span>
+            </label>
+            <div class="checkbox-container" id="class-checkboxes">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <h5>No subject selected</h5>
+                <p>Select a subject above to load available classes</p>
+              </div>
+            </div>
+            <div class="form-helper">
+              <i class="bi bi-info-circle"></i>
+              Multiple classes can be selected
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: Exam Schedule -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+              <i class="bi bi-calendar3" style="color:var(--purple);"></i>
+            </div>
+            <div class="section-title">
+              <h4>Exam Schedule</h4>
+              <p>Set date, time, and duration</p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Duration (Minutes) <span class="required-star">*</span>
+            </label>
+            <input type="number"
+                   name="duration_minutes"
+                   class="form-control"
+                   min="1"
+                   max="300"
+                   value="60"
+                   placeholder="e.g., 60"
+                   required>
+            <div class="form-helper">
+              <i class="bi bi-info-circle"></i>
+              Recommended: 30–120 minutes depending on exam type
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              Exam Date <span class="required-star">*</span>
+            </label>
+            <input type="date"
+                   name="exam_date"
+                   class="form-control"
+                   min="{{ today }}"
+                   required>
+          </div>
+
+          <div class="input-grid-3">
+            <div class="form-group">
+              <label class="form-label">
+                Start Time <span class="required-star">*</span>
+              </label>
+              <select name="start_time" class="form-select" required>
+                <option value="">— Select —</option>
+                {% for value, display in hours %}
+                  <option value="{{ value }}">{{ display }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">
+                End Time <span class="required-star">*</span>
+              </label>
+              <select name="end_time" class="form-select" required>
+                <option value="">— Select —</option>
+                {% for value, display in hours %}
+                  <option value="{{ value }}">{{ display }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: Exam Settings -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-icon" style="background:var(--teal-dim);border:1px solid var(--teal-border);">
+              <i class="bi bi-toggles" style="color:var(--teal);"></i>
+            </div>
+            <div class="section-title">
+              <h4>Exam Settings</h4>
+              <p>Configure advanced options for this examination</p>
+            </div>
+          </div>
+
+          <div class="toggle-group">
+            <div class="toggle-item">
+              <div class="toggle-label">
+                <div class="toggle-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+                  <i class="bi bi-shuffle" style="color:var(--amber);"></i>
+                </div>
+                <div class="toggle-text">
+                  <h5>Shuffle Questions</h5>
+                  <p>Randomize question order for each student</p>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="shuffle_questions" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-label">
+                <div class="toggle-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+                  <i class="bi bi-arrow-repeat" style="color:var(--blue);"></i>
+                </div>
+                <div class="toggle-text">
+                  <h5>Allow Retake</h5>
+                  <p>Students can retake if they fail or want to improve</p>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allow_retake">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-label">
+                <div class="toggle-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+                  <i class="bi bi-list-ol" style="color:var(--amber);"></i>
+                </div>
+                <div class="toggle-text">
+                  <h5>Shuffle Options</h5>
+                  <p>Each student sees A–D in their own order</p>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="shuffle_options" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-label">
+                <div class="toggle-icon" style="background:var(--red-dim,rgba(232,112,112,.1));border:1px solid var(--red-border,rgba(232,112,112,.3));">
+                  <i class="bi bi-shield-lock" style="color:var(--red,#e87070);"></i>
+                </div>
+                <div class="toggle-text">
+                  <h5>Exam Lockdown</h5>
+                  <p>Log tab switching, copying and pasting, and warn the student</p>
+                </div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" name="lockdown" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-item">
+              <div class="toggle-label">
+                <div class="toggle-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+                  <i class="bi bi-lightbulb" style="color:var(--green);"></i>
+                </div>
+                <div class="toggle-text">
+                  <h5>Answer Review</h5>
+                  <p>When students may see correct answers and explanations</p>
+                </div>
+              </div>
+              <select name="answer_review" style="padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);color:#f2f5fb;font:inherit;font-size:.8rem">
+                <option value="NEVER">Never</option><option value="AFTER_CLOSE" selected>After the exam closes</option><option value="AFTER_SUBMIT">As soon as they submit</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Footer -->
+        <div class="form-footer">
+          <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-ghost">
+            <i class="bi bi-x-lg"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-check-circle-fill"></i> Create Exam
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ── SIDEBAR ─────────────────────────────────────────────── -->
+    <div class="sidebar-stack">
+
+      <!-- Quick Stats -->
+      <div class="panel" style="animation-delay:.12s;">
+        <div class="panel-head">
+          <div class="panel-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+            <i class="bi bi-bar-chart-line" style="color:var(--champagne);font-size:.8rem;"></i>
+          </div>
+          <h3>Quick Stats</h3>
+        </div>
+        <div class="panel-body" style="padding:16px;">
+          <div class="info-item">
+            <div class="info-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+              <i class="bi bi-file-earmark-text" style="color:var(--blue);"></i>
+            </div>
+            <div class="info-content">
+              <h6>Total Exams</h6>
+              <p>{{ total_exams|default:0 }}</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+              <i class="bi bi-check-circle" style="color:var(--green);"></i>
+            </div>
+            <div class="info-content">
+              <h6>Active Exams</h6>
+              <p>{{ active_exams|default:0 }}</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+              <i class="bi bi-calendar-event" style="color:var(--amber);"></i>
+            </div>
+            <div class="info-content">
+              <h6>Scheduled</h6>
+              <p>{{ scheduled_exams|default:0 }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Best Practices -->
+      <div class="panel" style="animation-delay:.17s;">
+        <div class="panel-head">
+          <div class="panel-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+            <i class="bi bi-lightbulb" style="color:var(--green);font-size:.8rem;"></i>
+          </div>
+          <h3>Best Practices</h3>
+        </div>
+        <div class="panel-body" style="padding:16px 20px;">
+          <ul class="tips-list">
+            <li><i class="bi bi-check-circle-fill"></i><span>Use clear, descriptive exam titles</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Set appropriate time limits per question count</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Test the exam before publishing to students</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Shuffle questions to prevent academic dishonesty</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Assign only to correct class levels</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Help Card -->
+      <div class="help-card" style="animation:riseUp .45s ease both;animation-delay:.22s;">
+        <h5><i class="bi bi-question-circle-fill"></i> Need Help?</h5>
+        <p>Check our comprehensive guide on creating effective examinations for your students.</p>
+        <a href="#"><i class="bi bi-book-open"></i> View Documentation</a>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- AJAX Script -->
+<script>
+document.getElementById("subject").addEventListener("change", function () {
+  const subjectId = this.value;
+  const container = document.getElementById("class-checkboxes");
+
+  if (!subjectId) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+        <h5>No subject selected</h5>
+        <p>Select a subject above to load available classes</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading classes…</span>
+    </div>`;
+
+  fetch(`/cbt/ajax/classes-by-subject/?subject_id=${subjectId}`)
+    .then(res => res.json())
+    .then(data => {
+      container.innerHTML = "";
+      if (!data.classes.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-building-x"></i></div>
+            <h5>No classes found</h5>
+            <p>No classes are linked to this subject yet</p>
+          </div>`;
+        return;
+      }
+      data.classes.forEach(cls => {
+        const div = document.createElement("div");
+        div.className = "checkbox-item";
+        div.innerHTML = `
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox"
+                   name="classes" value="${cls.id}" id="class_${cls.id}"
+                   onchange="this.closest('.checkbox-item').classList.toggle('checked', this.checked)">
+            <label class="form-check-label" for="class_${cls.id}">
+              <i class="bi bi-mortarboard-fill"></i> ${cls.name}
+            </label>
+          </div>`;
+        container.appendChild(div);
+      });
+    })
+    .catch(() => {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-wifi-off"></i></div>
+          <h5>Failed to load classes</h5>
+          <p>Check your connection and try again</p>
+        </div>`;
+    });
+});
+
+// Form validation
+document.getElementById("examForm").addEventListener("submit", function (e) {
+  const selected = document.querySelectorAll('input[name="classes"]:checked');
+  if (!selected.length) {
+    e.preventDefault();
+    document.getElementById("class-checkboxes").scrollIntoView({ behavior: "smooth" });
+    const container = document.getElementById("class-checkboxes");
+    container.style.borderColor = "var(--red-border)";
+    container.style.boxShadow = "0 0 0 3px var(--red-dim)";
+    setTimeout(() => {
+      container.style.borderColor = "";
+      container.style.boxShadow = "";
+    }, 2000);
+  }
+});
+
+// Min date
+const dateInput = document.querySelector('input[name="exam_date"]');
+if (dateInput && !dateInput.getAttribute("min")) {
+  dateInput.setAttribute("min", new Date().toISOString().split("T")[0]);
+}
+</script>
+{% endblock %}

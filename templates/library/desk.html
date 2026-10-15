@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Library desk{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Desk</em></h1>
+  <p class="fin-sub">Scan the borrower's ID card (or type an admission number / staff username), then each book's barcode. A USB barcode scanner types straight into these boxes.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <form method="get" class="panel fin-form" style="padding:1.2rem">
+      <h3 style="margin:0 0 .6rem">1. Borrower</h3>
+      <div style="display:flex;gap:.4rem"><input name="borrower" value="{{ code }}" placeholder="Scan ID card" autocomplete="off" {% if not student and not staff %}autofocus{% endif %}><button class="fin-btn" type="submit">Find</button></div>
+    </form>
+    {% if student or staff %}
+    <div class="panel"><div class="panel-h"><h3>{% if student %}{{ student.full_name }}{% else %}{{ staff.full_name }}{% endif %}</h3><span class="hint">{% if student %}{{ student.class_assigned|default:"" }} · {{ student.admission_number }}{% else %}Staff{% endif %}</span></div><div class="panel-b">
+      {% if owing %}<p><span class="chip red">Owes ₦{{ owing|floatformat:2 }}</span></p>{% endif %}
+      {% for r in ready %}<p class="hint"><i class="bi bi-bookmark-check"></i> Reserved and waiting: <b>{{ r.book.title }}</b> [{{ r.copy.barcode }}]</p>{% endfor %}
+      <table class="tbl" data-no-export><tbody>
+      {% for l in loans %}<tr><td class="name">{{ l.copy.book.title }}<br><small class="hint">{{ l.copy.barcode }}{% if l.rental_term %} · rental{% endif %}</small></td><td>{% if l.due_on < today %}<span class="chip red">overdue {{ l.due_on|date:"j M" }}</span>{% else %}due {{ l.due_on|date:"j M" }}{% endif %}</td>
+        <td>{% if not l.rental_term %}<form method="post">{% csrf_token %}<input type="hidden" name="borrower" value="{{ code }}"><input type="hidden" name="loan" value="{{ l.pk }}"><button class="fin-btn fin-btn-sm" type="submit" name="action" value="renew">Renew</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No books out.</td></tr>{% endfor %}
+      </tbody></table>
+    </div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="borrower" value="{{ code }}"><input type="hidden" name="action" value="issue">
+      <h3 style="margin:0 0 .6rem">2. Lend a book</h3>
+      <div><label>Book barcode</label><input name="barcode" required autofocus autocomplete="off" placeholder="Scan the book"></div>
+      <div class="row2"><div><label>Days (blank = usual)</label><input name="days" inputmode="numeric"></div>
+      {% if student %}<div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="rental"> Textbook rental for this term</label></div>{% endif %}</div>
+      <button class="fin-btn fin-btn-gold" type="submit">Lend</button>
+    </form>
+    {% endif %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="return">
+    <h3 style="margin:0 0 .6rem">Return a book</h3>
+    <div><label>Book barcode</label><input name="barcode" required autocomplete="off" placeholder="Scan the book" {% if not student and not staff %}{% endif %}></div>
+    <div class="row2"><div><label>Condition now</label><select name="condition"><option value="">Unchanged</option>{% for k, v in conditions %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+    <div><label>Damage charge</label><input name="damage" inputmode="decimal" placeholder="0"></div></div>
+    <div><label>Note</label><input name="note" maxlength="160"></div>
+    <p class="hint" style="margin:0">Late fines are worked out and charged automatically. A reserved book is set aside for the next person.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Return</button>
+  </form>
+</div>
+{% endblock %}

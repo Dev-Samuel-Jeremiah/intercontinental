@@ -1,0 +1,52 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Campaigns{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.71rem;font-weight:700;}
+.bg{background:var(--green-dim);color:var(--green);} .ba{background:var(--amber-dim);color:var(--amber);} .br{background:var(--red-dim);color:var(--red);} .bn{background:rgba(255,255,255,.045);color:var(--slate2);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:9px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+</style>
+{% include 'partials/compact_ui.html' %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">All Campaigns</h2>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a href="{% url 'communications:campaign_create' %}" class="btn btn-g"><i class="bi bi-plus-lg"></i> New Campaign</a>
+    <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+  </div>
+</div>
+<div class="card">
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <thead><tr><th>Title</th><th>Channel</th><th>Audience</th><th>Status</th><th>Recipients</th><th>Emails</th><th>SMS</th><th>Sent</th><th></th></tr></thead>
+    <tbody>
+      {% for c in campaigns %}
+      <tr>
+        <td><strong>{{ c.title|truncatechars:40 }}</strong></td>
+        <td>{{ c.channel }}</td>
+        <td>{{ c.get_audience_display }}</td>
+        <td>{% if c.status == 'SENT' %}<span class="badge bg">Sent</span>
+            {% elif c.status == 'DRAFT' %}<span class="badge bn">Draft</span>
+            {% elif c.status == 'SCHEDULED' %}<span class="badge ba">Scheduled</span>
+            {% elif c.status == 'SENDING' %}<span class="badge ba">Sending</span>
+            {% else %}<span class="badge br">{{ c.status }}</span>{% endif %}</td>
+        <td>{{ c.total_recipients }}</td>
+        <td style="color:{% if c.emails_failed > 0 %}var(--red){% else %}var(--green){% endif %};">{{ c.emails_sent }} / {{ c.emails_sent|add:c.emails_failed }}</td>
+        <td style="color:{% if c.sms_failed > 0 %}var(--red){% else %}var(--green){% endif %};">{{ c.sms_sent }} / {{ c.sms_sent|add:c.sms_failed }}</td>
+        <td style="font-size:.78rem;color:var(--slate2);">{{ c.sent_at|date:"d M Y"|default:"—" }}</td>
+        <td><a href="{% url 'communications:campaign_detail' c.id %}" style="color:var(--blue);font-size:.78rem;">View →</a></td>
+      </tr>
+      {% empty %}<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--slate);">No campaigns yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

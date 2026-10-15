@@ -1,0 +1,95 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hostel Fee Reminders{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.72rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.045);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.72rem;font-weight:700;}
+.ba{background:var(--amber-dim);color:var(--amber);} .br{background:var(--red-dim);color:var(--red);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;border-radius:9px;font-size:.83rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-b{background:#2563eb;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:.76rem;font-weight:700;color:var(--slate2);}
+.fg select{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Hostel Fee Reminders</h2>
+  </div>
+    <p style="color:var(--slate2);font-size:.82rem;margin-top:3px;">
+      Send email/SMS reminder to all boarders with outstanding hostel fees
+      · <strong>{{ total }}</strong> boarders awaiting payment
+    </p>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+{% if pending %}
+<div class="card" style="background:linear-gradient(135deg,rgba(244,210,31,.16),rgba(244,210,31,.03));border-color:var(--champagne-border);color:var(--white);padding:24px;">
+  <div style="font-size:1rem;font-weight:800;margin-bottom:16px;"><i class="bi bi-send-fill"></i> Send Reminder to {{ total }} Boarder(s)</div>
+  <form method="POST" style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+    {% csrf_token %}
+    <div class="fg">
+      <label style="color:rgba(255,255,255,.8);">Channel</label>
+      <select name="channel" style="padding:9px 12px;border:1.5px solid rgba(255,255,255,.3);border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:.87rem;">
+        <option value="BOTH">Email + SMS</option>
+        <option value="EMAIL">Email Only</option>
+        <option value="SMS">SMS Only</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-g"
+      onclick="return confirm('Send hostel fee reminders to {{ total }} parent(s)?')">
+      <i class="bi bi-send-fill"></i> Send Reminders Now
+    </button>
+  </form>
+</div>
+
+<div class="card">
+  <div style="font-weight:800;font-size:.93rem;margin-bottom:12px;">
+    <i class="bi bi-list-check" style="color:var(--red);"></i>
+    Boarders with Outstanding Hostel Fees ({{ total }})
+  </div>
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Class</th><th>Hostel</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Parent Email</th><th>Parent Phone</th></tr></thead>
+    <tbody>
+      {% for bill in pending %}
+      <tr>
+        <td><strong>{{ bill.boarder.student.full_name }}</strong><br><span style="font-size:.72rem;color:var(--slate);">{{ bill.boarder.student.admission_number }}</span></td>
+        <td>{{ bill.boarder.student.class_assigned.name|default:"—" }}</td>
+        <td>{{ bill.boarder.hostel.name|default:"—" }}</td>
+        <td>₦{{ bill.total_fee|floatformat:2 }}</td>
+        <td style="color:var(--green);font-weight:600;">₦{{ bill.amount_paid|floatformat:2 }}</td>
+        <td style="font-weight:800;color:var(--red);">₦{{ bill.balance_due|floatformat:2 }}</td>
+        <td>{% if bill.status == 'PARTIAL' %}<span class="badge ba">Partial</span>{% else %}<span class="badge br">Unpaid</span>{% endif %}</td>
+        <td style="font-size:.78rem;">
+          {% if bill.boarder.student.parent_email %}
+          <i class="bi bi-envelope-check-fill" style="color:var(--green);"></i> {{ bill.boarder.student.parent_email }}
+          {% else %}<span style="color:var(--red);"><i class="bi bi-exclamation-triangle"></i> No email</span>{% endif %}
+        </td>
+        <td style="font-size:.78rem;font-family:monospace;">
+          {% if bill.boarder.student.parent_phone %}
+          <i class="bi bi-phone-fill" style="color:var(--green);"></i> {{ bill.boarder.student.parent_phone }}
+          {% else %}<span style="color:var(--red);"><i class="bi bi-exclamation-triangle"></i> No phone</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:50px;">
+  <i class="bi bi-check-circle" style="font-size:2.5rem;color:var(--green);display:block;margin-bottom:12px;"></i>
+  <p style="color:var(--slate2);font-size:.9rem;">All hostel fees are paid for the current term!</p>
+</div>
+{% endif %}
+{% endblock %}

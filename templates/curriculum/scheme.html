@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ scheme.subject.name }} {{ scheme.school_class.name }}{% endblock %}
+{% block content %}
+<style>
+  .wk{display:grid;grid-template-columns:72px 1fr;gap:.9rem;padding:.85rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .wk.now{background:var(--champagne-dim)}
+  .wk .n{font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--slate)}
+  .wk.now .n{color:var(--champagne-lt)}
+  .tp{display:flex;gap:.6rem;align-items:flex-start;justify-content:space-between;padding:.25rem 0}
+  .tp b{font-weight:600}
+  .tp.done b{color:var(--slate2);text-decoration:line-through;text-decoration-color:var(--green)}
+  .tp form{display:inline}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Scheme of work</div>
+  <h1 class="fin-title">{{ scheme.subject.name }} · <em>{{ scheme.school_class.name }}</em></h1>
+  <p class="fin-sub">{{ scheme.term.session.name }} {{ scheme.term.name }} · {{ scheme.weeks }} weeks{% if cov.week %} · now week {{ cov.week }}{% endif %}
+    {% if scheme.approved_at %} · <span style="color:var(--green)">approved by {{ scheme.approved_by.full_name|default:"an administrator" }}</span>{% endif %}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if can_approve and not scheme.approved_at %}<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="approve"><i class="bi bi-patch-check"></i> Approve</button></form>{% endif %}
+  <button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Topics taught</small><b>{{ cov.taught }} / {{ cov.total }}</b></div>
+  <div class="fin-stat"><small>Should be done by now</small><b>{{ cov.due }}</b></div>
+  <div class="fin-stat"><small>Status</small><b style="font-size:1.2rem;padding-top:.3rem">{% if cov.state == 'behind' %}<span style="color:var(--red)">{{ cov.behind }} topics behind</span>{% elif cov.state == 'empty' %}No topics yet{% elif cov.state == 'ahead' %}<span style="color:var(--champagne-lt)">Ahead</span>{% else %}<span style="color:var(--green)">On track</span>{% endif %}</b></div>
+</div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <div class="panel">
+    {% for w in weeks %}<div class="wk{% if w.n == cov.week %} now{% endif %}"><div class="n">Week {{ w.n }}</div><div>
+      {% for t in w.topics %}<div class="tp{% if t.taught %} done{% endif %}"><div><b>{{ t.topic }}</b>
+          {% if t.objectives %}<div class="hint">{{ t.objectives|linebreaksbr }}</div>{% endif %}
+          {% if t.resources %}<div class="hint"><i class="bi bi-book"></i> {{ t.resources }}</div>{% endif %}
+          {% if t.taught %}<div class="hint" style="color:var(--green)">Taught {{ t.taught_on|date:"j M" }}{% if t.taught_by %} by {{ t.taught_by.full_name }}{% endif %}</div>{% endif %}</div>
+        {% if editable %}<div style="display:flex;gap:.3rem;flex-shrink:0">
+          <form method="post">{% csrf_token %}<input type="hidden" name="topic_id" value="{{ t.id }}">
+            {% if t.taught %}<button class="fin-btn fin-btn-sm" name="action" value="untaught" title="Not taught yet"><i class="bi bi-arrow-counterclockwise"></i></button>
+            {% else %}<button class="fin-btn fin-btn-sm" name="action" value="taught" title="Mark taught today"><i class="bi bi-check2"></i> Taught</button>{% endif %}</form>
+          <details style="position:relative"><summary class="fin-btn fin-btn-sm" style="list-style:none"><i class="bi bi-three-dots"></i></summary>
+            <form method="post" class="fin-form" style="position:absolute;right:0;z-index:5;width:280px;padding:1rem;border-radius:14px;background:var(--surface2);border:1px solid var(--rim2)">{% csrf_token %}<input type="hidden" name="topic_id" value="{{ t.id }}">
+              <div><label>Topic</label><input name="topic" value="{{ t.topic }}" maxlength="200"></div>
+              <div><label>Week</label><input type="number" name="week" value="{{ t.week }}" min="1" max="{{ scheme.weeks }}"></div>
+              <div><label>Objectives</label><textarea name="objectives" rows="3">{{ t.objectives }}</textarea></div>
+              <div><label>Resources</label><input name="resources" value="{{ t.resources }}" maxlength="255"></div>
+              <div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="edit_topic">Save</button>
+              <button class="fin-btn fin-btn-danger fin-btn-sm" name="action" value="delete_topic" onclick="return confirm('Delete this topic?')">Delete</button></div>
+            </form></details>
+        </div>{% endif %}</div>
+      {% empty %}<span class="hint">—</span>{% endfor %}
+    </div></div>{% endfor %}
+  </div>
+  <div>
+    {% if editable %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-list-ol"></i> Add topics</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}
+        <div><textarea name="topics" rows="9" placeholder="Week 1: Number bases&#10;Week 2: Fractions&#10;Decimals&#10;4. Percentages" required></textarea>
+        <span class="hint">One topic per line. Start a line with "Week 3:" or "3." to place it; other lines go into the next week.</span></div>
+        <button class="fin-btn fin-btn-gold" name="action" value="add">Add topics</button>
+      </form></div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-gear"></i> Scheme</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<div style="display:flex;gap:.5rem;align-items:flex-end"><div style="flex:1"><label>Weeks in the term</label><input type="number" name="weeks" value="{{ scheme.weeks }}" min="1" max="16"></div><button class="fin-btn fin-btn-sm" name="action" value="weeks">Save</button></div></form>
+      <form method="post" style="margin-top:1rem">{% csrf_token %}<button class="fin-btn fin-btn-danger fin-btn-sm" name="action" value="delete" onclick="return confirm('Delete this whole scheme of work?')"><i class="bi bi-trash"></i> Delete scheme</button></form>
+    </div></div>{% endif %}
+    <p class="hint">Written by {{ scheme.created_by.full_name|default:"—" }}. Approving a lesson note linked to a topic marks the topic taught.</p>
+  </div>
+</div>
+{% endblock %}

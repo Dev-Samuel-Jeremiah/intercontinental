@@ -1,0 +1,181 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Payroll{% endblock %}
+{% block content %}
+<style>
+.fin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.stat{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:4px solid;}
+.stat.g{border-color:var(--green);}.stat.b{border-color:var(--champagne);}
+.sv{font-size:1.7rem;font-weight:900;color:var(--white);margin-top:4px;}
+.sl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--slate2);}
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:20px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:9px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.72rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);vertical-align:middle;}
+.badge{display:inline-flex;padding:3px 8px;border-radius:99px;font-size:.72rem;font-weight:700;}
+.bg{background:var(--green-dim);color:var(--green);}.ba{background:var(--amber-dim);color:var(--amber);}.br{background:var(--red-dim);color:var(--red);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:9px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;}.btn-b{background:#2563eb;color:#fff;}.btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px;}
+.fg label{font-size:.78rem;font-weight:700;color:var(--slate2);}
+.fg input,.fg select{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.88rem;font-family:inherit;}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;}
+.modal-ov.active{display:flex;}
+.modal-box{background:rgba(255,255,255,.03);border-radius:16px;padding:28px;max-width:480px;width:100%;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Finance</div>
+    <h2 class="cui-title">Payroll Management</h2>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <a href="{% url 'payroll:runs' %}" class="btn btn-b"><i class="bi bi-calculator"></i> Payroll runs (PAYE, pension, approvals)</a>
+    <a href="{% url 'payroll:change_requests' %}" class="btn btn-ghost"><i class="bi bi-inbox"></i> Detail changes</a>
+    <a href="{% url 'payroll:settings' %}" class="btn btn-ghost"><i class="bi bi-sliders"></i> Settings</a>
+    <button onclick="document.getElementById('addPayrollModal').classList.add('active')" class="btn btn-g">
+      <i class="bi bi-plus-lg"></i> Add Staff Payroll
+    </button>
+  </div>
+</div>
+<div style="padding:.7rem 1rem;border-radius:12px;border:1px solid var(--champagne-border);background:var(--champagne-dim);color:var(--champagne-lt);font-size:.85rem;margin-bottom:1rem"><i class="bi bi-info-circle"></i> New: monthly <b>payroll runs</b> work out PAYE (Nigeria Tax Act 2025), pension, NHF, loans and unpaid leave, go through approval, and give you the bank file and payslip emails. Open a staff member's <b>Pay details</b> to add allowances, PINs and loans.</div>
+
+<div class="fin-grid">
+  <div class="stat g"><div class="sl">Monthly Payroll</div><div class="sv">₦{{ total_monthly|floatformat:0 }}</div></div>
+  <div class="stat b"><div class="sl">Paid This Month</div><div class="sv">₦{{ paid_this_month|floatformat:0 }}</div></div>
+  <div class="stat g"><div class="sl">Staff on Payroll</div><div class="sv">{{ payrolls|length }}</div></div>
+</div>
+
+<!-- Staff Payroll Table -->
+<div class="card">
+  <div style="font-weight:800;font-size:.95rem;margin-bottom:14px;color:var(--white);"><i class="bi bi-people-fill" style="color:var(--blue);"></i> Staff Payroll</div>
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <thead><tr><th>Staff</th><th>Role</th><th>Grade</th><th>Basic Salary</th><th>Bank</th><th>Account No.</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for pr in payrolls %}
+      <tr>
+        <td><strong>{{ pr.staff.full_name }}</strong></td>
+        <td>{{ pr.staff.get_role_display }}</td>
+        <td>{{ pr.grade.name|default:"—" }}</td>
+        <td style="font-weight:700;color:var(--green);">₦{{ pr.basic_salary|floatformat:2 }}</td>
+        <td>{{ pr.bank_name|default:"—" }}</td>
+        <td style="font-family:monospace;">{{ pr.account_no|default:"—" }}</td>
+        <td>
+          <a href="{% url 'payroll:staff_pay' pr.staff_id %}" class="btn btn-ghost" style="font-size:.75rem;padding:5px 10px;"><i class="bi bi-person-gear"></i> Pay details</a>
+          <button onclick="openPayModal({{ pr.id }}, '{{ pr.staff.full_name|escapejs }}', '{{ pr.basic_salary }}')"
+            class="btn btn-b" style="font-size:.75rem;padding:5px 10px;">
+            <i class="bi bi-cash-coin"></i> Pay Salary
+          </button>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="text-align:center;padding:30px;color:var(--slate);">No staff on payroll yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Recent Salary Payments -->
+<div class="card">
+  <div style="font-weight:800;font-size:.95rem;margin-bottom:14px;color:var(--white);"><i class="bi bi-clock-history" style="color:var(--green);"></i> Recent Salary Payments</div>
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <thead><tr><th>Staff</th><th>Month/Year</th><th>Gross</th><th>Deductions</th><th>Net</th><th>Method</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for sp in recent %}
+      <tr>
+        <td>{{ sp.staff_payroll.staff.full_name }}</td>
+        <td>{{ sp.month_name }} {{ sp.year }}</td>
+        <td>₦{{ sp.gross_salary|floatformat:2 }}</td>
+        <td style="color:var(--red);">₦{{ sp.deductions|floatformat:2 }}</td>
+        <td style="font-weight:700;color:var(--green);">₦{{ sp.net_salary|floatformat:2 }}</td>
+        <td>{{ sp.get_method_display }}</td>
+        <td>{% if sp.status == 'PAID' %}<span class="badge bg">Paid</span>{% else %}<span class="badge ba">{{ sp.status }}</span>{% endif %}</td>
+        <td><a href="{% url 'payroll:payslip' sp.staff_payroll.id sp.month sp.year %}" style="color:var(--blue);font-size:.78rem;">Payslip</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8" style="text-align:center;padding:30px;color:var(--slate);">No payments recorded yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- Add Payroll Modal -->
+<div class="modal-ov" id="addPayrollModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="font-weight:800;font-size:1rem;">Add / Edit Staff Payroll</span>
+      <button onclick="document.getElementById('addPayrollModal').classList.remove('active')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">×</button>
+    </div>
+    <form method="POST" action="{% url 'payroll:add_staff' %}" style="display:flex;flex-direction:column;gap:12px;">
+      {% csrf_token %}
+      <div class="fg"><label>Staff Member</label>
+        <select name="staff_id" required>
+          <option value="">— Select —</option>
+          {% for pr in payrolls %}<option value="{{ pr.staff.id }}">{{ pr.staff.full_name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="fg"><label>Grade</label>
+        <select name="grade_id">
+          <option value="">— No grade —</option>
+          {% for g in grades %}<option value="{{ g.id }}">{{ g.name }}  ₦{{ g.base_salary }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="fg"><label>Basic Salary (₦)</label><input name="basic_salary" type="number" step="0.01" min="0" placeholder="e.g. 80000" required></div>
+      <div class="fg"><label>Bank Name</label><input name="bank_name" placeholder="e.g. GTBank"></div>
+      <div class="fg"><label>Account Number</label><input name="account_no" placeholder="0123456789"></div>
+      <div class="fg"><label>Account Name</label><input name="account_name" placeholder="Full account name"></div>
+      <button type="submit" class="btn btn-g" style="justify-content:center;"><i class="bi bi-save"></i> Save</button>
+    </form>
+  </div>
+</div>
+
+<!-- Process Salary Modal -->
+<div class="modal-ov" id="payModal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span style="font-weight:800;font-size:1rem;" id="payModalTitle">Process Salary</span>
+      <button onclick="document.getElementById('payModal').classList.remove('active')" style="background:none;border:none;font-size:1.3rem;cursor:pointer;">×</button>
+    </div>
+    <form method="POST" id="payModalForm" style="display:flex;flex-direction:column;gap:12px;">
+      {% csrf_token %}
+      <div class="fg"><label>Month</label>
+        <select name="month">
+          <option value="1">January</option><option value="2">February</option>
+          <option value="3">March</option><option value="4">April</option>
+          <option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option>
+          <option value="9">September</option><option value="10">October</option>
+          <option value="11">November</option><option value="12">December</option>
+        </select>
+      </div>
+      <div class="fg"><label>Year</label><input name="year" type="number" value="2025" min="2020" max="2030"></div>
+      <div class="fg"><label>Deductions (₦)</label><input name="deductions" type="number" step="0.01" min="0" value="0"></div>
+      <div class="fg"><label>Method</label>
+        <select name="method">
+          <option value="BANK_TRANSFER">Bank Transfer</option>
+          <option value="CASH">Cash</option>
+          <option value="CHEQUE">Cheque</option>
+        </select>
+      </div>
+      <div class="fg"><label>Note (optional)</label><input name="note" placeholder="e.g. Regular monthly salary"></div>
+      <button type="submit" class="btn btn-g" style="justify-content:center;"><i class="bi bi-cash-coin"></i> Record Payment</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openPayModal(id, name, salary){
+  document.getElementById('payModalTitle').textContent = 'Pay Salary — ' + name;
+  document.getElementById('payModalForm').action = '/payroll/process/' + id + '/';
+  document.getElementById('payModal').classList.add('active');
+}
+document.querySelectorAll('.modal-ov').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('active'); });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Admission analytics{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">Admission <em>analytics</em></h1>
+    <p class="adm-sub">Where applicants come from, and how many become students.</p>
+  </div>
+  <div class="adm-actions"><a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-kanban"></i> Pipeline</a></div>
+</div>
+
+<div class="adm-stats">
+  <div class="adm-stat"><small>Applications</small><b>{{ total }}</b></div>
+  <div class="adm-stat"><small>This month</small><b style="color:var(--champagne-lt)">{{ this_month }}</b></div>
+  <div class="adm-stat"><small>Offered</small><b style="color:var(--blue)">{{ offered }}</b></div>
+  <div class="adm-stat"><small>Enrolled</small><b style="color:var(--green)">{{ enrolled }}</b></div>
+  <div class="adm-stat"><small>Offer rate</small><b>{{ offer_rate }}%</b></div>
+  <div class="adm-stat"><small>Offer → enrolled</small><b>{{ enrol_rate }}%</b></div>
+</div>
+
+<div class="adm-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-funnel"></i> Funnel</h3></div>
+    <div class="panel-b" style="display:grid;gap:.6rem">
+      <table class="adm-table">
+        <tbody>
+          <tr><td>Applied</td><td style="text-align:right;color:var(--white)">{{ counts.NEW }}</td></tr>
+          <tr><td>Screening</td><td style="text-align:right;color:var(--white)">{{ counts.SCREENING }}</td></tr>
+          <tr><td>Entrance exam</td><td style="text-align:right;color:var(--white)">{{ counts.EXAM }}</td></tr>
+          <tr><td>Interview</td><td style="text-align:right;color:var(--white)">{{ counts.INTERVIEW }}</td></tr>
+          <tr><td>Offer sent</td><td style="text-align:right;color:var(--white)">{{ counts.OFFERED }}</td></tr>
+          <tr><td>Offer accepted</td><td style="text-align:right;color:var(--white)">{{ counts.ACCEPTED }}</td></tr>
+          <tr><td>Enrolled</td><td style="text-align:right;color:var(--green)">{{ counts.ENROLLED }}</td></tr>
+          <tr><td>Waitlisted</td><td style="text-align:right">{{ counts.WAITLIST }}</td></tr>
+          <tr><td>Not offered</td><td style="text-align:right;color:var(--red)">{{ counts.REJECTED }}</td></tr>
+          <tr><td>Withdrawn</td><td style="text-align:right">{{ counts.WITHDRAWN }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-megaphone"></i> Where they heard about us</h3></div>
+      <div class="panel-b">
+        {% if by_source %}
+        <table class="adm-table"><tbody>
+          {% for row in by_source %}<tr><td>{{ row.label }}</td><td style="text-align:right;color:var(--white)">{{ row.n }}</td></tr>{% endfor %}
+        </tbody></table>
+        {% else %}<p class="adm-sub">No answers recorded yet.</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-building"></i> Demand by class</h3></div>
+      <div class="panel-b">
+        {% if by_class %}
+        <table class="adm-table"><tbody>
+          {% for row in by_class %}<tr><td>{{ row.applying_for__name|default:"Not specified" }}</td><td style="text-align:right;color:var(--white)">{{ row.n }}</td></tr>{% endfor %}
+        </tbody></table>
+        {% else %}<p class="adm-sub">No applications yet.</p>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

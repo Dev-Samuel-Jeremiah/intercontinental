@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Pay detail changes{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'payroll:runs' %}" style="color:inherit">Payroll</a></div>
+  <h1 class="fin-title">Pay detail <em>changes</em></h1>
+  <p class="fin-sub">Staff asking to change their bank, tax or pension details. Check bank changes with the staff member in person before approving.</p>
+</div></div>
+<div class="panel">{% for r in pending %}<div style="padding:1rem 1.2rem;border-bottom:1px solid var(--rim)"><b>{{ r.staff_payroll.staff.full_name }}</b> <span class="hint">{{ r.created_at|date:"j M Y H:i" }}</span>
+  <table class="tbl" data-no-export style="margin:.5rem 0"><thead><tr><th>Detail</th><th>Now</th><th>Change to</th></tr></thead><tbody>
+  {% for f, v in r.changes.items %}<tr><td>{% for k, l in labels.items %}{% if k == f %}{{ l }}{% endif %}{% endfor %}</td><td>{% for k, l in labels.items %}{% if k == f %}{% if f == 'bank_name' %}{{ r.staff_payroll.bank_name|default:"—" }}{% elif f == 'account_no' %}{{ r.staff_payroll.account_no|default:"—" }}{% elif f == 'account_name' %}{{ r.staff_payroll.account_name|default:"—" }}{% elif f == 'tax_id' %}{{ r.staff_payroll.tax_id|default:"—" }}{% elif f == 'pension_pin' %}{{ r.staff_payroll.pension_pin|default:"—" }}{% elif f == 'pfa_name' %}{{ r.staff_payroll.pfa_name|default:"—" }}{% elif f == 'nhf_number' %}{{ r.staff_payroll.nhf_number|default:"—" }}{% else %}{{ r.staff_payroll.annual_rent }}{% endif %}{% endif %}{% endfor %}</td><td><b>{{ v }}</b></td></tr>{% endfor %}
+  </tbody></table>
+  <form method="post" style="display:flex;gap:.4rem">{% csrf_token %}<input type="hidden" name="id" value="{{ r.id }}"><button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="reject">Decline</button></form></div>
+{% empty %}<div class="empty"><i class="bi bi-check2-circle"></i><p>Nothing waiting.</p></div>{% endfor %}</div>
+{% endblock %}

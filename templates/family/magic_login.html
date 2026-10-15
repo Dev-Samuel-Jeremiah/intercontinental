@@ -1,0 +1,20 @@
+{% include "family/_top.html" %}
+  <a class="back" href="{% url 'users:parent_login' %}"><i class="bi bi-arrow-left"></i> Sign in with admission number and password</a>
+  <h1>Sign in without a <em>password</em></h1>
+  <p class="sub">Use the email address or phone number the school has for you.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if sent == 'EMAIL' %}
+  <div class="card"><p class="sub" style="margin:0">If <b>{{ contact }}</b> is on file, a sign-in link is on its way. Open it on this phone or computer within 20 minutes.</p></div>
+  {% elif sent == 'SMS' %}
+  <div class="card"><h2>Enter the code</h2><p class="hint">If {{ contact }} is on file, we have sent a 6-digit code by SMS. It expires in 10 minutes.</p>
+    <form method="post" action="{% url 'family:magic_code' %}">{% csrf_token %}<input type="hidden" name="contact" value="{{ contact }}">
+      <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="123456">
+      <button type="submit">Sign in</button></form></div>
+  {% endif %}
+  <div class="card">
+    <form method="post" action="{% url 'family:magic_request' %}">{% csrf_token %}
+      <label>Email address or phone number</label><input name="contact" required value="{{ contact }}" placeholder="e.g. 0803 123 4567 or you@example.com">
+      <button type="submit">{% if sent %}Send again{% else %}Send me a sign-in {% endif %}{% if not sent %}link or code{% endif %}</button>
+    </form>
+  </div>
+{% include "family/_end.html" %}

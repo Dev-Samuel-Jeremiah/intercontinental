@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Drivers &amp; attendants{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Drivers &amp; attendants</em></h1>
+  <p class="fin-sub">Link a crew member to their staff login so they can run trips and scan children from their phone.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl">
+    <thead><tr><th>Name</th><th>Role</th><th>Phone</th><th>Licence</th><th>Login</th><th></th></tr></thead><tbody>
+    {% for p in people %}<tr{% if not p.active %} style="opacity:.55"{% endif %}><td class="name">{{ p.name }}{% if p.next_of_kin %}<br><small class="hint">Next of kin: {{ p.next_of_kin }}</small>{% endif %}</td><td>{{ p.get_role_display }}</td><td>{{ p.phone }}</td>
+      <td>{{ p.licence_number|default:"" }}{% if p.licence_expires %}<br>{% if p.licence_expires < today %}<span class="chip red">Expired {{ p.licence_expires|date:"j M Y" }}</span>{% else %}<small class="hint">to {{ p.licence_expires|date:"j M Y" }}</small>{% endif %}{% endif %}</td>
+      <td>{% if p.staff %}<span class="chip ok">{{ p.staff.full_name }}</span>{% else %}—{% endif %}</td>
+      <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ p.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if p.active %}Stand down{% else %}Bring back{% endif %}</button></form></td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">Nobody yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add crew</h3>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="120"></div><div><label>Role</label><select name="role"><option value="DRIVER">Driver</option><option value="ATTENDANT">Bus attendant</option></select></div></div>
+    <div class="row2"><div><label>Phone</label><input name="phone" required maxlength="20"></div><div><label>Staff login</label><select name="staff"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Licence number</label><input name="licence_number" maxlength="40"></div><div><label>Licence expires</label><input type="date" name="licence_expires"></div></div>
+    <div><label>Address</label><input name="address" maxlength="255"></div>
+    <div><label>Next of kin (name and phone)</label><input name="next_of_kin" maxlength="160"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

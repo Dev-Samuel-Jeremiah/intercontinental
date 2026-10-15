@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Reading{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Reading logs &amp; challenges</em></h1>
+  <p class="fin-sub">Students log the books they finish; you check each one. Approved books count towards reading challenges, and a badge is awarded (and shown on the profile) when a student reaches the target.</p>
+</div></div>
+{% if lib %}{% include "library/_nav.html" %}{% else %}{% include "finance/_fin_styles.html" %}{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>To check ({{ pending|length }})</h3></div><div class="panel-b">
+    {% for e in pending %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b>{{ e.student.full_name }}</b> <span class="hint">{{ e.student.class_assigned|default:"" }}</span> — {{ e.title }}{% if e.author %} by {{ e.author }}{% endif %}
+      <div class="hint">Finished {{ e.finished_on|date:"j M" }}{% if e.pages %} · {{ e.pages }} pages{% endif %}{% if e.rating %} · {{ e.rating }}/5{% endif %}</div>
+      {% if e.review %}<div style="font-size:.88rem;margin:.2rem 0">{{ e.review|linebreaksbr }}</div>{% endif %}
+      <form method="post" style="display:flex;gap:.3rem;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ e.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="reject" onclick="return confirm('Remove this entry?')">Remove</button></form></div>
+    {% empty %}<p class="empty">Nothing to check.</p>{% endfor %}
+  </div></div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Challenges</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for c in challenges %}<tr><td class="name"><a href="{% url 'library:challenge' c.pk %}">{{ c.title }}</a><br><small class="hint">{{ c.starts|date:"j M" }}–{{ c.ends|date:"j M Y" }} · {{ c.target }} books · {% for k in c.classes.all %}{{ k.name }}{% if not forloop.last %}, {% endif %}{% empty %}everyone{% endfor %}</small></td><td>{% if c.ends < today %}<span class="chip">Ended</span>{% elif c.starts > today %}<span class="chip">Soon</span>{% else %}<span class="chip ok">On</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No challenges yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if lib %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="challenge">
+      <h3 style="margin:0 0 .6rem">Start a challenge</h3>
+      <div><label>Title</label><input name="title" required maxlength="160" placeholder="e.g. First Term Readathon"></div>
+      <div class="row2"><div><label>Starts</label><input type="date" name="starts" required></div><div><label>Ends</label><input type="date" name="ends" required></div></div>
+      <div class="row2"><div><label>Books to read</label><input name="target" value="5" inputmode="numeric"></div><div><label>Badge</label><input name="badge" value="Reading Champion" maxlength="80"></div></div>
+      <div><label>Classes (none = everyone)</label><select name="classes" multiple size="5">{% for k in classes %}<option value="{{ k.pk }}">{{ k.name }}</option>{% endfor %}</select></div>
+      <div><label>About it</label><textarea name="description" rows="2"></textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Start</button>
+    </form>{% endif %}
+  </div>
+</div>
+{% endblock %}

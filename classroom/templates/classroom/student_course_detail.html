@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ course.name }}</title>
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body>
+    <h1>{{ course.name }}</h1>
+    <p>{{ course.description }}</p>
+
+    <h2>Materials</h2>
+    <ul>
+        {% for material in materials %}
+            <li>{{ material.title }}</li>
+        {% empty %}
+            <li>No materials yet.</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Assignments</h2>
+    <ul>
+        {% for assignment in assignments %}
+            <li>
+                {{ assignment.title }} - Due: {{ assignment.due_date }}
+                <a href="{% url 'classroom:submit_assignment' assignment.id %}">Submit</a>
+            </li>
+        {% empty %}
+            <li>No assignments yet.</li>
+        {% endfor %}
+    </ul>
+
+
+    <h2>Quizzes</h2>
+    <ul>
+        {% for quiz in quizzes %}
+            <li>{{ quiz.title }} - Duration: {{ quiz.duration_minutes }} minutes</li>
+        {% empty %}
+            <li>No quizzes yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

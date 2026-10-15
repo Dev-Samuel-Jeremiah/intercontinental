@@ -1,0 +1,86 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Who teaches what{% endblock %}
+{% block content %}
+<style>
+  .mx-wrap{overflow:auto;max-height:70vh}
+  .mx{border-collapse:separate;border-spacing:0;font-size:.78rem;min-width:100%}
+  .mx th,.mx td{border-bottom:1px solid var(--rim);border-right:1px solid var(--rim);padding:.45rem .55rem;white-space:nowrap}
+  .mx thead th{position:sticky;top:0;z-index:2;background:var(--surface2,#172f5c);font-size:.68rem;letter-spacing:.5px;color:var(--slate2)}
+  .mx tbody th{position:sticky;left:0;z-index:1;background:var(--surface2,#172f5c);text-align:left;font-weight:600;color:var(--white)}
+  .mx thead th:first-child{left:0;z-index:3}
+  .mx td{min-width:118px;max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--slate2)}
+  .mx td.gap{background:var(--red-dim);color:var(--red);font-weight:600}
+  .mx td.extra{background:var(--amber-dim)}
+  .mx td.none{color:var(--slate);opacity:.45}
+  .mx td.pending{outline:2px solid var(--champagne);outline-offset:-2px;color:var(--champagne-lt)}
+  .mx.edit td{cursor:pointer}
+  .mx.edit td:hover{background:rgba(255,255,255,.05)}
+  .lg{display:flex;gap:1rem;flex-wrap:wrap;font-size:.74rem;color:var(--slate2);padding:.7rem 1.2rem}
+  .lg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:.35rem;vertical-align:-1px;background:var(--c)}
+  #picker{position:fixed;z-index:50;display:none;padding:.6rem;border-radius:12px;background:var(--surface2,#172f5c);border:1px solid var(--rim2);box-shadow:0 18px 40px -14px rgba(0,0,0,.8)}
+  #picker select{padding:.5rem;border-radius:9px;background:rgba(0,0,0,.3);color:var(--white);border:1px solid var(--rim2);font:inherit;min-width:220px}
+  #savebar{position:sticky;bottom:1rem;display:none;justify-content:space-between;align-items:center;gap:1rem;padding:.8rem 1rem;border-radius:14px;border:1px solid var(--champagne-border);background:var(--surface2,#172f5c);margin-top:1rem}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Who teaches <em>what</em></h1>
+  <p class="fin-sub">Every subject in every class, and the teacher for it.{% if can_manage %} Tap a cell to change its teacher.{% endif %}</p>
+</div>{% if can_manage %}<a class="fin-btn fin-btn-sm" href="{% url 'users:advanced_subject_assignment' %}"><i class="bi bi-diagram-3"></i> Detailed assignment</a>{% endif %}</div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Classes</small><b>{{ classes|length }}</b></div>
+  <div class="fin-stat"><small>Subjects</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Without a teacher</small><b style="{% if gaps %}color:var(--red){% endif %}">{{ gaps }}</b></div>
+  <div class="fin-stat"><small>Teachers</small><b>{{ load.rows|length }}</b></div>
+</div>
+<form method="post" id="mxf">{% csrf_token %}
+<div class="panel">
+  {% if rows and classes %}<div class="mx-wrap"><table class="mx{% if can_manage %} edit{% endif %}"><thead><tr><th>Subject</th>{% for c in classes %}<th>{{ c.name }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in rows %}<tr><th>{{ r.subject.name }}</th>{% for cell in r.cells %}<td class="{{ cell.state }}" data-s="{{ r.subject.id }}" data-c="{{ cell.school_class.id }}" data-t="{{ cell.teachers.0.id|default:'' }}"
+        title="{{ r.subject.name }} · {{ cell.school_class.name }}{% if cell.state == 'extra' %} — assigned, but the subject isn't on this class's list{% endif %}">{% if cell.teachers %}{{ cell.teachers.0.full_name }}{% if cell.teachers|length > 1 %} +{{ cell.teachers|length|add:"-1" }}{% endif %}{% elif cell.offered %}No teacher{% else %}·{% endif %}</td>{% endfor %}</tr>{% endfor %}
+  </tbody></table></div>
+  <div class="lg"><span style="--c:var(--red)">Taught, no teacher</span><span style="--c:var(--amber)">Teacher set, subject not on the class list</span><span style="--c:rgba(255,255,255,.15)">Not taught in that class</span></div>
+  {% else %}<div class="empty"><i class="bi bi-grid-3x3"></i><p>Add classes and subjects first.</p></div>{% endif %}
+</div>
+<div id="savebar"><span><b id="npend">0</b> change(s) not saved yet</span><span style="display:flex;gap:.5rem"><a class="fin-btn fin-btn-sm" href="">Undo</a><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Save changes</button></span></div>
+</form>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-speedometer2"></i> Teaching load</h3><span class="hint">{% if load.has_timetable %}periods a week from the published timetable · flagged above {{ heavy_periods }}{% else %}no published timetable — flagged above {{ heavy_allocations }} subject-classes{% endif %}</span></div>
+  {% if load.rows %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Teacher</th>{% if load.has_timetable %}<th>Periods / week</th>{% endif %}<th>Subject-classes</th><th>Classes</th><th>Subjects</th><th></th></tr></thead><tbody>
+  {% for t in load.rows %}<tr><td class="name">{{ t.staff.full_name }}</td>{% if load.has_timetable %}<td class="money">{{ t.periods }}</td>{% endif %}<td>{{ t.allocations }}</td><td>{{ t.classes }}</td>
+    <td class="hint">{{ t.subjects|join:", "|default:"—" }}</td>
+    <td>{% if t.state == 'heavy' %}<span class="chip red">heavy load</span>{% elif t.state == 'idle' %}<span class="chip amber">nothing assigned</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty"><p>No teachers yet.</p></div>{% endif %}
+</div>
+{% if can_manage %}
+<div id="picker"><select id="pick"><option value="">— no teacher —</option>{% for t in teachers %}<option value="{{ t.id }}">{{ t.full_name }}</option>{% endfor %}</select></div>
+<script>
+(function(){
+  var picker=document.getElementById('picker');document.body.appendChild(picker);  // escape the animated content wrapper so position:fixed works
+  var pick=document.getElementById('pick'),form=document.getElementById('mxf'),cur=null,pend={};
+  function close(){picker.style.display='none';cur=null;}
+  document.querySelectorAll('.mx.edit td').forEach(function(td){
+    td.addEventListener('click',function(e){
+      e.stopPropagation();cur=td;var r=td.getBoundingClientRect();
+      pick.value=(pend[td.dataset.s+'_'+td.dataset.c]!==undefined?pend[td.dataset.s+'_'+td.dataset.c]:td.dataset.t)||'';
+      picker.style.display='block';
+      picker.style.left=Math.min(r.left,window.innerWidth-250)+'px';
+      picker.style.top=(r.bottom+4+picker.offsetHeight>window.innerHeight?r.top-picker.offsetHeight-4:r.bottom+4)+'px';
+      pick.focus();
+    });
+  });
+  pick.addEventListener('change',function(){
+    if(!cur)return;var k=cur.dataset.s+'_'+cur.dataset.c,inp=form.querySelector('input[name="cell_'+k+'"]');
+    if(pick.value===(cur.dataset.t||'')){delete pend[k];if(inp)inp.remove();cur.classList.remove('pending');}
+    else{pend[k]=pick.value;if(!inp){inp=document.createElement('input');inp.type='hidden';inp.name='cell_'+k;form.appendChild(inp);}
+      inp.value=pick.value;cur.classList.add('pending');}
+    cur.textContent=pick.value?pick.options[pick.selectedIndex].text:'No teacher';
+    var n=Object.keys(pend).length;document.getElementById('npend').textContent=n;
+    document.getElementById('savebar').style.display=n?'flex':'none';close();
+  });
+  document.addEventListener('click',function(e){if(!picker.contains(e.target))close();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  window.addEventListener('beforeunload',function(e){if(Object.keys(pend).length&&!form.dataset.sending){e.preventDefault();e.returnValue='';}});
+  form.addEventListener('submit',function(){form.dataset.sending=1;});
+})();
+</script>{% endif %}
+{% endblock %}

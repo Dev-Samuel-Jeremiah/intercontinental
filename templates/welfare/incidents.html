@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Discipline incidents{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Conduct</div>
+  <h1 class="fin-title"><em>Incidents</em></h1>
+  <p class="fin-sub">Record what happened, how serious it was and what was done. Families are emailed (unless you hide it from parents); serious incidents alert the discipline team; demerits count towards the points thresholds.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if disc %}All incidents{% else %}Incidents you reported{% endif %}</h3>{% if disc %}<span><a href="?status=OPEN">Open</a> · <a href="?status=CLOSED">Closed</a> · <a href="?">All</a></span>{% endif %}</div><div class="panel-b">
+    {% for i in items %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b>{{ i.student.full_name }}</b> <span class="hint">{{ i.student.class_assigned|default:"" }} · {{ i.date|date:"D j M" }}{% if i.place %} · {{ i.place }}{% endif %}</span>
+      <span class="chip{% if i.severity >= 3 %} red{% elif i.severity == 2 %} gold{% endif %}">{{ i.get_category_display }} · {{ i.get_severity_display }}</span>{% if i.status == 'CLOSED' %} <span class="chip ok">Closed</span>{% endif %}
+      <div class="hint">{{ i.description|truncatechars:240 }}{% if i.action %} · Action: {{ i.get_action_display }}{% endif %}{% if i.action_note %} — {{ i.action_note }}{% endif %}{% if i.demerits %} · {{ i.demerits }} demerit{{ i.demerits|pluralize }}{% endif %}{% if i.parents_told_at %} · family told{% elif not i.parent_visible %} · not shown to parents{% endif %}</div>
+      {% if disc and i.status == 'OPEN' %}<form method="post" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="op" value="close"><input type="hidden" name="id" value="{{ i.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Close</button></form>{% endif %}</div>
+    {% empty %}<p class="empty">No incidents.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Record an incident</h3>
+    <div><label>Student(s)</label><select name="students" multiple size="6" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>What</label><select name="category">{% for k, v in categories %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>How serious</label><select name="severity">{% for k, v in severities %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Where</label><input name="place" maxlength="120"></div></div>
+    <div><label>What happened</label><textarea name="description" rows="3" required></textarea></div>
+    <div class="row2"><div><label>Action</label><select name="action"><option value="">— to decide —</option>{% for k, v in actions %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Demerit points</label><input name="demerits" value="0" inputmode="numeric"></div></div>
+    <div><label>Action details</label><input name="action_note" maxlength="255"></div>
+    <div><label>Tell the family</label><select name="parent_visible"><option value="1">Yes — email them and show it on their portal</option><option value="0">No — keep it internal</option></select></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Record</button>
+  </form>
+</div>
+{% endblock %}

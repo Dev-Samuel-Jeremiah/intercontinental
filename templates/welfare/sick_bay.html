@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Sick bay{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health</div>
+  <h1 class="fin-title"><em>Sick bay</em></h1>
+  <p class="fin-sub">Every visit — day pupils and boarders. Families get an email and text when a child comes in, and again if they go home or to hospital.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>In the sick bay ({{ inside|length }})</h3></div><div class="panel-b">
+      {% for v in inside %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a></b> <span class="hint">{{ v.student.class_assigned|default:"" }} · since {{ v.admitted_at|time:"H:i" }}</span>
+        <div class="hint">{{ v.complaint }}{% if v.temperature %} · {{ v.temperature }}°C{% endif %}{% if v.treatment %} · {{ v.treatment }}{% endif %}</div>
+        {% for a in v.student.medical.alerts %}<span class="alert-chip">{{ a }}</span>{% endfor %}
+        <form method="post" class="fin-form" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ v.pk }}"><input type="hidden" name="action" value="discharge">
+          <select name="outcome" style="width:auto">{% for k, l in outcomes %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select>
+          <input name="treatment" placeholder="Treatment given" style="flex:1;min-width:140px">
+          <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Discharge</button></form></div>
+      {% empty %}<p class="empty">Nobody is in the sick bay.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent visits</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for v in history %}<tr><td>{{ v.admitted_at|date:"D j M H:i" }}</td><td class="name"><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a><br><small class="hint">{{ v.complaint }}</small></td><td>{{ v.get_outcome_display }}</td></tr>
+      {% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="admit">
+    <h3 style="margin:0 0 .6rem">Admit</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+    <div><label>Symptoms / complaint</label><input name="complaint" required maxlength="255"></div>
+    <div class="row2"><div><label>Temperature °C</label><input name="temperature" inputmode="decimal"></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="tell_parent" checked> Tell the family</label></div></div>
+    <div><label>Treatment</label><textarea name="treatment" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Admit</button>
+  </form>
+</div>
+{% endblock %}

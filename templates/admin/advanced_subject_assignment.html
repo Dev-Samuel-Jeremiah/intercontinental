@@ -1,0 +1,1424 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Subject Assignment Manager{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+:root{
+  /* Semantic colours */
+  --green:          #4ade80;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE WRAP
+═══════════════════════════════════════════════════════════════ */
+.asm-wrap {
+  max-width: 1400px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-header-left {}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+}
+.eyebrow span {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 4px;
+  letter-spacing: -.02em;
+}
+.page-title em {
+  font-style: italic;
+  color: var(--champagne);
+}
+
+.page-subtitle {
+  font-size: 0.85rem;
+  color: var(--slate2);
+  margin: 0;
+  font-weight: 400;
+}
+
+.page-header-divider {
+  height: 1px;
+  background: var(--rim2);
+  margin: 1.5rem 0;
+  position: relative;
+}
+.page-header-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+.context-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-bdr);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════════════════════ */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 2rem;
+}
+@media(max-width:900px) { .stat-row { grid-template-columns: repeat(2,1fr); } }
+@media(max-width:500px) { .stat-row { grid-template-columns: 1fr; } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  animation: riseUp .45s ease both;
+}
+.stat-card:nth-child(1) { animation-delay: .05s; }
+.stat-card:nth-child(2) { animation-delay: .10s; }
+.stat-card:nth-child(3) { animation-delay: .15s; }
+.stat-card:nth-child(4) { animation-delay: .20s; }
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.stat-card .s-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  margin-bottom: 14px;
+}
+.stat-card .s-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  line-height: 1;
+  display: block;
+}
+.stat-card .s-lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-top: 4px;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.panel-head {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.panel-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panel-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.panel-head h2,
+.panel-head h3 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.panel-body { padding: 24px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB BAR
+═══════════════════════════════════════════════════════════════ */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 14px;
+  padding: 5px;
+  margin-bottom: 24px;
+  width: fit-content;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.83rem;
+  color: var(--slate2);
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab-btn i { font-size: 0.9rem; }
+.tab-btn.active {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 3px 14px rgba(244,210,31,.28);
+}
+.tab-btn:not(.active):hover {
+  background: var(--rim);
+  color: var(--white);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TAB CONTENT
+═══════════════════════════════════════════════════════════════ */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════
+   SEARCH BAR
+═══════════════════════════════════════════════════════════════ */
+.search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+.search-wrap i {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--slate);
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+.search-wrap input {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.86rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+}
+.search-wrap input::placeholder { color: var(--slate); }
+.search-wrap input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════════════════════════ */
+.form-grp label {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: 8px;
+}
+.form-grp select,
+.form-grp input[type=text] {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--rim2);
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.form-grp select:focus,
+.form-grp input[type=text]:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.form-grp select option { background: var(--surface2); color: var(--white); }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 24px rgba(244,210,31,.36);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+.btn-success {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green-border);
+}
+.btn-success:hover { background: rgba(74,222,128,.18); }
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-danger:hover { background: rgba(248,113,113,.18); }
+.btn-ghost {
+  background: transparent;
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover {
+  background: var(--rim);
+  color: var(--white);
+  border-color: var(--rim3);
+}
+.btn-sm { padding: 6px 14px; font-size: 0.78rem; border-radius: 8px; }
+
+.btn-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--rim2);
+  background: transparent;
+  cursor: pointer;
+  color: var(--slate2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  transition: all .18s;
+  flex-shrink: 0;
+}
+.btn-icon:hover {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red-border);
+}
+.btn-icon.add:hover {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRID LAYOUTS
+═══════════════════════════════════════════════════════════════ */
+.qa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+}
+@media(max-width:900px) { .qa-grid { grid-template-columns: 1fr 1fr; } }
+@media(max-width:600px) { .qa-grid { grid-template-columns: 1fr; } }
+
+.bulk-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+@media(max-width:700px) { .bulk-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════════════════════════
+   CLASS MATRIX
+═══════════════════════════════════════════════════════════════ */
+.matrix-class-card {
+  margin-bottom: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--rim);
+  overflow: hidden;
+  background: var(--surface);
+}
+.matrix-class-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim);
+  cursor: pointer;
+  gap: 12px;
+  flex-wrap: wrap;
+  user-select: none;
+  transition: background .18s;
+}
+.matrix-class-head:hover { background: var(--surface3); }
+.matrix-class-head h3 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.93rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+}
+.badge-blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+.badge-green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+.badge-amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+.badge-red    { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+.badge-gray   { background: var(--rim);        border: 1px solid var(--rim2);          color: var(--slate2); }
+.badge-champ  { background: var(--champagne-dim); border: 1px solid var(--champagne-bdr); color: var(--champagne-lt); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════════════ */
+.matrix-table { width: 100%; border-collapse: collapse; }
+.matrix-table th {
+  background: var(--surface2);
+  padding: 10px 18px;
+  text-align: left;
+  font-size: 0.71rem;
+  font-weight: 600;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  border-bottom: 1px solid var(--rim);
+  font-family: 'Outfit', sans-serif;
+}
+.matrix-table td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--rim);
+  vertical-align: middle;
+  font-size: 0.86rem;
+  color: var(--slate2);
+}
+.matrix-table tr:last-child td { border-bottom: none; }
+.matrix-table tr:hover td { background: rgba(255,255,255,.025); }
+.matrix-table td strong { color: var(--white); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TEACHER CHIPS
+═══════════════════════════════════════════════════════════════ */
+.teacher-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  margin: 2px;
+}
+.teacher-chip .rm {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--blue);
+  font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  padding: 0;
+  line-height: 1;
+}
+.teacher-chip .rm:hover { color: var(--red); }
+
+.unassigned-badge {
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INLINE SELECT (matrix)
+═══════════════════════════════════════════════════════════════ */
+.inline-teacher-sel {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--rim2);
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s;
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 0;
+  cursor: pointer;
+}
+.inline-teacher-sel:focus { border-color: var(--champagne); }
+.inline-teacher-sel option { background: var(--surface2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TEACHER CARDS
+═══════════════════════════════════════════════════════════════ */
+.teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.teacher-card {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 20px;
+  transition: border-color .2s, box-shadow .2s;
+  position: relative;
+  overflow: hidden;
+}
+.teacher-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.teacher-card:hover {
+  border-color: var(--rim3);
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+}
+.tc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.avatar {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #0a1f44;
+  flex-shrink: 0;
+  letter-spacing: -.02em;
+}
+.tc-name { font-weight: 600; font-size: 0.92rem; color: var(--white); }
+.tc-role { font-size: 0.73rem; color: var(--slate); margin-top: 2px; }
+.tc-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.tc-classes { font-size: 0.76rem; color: var(--slate); }
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBJECT CHECKLIST
+═══════════════════════════════════════════════════════════════ */
+.subject-checklist {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rim3) transparent;
+}
+.subject-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--slate2);
+  transition: background .15s;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.subject-checklist label:hover { background: var(--rim); color: var(--white); }
+.subject-checklist input[type=checkbox] {
+  accent-color: var(--champagne);
+  width: 15px; height: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════════════════════ */
+.prog-bar {
+  height: 4px;
+  background: var(--rim2);
+  border-radius: 99px;
+  overflow: hidden;
+  width: 90px;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--champagne), var(--champagne-lt));
+  transition: width .4s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COLLAPSE ARROW
+═══════════════════════════════════════════════════════════════ */
+.arrow {
+  font-size: 0.7rem;
+  color: var(--slate);
+  transition: transform .25s;
+}
+.collapsed .arrow { transform: rotate(-90deg); }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════ */
+#toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 9999;
+  padding: 14px 22px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #fff;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all .35s cubic-bezier(.22,.68,0,1.2);
+  pointer-events: none;
+  max-width: 340px;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+#toast.success { background: linear-gradient(135deg, #166534, #15803d); border: 1px solid var(--green-border); }
+#toast.error   { background: linear-gradient(135deg, #991b1b, #b91c1c); border: 1px solid var(--red-border); }
+#toast.info    { background: linear-gradient(135deg, #f4d21f, #d1ad00); }
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+}
+.empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: var(--slate);
+  margin-bottom: 16px;
+  border: 1px solid var(--rim2);
+}
+.empty-state h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin: 0 0 6px;
+}
+.empty-state p {
+  font-size: 0.82rem;
+  color: var(--slate);
+  margin: 0 0 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOG OUTPUT
+═══════════════════════════════════════════════════════════════ */
+.log-success {
+  padding: 12px 16px;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: 10px;
+  color: var(--green);
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+</style>
+
+<div class="asm-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="eyebrow"><span>Academic Management · {{ tenant.name }}</span></div>
+      <h1 class="page-title">Subject <em>Assignment</em> Manager</h1>
+      <p class="page-subtitle">Assign subjects to teachers per class — track coverage and manage workloads.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+      <div class="context-pill">
+        <i class="bi bi-layers"></i>
+        <span id="total-assign-count">{{ all_assignments.count }}</span> Active Assignments
+      </div>
+      <a href="{% url 'users:assign_subjects' %}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Basic View
+      </a>
+    </div>
+  </div>
+  <div class="page-header-divider"></div>
+
+  <!-- ══ STAT CARDS ════════════════════════════════════════════ -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="s-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+        <i class="bi bi-people" style="color:var(--blue);"></i>
+      </div>
+      <span class="s-num">{{ teachers.count }}</span>
+      <span class="s-lbl">Teachers</span>
+    </div>
+    <div class="stat-card">
+      <div class="s-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+        <i class="bi bi-building" style="color:var(--purple);"></i>
+      </div>
+      <span class="s-num">{{ classes.count }}</span>
+      <span class="s-lbl">Classes</span>
+    </div>
+    <div class="stat-card">
+      <div class="s-icon" style="background:var(--teal-dim);border:1px solid var(--teal-border);">
+        <i class="bi bi-book" style="color:var(--teal);"></i>
+      </div>
+      <span class="s-num">{{ subjects.count }}</span>
+      <span class="s-lbl">Subjects</span>
+    </div>
+    <div class="stat-card">
+      <div class="s-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+        <i class="bi bi-check2-circle" style="color:var(--champagne);"></i>
+      </div>
+      <span class="s-num">{{ all_assignments.count }}</span>
+      <span class="s-lbl">Assignments</span>
+    </div>
+  </div>
+
+  <!-- ══ TAB BAR ═══════════════════════════════════════════════ -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('matrix',this)">
+      <i class="bi bi-grid-3x3-gap"></i> Class Matrix
+    </button>
+    <button class="tab-btn" onclick="switchTab('quick',this)">
+      <i class="bi bi-lightning-charge"></i> Quick Assign
+    </button>
+    <button class="tab-btn" onclick="switchTab('bulk',this)">
+      <i class="bi bi-stack"></i> Bulk Assign
+    </button>
+    <button class="tab-btn" onclick="switchTab('teachers',this)">
+      <i class="bi bi-person-workspace"></i> Teacher View
+    </button>
+  </div>
+
+  <!-- ══ TAB: Class Matrix ═════════════════════════════════════ -->
+  <div class="tab-content active" id="tab-matrix">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+            <i class="bi bi-grid-3x3-gap" style="color:var(--blue);font-size:.85rem;"></i>
+          </div>
+          <h2>Class × Subject Coverage</h2>
+        </div>
+        <div class="search-wrap" style="max-width:260px;">
+          <i class="bi bi-search"></i>
+          <input type="text" id="matrix-search" placeholder="Filter classes…" oninput="filterMatrix(this.value)">
+        </div>
+      </div>
+      <div class="panel-body" style="padding:16px;">
+
+        {% for item in class_matrix %}
+        <div class="matrix-class-card" data-classname="{{ item.class.name|lower }}">
+          <div class="matrix-class-head" onclick="toggleCollapse(this)">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <h3>{{ item.class.name }}</h3>
+              {% if item.total_subjects == 0 %}
+                <span class="badge badge-gray"><i class="bi bi-dash-circle"></i> No subjects set</span>
+              {% elif item.covered == item.total_subjects %}
+                <span class="badge badge-green"><i class="bi bi-check-circle"></i> Fully covered</span>
+              {% elif item.covered == 0 %}
+                <span class="badge badge-red"><i class="bi bi-exclamation-triangle"></i> No teachers assigned</span>
+              {% else %}
+                <span class="badge badge-amber"><i class="bi bi-hourglass-split"></i> {{ item.covered }}/{{ item.total_subjects }} covered</span>
+              {% endif %}
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              {% if item.total_subjects > 0 %}
+              <div class="prog-bar">
+                <div class="prog-fill" style="width:{% if item.total_subjects > 0 %}{% widthratio item.covered item.total_subjects 100 %}{% else %}0{% endif %}%;"></div>
+              </div>
+              {% endif %}
+              <i class="bi bi-chevron-down arrow"></i>
+            </div>
+          </div>
+
+          <div class="collapse-body">
+            {% if item.subjects %}
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Assigned Teachers</th>
+                  <th style="width:200px;">Add Teacher</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in item.subjects %}
+                <tr id="row-{{ item.class.id }}-{{ row.subject.id }}">
+                  <td>
+                    <strong>{{ row.subject.name }}</strong>
+                    {% if row.subject.code %}<br><span style="color:var(--slate);font-size:.72rem;font-weight:500;">{{ row.subject.code }}</span>{% endif %}
+                  </td>
+                  <td id="chips-{{ item.class.id }}-{{ row.subject.id }}">
+                    {% for ssc in row.teachers %}
+                    <span class="teacher-chip" id="chip-{{ ssc.id }}">
+                      <i class="bi bi-person-fill" style="font-size:.65rem;"></i>
+                      <span>{{ ssc.staff.full_name }}</span>
+                      <button class="rm" title="Remove"
+                        onclick="removeAssignment({{ ssc.id }}, 'chip-{{ ssc.id }}')">
+                        <i class="bi bi-x"></i>
+                      </button>
+                    </span>
+                    {% empty %}
+                    <span class="unassigned-badge">
+                      <i class="bi bi-exclamation-circle"></i> Unassigned
+                    </span>
+                    {% endfor %}
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                      <select class="inline-teacher-sel"
+                        id="sel-{{ item.class.id }}-{{ row.subject.id }}">
+                        <option value="">— Teacher —</option>
+                        {% for t in teachers %}
+                        <option value="{{ t.id }}">{{ t.full_name }}</option>
+                        {% endfor %}
+                      </select>
+                      <button class="btn-icon add" title="Add"
+                        onclick="quickAssignInline({{ item.class.id }}, {{ row.subject.id }},
+                          'sel-{{ item.class.id }}-{{ row.subject.id }}',
+                          'chips-{{ item.class.id }}-{{ row.subject.id }}')">
+                        <i class="bi bi-plus-lg"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% else %}
+            <div class="empty-state">
+              <div class="empty-icon"><i class="bi bi-journal-x"></i></div>
+              <h4>No subjects assigned</h4>
+              <p>This class has no subjects linked yet.</p>
+              <a href="{% url 'users:assign_subjects' %}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-plus"></i> Assign Subjects
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+          <div class="empty-icon"><i class="bi bi-building-x"></i></div>
+          <h4>No classes found</h4>
+          <p>Create classes to begin subject assignment.</p>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: Quick Assign ═════════════════════════════════════ -->
+  <div class="tab-content" id="tab-quick">
+    <div class="panel" style="animation-delay:.05s;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+            <i class="bi bi-lightning-charge" style="color:var(--amber);font-size:.85rem;"></i>
+          </div>
+          <h2>Quick Single Assignment</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="qa-grid">
+          <div class="form-grp">
+            <label>Teacher</label>
+            <select id="qa-teacher">
+              <option value="">— Select Teacher —</option>
+              {% for t in teachers %}
+              <option value="{{ t.id }}">{{ t.full_name }} ({{ t.role }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-grp">
+            <label>Class</label>
+            <select id="qa-class" onchange="loadSubjectsForClass(this.value, 'qa-subject')">
+              <option value="">— Select Class —</option>
+              {% for c in classes %}
+              <option value="{{ c.id }}">{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-grp">
+            <label>Subject</label>
+            <select id="qa-subject">
+              <option value="">— Select Class first —</option>
+            </select>
+          </div>
+          <div>
+            <button class="btn btn-primary" onclick="quickAssign()">
+              <i class="bi bi-plus-circle"></i> Assign
+            </button>
+          </div>
+        </div>
+        <div id="qa-log" style="margin-top:18px;"></div>
+      </div>
+    </div>
+
+    <!-- Assignments Table -->
+    <div class="panel" style="animation-delay:.10s;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:var(--teal-dim);border:1px solid var(--teal-border);">
+            <i class="bi bi-list-check" style="color:var(--teal);font-size:.85rem;"></i>
+          </div>
+          <h2>All Current Assignments</h2>
+        </div>
+        <div class="search-wrap" style="max-width:240px;">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search…" oninput="filterTable('assign-table', this.value)">
+        </div>
+      </div>
+      <div style="overflow:auto;">
+        <table class="matrix-table" id="assign-table">
+          <thead>
+            <tr>
+              <th>Teacher</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="assign-tbody">
+            {% for ssc in all_assignments %}
+            <tr id="arow-{{ ssc.id }}">
+              <td style="color:var(--white);font-weight:500;">{{ ssc.staff.full_name }}</td>
+              <td>{{ ssc.subject.name }}</td>
+              <td>
+                <span class="badge badge-gray">{{ ssc.school_class.name }}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm btn-danger"
+                  onclick="removeAssignment({{ ssc.id }}, 'arow-{{ ssc.id }}', true)">
+                  <i class="bi bi-trash3"></i> Remove
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                  <h4>No assignments yet</h4>
+                  <p>Use the form above to create your first assignment.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: Bulk Assign ══════════════════════════════════════ -->
+  <div class="tab-content" id="tab-bulk">
+    <div class="panel" style="animation-delay:.05s;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+            <i class="bi bi-stack" style="color:var(--purple);font-size:.85rem;"></i>
+          </div>
+          <h2>Bulk Assign — One Teacher · One Class · Multiple Subjects</h2>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="bulk-grid">
+          <div>
+            <div class="form-grp" style="margin-bottom:16px;">
+              <label>Teacher</label>
+              <select id="bulk-teacher">
+                <option value="">— Select Teacher —</option>
+                {% for t in teachers %}
+                <option value="{{ t.id }}">{{ t.full_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-grp" style="margin-bottom:20px;">
+              <label>Class</label>
+              <select id="bulk-class" onchange="loadSubjectsForClass(this.value, 'bulk-subject-hidden', true)">
+                <option value="">— Select Class —</option>
+                {% for c in classes %}
+                <option value="{{ c.id }}">{{ c.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+              <button class="btn btn-primary" onclick="bulkAssign()">
+                <i class="bi bi-check2-all"></i> Assign Selected
+              </button>
+              <button class="btn btn-ghost" onclick="toggleAllSubjects(true)">
+                <i class="bi bi-check-square"></i> Select All
+              </button>
+              <button class="btn btn-ghost" onclick="toggleAllSubjects(false)">
+                <i class="bi bi-square"></i> Deselect All
+              </button>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="clearTeacherClass()">
+              <i class="bi bi-trash3"></i> Clear all for this teacher × class
+            </button>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:.73rem;font-weight:600;letter-spacing:.4px;
+              text-transform:uppercase;color:var(--slate2);margin-bottom:8px;">
+              Subjects in Selected Class
+            </label>
+            <div class="subject-checklist" id="bulk-checklist">
+              <div class="empty-state" style="padding:24px 12px;">
+                <div class="empty-icon" style="width:40px;height:40px;font-size:1rem;margin-bottom:10px;">
+                  <i class="bi bi-ui-checks"></i>
+                </div>
+                <h4 style="font-size:.85rem;">Select a class</h4>
+                <p style="font-size:.78rem;">Subjects will appear here.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="bulk-log" style="margin-top:20px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: Teacher View ═════════════════════════════════════ -->
+  <div class="tab-content" id="tab-teachers">
+    <div class="panel" style="animation-delay:.05s;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+            <i class="bi bi-person-workspace" style="color:var(--green);font-size:.85rem;"></i>
+          </div>
+          <h2>Teacher Workload Overview</h2>
+        </div>
+        <div class="search-wrap" style="max-width:240px;">
+          <i class="bi bi-search"></i>
+          <input type="text" placeholder="Search teachers…" oninput="filterTeacherCards(this.value)">
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="teacher-grid" id="teacher-grid">
+          {% for ts in teacher_summary %}
+          <div class="teacher-card" data-name="{{ ts.teacher.full_name|lower }}">
+            <div class="tc-head">
+              <div class="avatar">{{ ts.teacher.full_name|first|upper }}</div>
+              <div>
+                <div class="tc-name">{{ ts.teacher.full_name }}</div>
+                <div class="tc-role">{{ ts.teacher.get_role_display }}</div>
+              </div>
+            </div>
+            <div class="tc-meta">
+              <span class="badge badge-champ">
+                <i class="bi bi-journal-check"></i>
+                {{ ts.count }} assignment{{ ts.count|pluralize }}
+              </span>
+              {% if ts.count == 0 %}
+                <span class="badge badge-red"><i class="bi bi-exclamation-circle"></i> Unassigned</span>
+              {% endif %}
+            </div>
+            <div class="tc-classes">
+              {% if ts.classes %}
+                <i class="bi bi-building" style="margin-right:4px;"></i>{{ ts.classes|join:", " }}
+              {% else %}
+                <span style="color:var(--slate);"><i class="bi bi-dash"></i> No class assignments yet.</span>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="empty-state" style="grid-column:1/-1;">
+            <div class="empty-icon"><i class="bi bi-people-fill"></i></div>
+            <h4>No teachers found</h4>
+            <p>Add staff members to begin managing assignments.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.asm-wrap -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Class → subjects data -->
+<script id="class-subjects-data" type="application/json">
+{
+  {% for c in classes %}
+  "{{ c.id }}": [
+    {% with subs=c.class_subjects.all %}
+    {% for cs in subs %}
+    {"id": {{ cs.subject.id }}, "name": "{{ cs.subject.name|escapejs }}"}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+    {% endwith %}
+  ]{% if not forloop.last %},{% endif %}
+  {% endfor %}
+}
+</script>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const CLASS_SUBJECTS = JSON.parse(document.getElementById('class-subjects-data').textContent);
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+/* ── Toast ─────────────────────────────────────────────────── */
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  setTimeout(() => { t.className = ''; }, 3200);
+}
+
+/* ── Collapse ──────────────────────────────────────────────── */
+function toggleCollapse(head) {
+  const body = head.nextElementSibling;
+  const collapsed = body.style.display === 'none';
+  body.style.display = collapsed ? '' : 'none';
+  head.parentElement.classList.toggle('collapsed', !collapsed);
+}
+
+/* ── Filter Matrix ─────────────────────────────────────────── */
+function filterMatrix(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.matrix-class-card').forEach(card => {
+    card.style.display = card.dataset.classname.includes(q) ? '' : 'none';
+  });
+}
+
+/* ── Filter Table ──────────────────────────────────────────── */
+function filterTable(tableId, q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+/* ── Filter Teacher Cards ──────────────────────────────────── */
+function filterTeacherCards(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('.teacher-card').forEach(c => {
+    c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+
+/* ── Load subjects ─────────────────────────────────────────── */
+function loadSubjectsForClass(classId, targetId, isChecklist=false) {
+  const subjects = CLASS_SUBJECTS[classId] || [];
+  if (isChecklist) {
+    const cl = document.getElementById('bulk-checklist');
+    if (!subjects.length) {
+      cl.innerHTML = `<div class="empty-state" style="padding:24px 12px;">
+        <div class="empty-icon" style="width:40px;height:40px;font-size:1rem;margin-bottom:10px;">
+          <i class="bi bi-journal-x"></i></div>
+        <h4 style="font-size:.85rem;">No subjects</h4>
+        <p style="font-size:.78rem;">This class has no subjects linked.</p></div>`;
+      return;
+    }
+    cl.innerHTML = subjects.map(s =>
+      `<label><input type="checkbox" value="${s.id}" class="bulk-sub-chk"> ${s.name}</label>`
+    ).join('');
+  } else {
+    const sel = document.getElementById(targetId);
+    sel.innerHTML = subjects.length
+      ? '<option value="">— Subject —</option>' + subjects.map(s =>
+          `<option value="${s.id}">${s.name}</option>`).join('')
+      : '<option value="">No subjects for this class</option>';
+  }
+}
+
+/* ── POST helper ───────────────────────────────────────────── */
+async function post(data) {
+  const fd = new FormData();
+  fd.append('csrfmiddlewaretoken', CSRF);
+  for (const [k, v] of Object.entries(data)) {
+    if (Array.isArray(v)) v.forEach(x => fd.append(k, x));
+    else fd.append(k, v);
+  }
+  const r = await fetch(window.location.href, { method: 'POST', body: fd });
+  return r.json();
+}
+
+/* ── Remove assignment ─────────────────────────────────────── */
+async function removeAssignment(sscId, elemId, isRow=false) {
+  if (!confirm('Remove this assignment?')) return;
+  const res = await post({ action: 'remove_assignment', ssc_id: sscId });
+  if (res.status === 'ok') {
+    const el = document.getElementById(elemId);
+    if (el) el.remove();
+    showToast(res.message, 'success');
+    bumpCounter(-1);
+  } else {
+    showToast(res.message || 'Error.', 'error');
+  }
+}
+
+/* ── Inline quick-assign (matrix tab) ─────────────────────── */
+async function quickAssignInline(classId, subjectId, selId, chipsId) {
+  const sel = document.getElementById(selId);
+  const staffId = sel.value;
+  if (!staffId) { showToast('Please select a teacher first.', 'error'); return; }
+
+  const res = await post({ action: 'add_assignment', staff_id: staffId, subject_id: subjectId, class_id: classId });
+  if (res.status === 'ok') {
+    const chips = document.getElementById(chipsId);
+    const unassigned = chips.querySelector('.unassigned-badge');
+    if (unassigned) unassigned.remove();
+    chips.insertAdjacentHTML('beforeend',
+      `<span class="teacher-chip" id="chip-${res.ssc_id}">
+        <i class="bi bi-person-fill" style="font-size:.65rem;"></i>
+        <span>${res.staff_name}</span>
+        <button class="rm" onclick="removeAssignment(${res.ssc_id},'chip-${res.ssc_id}')">
+          <i class="bi bi-x"></i></button>
+       </span>`);
+    sel.value = '';
+    showToast(`${res.staff_name} assigned to ${res.subject_name}.`, 'success');
+    bumpCounter(1);
+  } else if (res.status === 'exists') {
+    showToast('Already assigned.', 'info');
+  } else {
+    showToast(res.message || 'Error.', 'error');
+  }
+}
+
+/* ── Quick assign (quick tab) ──────────────────────────────── */
+async function quickAssign() {
+  const staffId   = document.getElementById('qa-teacher').value;
+  const classId   = document.getElementById('qa-class').value;
+  const subjectId = document.getElementById('qa-subject').value;
+  if (!staffId || !classId || !subjectId) {
+    showToast('Please fill in all three fields.', 'error'); return;
+  }
+  const res = await post({ action: 'add_assignment', staff_id: staffId, subject_id: subjectId, class_id: classId });
+  const log = document.getElementById('qa-log');
+  if (res.status === 'ok') {
+    showToast('Assigned successfully!', 'success');
+    bumpCounter(1);
+    const tbody = document.getElementById('assign-tbody');
+    tbody.insertAdjacentHTML('afterbegin',
+      `<tr id="arow-${res.ssc_id}">
+        <td style="color:var(--white);font-weight:500;">${res.staff_name}</td>
+        <td>${res.subject_name}</td>
+        <td><span class="badge badge-gray">${res.class_name}</span></td>
+        <td><button class="btn btn-sm btn-danger"
+          onclick="removeAssignment(${res.ssc_id},'arow-${res.ssc_id}',true)">
+          <i class="bi bi-trash3"></i> Remove</button></td>
+       </tr>`);
+    log.innerHTML = `<div class="log-success">
+      <i class="bi bi-check-circle-fill"></i>
+      ${res.staff_name} → ${res.subject_name} (${res.class_name})</div>`;
+  } else if (res.status === 'exists') {
+    showToast('This assignment already exists.', 'info');
+  } else {
+    showToast(res.message, 'error');
+  }
+}
+
+/* ── Bulk assign ───────────────────────────────────────────── */
+async function bulkAssign() {
+  const staffId = document.getElementById('bulk-teacher').value;
+  const classId = document.getElementById('bulk-class').value;
+  const checked = [...document.querySelectorAll('.bulk-sub-chk:checked')].map(c => c.value);
+  if (!staffId || !classId) { showToast('Select teacher and class.', 'error'); return; }
+  if (!checked.length)       { showToast('Select at least one subject.', 'error'); return; }
+  const res = await post({ action: 'bulk_assign', staff_id: staffId, class_id: classId, subject_ids: checked });
+  if (res.status === 'ok') {
+    showToast(res.message, 'success');
+    bumpCounter(checked.length);
+    document.getElementById('bulk-log').innerHTML =
+      `<div class="log-success"><i class="bi bi-check-circle-fill"></i> ${res.message}</div>`;
+    setTimeout(() => location.reload(), 1600);
+  } else {
+    showToast(res.message, 'error');
+  }
+}
+
+/* ── Clear teacher × class ─────────────────────────────────── */
+async function clearTeacherClass() {
+  const staffId = document.getElementById('bulk-teacher').value;
+  const classId = document.getElementById('bulk-class').value;
+  if (!staffId || !classId) { showToast('Select teacher and class first.', 'error'); return; }
+  if (!confirm('Remove ALL assignments for this teacher in this class?')) return;
+  const res = await post({ action: 'clear_teacher_class', staff_id: staffId, class_id: classId });
+  showToast(res.message, 'success');
+  setTimeout(() => location.reload(), 1400);
+}
+
+/* ── Toggle all checkboxes ─────────────────────────────────── */
+function toggleAllSubjects(checked) {
+  document.querySelectorAll('.bulk-sub-chk').forEach(c => c.checked = checked);
+}
+
+/* ── Update assignment counter ─────────────────────────────── */
+function bumpCounter(delta) {
+  const el = document.getElementById('total-assign-count');
+  el.textContent = Math.max(0, parseInt(el.textContent) + delta);
+}
+</script>
+{% endblock %}

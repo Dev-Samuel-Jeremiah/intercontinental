@@ -1,0 +1,93 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<style>
+  .na-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.3rem}
+  .na-eyebrow{font-size:.68rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--champagne);display:flex;align-items:center;gap:.55rem}
+  .na-eyebrow::before{content:"";width:18px;height:1px;background:var(--champagne)}
+  .na-title{font-family:var(--serif);font-size:clamp(1.9rem,3.4vw,2.6rem);font-weight:500;color:var(--white);margin:.35rem 0 .2rem}
+  .na-title em{color:var(--champagne)}
+  .na-sub{color:var(--slate2);font-size:.88rem}
+  .na-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1rem;border-radius:11px;font:inherit;font-size:.82rem;font-weight:600;
+    border:0;cursor:pointer;background:linear-gradient(135deg,var(--champagne),var(--champagne-dk));color:#0a1f44}
+  .na-btn[disabled]{opacity:.45;cursor:default}
+  .na-bar{display:flex;gap:.5rem 1rem;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:1rem}
+  .na-pills{display:flex;gap:.35rem;flex-wrap:wrap}
+  .na-pills a{padding:.42rem .85rem;border-radius:99px;font-size:.76rem;font-weight:600;border:1px solid var(--rim2);color:var(--slate2)}
+  .na-pills a.on{background:var(--champagne);border-color:var(--champagne);color:#0a1f44}
+  .na-panel{background:var(--surface);border:1px solid var(--rim);border-radius:var(--radius);overflow:hidden}
+  .na-item{display:flex;gap:.9rem;padding:1rem 1.2rem;border-bottom:1px solid var(--rim);color:inherit;position:relative}
+  .na-item:last-child{border-bottom:0}
+  a.na-item:hover{background:rgba(255,255,255,.025)}
+  .na-item.unread{background:rgba(244,210,31,.04)}
+  .na-item.unread::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--champagne)}
+  .na-ic{width:42px;height:42px;flex-shrink:0;border-radius:12px;display:grid;place-items:center;font-size:1.05rem;background:var(--blue-dim);color:var(--blue)}
+  .na-ic.success{background:var(--green-dim);color:var(--green)}
+  .na-ic.warning{background:var(--amber-dim);color:var(--amber)}
+  .na-ic.danger{background:var(--red-dim);color:var(--red)}
+  .na-tx{flex:1;min-width:0}
+  .na-t{font-weight:600;color:var(--white);font-size:.92rem}
+  .na-b{color:var(--slate2);font-size:.84rem;margin-top:.15rem;line-height:1.45}
+  .na-m{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.35rem;font-size:.72rem;color:var(--slate)}
+  .na-m .for{color:var(--champagne-lt)}
+  .na-new{align-self:center;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--champagne)}
+  .na-empty{padding:3rem 1rem;text-align:center;color:var(--slate)}
+  .na-empty i{display:block;font-size:2rem;margin-bottom:.6rem;opacity:.6}
+  .na-pg{display:flex;justify-content:center;gap:.5rem;margin-top:1.2rem}
+  .na-pg a,.na-pg span{padding:.45rem .9rem;border-radius:9px;border:1px solid var(--rim2);color:var(--slate2);font-size:.82rem}
+</style>
+
+<div class="na-head">
+  <div>
+    <div class="na-eyebrow">Inbox</div>
+    <h1 class="na-title">Your <em>notifications</em></h1>
+    <p class="na-sub">
+      {% if role == 'admin' %}Everything happening across the school, newest first.
+      {% elif role == 'parent' %}News about your children and their classes.
+      {% elif role == 'student' %}Exams, homework, results and notices for you and your class.
+      {% else %}Notices about your classes, messages and requests.{% endif %}
+      {% if unread_total %}<b style="color:var(--champagne)">{{ unread_total }} unread.</b>{% endif %}
+    </p>
+  </div>
+  <form method="post">{% csrf_token %}<input type="hidden" name="all" value="1">
+    <button class="na-btn" type="submit"{% if not unread_total %} disabled{% endif %}><i class="bi bi-check2-all"></i> Mark all as read</button>
+  </form>
+</div>
+
+<div class="na-bar">
+  <div class="na-pills">
+    <a href="?show=all{% if category %}&category={{ category|urlencode }}{% endif %}" class="{% if show != 'unread' %}on{% endif %}">All</a>
+    <a href="?show=unread{% if category %}&category={{ category|urlencode }}{% endif %}" class="{% if show == 'unread' %}on{% endif %}">Unread</a>
+  </div>
+  <div class="na-pills">
+    <a href="?show={{ show }}" class="{% if not category %}on{% endif %}">Every kind</a>
+    {% for c in categories %}<a href="?show={{ show }}&category={{ c|urlencode }}" class="{% if category == c %}on{% endif %}">{{ c }}</a>{% endfor %}
+  </div>
+</div>
+
+<div class="na-panel">
+  {% for n in items %}
+  {% if n.url %}<a class="na-item{% if n.unread %} unread{% endif %}" href="{{ n.url }}">{% else %}<div class="na-item{% if n.unread %} unread{% endif %}">{% endif %}
+    <div class="na-ic {{ n.level }}"><i class="bi bi-{{ n.icon }}"></i></div>
+    <div class="na-tx">
+      <div class="na-t">{{ n.title }}</div>
+      {% if n.body %}<div class="na-b">{{ n.body }}</div>{% endif %}
+      <div class="na-m"><span title="{{ n.when|date:'l j F Y, H:i' }}">{{ n.when|naturaltime }}</span><span>· {{ n.category }}</span>{% if n.for %}<span class="for">· {{ n.for }}</span>{% endif %}</div>
+    </div>
+    {% if n.unread %}<span class="na-new">New</span>{% endif %}
+  {% if n.url %}</a>{% else %}</div>{% endif %}
+  {% empty %}
+  <div class="na-empty"><i class="bi {% if show == 'unread' %}bi-check2-all{% else %}bi-bell-slash{% endif %}"></i>
+    {% if show == 'unread' %}You're all caught up.{% else %}Nothing here yet. New notices will appear as things happen.{% endif %}</div>
+  {% endfor %}
+</div>
+
+{% if page.paginator.num_pages > 1 %}
+<div class="na-pg">
+  {% if page.has_previous %}<a href="?show={{ show }}&category={{ category|urlencode }}&page={{ page.previous_page_number }}">&laquo; Newer</a>{% endif %}
+  <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a href="?show={{ show }}&category={{ category|urlencode }}&page={{ page.next_page_number }}">Older &raquo;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

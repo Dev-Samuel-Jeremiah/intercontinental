@@ -1,0 +1,214 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}ID Card Directory{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+
+.dir-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:18px; }
+.dir-toolbar h2{ color:var(--white); font-weight:600; margin:0; font-size:1.15rem; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:9px 16px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; font-size:.85rem;
+  white-space:nowrap; text-align:center; }
+.idc-btn.ghost{ background:transparent; border:1px solid var(--rim); color:var(--white); }
+
+.dir-tabs{ display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--rim);
+  overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.dir-tab{ padding:10px 20px; color:var(--slate); text-decoration:none; font-weight:600; font-size:.9rem;
+  border-bottom:2px solid transparent; white-space:nowrap; flex-shrink:0; }
+.dir-tab.active{ color:var(--champagne-lt); border-bottom-color:var(--champagne); }
+
+.dir-filters{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+.dir-filters input, .dir-filters select{ background:var(--surface2); color:var(--white); border:1px solid var(--rim);
+  border-radius:8px; padding:9px 14px; font-size:.85rem; min-width:0; }
+.dir-filters input[type="text"]{ min-width:220px; flex:1 1 220px; }
+.dir-filters select{ flex:0 1 160px; }
+.dir-filters button{ flex-shrink:0; }
+
+.dir-table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:12px; }
+.dir-table{ width:100%; min-width:560px; border-collapse:collapse; background:var(--surface2); border-radius:12px; overflow:hidden; }
+.dir-table th{ text-align:left; padding:12px 16px; font-size:.72rem; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--slate); border-bottom:1px solid var(--rim); white-space:nowrap; }
+.dir-table td{ padding:10px 16px; border-bottom:1px solid var(--rim); color:var(--white); font-size:.88rem; vertical-align:middle; }
+.dir-avatar{ width:38px; height:38px; border-radius:8px; object-fit:cover; background:#333; border:1px solid var(--rim); }
+.dir-avatar-fallback{ width:38px; height:38px; border-radius:8px; background:var(--rim); display:flex;
+  align-items:center; justify-content:center; color:var(--slate); font-size:1rem; }
+.dir-name{ font-weight:600; }
+.dir-sub{ color:var(--slate); font-size:.78rem; }
+.dir-empty{ text-align:center; color:var(--slate); padding:36px; }
+
+.pg{ display:flex; gap:8px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+.pg a, .pg span{ color:var(--white); padding:6px 12px; border:1px solid var(--rim); border-radius:6px; text-decoration:none; font-size:.85rem; }
+
+/* ══════════════════════════════════════════════
+   MOBILE — collapse the table into stacked cards
+══════════════════════════════════════════════ */
+@media(max-width:700px){
+  .dir-toolbar{ flex-direction:column; align-items:stretch; }
+  .dir-toolbar .idc-btn{ width:100%; }
+
+  .dir-filters{ flex-direction:column; align-items:stretch; }
+  .dir-filters input[type="text"], .dir-filters select, .dir-filters button{ width:100%; flex:none; }
+
+  .dir-table-wrap{ overflow-x:visible; }
+  .dir-table{ min-width:0; }
+  .dir-table thead{ display:none; }
+  .dir-table, .dir-table tbody, .dir-table tr, .dir-table td{ display:block; width:100%; }
+  .dir-table tr{
+    background:var(--surface2); border:1px solid var(--rim); border-radius:12px;
+    margin-bottom:12px; padding:10px 4px; position:relative;
+  }
+  .dir-table td{
+    border-bottom:none; padding:6px 14px; display:flex; align-items:center;
+    justify-content:space-between; gap:10px; text-align:right;
+  }
+  .dir-table td[data-label]::before{
+    content:attr(data-label); font-size:.68rem; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--slate); font-weight:600; text-align:left; flex-shrink:0;
+  }
+  /* photo cell: no label, own row */
+  .dir-table td.dir-cell-photo{ justify-content:flex-start; padding-bottom:2px; }
+  .dir-table td.dir-cell-photo::before{ content:none; }
+  /* name cell: no label needed, show large */
+  .dir-table td.dir-cell-name{ justify-content:flex-start; }
+  .dir-table td.dir-cell-name::before{ content:none; }
+  .dir-table td.dir-cell-name .dir-name{ font-size:1rem; }
+  /* action cell: full-width button, own row */
+  .dir-table td.dir-cell-action{ justify-content:stretch; padding-top:10px; }
+  .dir-table td.dir-cell-action::before{ content:none; }
+  .dir-table td.dir-cell-action .idc-btn{ width:100%; justify-content:center; display:flex; }
+
+  .dir-empty{ padding:24px 12px; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="dir-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-person-lines-fill"></i> ID Card Directory</h2></div>
+  <a href="{% url 'idcards:bulk_print_cards' %}" class="idc-btn ghost"><i class="bi bi-grid-3x3-gap-fill"></i> Bulk Print by Class</a>
+</div>
+
+<div class="dir-tabs">
+  <a href="?tab=students" class="dir-tab {% if tab == 'students' %}active{% endif %}">
+    <i class="bi bi-mortarboard-fill"></i> Students
+  </a>
+  {% if is_full_admin %}
+  <a href="?tab=staff" class="dir-tab {% if tab == 'staff' %}active{% endif %}">
+    <i class="bi bi-person-badge-fill"></i> Staff
+  </a>
+  {% endif %}
+</div>
+
+{% if tab == 'students' %}
+  <form method="get" class="dir-filters">
+    <input type="hidden" name="tab" value="students">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search name or admission no…">
+    <select name="class_id">
+      <option value="">All Classes</option>
+      {% for c in classes %}
+        <option value="{{ c.id }}" {% if selected_class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="idc-btn"><i class="bi bi-search"></i> Filter</button>
+  </form>
+
+  <div class="dir-table-wrap">
+  <table class="dir-table">
+    <thead>
+      <tr><th></th><th>Name</th><th>Admission No.</th><th>Class</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for student in students_page %}
+      <tr>
+        <td class="dir-cell-photo">
+          {% if student.passport %}
+            <img class="dir-avatar" src="{{ student.passport.url }}" alt="{{ student.full_name }}">
+          {% else %}
+            <div class="dir-avatar-fallback"><i class="bi bi-person-fill"></i></div>
+          {% endif %}
+        </td>
+        <td class="dir-cell-name">
+          <div class="dir-name">{{ student.full_name }}</div>
+          <div class="dir-sub">{{ student.gender|default:"" }}</div>
+        </td>
+        <td data-label="Admission No.">{{ student.admission_number }}</td>
+        <td data-label="Class">{{ student.class_assigned.name|default:"—" }}</td>
+        <td data-label="Status"><span class="dir-sub">{{ student.status }}</span></td>
+        <td class="dir-cell-action">
+          <a href="{% url 'idcards:print_student_card' student_id=student.id %}" class="idc-btn ghost">
+            <i class="bi bi-person-vcard-fill"></i> View ID Card
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="dir-empty">No students match your search.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="pg">
+    {% if students_page.has_previous %}
+      <a href="?tab=students&page={{ students_page.previous_page_number }}&q={{ q }}&class_id={{ selected_class_id }}">&laquo; Prev</a>
+    {% endif %}
+    {% if students_page %}
+      <span>Page {{ students_page.number }} of {{ students_page.paginator.num_pages }}</span>
+    {% endif %}
+    {% if students_page.has_next %}
+      <a href="?tab=students&page={{ students_page.next_page_number }}&q={{ q }}&class_id={{ selected_class_id }}">Next &raquo;</a>
+    {% endif %}
+  </div>
+
+{% elif tab == 'staff' %}
+  <form method="get" class="dir-filters">
+    <input type="hidden" name="tab" value="staff">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search staff name…">
+    <select name="role">
+      <option value="">All Roles</option>
+      {% for value, label in role_choices %}
+        <option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="idc-btn"><i class="bi bi-search"></i> Filter</button>
+  </form>
+
+  <div class="dir-table-wrap">
+  <table class="dir-table">
+    <thead>
+      <tr><th></th><th>Name</th><th>Role</th><th>Username</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for staff in staff_page %}
+      <tr>
+        <td class="dir-cell-photo"><div class="dir-avatar-fallback"><i class="bi bi-person-badge-fill"></i></div></td>
+        <td class="dir-cell-name"><div class="dir-name">{{ staff.full_name }}</div></td>
+        <td data-label="Role">{{ staff.get_role_display }}</td>
+        <td data-label="Username" class="dir-sub">{{ staff.user.username }}</td>
+        <td class="dir-cell-action">
+          <a href="{% url 'idcards:print_staff_card' staff_id=staff.id %}" class="idc-btn ghost">
+            <i class="bi bi-person-vcard-fill"></i> View ID Card
+          </a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="dir-empty">No staff match your search.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <div class="pg">
+    {% if staff_page.has_previous %}
+      <a href="?tab=staff&page={{ staff_page.previous_page_number }}&q={{ q }}&role={{ selected_role }}">&laquo; Prev</a>
+    {% endif %}
+    {% if staff_page %}
+      <span>Page {{ staff_page.number }} of {{ staff_page.paginator.num_pages }}</span>
+    {% endif %}
+    {% if staff_page.has_next %}
+      <a href="?tab=staff&page={{ staff_page.next_page_number }}&q={{ q }}&role={{ selected_role }}">Next &raquo;</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

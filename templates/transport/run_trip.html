@@ -1,0 +1,59 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Trip{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.kid{display:flex;justify-content:space-between;align-items:center;gap:.5rem;padding:.55rem 0;border-bottom:1px solid var(--rim)}.kid form{display:flex;gap:.3rem}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{% if trip.route %}{{ trip.route.name }}{% else %}{{ trip.field_trip.title }}{% endif %} · {{ trip.date|date:"D j M" }}</div>
+  <h1 class="fin-title"><em>{{ trip.get_leg_display }} trip</em></h1>
+  <p class="fin-sub">{{ att.on|length }} of {{ att.expected|length }} on board{% if att.still_on and att.on|length != att.still_on|length %} · {{ att.still_on|length }} still on{% endif %}{% if trip.ended_at %} · ended {{ trip.ended_at|time:"H:i" }}{% endif %}</p>
+</div>{% if trip.route %}<div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-sm{% if leg == 'AM' %} fin-btn-gold{% endif %}" href="?leg=AM">Morning</a><a class="fin-btn fin-btn-sm{% if leg == 'PM' %} fin-btn-gold{% endif %}" href="?leg=PM">Afternoon</a></div>{% endif %}</div>
+{% if not trip.ended_at %}
+<p id="gps" class="hint" style="margin:-.6rem 0 1rem"><i class="bi bi-geo-alt"></i> Sharing the bus position with parents while this page is open…</p>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Children</h3></div><div class="panel-b">
+    {% for s, on, still in rows %}<div class="kid"><div><b>{{ s.full_name }}</b>{% if still %} <span class="chip gold">On bus</span>{% elif on %} <span class="chip ok">Off</span>{% endif %}</div>
+      <form method="post">{% csrf_token %}<input type="hidden" name="leg" value="{{ leg }}"><input type="hidden" name="student" value="{{ s.pk }}">
+        {% if not on %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="ON">On</button>{% elif still %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="OFF">Off</button>{% endif %}</form></div>
+    {% empty %}<p class="empty">No children expected on this trip.</p>{% endfor %}
+  </div></div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="leg" value="{{ leg }}">
+      <h3 style="margin:0 0 .6rem">Scan an ID card</h3>
+      <div><label>Card QR or admission number</label><input name="code" autofocus autocomplete="off" placeholder="Scan or type"></div>
+      <div class="row2"><button class="fin-btn fin-btn-gold" type="submit" name="action" value="ON">Boarded</button><button class="fin-btn" type="submit" name="action" value="OFF">Got off</button></div>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="leg" value="{{ leg }}"><input type="hidden" name="action" value="delay">
+      <h3 style="margin:0 0 .6rem">Running late?</h3>
+      <div class="row2"><div><label>Minutes late</label><input name="minutes" value="{{ trip.delay_minutes }}" inputmode="numeric"></div><div><label>Why</label><input name="note" value="{{ trip.delay_note }}" maxlength="160" placeholder="e.g. traffic"></div></div>
+      <p class="hint" style="margin:0">10 minutes or more texts every family on the route.</p>
+      <button class="fin-btn" type="submit">Save delay</button>
+    </form>
+    <form method="post" class="panel" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="leg" value="{{ leg }}"><input type="hidden" name="action" value="end">
+      <p class="hint" style="margin:0 0 .5rem">Walk the bus before ending. Anyone still marked on board alerts the transport office.</p>
+      <button class="fin-btn fin-btn-gold" type="submit" onclick="return confirm('End this trip?')">End trip</button>
+    </form>
+  </div>
+</div>
+<script>
+(function(){
+  var url="{% url 'transport:position' trip.pk %}", token="{{ csrf_token }}", el=document.getElementById('gps');
+  if(!navigator.geolocation){el.textContent='This phone cannot share its position.';return;}
+  var last=0;
+  function send(p){
+    var now=Date.now(); if(now-last<45000) return; last=now;
+    var body=new URLSearchParams({lat:p.coords.latitude,lng:p.coords.longitude});
+    fetch(url,{method:'POST',headers:{'X-CSRFToken':token},body:body}).then(function(r){return r.json()}).then(function(j){
+      el.innerHTML=j.ok?'<i class="bi bi-geo-alt-fill"></i> Position shared at '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'Position not shared: '+(j.error||'');
+    }).catch(function(){});
+  }
+  navigator.geolocation.watchPosition(send,function(){el.textContent='Turn on location to let parents see the bus.';},{enableHighAccuracy:true,maximumAge:30000});
+})();
+</script>
+{% else %}
+<div class="panel"><div class="panel-b">
+  <p>This trip has ended. {% if att.still_on %}<b style="color:var(--red)">Still marked on board: {% for s in att.still_on %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</b>{% else %}Everyone was accounted for.{% endif %}</p>
+  {% if att.missing %}<p class="hint">Did not board: {% for s in att.missing %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+</div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,104 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#081a3a">
+  <title>{% block title %}Admissions{% endblock %} | {{ tenant.name }}</title>
+  <link rel="icon" href="{% if tenant.logo %}{{ tenant.logo.url }}{% else %}{% static 'images/logo.png' %}{% endif %}" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root{
+      --ink:#081a3a; --surface:#0f244b; --rim:rgba(255,255,255,.06); --rim2:rgba(255,255,255,.10);
+      --gold:#f4d21f; --gold-lt:#ffe580; --gold-dk:#c9a800; --gold-dim:rgba(244,210,31,.12); --gold-rim:rgba(244,210,31,.30);
+      --text:#f2f5fb; --text-2:rgba(242,245,251,.64); --text-3:rgba(242,245,251,.42);
+      --green:#5ecb8e; --red:#e87070; --amber:#f59e0b;
+      --serif:"Cormorant Garamond",Georgia,serif; --sans:"Outfit",system-ui,sans-serif;
+      --ease:cubic-bezier(.22,1,.36,1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;font-family:var(--sans);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;
+      background:radial-gradient(900px 500px at 50% -10%,rgba(244,210,31,.14),transparent 60%),
+                 radial-gradient(700px 500px at 100% 110%,rgba(30,80,190,.08),transparent 60%),var(--ink);}
+    a{color:inherit;text-decoration:none}
+    :focus-visible{outline:2px solid var(--gold-lt);outline-offset:2px}
+    .wrap{width:min(860px,100%);margin:0 auto;padding:clamp(1.5rem,4vw,3rem) 16px 5rem}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:2.4rem}
+    .brand{display:flex;align-items:center;gap:.8rem}
+    .brand-logo{width:46px;height:46px;border-radius:13px;overflow:hidden;display:grid;place-items:center;
+      background:linear-gradient(135deg,rgba(255,229,128,.22),rgba(244,210,31,.06));border:1px solid var(--gold-rim);
+      font-family:var(--serif);font-weight:700;color:var(--gold-lt)}
+    .brand-logo img{width:100%;height:100%;object-fit:cover}
+    .brand b{display:block;font-size:1rem}
+    .brand span{font-size:.66rem;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--gold)}
+    .top a.link{font-size:.86rem;color:var(--text-2);display:inline-flex;align-items:center;gap:.4rem}
+    .top a.link:hover{color:var(--gold-lt)}
+    .eyebrow{display:inline-flex;align-items:center;gap:.55rem;font-size:.68rem;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem}
+    .eyebrow::before{content:"";width:22px;height:1px;background:var(--gold-rim)}
+    h1{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,5vw,2.9rem);line-height:1.08;letter-spacing:-.01em;margin-bottom:.7rem}
+    h1 em{font-style:italic;color:var(--gold-lt)}
+    .lead{color:var(--text-2);font-weight:300;max-width:60ch}
+    .card{margin-top:2rem;padding:clamp(1.3rem,3vw,2rem);border-radius:20px;border:1px solid var(--rim);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))}
+    .card h2{font-family:var(--serif);font-size:1.35rem;font-weight:600;margin-bottom:.3rem}
+    .card .hint{color:var(--text-3);font-size:.84rem;margin-bottom:1.2rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem}
+    .field{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+    .field.full{grid-column:1/-1}
+    label{font-size:.78rem;font-weight:600;color:var(--text-2)}
+    label .req{color:var(--gold)}
+    .f-input,input,select,textarea{width:100%;padding:.78rem .9rem;border-radius:11px;font:inherit;font-size:.92rem;
+      background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
+    input::placeholder,textarea::placeholder{color:var(--text-3)}
+    input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(244,210,31,.15)}
+    select option{background:#132a54;color:var(--text)}
+    input[type=file]{padding:.6rem;color:var(--text-2);font-size:.86rem}
+    input[type=file]::file-selector-button{margin-right:.8rem;padding:.45rem .8rem;border-radius:8px;border:1px solid var(--rim2);
+      background:rgba(255,255,255,.05);color:var(--text);font:inherit;font-size:.82rem;cursor:pointer}
+    .help{font-size:.76rem;color:var(--text-3)}
+    .errors{margin-bottom:1.2rem;padding:.85rem 1rem;border-radius:12px;background:rgba(232,112,112,.1);
+      border:1px solid rgba(232,112,112,.3);color:var(--red);font-size:.86rem}
+    .errors ul{margin:0;padding-left:1.1rem}
+    .field .err{font-size:.78rem;color:var(--red)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;padding:.95rem 1.5rem;border-radius:12px;
+      border:0;cursor:pointer;font:inherit;font-size:.95rem;font-weight:600;
+      background:linear-gradient(135deg,var(--gold-lt),var(--gold) 60%,var(--gold-dk));color:#0a1f44;
+      box-shadow:0 14px 30px -12px rgba(244,210,31,.7),inset 0 1px 0 rgba(255,255,255,.45);
+      transition:transform .25s var(--ease),box-shadow .25s}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 18px 36px -12px rgba(244,210,31,.85)}
+    .btn.ghost{background:rgba(255,255,255,.04);color:var(--text);border:1px solid var(--rim2);box-shadow:none}
+    .btn.ghost:hover{border-color:var(--gold-rim);color:var(--gold-lt)}
+    .note{display:flex;gap:.7rem;padding:.9rem 1rem;border-radius:12px;font-size:.86rem;line-height:1.55;
+      background:rgba(255,255,255,.03);border:1px solid var(--rim);color:var(--text-2)}
+    .note i{color:var(--gold-lt);margin-top:.1rem}
+    .foot{margin-top:2.5rem;font-size:.8rem;color:var(--text-3);text-align:center}
+    @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+    {% block extra_css %}{% endblock %}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="brand-logo">
+          {% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="">{% else %}{{ tenant.name|slice:":2"|upper }}{% endif %}
+        </div>
+        <div>
+          <b>{{ tenant.name }}</b>
+          <span>Admissions</span>
+        </div>
+      </div>
+      {% block topright %}
+      <a class="link" href="{% url 'apply_status' %}"><i class="bi bi-search"></i> Check application status</a>
+      {% endblock %}
+    </div>
+
+    {% block body %}{% endblock %}
+
+    <p class="foot">&copy; {% now "Y" %} {{ tenant.name }}</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ report.get_period_display }} report{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+<style>
+  .rw-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1.3rem;align-items:start}
+  @media(max-width:1000px){.rw-grid{grid-template-columns:1fr}}
+  .rw-field{margin-bottom:1.2rem}
+  .rw-field label{display:flex;align-items:baseline;gap:.5rem;font-weight:600;font-size:.88rem;color:var(--white);margin-bottom:.2rem}
+  .rw-field label em{font-style:normal;color:var(--champagne);font-size:.75rem}
+  .rw-field p{margin:0 0 .45rem;font-size:.76rem;color:var(--slate)}
+  .rw-field textarea{width:100%;min-height:96px;resize:vertical;padding:.8rem .9rem;border-radius:12px;font:inherit;font-size:.88rem;line-height:1.55;
+    background:var(--surface2);border:1px solid var(--rim2);color:var(--white);transition:border-color .18s,box-shadow .18s}
+  .rw-field textarea:focus{outline:0;border-color:var(--champagne);box-shadow:0 0 0 3px var(--champagne-dim)}
+  .rw-field textarea#f-work_done{min-height:150px}
+  .rw-count{text-align:right;font-size:.68rem;color:var(--slate);margin-top:.2rem}
+  .rw-side{position:sticky;top:calc(var(--top-h) + 1rem);display:grid;gap:1rem}
+  .rw-file{display:flex;flex-direction:column;gap:.5rem;font-size:.82rem;color:var(--slate2)}
+  .rw-file input[type=file]{font-size:.78rem;color:var(--slate2)}
+  .rw-submit{display:grid;gap:.6rem}
+  .rw-submit .rp-btn{justify-content:center;width:100%}
+  .rw-tip{font-size:.78rem;color:var(--slate);line-height:1.5}
+  .rw-tip li{margin-bottom:.3rem}
+</style>
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">My work reports</div>
+    <h1 class="rp-title">{{ report.get_period_display }} <em>report</em></h1>
+    <p class="rp-sub">{{ period_label }} &middot; {{ me.full_name }}{% if report.status == 'SUBMITTED' %} &middot; <span style="color:var(--blue)">submitted {{ report.submitted_at|date:"j M, H:i" }} — you can still edit it until it is reviewed</span>{% endif %}</p>
+  </div>
+  <div class="rp-actions">
+    <div class="rp-seg">
+      <a href="?period=daily" class="{% if period == 'DAILY' %}on{% endif %}">Daily</a>
+      <a href="?period=weekly" class="{% if period == 'WEEKLY' %}on{% endif %}">Weekly</a>
+    </div>
+    <div class="rp-nav">
+      <a href="?period={{ period|lower }}&date={{ prev|date:'Y-m-d' }}" title="Previous"><i class="bi bi-chevron-left"></i></a>
+      {% if next %}<a href="?period={{ period|lower }}&date={{ next|date:'Y-m-d' }}" title="Next"><i class="bi bi-chevron-right"></i></a>{% else %}<span class="off"><i class="bi bi-chevron-right"></i></span>{% endif %}
+    </div>
+    <a class="rp-btn" href="{% url 'hr:my_reports' %}"><i class="bi bi-arrow-left"></i> My reports</a>
+  </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="rw-form">
+  {% csrf_token %}
+  <input type="hidden" name="period" value="{{ period|lower }}">
+  <input type="hidden" name="date" value="{{ report.period_start|date:'Y-m-d' }}">
+  <div class="rw-grid">
+    <div class="rp-panel"><div class="rp-panel-b">
+      {% for name, label, help, required, value in fields %}
+      <div class="rw-field">
+        <label for="f-{{ name }}">{{ label }}{% if required %} <em>required</em>{% endif %}</label>
+        <p>{{ help }}</p>
+        <textarea id="f-{{ name }}" name="{{ name }}" maxlength="5000" data-count>{{ value }}</textarea>
+        <div class="rw-count"></div>
+      </div>
+      {% endfor %}
+    </div></div>
+
+    <div class="rw-side">
+      <div class="rp-panel"><div class="rp-panel-b rw-submit">
+        <button class="rp-btn gold" type="submit" name="action" value="submit"><i class="bi bi-send-fill"></i> {% if report.status == 'SUBMITTED' %}Update submitted report{% else %}Submit report{% endif %}</button>
+        {% if report.status != 'SUBMITTED' %}<button class="rp-btn" type="submit" name="action" value="draft"><i class="bi bi-save"></i> Save draft</button>{% endif %}
+        <p class="rw-tip" style="margin:.2rem 0 0">{% if report.status == 'SUBMITTED' %}Changes are visible to the administrators straight away.{% else %}Drafts are private. Submitting notifies the school administrators.{% endif %}</p>
+      </div></div>
+      <div class="rp-panel"><div class="rp-panel-b rw-file">
+        <b style="color:var(--white)"><i class="bi bi-paperclip"></i> Attachment</b>
+        {% if report.attachment %}
+          <a class="rp-chip gold" href="{% url 'hr:report_attachment' report.pk %}" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i> Current file</a>
+          <label><input type="checkbox" name="remove_attachment" value="1"> Remove it</label>
+        {% endif %}
+        <input type="file" name="attachment" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.txt">
+        <span class="rp-muted" style="font-size:.72rem">Optional — a photo, scheme, or document (up to 10 MB).</span>
+      </div></div>
+      <div class="rp-panel"><div class="rp-panel-b">
+        <b style="color:var(--white);font-size:.85rem"><i class="bi bi-lightbulb" style="color:var(--champagne)"></i> A good report</b>
+        <ul class="rw-tip" style="padding-left:1.1rem;margin:.6rem 0 0">
+          <li>Be specific: which classes, which topics, what was completed.</li>
+          <li>Mention problems early, with what you need from the school.</li>
+          <li>{% if period == 'DAILY' %}A daily report is on time until the end of the next day.{% else %}A weekly report is on time until the Monday after.{% endif %}</li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+</form>
+
+<script>
+  document.querySelectorAll('textarea[data-count]').forEach(t => {
+    const out = t.parentElement.querySelector('.rw-count');
+    const show = () => { out.textContent = t.value.length ? `${t.value.length} / 5000` : ''; };
+    t.addEventListener('input', show); show();
+  });
+  // Warn before leaving with unsaved words
+  (function () {
+    const form = document.getElementById('rw-form');
+    let dirty = false;
+    form.addEventListener('input', () => { dirty = true; });
+    form.addEventListener('submit', () => { dirty = false; });
+    window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+  })();
+</script>
+{% endblock %}

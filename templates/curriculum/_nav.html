@@ -1,0 +1,32 @@
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cur-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.4rem}
+  .cur-tabs a{padding:.42rem .8rem;border-radius:999px;border:1px solid var(--rim2);color:var(--slate2);text-decoration:none;font-size:.8rem;font-weight:600}
+  .cur-tabs a:hover{color:var(--champagne-lt);border-color:var(--champagne-border)}
+  .cur-tabs a.on{color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));border-color:transparent}
+  .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);position:relative;overflow:hidden;min-width:90px}
+  .bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--green)}
+  .bar u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--champagne-lt)}
+  .bar.behind i{background:var(--red)}
+  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--rim2)}
+  .msgs .success{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+  .msgs .error{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+  .msgs .info{border-color:var(--champagne-border);color:var(--champagne-lt)}
+  .msgs .warning{border-color:var(--amber-border);color:var(--amber);background:var(--amber-dim)}
+</style>
+<nav class="cur-tabs">
+  {% url 'curriculum:home' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Coverage</a>
+  {% url 'curriculum:schemes' as u %}<a href="{{ u }}" class="{% if request.path == u or '/schemes/' in request.path %}on{% endif %}">Schemes of work</a>
+  {% url 'curriculum:notes' as u %}<a href="{{ u }}" class="{% if '/notes/' in request.path and '/review/' not in request.path %}on{% endif %}">Lesson notes</a>
+  {% url 'curriculum:review' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Review notes</a>
+  {% url 'curriculum:homework' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Homework</a>
+  {% url 'curriculum:calendar' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Calendar</a>
+  {% url 'curriculum:allocation' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Who teaches what</a>
+  {% url 'curriculum:streams' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Streams</a>
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% url 'curriculum:promotion' as u %}<a href="{{ u }}" class="{% if '/promotion/' in request.path %}on{% endif %}">Promotion</a>{% endif %}
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% url 'curriculum:cover' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Cover</a>{% endif %}
+  {% url 'curriculum:observations' as u %}<a href="{{ u }}" class="{% if '/observations/' in request.path %}on{% endif %}">Observations</a>
+  {% url 'curriculum:clubs' as u %}<a href="{{ u }}" class="{% if '/clubs/' in request.path %}on{% endif %}">Clubs</a>
+  {% url 'curriculum:departments' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Departments</a>
+</nav>
+{# Messages are shown by the main layout (dashboard/base.html). #}

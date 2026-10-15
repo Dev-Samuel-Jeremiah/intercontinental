@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}School at a glance{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">The school <em>today</em></h1>
+  <p class="fin-sub">{{ today.day|date:"l j F Y" }} · {{ roll }} students on roll. Click any number to see the students behind it.</p>
+</div>{% if is_admin %}<a class="fin-btn" href="{% url 'analytics:board_pack' %}"><i class="bi bi-file-earmark-richtext"></i> Board pack</a>{% endif %}</div>
+{% include "analytics/_nav.html" %}
+<div class="fin-stats">
+  <div class="kpi"><small>Present today</small><b>{% if today.rate is not None %}{{ today.rate }}%{% else %}—{% endif %}</b><span class="hint">{{ today.present }} present · <a href="{% url 'analytics:students' %}?absent={{ today.day|date:'Y-m-d' }}"><u>{{ today.absent }} absent</u></a> · {{ today.late }} late</span></div>
+  {% if fee %}<div class="kpi"><small>Fees collected this term</small><b>{% if fee.rate is not None %}{{ fee.rate }}%{% else %}—{% endif %}</b><span class="hint">₦{{ fee.paid|floatformat:0|intcomma }} of ₦{{ fee.expected|floatformat:0|intcomma }}</span></div>
+  <div class="kpi"><a href="{% url 'analytics:students' %}?owing=1"><small>Still owed</small><b>₦{{ fee.outstanding|floatformat:0|intcomma }}</b><span class="hint"><u>{{ fee.debtors }} famil{{ fee.debtors|pluralize:"y,ies" }}</u></span></a></div>
+  <div class="kpi"><small>Received today</small><b>₦{{ cash.today|floatformat:0|intcomma }}</b><span class="hint">₦{{ cash.this_week|floatformat:0|intcomma }} this week{% if cash.pending %} · {{ cash.pending }} waiting approval{% endif %}</span></div>{% endif %}
+  {% if results %}<div class="kpi"><small>Average, {{ results.term }}</small><b>{{ results.average }}%</b><span class="hint">{{ results.pass_rate }}% of students averaged 50+</span></div>{% endif %}
+</div>
+{% if today.unmarked %}<div class="chip amber" style="white-space:normal;margin-bottom:1rem;padding:.5rem .8rem"><i class="bi bi-exclamation-triangle"></i> No register yet today for: {% for c in today.unmarked %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bullseye"></i> Targets</h3><a class="fin-btn fin-btn-sm" href="{% url 'analytics:kpis' %}">Set targets</a></div><div class="panel-b">
+      {% for k in kpis %}<div class="hbar"><span>{{ k.label }}</span><span class="track"><i class="{% if k.met %}green{% elif k.progress is not None and k.progress < 80 %}amber{% endif %}" style="width:{{ k.progress|default:0 }}%"></i></span>
+        <span class="hint">{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %}{% if k.target %} / {{ k.target }}{% endif %}</span></div>{% endfor %}
+    </div></div>
+    {% if cash %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-cash-coin"></i> Payments received, last 8 weeks</h3><a class="fin-btn fin-btn-sm" href="{% url 'analytics:fees' %}">Fee details</a></div><div class="panel-b">
+      <div class="vbars">{% for w in cash.weeks %}<div class="col" title="Week of {{ w.week|date:'j M' }}: ₦{{ w.amount|floatformat:0|intcomma }}"><b>{% if w.amount %}{{ w.amount|floatformat:0|intcomma }}{% endif %}</b><i style="height:{{ w.width }}%"></i><small>{{ w.week|date:"j M" }}</small></div>{% endfor %}</div>
+    </div></div>{% endif %}
+  </div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-event"></i> Next three weeks</h3></div><div class="panel-b">
+      {% for e in events %}<div style="display:flex;gap:.6rem;align-items:center;padding:.3rem 0"><span style="width:9px;height:9px;border-radius:3px;background:{{ e.colour }}"></span><span style="flex:1">{{ e.title }}</span><span class="hint">{{ e.start_date|date:"D j M" }}</span></div>{% empty %}<p class="hint" style="margin:0">Nothing on the calendar.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-activity"></i> Latest activity</h3><a class="fin-btn fin-btn-sm" href="{% url 'analytics:activity' %}">All</a></div><div class="panel-b feed">
+      {% for f in feed %}<div><i class="bi {{ f.icon }}"></i><span style="flex:1">{{ f.text }}</span><span class="hint">{{ f.when|naturaltime }}</span></div>{% empty %}<p class="hint" style="margin:0">Nothing yet.</p>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

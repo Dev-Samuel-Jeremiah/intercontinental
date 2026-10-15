@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Asset tags</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;margin:12mm;color:#000;background:#fff}
+.sheet{display:grid;grid-template-columns:repeat(4,1fr);gap:4mm}.lab{border:1px dashed #bbb;padding:2mm;text-align:center;page-break-inside:avoid}
+.lab svg{width:26mm;height:26mm}.lab b{display:block;font-size:10pt;letter-spacing:1px}.lab small{font-size:7pt;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar{margin-bottom:6mm}@media print{.bar{display:none}.lab{border-color:#eee}}</style></head>
+<body><div class="bar"><button onclick="window.print()">Print</button> {{ items|length }} tag{{ items|pluralize }} · scan to see the asset's history or report a fault.</div>
+<div class="sheet">{% for it in items %}<div class="lab">{{ it.qr|safe }}<b>{{ it.tag.code }}</b><small>{{ it.tag.name }}</small><small>{{ school }}</small></div>{% empty %}<p>No tags to print. Tag assets today, or choose a room on the register.</p>{% endfor %}</div>
+</body></html>

@@ -1,0 +1,25 @@
+{% include "communications/_portal_head.html" %}
+<style>table{width:100%;border-collapse:collapse;font-size:.88rem}td{padding:.35rem .2rem;border-bottom:1px solid var(--rim2)}
+.ghost{width:auto;margin:0;padding:.25rem .6rem;font-size:.78rem;background:transparent;color:var(--white);border:1px solid var(--rim2)}</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1><em>Library</em></h1>
+  <p class="sub">Books your children have out, what they have read, and any library charges.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for c in cards %}
+  <div class="card">
+    <h2><i class="bi bi-book" style="color:var(--champagne-lt)"></i> {{ c.kid.full_name }}</h2>
+    <p class="hint" style="margin:0">{{ c.read }} book{{ c.read|pluralize }} read and checked{% for b in c.badges %} · <b>{{ b.challenge.badge }}</b>{% endfor %}</p>
+    {% for r in c.ready %}<div class="msg" style="margin-top:.6rem">"{{ r.book.title }}" is waiting at the library desk until {{ r.hold_until|date:"D j M" }}.</div>{% endfor %}
+    <h2 style="margin-top:1rem">Books out</h2>
+    <table>{% for l in c.loans %}<tr><td>{{ l.copy.book.title }}</td><td>{% if l.due_on < today %}<span class="chip no">Overdue since {{ l.due_on|date:"j M" }}</span>{% else %}due {{ l.due_on|date:"D j M" }}{% endif %}</td></tr>{% empty %}<tr><td class="hint">None.</td></tr>{% endfor %}</table>
+    {% if c.charges %}<h2 style="margin-top:1rem">Charges</h2>
+    <table>{% for x in c.charges %}<tr><td>{{ x.get_kind_display }}<br><small class="hint">{{ x.note }}</small></td><td>₦{{ x.amount|floatformat:2 }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ x.pk }}"><button type="submit" class="ghost" onclick="return confirm('Pay ₦{{ x.amount|floatformat:2 }} from your family wallet?')">Pay from wallet</button></form></td></tr>{% endfor %}</table>{% endif %}
+    {% if c.logs %}<h2 style="margin-top:1rem">Recently read</h2>{% for e in c.logs %}<p style="margin:.15rem 0">{{ e.title }}{% if e.author %} <span class="hint">by {{ e.author }}</span>{% endif %}{% if e.rating %} · {{ e.rating }}/5{% endif %}</p>{% endfor %}{% endif %}
+  </div>
+  {% empty %}<p class="hint">No children found.</p>{% endfor %}
+</div>
+</body>
+</html>

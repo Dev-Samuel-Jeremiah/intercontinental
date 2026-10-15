@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Attendance settings{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Attendance <em>settings</em></h1>
+  <p class="fin-sub">When school starts, when a child counts as late, telling parents about absences, and when to flag a child for follow-up.</p>
+</div></div>
+<div style="max-width:720px"><div class="panel"><div class="panel-b">
+  <form method="post" class="fin-form">{% csrf_token %}
+    <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+      <div><label>School starts at</label><input type="time" name="school_starts_at" value="{{ cfg.school_starts_at|time:'H:i' }}" required></div>
+      <div><label>Grace before “late” (minutes)</label><input type="number" name="late_grace_minutes" min="0" max="120" value="{{ cfg.late_grace_minutes }}"></div>
+    </div>
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" name="gate_marks_present" value="1" style="width:auto"{% if cfg.gate_marks_present %} checked{% endif %}> A gate arrival scan marks the student present, with any lateness</label>
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" name="absence_alerts" value="1" style="width:auto"{% if cfg.absence_alerts %} checked{% endif %}> Tell parents when their child is marked absent on today's register</label>
+    <div><label>Send absence alerts by</label><select name="alert_channel"><option value="SMS"{% if cfg.alert_channel == 'SMS' %} selected{% endif %}>SMS</option><option value="EMAIL"{% if cfg.alert_channel == 'EMAIL' %} selected{% endif %}>Email</option><option value="BOTH"{% if cfg.alert_channel == 'BOTH' %} selected{% endif %}>SMS and email</option></select></div>
+    <div class="row2" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+      <div><label>Flag when term attendance is below (%)</label><input type="number" name="chronic_rate" min="50" max="100" value="{{ cfg.chronic_rate }}"></div>
+      <div><label>…or absent this many days running</label><input type="number" name="chronic_streak" min="2" max="30" value="{{ cfg.chronic_streak }}"></div>
+    </div>
+    <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save</button>
+    <p class="hint">Alerts go to the main contact and any guardian who agreed to that channel. A child whose parent already gave a reason is not alerted.</p>
+  </form>
+</div></div></div>
+{% endblock %}

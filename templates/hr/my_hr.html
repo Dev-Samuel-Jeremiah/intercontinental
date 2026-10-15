@@ -1,0 +1,59 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My HR{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">People &amp; HR</div>
+  <h1 class="fin-title">My <em>HR</em></h1>
+  <p class="fin-sub">{{ me.full_name }} · {{ rec.job_title|default:me.get_role_display }}{% if rec.department %} · {{ rec.department.name }}{% endif %}{% if contract %} · {{ contract.get_kind_display }} contract{% if contract.end %} to {{ contract.end|date:"j M Y" }}{% endif %}{% endif %}</p>
+</div></div>
+
+{% for c in cases %}{% if not c.closed_at and not c.response %}
+<div class="panel" style="margin-bottom:1rem;border-color:var(--red-border)"><div class="panel-b"><i class="bi bi-exclamation-octagon"></i> You have a {{ c.get_kind_display|lower }} dated {{ c.date|date:"j M Y" }} waiting for your reply{% if c.respond_by %} by {{ c.respond_by|date:"j M Y" }}{% endif %}. <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'hr:case' c.pk %}">Read and reply</a></div></div>
+{% endif %}{% endfor %}
+{% for a in appraisals %}{% if a.status == 'SELF' and a.cycle.open %}
+<div class="panel" style="margin-bottom:1rem"><div class="panel-b"><i class="bi bi-clipboard2-check"></i> {{ a.cycle.title }}: your self-review is due by {{ a.cycle.closes|date:"j M Y" }}. <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'hr:appraisal' a.pk %}">Start</a></div></div>
+{% endif %}{% endfor %}
+{% for a in to_review %}
+<div class="panel" style="margin-bottom:1rem"><div class="panel-b"><i class="bi bi-inbox"></i> Review {{ a.staff.full_name }} — {{ a.cycle.title }}. <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'hr:appraisal' a.pk %}">Review</a></div></div>
+{% endfor %}
+
+<div class="fin-grid">
+<div style="display:grid;gap:1.2rem">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="contact">
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-telephone"></i> My contact details</h3>
+    <div class="row2"><div><label>Phone</label><input name="phone" value="{{ rec.phone }}" maxlength="20"></div><div><label>Extension</label><input name="extension" value="{{ rec.extension }}" maxlength="10"></div></div>
+    <div class="row2"><div><label>Emergency contact</label><input name="emergency_name" value="{{ rec.emergency_name }}" maxlength="120"></div><div><label>Their phone</label><input name="emergency_phone" value="{{ rec.emergency_phone }}" maxlength="20"></div></div>
+    <div><label>Home address</label><input name="address" value="{{ rec.address }}" maxlength="255"></div>
+    <div><label>Date of birth <span class="hint">so the school can wish you a happy birthday</span></label><input type="date" name="date_of_birth" value="{{ rec.date_of_birth|date:'Y-m-d' }}"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="training">
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-mortarboard"></i> Add training I attended</h3>
+    <div><label>Training / workshop</label><input name="title" maxlength="160" required></div>
+    <div class="row2"><div><label>Provider</label><input name="provider" maxlength="120"></div><div><label>Date</label><input type="date" name="date" required></div></div>
+    <div class="row2"><div><label>Hours</label><input name="hours" inputmode="decimal" value="0"></div><div><label>Cost (₦)</label><input name="cost" inputmode="decimal" value="0"></div></div>
+    <div><label>Certificate</label><input type="file" name="certificate"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+<div style="display:grid;gap:1.2rem">
+  {% if steps %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Onboarding — {{ done }} of {{ steps|length }}</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for s in steps %}<tr><td>{{ s.task.title }}</td><td>{% if s.done %}<span class="chip green">Done</span>{% else %}<span class="chip">Outstanding</span>{% endif %}</td></tr>{% endfor %}</tbody></table>
+    <p class="hint">HR ticks these off. Speak to the school office about anything outstanding.</p>
+  </div></div>{% endif %}
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-file-earmark-text"></i> My contracts</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for c in contracts %}<tr><td class="name">{{ c.get_kind_display }}</td><td>{{ c.start|date:"j M Y" }} – {% if c.end %}{{ c.end|date:"j M Y" }}{% else %}open-ended{% endif %}</td><td>{% if c.file %}<a href="{% url 'hr:document' 'contract' c.pk %}" target="_blank"><i class="bi bi-paperclip"></i> Copy</a>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None on file.</td></tr>{% endfor %}</tbody></table>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard2-check"></i> My appraisals</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for a in appraisals %}<tr><td class="name"><a href="{% url 'hr:appraisal' a.pk %}">{{ a.cycle.title }}</a></td><td>{{ a.get_status_display }}</td><td>{% if a.overall %}<b>{{ a.overall }}</b> / 5{% endif %}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}</tbody></table>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-mortarboard"></i> My training</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for t in training %}<tr><td class="name">{{ t.title }}</td><td>{{ t.date|date:"j M Y" }}</td><td>{{ t.hours }} h</td><td>{% if t.certificate %}<a href="{% url 'hr:document' 'training' t.pk %}" target="_blank"><i class="bi bi-award"></i></a>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None recorded.</td></tr>{% endfor %}</tbody></table>
+  </div></div>
+  {% if cases %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-octagon"></i> Letters</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for c in cases %}<tr><td class="name"><a href="{% url 'hr:case' c.pk %}">{{ c.get_kind_display }}</a></td><td>{{ c.date|date:"j M Y" }}</td><td>{% if c.closed_at %}{{ c.get_outcome_display }}{% elif c.response %}Replied{% else %}Reply needed{% endif %}</td></tr>{% endfor %}</tbody></table>
+  </div></div>{% endif %}
+</div>
+</div>
+{% endblock %}

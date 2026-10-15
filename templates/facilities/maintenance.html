@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Maintenance{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Site</div>
+  <h1 class="fin-title"><em>Maintenance</em></h1>
+  <p class="fin-sub">Report a broken fan, leaking tap, faulty socket or anything else. The maintenance team is emailed (and administrators too if it is urgent); you are emailed when it is fixed.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if maint %}Jobs{% else %}Your reports{% endif %}</h3><span><a href="?show=open">Open</a> · <a href="?show=done">Done</a></span></div><div class="panel-b">
+    {% for j in rows %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{{ j.title }}</b> <span class="hint">{{ j.space|default:j.where }} · {{ j.get_category_display }} · {{ j.created_at|date:"j M H:i" }}{% if maint %} · {{ j.reported_by.get_full_name|default:j.reported_by.username }}{% endif %}{% if j.tag %} · {{ j.tag.code }}{% endif %}</span>
+      <span class="chip{% if j.priority == 'URGENT' %} red{% elif j.priority == 'HIGH' %} gold{% endif %}">{{ j.get_priority_display }}</span> <span class="chip{% if j.status == 'DONE' or j.status == 'CLOSED' %} ok{% endif %}">{{ j.get_status_display }}</span>
+      {% if j.description %}<div class="hint">{{ j.description|truncatechars:200 }}</div>{% endif %}
+      {% if j.resolution %}<div class="hint">Fixed: {{ j.resolution }}{% if j.cost %} · ₦{{ j.cost|floatformat:0 }}{% endif %}</div>{% endif %}
+      {% if maint and j.photo %}<a class="hint" href="{% url 'facilities:job_photo' j.pk %}">Photo</a>{% endif %}
+      {% if maint and j.status != 'CLOSED' %}<form method="post" class="fin-form" style="display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="op" value="update"><input type="hidden" name="id" value="{{ j.pk }}">
+        <select name="assigned_to" style="width:auto"><option value="">Assign…</option>{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk == j.assigned_to_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select>
+        <input name="contractor" value="{{ j.contractor }}" placeholder="Outside contractor" style="width:130px">
+        <select name="status" style="width:auto">{% for k, v in statuses %}<option value="{{ k }}" {% if k == j.status %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+        <input name="resolution" placeholder="What was done" style="flex:1;min-width:120px"><input name="cost" placeholder="Cost" inputmode="decimal" style="width:80px">
+        <button class="fin-btn fin-btn-sm" type="submit">Save</button></form>{% endif %}</div>
+    {% empty %}<p class="empty">Nothing here.</p>{% endfor %}
+  </div></div>
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="op" value="new">
+    <h3 style="margin:0 0 .6rem">Report a fault</h3>
+    <div><label>What is wrong</label><input name="title" required maxlength="160" placeholder="e.g. Ceiling fan not working"></div>
+    <div class="row2"><div><label>Room</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div><div><label>…or where</label><input name="where" maxlength="120"></div></div>
+    <div class="row2"><div><label>Kind</label><select name="category">{% for k, v in categories %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>How urgent</label><select name="priority">{% for k, v in priorities %}<option value="{{ k }}" {% if k == 'NORMAL' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Details</label><textarea name="description" rows="3"></textarea></div>
+    <div><label>Photo (optional)</label><input type="file" name="photo" accept="image/*"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Report</button>
+  </form>
+</div>
+{% endblock %}

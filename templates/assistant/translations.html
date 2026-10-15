@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Translate: {{ ann.title }}{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'announcements:announcement_list' %}" style="color:inherit">Announcements</a></div>
+  <h1 class="fin-title">Translate <em>{{ ann.title }}</em></h1>
+  <p class="fin-sub">AI translations for parents. Ask a staff member who speaks the language to check each one; parents only see a translation once it is approved.</p>
+</div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-file-text"></i> Original (English)</h3></div><div class="panel-b"><b>{{ ann.title }}</b><p style="white-space:pre-wrap">{{ ann.message }}</p></div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-translate"></i> Translate into</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<div class="pick">{% for v, l in languages %}<label><input type="checkbox" name="languages" value="{{ v }}" {% if v not in have %}checked{% endif %}> {{ l }}{% if v in have %} <span class="hint">(redo)</span>{% endif %}</label>{% endfor %}</div>
+        <button class="fin-btn fin-btn-gold" name="action" value="translate"><i class="bi bi-stars"></i> Translate</button></form>
+    </div></div>
+  </div>
+  <div>
+    {% for t in items %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="id" value="{{ t.id }}">
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;font-size:1rem">{{ t.get_language_display }}</h3>{% if t.approved %}<span class="chip green">Approved by {{ t.approved_by.get_full_name|default:t.approved_by.username }}</span>{% else %}<span class="chip amber">Not checked yet</span>{% endif %}</div>
+      <div><label>Title</label><input name="title" value="{{ t.title }}" maxlength="255"></div>
+      <div><label>Message</label><textarea name="message" rows="7">{{ t.message }}</textarea></div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="fin-btn" name="action" value="save">Save</button><button class="fin-btn fin-btn-gold" name="action" value="approve"><i class="bi bi-check2"></i> {% if t.approved %}Save and keep approved{% else %}Approve for parents{% endif %}</button>
+        <button class="fin-btn fin-btn-danger" name="action" value="delete" onclick="return confirm('Remove this translation?')"><i class="bi bi-trash"></i></button></div>
+    </form>
+    {% empty %}<div class="panel"><div class="empty"><i class="bi bi-translate"></i><p>No translations yet.</p></div></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

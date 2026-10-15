@@ -1,0 +1,1012 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Issue & Pay on Behalf{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+body{
+    background:var(--ink);
+    color:var(--white);
+    font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+    max-width:1700px;
+    margin:auto;
+    padding:2rem 2.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+/* HEADER */
+.page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--rim);
+    position:relative;
+}
+
+.page-head::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:-1px;
+    width:80px;
+    height:2px;
+    background:var(--champagne);
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+    color:var(--champagne);
+    text-transform:uppercase;
+    letter-spacing:2px;
+    font-size:.7rem;
+    font-weight:700;
+}
+
+.eyebrow::before{
+    content:"";
+    width:32px;
+    height:1px;
+    background:var(--champagne);
+}
+
+.page-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:3rem;
+    line-height:1;
+    font-weight:700;
+    margin:0;
+    color:var(--white);
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+}
+
+.page-sub{
+    margin-top:10px;
+    color:var(--slate2);
+    font-size:.95rem;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.24);
+    color:var(--champagne-lt);
+    font-size:.82rem;
+    font-weight:600;
+}
+
+/* PANELS */
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    margin-bottom:20px;
+    animation:riseUp .45s ease both;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    left:0;
+    right:0;
+    top:0;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:18px 22px;
+    border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.9rem;
+    flex-shrink:0;
+}
+
+.icon-green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:var(--green);
+}
+
+.icon-blue{
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:var(--blue);
+}
+
+.icon-purple{
+    background:var(--purple-dim);
+    border:1px solid var(--purple-border);
+    color:var(--purple);
+}
+
+.icon-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:var(--red);
+}
+
+.panel-title h3{
+    margin:0;
+    font-size:.95rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+.panel-body{
+    padding:22px;
+}
+
+/* FORMS */
+.form-grid{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:14px;
+    align-items:end;
+}
+
+.fg{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.fg label{
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+.fg input,
+.fg select{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    padding:12px 14px;
+    color:var(--white);
+    font-family:'Outfit',sans-serif;
+    font-size:.9rem;
+}
+
+.fg input:focus,
+.fg select:focus{
+    outline:none;
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.btn-main{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:none;
+    border-radius:12px;
+    padding:12px 18px;
+    background:linear-gradient(135deg,#f4d21f,#d1ad00);
+    color:#0a1f44;
+    font-weight:600;
+    text-decoration:none;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+    transition:.25s ease;
+    cursor:pointer;
+}
+
+.btn-main:hover{
+    transform:translateY(-2px);
+    color:#fff;
+}
+
+.btn-ghost{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:11px 15px;
+    border-radius:12px;
+    text-decoration:none;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    color:var(--slate2);
+    transition:.25s ease;
+}
+
+.btn-ghost:hover{
+    border-color:var(--champagne);
+    color:var(--white);
+}
+
+.btn-danger{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#ffb4b4;
+    transition:.25s ease;
+}
+
+.btn-danger:hover{
+    background:rgba(239,68,68,.18);
+}
+
+/* ALERTS */
+.alert-msg{
+    padding:14px 16px;
+    border-radius:14px;
+    margin-bottom:14px;
+    font-size:.88rem;
+    font-weight:500;
+}
+
+.alert-success{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:#86efac;
+}
+
+.alert-error{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#fca5a5;
+}
+
+.alert-info{
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:#93c5fd;
+}
+
+/* WALLET HERO */
+.wallet-hero{
+    background:linear-gradient(135deg,#26212b,#12274e);
+    border:1px solid rgba(244,210,31,.14);
+    border-radius:18px;
+    padding:26px;
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.wallet-label{
+    color:var(--slate2);
+    font-size:.75rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin-bottom:8px;
+}
+
+.wallet-balance{
+    font-family:'Cormorant Garamond',serif;
+    font-size:3rem;
+    color:var(--champagne-lt);
+    font-weight:700;
+    line-height:1;
+}
+
+.wallet-meta{
+    margin-top:10px;
+    color:var(--slate2);
+    font-size:.88rem;
+}
+
+/* TABS */
+.sib-tabs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.sib-tab{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 14px;
+    border-radius:12px;
+    text-decoration:none;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    color:var(--slate2);
+    font-size:.84rem;
+    transition:.25s ease;
+}
+
+.sib-tab.active{
+    background:var(--champagne-dim);
+    border-color:rgba(244,210,31,.28);
+    color:var(--champagne-lt);
+}
+
+.sib-tab:hover{
+    border-color:var(--champagne);
+}
+
+/* TABLES */
+.table-wrap{
+    overflow-x:auto;
+}
+
+.tbl{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.tbl th{
+    text-align:left;
+    padding:14px 16px;
+    color:var(--slate2);
+    font-size:.72rem;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    font-weight:700;
+    border-bottom:1px solid var(--rim);
+}
+
+.tbl td{
+    padding:16px;
+    border-bottom:1px solid var(--rim);
+    color:var(--white);
+    vertical-align:middle;
+    font-size:.88rem;
+}
+
+.tbl tr:hover td{
+    background:rgba(255,255,255,.025);
+}
+
+/* BADGES */
+.badge-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:.72rem;
+    font-weight:700;
+}
+
+.badge-green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:#86efac;
+}
+
+.badge-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#fca5a5;
+}
+
+.badge-blue{
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:#93c5fd;
+}
+
+.badge-amber{
+    background:var(--amber-dim);
+    border:1px solid var(--amber-border);
+    color:#fcd34d;
+}
+
+/* ROWS */
+.fee-row,
+.asset-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    padding:18px 0;
+    border-bottom:1px solid var(--rim);
+    flex-wrap:wrap;
+}
+
+.fee-row:last-child,
+.asset-row:last-child{
+    border-bottom:none;
+}
+
+.row-title{
+    font-size:.92rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+.row-meta{
+    margin-top:4px;
+    color:var(--slate2);
+    font-size:.78rem;
+}
+
+.amount{
+    font-family:'Cormorant Garamond',serif;
+    font-size:1.6rem;
+    color:var(--champagne-lt);
+    font-weight:700;
+}
+
+.asset-form{
+    display:flex;
+    align-items:flex-end;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+/* EMPTY STATE */
+.empty-state{
+    text-align:center;
+    padding:42px 20px;
+}
+
+.empty-icon{
+    width:72px;
+    height:72px;
+    margin:0 auto 16px;
+    border-radius:18px;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.7rem;
+    color:var(--champagne);
+}
+
+.empty-state h4{
+    margin-bottom:8px;
+    color:var(--white);
+}
+
+.empty-state p{
+    color:var(--slate2);
+    margin:0;
+}
+
+.grid-2{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+@media(max-width:992px){
+    .grid-2{
+        grid-template-columns:1fr;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+@media(max-width:768px){
+    .your-wrap{
+        padding:1.3rem 1rem 3rem;
+    }
+
+    .page-title{
+        font-size:2.3rem;
+    }
+
+    .wallet-balance{
+        font-size:2.4rem;
+    }
+}
+
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+</style>
+
+<div class="your-wrap">
+
+    {% if messages %}
+        {% for m in messages %}
+            <div class="alert-msg
+                {% if m.tags == 'success' %}
+                    alert-success
+                {% elif m.tags == 'error' %}
+                    alert-error
+                {% else %}
+                    alert-info
+                {% endif %}
+            ">
+                {{ m }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- HEADER -->
+    <div class="page-head">
+        <div>
+            <div class="eyebrow">Finance Management</div>
+
+            <h1 class="page-title">
+                Issue &amp; <em>Pay</em> on Behalf
+            </h1>
+
+            <div class="page-sub">
+                Admin / Accountant — issue inventory items and pay fees for any student.
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="context-badge">
+                <i class="bi bi-wallet2"></i>
+                Student Wallet Operations
+            </div>
+
+            <a href="{% url 'finance:admin_dashboard' %}" class="btn-ghost">
+                <i class="bi bi-arrow-left"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- SELECT STUDENT -->
+    <div class="panel" style="animation-delay:.05s;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-blue">
+                    <i class="bi bi-person-search"></i>
+                </div>
+                <h3>Select Student</h3>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <form method="GET" class="form-grid">
+                <div class="fg">
+                    <label>Student</label>
+
+                    <select name="student_id" required>
+                        <option value="">— Select a student —</option>
+
+                        {% for s in students %}
+                        <option value="{{ s.id }}" {% if student and student.id == s.id %}selected{% endif %}>
+                            {{ s.full_name }} ({{ s.admission_number }}) — {{ s.class_assigned.name|default:"No class" }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-main">
+                    <i class="bi bi-search"></i>
+                    Load Student
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if student %}
+
+    {% if siblings|length > 1 %}
+    <div class="panel" style="animation-delay:.1s;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-purple">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h3>Children Sharing Wallet</h3>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <div class="sib-tabs">
+                {% for sib in siblings %}
+                <a href="?student_id={{ sib.id }}" class="sib-tab {% if sib.id == student.id %}active{% endif %}">
+                    {{ sib.full_name }}
+
+                    {% for sd in siblings_data %}
+                        {% if sd.student.id == sib.id %}
+                            {% if sd.total_owed > 0 %}
+                                <span style="color:#fca5a5;">
+                                    ₦{{ sd.total_owed|floatformat:0 }} owed
+                                </span>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- WALLET HERO -->
+    <div class="panel" style="animation-delay:.15s;">
+        <div class="panel-body">
+            <div class="wallet-hero">
+                <div>
+                    <div class="wallet-label">Family Wallet Balance</div>
+
+                    <div class="wallet-balance">
+                        ₦{{ wallet.balance|floatformat:2 }}
+                    </div>
+
+                    <div class="wallet-meta">
+                        {% if student.parent_name %}
+                            {{ student.parent_name }} ·
+                        {% endif %}
+
+                        {% for sib in siblings %}
+                            {{ sib.full_name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <div class="wallet-label">Currently Managing</div>
+
+                    <div style="font-size:1.1rem;font-weight:700;">
+                        {{ student.full_name }}
+                    </div>
+
+                    <div class="wallet-meta">
+                        {{ student.class_assigned.name|default:"No class" }}
+                        · {{ student.admission_number }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if siblings|length > 1 %}
+    <div class="panel" style="animation-delay:.2s;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-green">
+                    <i class="bi bi-people"></i>
+                </div>
+                <h3>Outstanding Fees Overview</h3>
+            </div>
+
+            <div class="context-badge">
+                {{ siblings|length }} Children
+            </div>
+        </div>
+
+        <div class="table-wrap">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Child</th>
+                        <th>Class</th>
+                        <th>Unpaid Fees</th>
+                        <th>Total Owed</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for sd in siblings_data %}
+                    <tr>
+                        <td><strong>{{ sd.student.full_name }}</strong></td>
+
+                        <td>{{ sd.student.class_assigned.name|default:"—" }}</td>
+
+                        <td>{{ sd.unpaid|length }}</td>
+
+                        <td>
+                            {% if sd.total_owed > 0 %}
+                                <span class="badge-pill badge-red">
+                                    ₦{{ sd.total_owed|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span class="badge-pill badge-green">
+                                    Cleared
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="?student_id={{ sd.student.id }}" class="btn-ghost">
+                                Manage
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid-2">
+
+        <!-- PAY FEES -->
+        <div class="panel" style="animation-delay:.25s;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="icon-badge icon-green">
+                        <i class="bi bi-file-earmark-check-fill"></i>
+                    </div>
+
+                    <h3>Pay School Fees</h3>
+                </div>
+            </div>
+
+            <div class="panel-body">
+
+                {% if fees %}
+
+                    {% for fee in fees %}
+                    <div class="fee-row">
+
+                        <div>
+                            <div class="row-title">{{ fee.name }}</div>
+
+                            <div class="row-meta">
+                                {{ fee.get_category_display }}
+
+                                {% if fee.is_compulsory %}
+                                    · <span style="color:#fca5a5;">Compulsory</span>
+                                {% endif %}
+
+                                {% if fee.due_date %}
+                                    · Due {{ fee.due_date }}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                            <div class="amount">
+                                ₦{{ fee.amount|floatformat:2 }}
+                            </div>
+
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="pay_fee">
+                                <input type="hidden" name="student_id" value="{{ student.id }}">
+                                <input type="hidden" name="fee_id" value="{{ fee.id }}">
+
+                                {% if wallet.balance >= fee.amount %}
+                                <button type="submit"
+                                        class="btn-main"
+                                        onclick="return confirm('Pay ₦{{ fee.amount|floatformat:2 }} for {{ fee.name }}?')">
+                                    <i class="bi bi-check-lg"></i>
+                                    Pay
+                                </button>
+                                {% else %}
+                                <span class="badge-pill badge-red">
+                                    Low Balance
+                                </span>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                {% else %}
+
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+
+                    <h4>All Fees Cleared</h4>
+
+                    <p>No outstanding school fees for this student.</p>
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ISSUE INVENTORY -->
+        <div class="panel" style="animation-delay:.3s;">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <div class="icon-badge icon-blue">
+                        <i class="bi bi-box-seam-fill"></i>
+                    </div>
+
+                    <h3>Issue Inventory Items</h3>
+                </div>
+            </div>
+
+            <div class="panel-body">
+
+                {% if assets %}
+
+                    {% for asset in assets %}
+                    <div class="asset-row">
+
+                        <div>
+                            <div class="row-title">{{ asset.name }}</div>
+
+                            <div class="row-meta">
+                                {{ asset.category.name }} · {{ asset.asset_code }}
+                            </div>
+
+                            <div style="margin-top:6px;">
+                                <span class="badge-pill badge-blue">
+                                    {{ asset.stock }} in stock
+                                </span>
+                            </div>
+                        </div>
+
+                        <form method="POST" class="asset-form">
+                            {% csrf_token %}
+
+                            <input type="hidden" name="action" value="issue_asset">
+                            <input type="hidden" name="student_id" value="{{ student.id }}">
+                            <input type="hidden" name="asset_id" value="{{ asset.id }}">
+
+                            <div class="fg">
+                                <label>Qty</label>
+
+                                <input type="number"
+                                       name="quantity"
+                                       value="1"
+                                       min="1"
+                                       max="{{ asset.stock }}">
+                            </div>
+
+                            <div class="fg">
+                                <label>Unit Price (₦)</label>
+
+                                <input type="number"
+                                       name="unit_price"
+                                       value="0"
+                                       min="0"
+                                       step="0.01"
+                                       placeholder="0 = free">
+                            </div>
+
+                            <button type="submit"
+                                    class="btn-main"
+                                    onclick="return confirm('Issue {{ asset.name }} to {{ student.full_name }}?')">
+                                <i class="bi bi-box-arrow-up"></i>
+                                Issue
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+
+                {% else %}
+
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+
+                    <h4>No Inventory Available</h4>
+
+                    <p>No stocked inventory items found.</p>
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS -->
+    <div class="panel" style="animation-delay:.35s;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-amber">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+
+                <h3>Recent Wallet Transactions</h3>
+            </div>
+
+            <a href="{% url 'finance:admin_student_wallet_id' student.id %}" class="btn-ghost">
+                Full Wallet
+            </a>
+        </div>
+
+        {% if txns %}
+        <div class="table-wrap">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Balance After</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for txn in txns %}
+                    <tr>
+                        <td>{{ txn.created_at|date:"d M Y H:i" }}</td>
+
+                        <td>{{ txn.description|truncatechars:50 }}</td>
+
+                        <td>
+                            {% if txn.txn_type == 'CREDIT' %}
+                                <span class="badge-pill badge-green">Credit</span>
+                            {% else %}
+                                <span class="badge-pill badge-red">Debit</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if txn.txn_type == 'CREDIT' %}
+                                <span style="color:#86efac;font-weight:700;">
+                                    +₦{{ txn.amount|floatformat:2 }}
+                                </span>
+                            {% else %}
+                                <span style="color:#fca5a5;font-weight:700;">
+                                    -₦{{ txn.amount|floatformat:2 }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td style="color:var(--slate2);">
+                            ₦{{ txn.balance_after|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-receipt"></i>
+            </div>
+
+            <h4>No Transactions Yet</h4>
+
+            <p>Wallet activity will appear here once transactions begin.</p>
+        </div>
+
+        {% endif %}
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Public Holidays{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.ph-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  color: var(--white);
+  animation: riseUp .42s ease both;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 1.75rem; padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rim); position: relative;
+}
+.page-header::after {
+  content: ""; position: absolute; bottom: -1px; left: 0;
+  width: 80px; height: 1px; background: var(--champagne);
+}
+.page-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem;
+}
+.page-eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--champagne); }
+.page-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2.1rem; font-weight: 500; line-height: 1.1;
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+.holiday-count {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .45rem 1rem;
+  background: var(--champagne-dim); border: 1px solid rgba(244,210,31,.25);
+  border-radius: 50px; font-size: .72rem; font-weight: 600; color: var(--champagne);
+  white-space: nowrap;
+}
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: var(--radius); overflow: hidden; position: relative;
+  margin-bottom: 1.25rem;
+}
+.panel::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel-head {
+  padding: 1.05rem 1.4rem .85rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; gap: .65rem;
+}
+.panel-head-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .88rem; flex-shrink: 0;
+}
+.phi-gold  { background: var(--champagne-dim); color: var(--champagne); }
+.phi-green { background: var(--green-dim);     color: var(--green); }
+.panel-head h3 {
+  font-size: .88rem; font-weight: 600; color: var(--white); margin: 0;
+}
+
+/* ── FORM ── */
+.form-body { padding: 1.4rem; display: flex; flex-direction: column; gap: 1rem; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; }
+.field-label {
+  font-size: .73rem; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate2);
+  display: flex; align-items: center; gap: .35rem;
+}
+.field-label i { font-size: .82rem; color: var(--champagne); }
+.field-input {
+  width: 100%; padding: .78rem 1rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm); font-size: .88rem; color: var(--white);
+  font-family: "Outfit", inherit; outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.field-input::placeholder { color: rgba(255,255,255,.2); }
+.field-input:focus { border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1); }
+.field-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(.5) sepia(1) saturate(2) hue-rotate(5deg); cursor: pointer; opacity: .6;
+}
+.field-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+.form-footer { padding: 0 1.4rem 1.4rem; }
+.btn-add {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .78rem 1.5rem;
+  background: linear-gradient(135deg, var(--champagne) 0%, #d1ad00 100%);
+  border: none; border-radius: var(--radius-sm);
+  font-size: .88rem; font-weight: 700; font-family: "Outfit", inherit;
+  color: #0a1f44; cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .14s, box-shadow .14s;
+}
+.btn-add:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(244,210,31,.32); }
+.btn-add:active { transform: translateY(0); }
+
+/* ── HOLIDAY LIST ── */
+.holiday-list { list-style: none; padding: .3rem 0; }
+
+.holiday-item {
+  display: flex; align-items: center; gap: .9rem;
+  padding: .85rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  transition: background .14s; position: relative;
+}
+.holiday-item:last-child { border-bottom: none; }
+.holiday-item:hover { background: rgba(255,255,255,.025); }
+
+/* coloured left pip cycles through accent colours */
+.holiday-item:nth-child(6n+1) .h-pip { background: var(--champagne); }
+.holiday-item:nth-child(6n+2) .h-pip { background: var(--green); }
+.holiday-item:nth-child(6n+3) .h-pip { background: #60a8e8; }
+.holiday-item:nth-child(6n+4) .h-pip { background: #a890f0; }
+.holiday-item:nth-child(6n+5) .h-pip { background: #5ecec8; }
+.holiday-item:nth-child(6n+6) .h-pip { background: var(--red); }
+
+.h-pip { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+
+.h-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; color: var(--slate2);
+}
+
+.h-info { flex: 1; min-width: 0; }
+.h-name {
+  font-size: .86rem; font-weight: 600; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: .18rem;
+}
+.h-date-sub { font-size: .7rem; color: var(--slate); }
+
+.h-date-badge {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: var(--radius-xs);
+  padding: .35rem .7rem; min-width: 52px;
+}
+.h-date-day {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.3rem; font-weight: 500; color: var(--white); line-height: 1;
+}
+.h-date-month {
+  font-size: .6rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--champagne);
+}
+
+/* Empty state */
+.holiday-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .75rem; padding: 2.75rem 1.4rem; text-align: center;
+}
+.empty-icon {
+  width: 50px; height: 50px; border-radius: 13px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: var(--slate);
+}
+.empty-title { font-size: .9rem; font-weight: 600; color: var(--slate2); }
+.empty-sub   { font-size: .76rem; color: var(--slate); }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media(max-width: 480px) {
+  .ph-wrap { padding: 1.25rem .75rem 3rem; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: .75rem; }
+  .h-date-badge { display: none; }
+}
+</style>
+
+<div class="ph-wrap">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-eyebrow">Academic Calendar</div>
+      <h1 class="page-title">Public <em>Holidays</em></h1>
+    </div>
+    <div class="holiday-count">
+      <i class="bi bi-calendar-heart"></i>
+      {{ holidays|length }} Holiday{{ holidays|length|pluralize }}
+    </div>
+  </div>
+
+  <!-- ── ADD HOLIDAY FORM ── -->
+  <div class="panel" style="animation: riseUp .42s ease both;">
+    <div class="panel-head">
+      <div class="panel-head-icon phi-gold"><i class="bi bi-plus-circle-fill"></i></div>
+      <h3>Add New Holiday</h3>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-body">
+        <div class="field">
+          <label class="field-label" for="holidayName">
+            <i class="bi bi-star-fill"></i> Holiday Name
+          </label>
+          <input class="field-input" type="text" id="holidayName"
+                 name="name" placeholder="e.g. Independence Day" required autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field-label" for="holidayDate">
+            <i class="bi bi-calendar3"></i> Holiday Date
+          </label>
+          <input class="field-input" type="date" id="holidayDate" name="date" required>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button type="submit" class="btn-add">
+          <i class="bi bi-plus-circle-fill"></i>
+          Add Holiday
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── HOLIDAY LIST ── -->
+  <div class="panel" style="animation: riseUp .5s .07s ease both;">
+    <div class="panel-head">
+      <div class="panel-head-icon phi-green"><i class="bi bi-calendar-heart-fill"></i></div>
+      <h3>Scheduled Holidays</h3>
+    </div>
+    <ul class="holiday-list">
+      {% for h in holidays %}
+      <li class="holiday-item">
+        <div class="h-pip"></div>
+        <div class="h-icon"><i class="bi bi-calendar-event"></i></div>
+        <div class="h-info">
+          <div class="h-name">{{ h.name }}</div>
+          <div class="h-date-sub">{{ h.date|date:"l, d F Y" }}</div>
+        </div>
+        <div class="h-date-badge">
+          <div class="h-date-day">{{ h.date|date:"d" }}</div>
+          <div class="h-date-month">{{ h.date|date:"M" }}</div>
+        </div>
+      </li>
+      {% empty %}
+      <li>
+        <div class="holiday-empty">
+          <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+          <div class="empty-title">No holidays yet</div>
+          <div class="empty-sub">Add your first public holiday using the form above.</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+</div>
+{% endblock %}

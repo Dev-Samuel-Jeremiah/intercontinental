@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Data export &amp; backups{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Administration</div>
+  <h1 class="fin-title">Data &amp; <em>backups</em></h1>
+  <p class="fin-sub">Download all of the school's data at any time. A backup is also taken automatically every night and the last 14 are kept.</p>
+</div></div>
+<div class="fin-grid">
+  <div class="panel" style="padding:1.2rem"><h3 style="margin:0 0 .5rem">Export everything</h3>
+    <p class="hint" style="margin:0 0 .6rem">A ZIP file with one spreadsheet (CSV) per table — students, staff, results, attendance, payments and everything else. Passwords are not included.</p>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="export"><button class="fin-btn fin-btn-gold" type="submit">Prepare an export</button></form>
+    <table class="tbl" data-no-export style="margin-top:.6rem"><tbody>{% for ex in exports %}<tr><td>{{ ex.created_at|date:"j M Y H:i" }}</td><td>{% if ex.status == 'READY' %}<a href="{% url 'platform_school:export_file' ex.pk %}">Download ({{ ex.size|filesizeformat }})</a>{% else %}{{ ex.get_status_display }}{% if ex.error %} — {{ ex.error }}{% endif %}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel" style="padding:1.2rem"><h3 style="margin:0 0 .5rem">Backups</h3>
+    <p class="hint" style="margin:0 0 .6rem">Keep a copy of a recent backup somewhere safe, away from the server.</p>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="backup"><button class="fin-btn" type="submit">Back up now</button></form>
+    <table class="tbl" data-no-export style="margin-top:.6rem"><tbody>{% for b in backups %}<tr><td>{{ b.created_at|date:"j M Y H:i" }}</td><td>{{ b.get_kind_display }}</td><td class="num">{{ b.rows }} records</td><td>{% if b.file %}<a href="{% url 'platform_school:backup_file' b.pk %}">Download ({{ b.size|filesizeformat }})</a>{% endif %}</td></tr>{% empty %}<tr><td class="empty">No backups yet.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% endblock %}

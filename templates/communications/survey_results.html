@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ s.title }} — results{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#f4d21f,#ffe066)}
+.brow{display:grid;grid-template-columns:minmax(120px,1.2fr) 3fr 70px;gap:.7rem;align-items:center;margin:.35rem 0;font-size:.88rem}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'communications:surveys' %}" style="color:inherit">Surveys</a></div>
+  <h1 class="fin-title">{{ s.title }}</h1>
+  <p class="fin-sub">{{ s.get_audience_display }} · {{ r.count }} answer{{ r.count|pluralize }} · {% if open %}open until {{ s.closes|date:"j M Y" }}{% else %}closed{% endif %}{% if s.anonymous %} · anonymous{% endif %}</p>
+</div>
+<div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="invite"><button class="fin-btn" type="submit">Email invitations</button></form>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="fin-btn" type="submit">{% if s.published %}Close survey{% else %}Reopen{% endif %}</button></form>
+</div></div>
+<p class="hint">Share the link: <a href="{% url 'communications:survey_answer' s.pk %}">{{ request.scheme }}://{{ request.get_host }}{% url 'communications:survey_answer' s.pk %}</a> (people sign in to answer).</p>
+{% for q in r.questions %}
+<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>{{ forloop.counter }}. {{ q.text }}</h3></div><div class="panel-b">
+  <p class="hint">{{ q.answered }} answered{% if q.average %} · average {{ q.average }} out of 5{% endif %}{% if q.kind == 'MULTI' %} · people could tick more than one{% endif %}</p>
+  {% if q.bars %}{% for b in q.bars %}<div class="brow"><span>{{ b.label }}</span><div class="bar"><i style="width:{{ b.pct }}%"></i></div><span>{{ b.count }} · {{ b.pct }}%</span></div>{% endfor %}
+  {% else %}{% for who, text in q.texts %}<div style="border-left:3px solid var(--rim2);padding:.3rem .8rem;margin:.5rem 0">{{ text|linebreaksbr }}{% if who %}<div class="hint">— {{ who }}</div>{% endif %}</div>{% empty %}<p class="empty">No written answers yet.</p>{% endfor %}{% endif %}
+</div></div>
+{% endfor %}
+{% endblock %}

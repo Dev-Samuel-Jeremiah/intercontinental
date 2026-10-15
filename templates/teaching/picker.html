@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Name picker and timer{% endblock %}
+{% block content %}
+<style>
+  .big{font-family:var(--serif,'Cormorant Garamond',serif);font-size:clamp(2.2rem,7vw,4.5rem);text-align:center;margin:1rem 0;min-height:1.3em}
+  .clock{font-size:clamp(2.5rem,9vw,5.5rem);text-align:center;font-variant-numeric:tabular-nums;margin:.6rem 0}
+  .clock.done{color:var(--red,#e87070)}
+  .groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;margin-top:.8rem}
+  .groups div{border:1px solid var(--rim);border-radius:12px;padding:.6rem;font-size:.88rem}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Name picker &amp; <em>timer</em></h1>
+  <p class="fin-sub">Pick students at random without repeats, time an activity, or make groups. Nothing here is saved.</p>
+</div>
+<div style="display:flex;gap:.3rem;flex-wrap:wrap">{% for c in classes %}<a class="fin-btn fin-btn-sm{% if cls and c.pk == cls.pk %} fin-btn-gold{% endif %}" href="?class={{ c.pk }}">{{ c.name }}</a>{% endfor %}</div></div>
+{% include "teaching/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{{ cls.name|default:"No class" }} — {{ count }} students</h3></div><div class="panel-b">
+    <div class="big" id="name">Ready?</div>
+    <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap">
+      <button class="fin-btn fin-btn-gold" type="button" onclick="pick()">Pick a name</button>
+      <button class="fin-btn" type="button" onclick="resetPick()">Start again</button>
+    </div>
+    <p class="hint" style="text-align:center" id="left"></p>
+    <hr style="border-color:var(--rim)">
+    <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap"><label>Groups of</label><input id="size" type="number" min="2" max="10" value="4" style="width:70px"><button class="fin-btn fin-btn-sm" type="button" onclick="groups()">Make groups</button></div>
+    <div class="groups" id="groups"></div>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3>Timer</h3></div><div class="panel-b">
+    <div class="clock" id="clock">05:00</div>
+    <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap">
+      <button class="fin-btn fin-btn-sm" type="button" onclick="setT(60)">1 min</button><button class="fin-btn fin-btn-sm" type="button" onclick="setT(180)">3 min</button><button class="fin-btn fin-btn-sm" type="button" onclick="setT(300)">5 min</button><button class="fin-btn fin-btn-sm" type="button" onclick="setT(600)">10 min</button><button class="fin-btn fin-btn-sm" type="button" onclick="setT(900)">15 min</button>
+    </div>
+    <div style="display:flex;gap:.4rem;justify-content:center;margin-top:.6rem"><button class="fin-btn fin-btn-gold" type="button" id="go" onclick="toggle()">Start</button><button class="fin-btn" type="button" onclick="setT(total)">Reset</button></div>
+  </div></div>
+</div>
+<script>
+var NAMES = {{ names_json|safe }}, pool = [], total = 300, left = 300, timer = null;
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function resetPick(){ pool = shuffle(NAMES.slice()); document.getElementById('name').textContent='Ready?'; info(); }
+function info(){ document.getElementById('left').textContent = pool.length + ' of ' + NAMES.length + ' still to be picked'; }
+function pick(){ if(!NAMES.length) return; if(!pool.length) resetPick(); document.getElementById('name').textContent = pool.pop(); info(); }
+function groups(){ var n = Math.max(2, parseInt(document.getElementById('size').value) || 4), a = shuffle(NAMES.slice()), out = document.getElementById('groups'); out.innerHTML = '';
+  for(var g=0; g*n < a.length; g++){ var d = document.createElement('div'); var b = document.createElement('b'); b.textContent = 'Group ' + (g+1); d.appendChild(b);
+    a.slice(g*n, g*n+n).forEach(function(x){ d.appendChild(document.createElement('br')); d.appendChild(document.createTextNode(x)); }); out.appendChild(d); } }
+function show(){ var m = Math.floor(left/60), s = left%60, el = document.getElementById('clock'); el.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); el.classList.toggle('done', left === 0); }
+function setT(sec){ clearInterval(timer); timer = null; total = sec; left = sec; document.getElementById('go').textContent = 'Start'; show(); }
+function toggle(){ var btn = document.getElementById('go');
+  if(timer){ clearInterval(timer); timer = null; btn.textContent = 'Start'; return; }
+  btn.textContent = 'Pause'; timer = setInterval(function(){ if(left > 0){ left--; show(); } if(left === 0){ clearInterval(timer); timer = null; btn.textContent = 'Start'; } }, 1000); }
+resetPick(); show();
+</script>
+{% endblock %}

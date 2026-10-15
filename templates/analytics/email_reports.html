@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Summary emails{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">Summary <em>emails</em></h1>
+  <p class="fin-sub">A short summary for the proprietor, governors or anyone else — attendance, fees, results and targets — every Monday or on the 1st of each month.</p>
+</div></div>
+{% include "analytics/_nav.html" %}
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add someone</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="add">
+        <div><label>Email</label><input type="email" name="email" required placeholder="proprietor@example.com"></div>
+        <div><label>How often</label><select name="frequency"><option value="WEEKLY">Every Monday</option><option value="MONTHLY">First of the month</option></select></div>
+        <button class="fin-btn fin-btn-gold" type="submit">Add</button></form>
+      <p class="hint" style="margin-bottom:0">The server sends them with <code>python manage.py send_school_reports</code>, run once a day.</p>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Receiving it</h3></div>
+      {% if subs %}<table class="tbl"><thead><tr><th>Email</th><th>How often</th><th>Last sent</th><th></th></tr></thead><tbody>
+      {% for s in subs %}<tr><td class="name">{{ s.email }}</td><td>{{ s.get_frequency_display }}</td><td>{{ s.last_sent_at|date:"j M Y"|default:"—" }}</td>
+        <td style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ s.id }}"><button class="fin-btn fin-btn-sm" name="action" value="send">Send now</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="remove"><i class="bi bi-x"></i></button></form></td></tr>{% endfor %}
+      </tbody></table>{% else %}<div class="empty"><p>Nobody yet.</p></div>{% endif %}
+    </div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-eye"></i> What it looks like today</h3></div><div class="panel-b" style="background:#fff;border-radius:0 0 18px 18px">{% include "analytics/email_summary.html" with school=preview.school today=preview.today roll=preview.roll movement=preview.movement attendance=preview.attendance attendance_30=preview.attendance_30 fees=preview.fees collections=preview.collections results=preview.results kpis=preview.kpis url=preview.url %}</div></div>
+</div>
+{% endblock %}

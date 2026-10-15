@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Timetable reports{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>@media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}.tbl td,.tbl th{color:#000!important;border-color:#999!important}}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ tt.config.name }}</div>
+  <h1 class="fin-title">Timetable <em>reports</em></h1>
+  <p class="fin-sub">Teaching load per teacher and anything that breaks a timetable rule.</p>
+</div><div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button><a class="fin-btn fin-btn-sm" href="{% url 'timetable:edit' tt.id %}"><i class="bi bi-pencil-square"></i> Edit</a></div></div>
+<div class="print">
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Clashes and gaps ({{ problems|length }})</h3></div><div class="panel-b">
+  {% for p in problems %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)">{{ forloop.counter }}. {{ p }}</div>{% empty %}<p style="margin:0;color:var(--green)"><i class="bi bi-check2-circle"></i> No clashes — every lesson is placed and no rule is broken.</p>{% endfor %}
+</div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-speedometer2"></i> Teaching load</h3><span class="hint">flagged above {{ heavy_week }} a week or {{ heavy_day }} in a day</span></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Teacher</th><th>Periods / week</th>{% for d in days %}<th>{{ d|slice:":3" }}</th>{% endfor %}<th>Free periods</th><th>Gaps between lessons</th><th></th></tr></thead><tbody>
+  {% for r in load %}<tr><td class="name">{{ r.teacher.full_name }}</td><td><b>{{ r.week }}</b></td>{% for n in r.per_day %}<td>{{ n }}</td>{% endfor %}<td>{{ r.free }}</td><td>{{ r.gaps }}</td>
+    <td>{% for w in r.warn %}<span class="chip red">{{ w }}</span> {% endfor %}</td></tr>{% endfor %}
+</tbody></table></div></div>
+</div>
+{% endblock %}

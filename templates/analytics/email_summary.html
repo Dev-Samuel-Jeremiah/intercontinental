@@ -1,0 +1,15 @@
+{% load humanize %}<div style="font-family:Arial,Helvetica,sans-serif;max-width:620px;margin:0 auto;color:#1c1917">
+  <h2 style="margin:0 0 4px">{{ school.name }}</h2>
+  <p style="margin:0 0 16px;color:#78716c">School summary · {{ today|date:"l j F Y" }}</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Students on roll</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>{{ roll }}</b>{% if movement.joined or movement.left %} <span style="color:#78716c">(+{{ movement.joined }} / −{{ movement.left }} this month)</span>{% endif %}</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Attendance, last 7 days</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>{% if attendance is not None %}{{ attendance }}%{% else %}—{% endif %}</b> <span style="color:#78716c">(30 days: {% if attendance_30 is not None %}{{ attendance_30 }}%{% else %}—{% endif %})</span></td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Fees collected this term</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>₦{{ fees.paid|floatformat:0|intcomma }}</b> of ₦{{ fees.expected|floatformat:0|intcomma }}{% if fees.rate is not None %} ({{ fees.rate }}%){% endif %}</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Still owed</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>₦{{ fees.outstanding|floatformat:0|intcomma }}</b> by {{ fees.debtors }} famil{{ fees.debtors|pluralize:"y,ies" }}</td></tr>
+    <tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Received in the last 7 days</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>₦{{ collections.this_week|floatformat:0|intcomma }}</b> this week</td></tr>
+    {% if results %}<tr><td style="padding:8px;border-bottom:1px solid #e7e5e4">Results, {{ results.term }}</td><td style="padding:8px;border-bottom:1px solid #e7e5e4;text-align:right"><b>{{ results.average }}%</b> average · {{ results.pass_rate }}% averaging 50+</td></tr>{% endif %}
+  </table>
+  {% if kpis %}<h3 style="margin:20px 0 6px;font-size:15px">Targets</h3>
+  <table style="width:100%;border-collapse:collapse;font-size:13px">{% for k in kpis %}{% if k.target %}<tr><td style="padding:6px 8px;border-bottom:1px solid #f0efed">{{ k.label }}</td><td style="padding:6px 8px;border-bottom:1px solid #f0efed;text-align:right">{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %} / {{ k.target }} {% if k.met %}<span style="color:#15803d">✔</span>{% endif %}</td></tr>{% endif %}{% endfor %}</table>{% endif %}
+  <p style="margin-top:20px"><a href="{{ url }}/analytics/" style="color:#a16207">Open the dashboard</a></p>
+</div>

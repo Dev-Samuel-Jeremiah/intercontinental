@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Peer tutors{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student experience</div>
+  <h1 class="fin-title">Peer <em>tutors</em></h1>
+  <p class="fin-sub">Approve students before they appear as tutors, and see the sessions they arrange.</p>
+</div></div>
+{% include "studentlife/_staffnav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Offers</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for o in offers %}<tr><td class="name">{{ o.student.full_name }}<br><small class="hint">{{ o.student.class_assigned.name|default:"" }}</small></td><td>{{ o.subject.name }}<br><small class="hint">{{ o.about }}</small></td>
+      <td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ o.pk }}">{% if o.approved %}<input type="hidden" name="action" value="remove"><button class="fin-btn fin-btn-sm" type="submit">Withdraw approval</button>{% else %}<input type="hidden" name="action" value="approve"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Approve</button>{% endif %}</form></td></tr>{% empty %}<tr><td class="empty">No offers.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <div class="panel"><div class="panel-h"><h3>Recent sessions</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for s in sessions %}<tr><td>{{ s.offer.student.full_name }} → {{ s.learner.full_name }}</td><td>{{ s.offer.subject.name }}: {{ s.topic }}</td><td>{{ s.get_status_display }}{% if s.rating %} · {{ s.rating }}★{% endif %}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

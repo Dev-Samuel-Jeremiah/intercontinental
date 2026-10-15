@@ -1,0 +1,30 @@
+{% include "communications/_portal_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Talk to a <em>teacher</em></h1>
+  <p class="sub">Message your child's teachers. They reply during school office hours ({{ hours }}). The school can see these conversations.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if convs %}<div class="card"><h2><i class="bi bi-chat-left-text" style="color:var(--champagne-lt)"></i> Your conversations</h2>
+    {% for c in convs %}<div style="padding:.6rem 0;border-top:1px solid var(--rim2)"><a href="{% url 'communications:chat_thread' c.pk %}"><b>{{ c.subject }}</b></a>{% if c.unread %} <span class="chip ok">{{ c.unread }} new</span>{% endif %}{% if c.closed %} <span class="chip">Closed</span>{% endif %}
+      <div class="hint">{{ c.teacher.full_name }} · about {{ c.student.full_name }} · {{ c.last_at|date:"j M, H:i" }}</div></div>{% endfor %}
+  </div>{% endif %}
+  {% if enabled %}
+  <div class="card"><h2><i class="bi bi-plus-circle" style="color:var(--champagne-lt)"></i> New message</h2>
+    <form method="post">{% csrf_token %}
+      <label>Child and teacher</label>
+      <select name="teacher" required onchange="document.getElementById('st').value=this.selectedOptions[0].dataset.student||''">
+        <option value="">Choose…</option>
+        {% for child, teachers in choices %}<optgroup label="{{ child.full_name }}">{% for t in teachers %}<option value="{{ t.pk }}" data-student="{{ child.pk }}">{{ t.full_name }}{% if child.class_assigned.form_teacher_id == t.pk %} (form teacher){% endif %}</option>{% empty %}<option disabled>No teachers listed for this class yet</option>{% endfor %}</optgroup>{% endfor %}
+      </select>
+      <input type="hidden" name="student" id="st">
+      <label>Subject</label><input name="subject" required maxlength="160">
+      <label>Message</label><textarea name="body" rows="5" required maxlength="4000"></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  {% else %}<div class="card"><p class="sub" style="margin:0">The school has turned chat off. Please contact the school office.</p></div>{% endif %}
+</div>
+</body>
+</html>

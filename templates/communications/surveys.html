@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Surveys &amp; polls{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Surveys &amp; <em>polls</em></h1>
+  <p class="fin-sub">Ask parents or staff for their views and see the results as charts.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+{% if todo %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3><i class="bi bi-inbox"></i> Waiting for your answers</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>{% for s in todo %}<tr><td class="name">{{ s.title }}</td><td>closes {{ s.closes|date:"j M" }}</td><td><a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'communications:survey_answer' s.pk %}">Answer</a></td></tr>{% endfor %}</tbody></table>
+</div></div>
+{% endif %}
+{% if admin %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-plus-circle"></i> New survey</h3>
+    <div><label>Title</label><input name="title" required maxlength="160" value="{{ form.title }}"></div>
+    <div><label>Introduction</label><textarea name="description" rows="2">{{ form.description }}</textarea></div>
+    <div class="row2"><div><label>Who answers</label><select name="audience">{% for k, l in audiences %}<option value="{{ k }}" {% if form.audience == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      <div><label>Closes</label><input type="date" name="closes" required value="{{ form.closes }}"></div></div>
+    <div><label>Questions <span class="hint">one per line; options after |; start with [multi], [rating] or [text]</span></label><textarea name="questions" rows="8" required>{% if form.questions %}{{ form.questions }}{% else %}{{ example }}{% endif %}</textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="anonymous" value="1" style="width:auto" checked> Anonymous — don't show names with answers</label>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="invite" value="1" style="width:auto" checked> Email everyone it is for</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Open survey</button>
+  </form>
+  <div class="panel"><div class="panel-b">
+    <table class="tbl" data-no-export><thead><tr><th>Survey</th><th>For</th><th>Answers</th><th>Status</th></tr></thead><tbody>
+    {% for s in items %}<tr><td class="name"><a href="{% url 'communications:survey_results' s.pk %}">{{ s.title }}</a></td><td>{{ s.get_audience_display }}</td><td>{{ s.count }}</td>
+      <td>{% if s.published and s.closes >= today %}<span class="chip green">Open to {{ s.closes|date:"j M" }}</span>{% else %}<span class="chip">Closed</span>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">No surveys yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% elif not todo %}<div class="panel"><div class="panel-b"><p class="empty">No surveys waiting for you.</p></div></div>{% endif %}
+{% endblock %}

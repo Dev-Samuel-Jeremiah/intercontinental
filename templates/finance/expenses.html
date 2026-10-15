@@ -1,0 +1,175 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Expenses{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Money <em>going out</em></h1>
+    <p class="fin-sub">Every payment the school makes, with its receipt — diesel, repairs, supplies, salaries.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:vendors' %}"><i class="bi bi-shop"></i> Suppliers</a>
+    <a class="fin-btn" href="{% url 'finance:petty_cash' %}"><i class="bi bi-wallet2"></i> Petty cash</a>
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:income_statement' %}"><i class="bi bi-graph-up-arrow"></i> Income &amp; expenditure</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Paid out ({{ start|date:"j M" }} – {{ end|date:"j M" }})</small><b style="color:var(--red)">₦{{ total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Awaiting approval</small><b style="color:var(--amber)">₦{{ pending_total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Requests pending</small><b>{{ pending_count }}</b></div>
+  <div class="fin-stat"><small>Petty cash in hand</small><b style="color:var(--champagne-lt)">₦{{ petty_cash|floatformat:0|intcomma }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Record spending</h3></div>
+      <div class="panel-b">
+        <form method="post" enctype="multipart/form-data" class="fin-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add">
+          <div><label>What was it for</label><input type="text" name="description" placeholder="Diesel for the generator" required></div>
+          <div class="row2">
+            <div><label>Category</label>
+              <select name="category_id" required>
+                <option value="">— choose —</option>
+                {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div><label>Amount on the invoice (₦)</label><input type="number" name="amount" id="exp-amount" step="0.01" min="0.01" required placeholder="45000"></div>
+          </div>
+          <div class="row2">
+            <div><label>Date</label><input type="date" name="spent_on" value="{{ today|date:'Y-m-d' }}"></div>
+            <div><label>Paid by</label>
+              <select name="method">{% for v, l in methods %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+            </div>
+          </div>
+          <div class="row2">
+            <div><label>Supplier</label>
+              <select name="vendor_id" id="exp-vendor">
+                <option value="">— not a saved supplier —</option>
+                {% for v in vendors %}<option value="{{ v.id }}" data-type="{{ v.payee_type }}" data-exempt="{% if v.wht_exempt %}1{% endif %}">{{ v.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div><label>Or paid to</label><input type="text" name="payee" placeholder="Name on the receipt"></div>
+          </div>
+          <div class="row2">
+            <div><label>Withholding tax</label>
+              <select name="wht_rate_id" id="exp-wht">
+                <option value="">None</option>
+                {% for r in wht_rates %}<option value="{{ r.id }}" data-company="{{ r.company_rate }}" data-individual="{{ r.individual_rate }}">{{ r.name }}</option>{% endfor %}
+              </select>
+            </div>
+            <div id="exp-type-wrap"><label>Supplier is</label>
+              <select name="payee_type" id="exp-type">{% for v, l in payee_types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+            </div>
+          </div>
+          <div class="row2">
+            <div><label>VAT on the invoice (₦)</label><input type="number" name="vat_amount" step="0.01" min="0" placeholder="0 if none"></div>
+            <div><label>Pay the supplier</label><div id="exp-net" class="hint" style="padding:.65rem 0;font-size:.86rem">—</div></div>
+          </div>
+          <div class="row2">
+            <div><label>Reference</label><input type="text" name="reference" placeholder="Teller / cheque no."></div>
+            <div><label>Receipt</label><input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png"></div>
+          </div>
+          {% if user.is_superuser %}
+          <label style="display:flex;gap:.5rem;align-items:center;font-weight:500;font-size:.84rem">
+            <input type="checkbox" name="already_paid" value="1" style="width:auto" checked> This money has already been paid out
+          </label>
+          {% endif %}
+          <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Record expense</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-tags"></i> Categories</h3></div>
+      <div class="panel-b">
+        <form method="post" style="display:flex;gap:.5rem">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_category">
+          <input type="text" name="name" placeholder="Diesel, repairs, utilities…" style="flex:1;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+          <button class="fin-btn" type="submit"><i class="bi bi-plus-lg"></i></button>
+        </form>
+        <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem">
+          {% for c in categories %}<span class="chip">{{ c.name }}</span>{% empty %}<span class="hint">No categories yet — add one above.</span>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-receipt-cutoff"></i> Money going out</h3></div>
+    <form method="get" class="panel-b" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end;border-bottom:1px solid var(--rim)">
+      <div style="flex:1 1 150px"><label style="font-size:.72rem;color:var(--slate);display:block;margin-bottom:.25rem">Search</label>
+        <input type="search" name="q" value="{{ search }}" placeholder="Description or payee" style="width:100%;padding:.5rem .7rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.84rem"></div>
+      <div><label style="font-size:.72rem;color:var(--slate);display:block;margin-bottom:.25rem">From</label>
+        <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" style="padding:.5rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.84rem"></div>
+      <div><label style="font-size:.72rem;color:var(--slate);display:block;margin-bottom:.25rem">To</label>
+        <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" style="padding:.5rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.84rem"></div>
+      <div><label style="font-size:.72rem;color:var(--slate);display:block;margin-bottom:.25rem">Status</label>
+        <select name="status" style="padding:.5rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.84rem">
+          <option value="">All</option>
+          {% for v, l in statuses %}<option value="{{ v }}" {% if status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+        </select></div>
+      <button class="fin-btn" type="submit"><i class="bi bi-funnel"></i></button>
+    </form>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>What for</th><th>Paid to</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for e in expenses %}
+          <tr>
+            <td>{{ e.spent_on|date:"j M Y" }}<br><span class="hint">{{ e.get_method_display }}</span></td>
+            <td class="name">{{ e.description }}<br><span class="hint">{{ e.category.name }}{% if e.reference %} · {{ e.reference }}{% endif %}</span></td>
+            <td>{{ e.paid_to }}</td>
+            <td class="money">₦{{ e.amount|floatformat:0|intcomma }}{% if e.wht_amount %}<br><span class="hint">WHT {{ e.wht_percent|floatformat:"-2" }}% ₦{{ e.wht_amount|floatformat:"-2"|intcomma }} · paid ₦{{ e.net_paid|floatformat:"-2"|intcomma }}</span>{% endif %}{% if e.vat_amount %}<br><span class="hint">incl. VAT ₦{{ e.vat_amount|floatformat:"-2"|intcomma }}</span>{% endif %}{% if e.receipt %}<br><a href="{{ e.receipt.url }}" target="_blank" rel="noopener" class="hint" style="color:var(--champagne-lt)"><i class="bi bi-paperclip"></i> receipt</a>{% endif %}</td>
+            <td>
+              {% if e.status == 'PAID' %}<span class="chip green">Paid</span>
+              {% elif e.status == 'APPROVED' %}<span class="chip gold">Approved</span>
+              {% elif e.status == 'REJECTED' %}<span class="chip red">Rejected</span>
+              {% else %}<span class="chip amber">Awaiting</span>{% endif %}
+            </td>
+            <td style="white-space:nowrap">
+              {% if e.status == 'PENDING' %}
+              <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="approve"><input type="hidden" name="expense_id" value="{{ e.id }}"><button class="fin-btn fin-btn-sm" type="submit">Approve</button></form>
+              <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="expense_id" value="{{ e.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" type="submit">Reject</button></form>
+              {% elif e.status == 'APPROVED' %}
+              <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="mark_paid"><input type="hidden" name="expense_id" value="{{ e.id }}"><button class="fin-btn fin-btn-sm" type="submit">Mark paid</button></form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="empty"><i class="bi bi-receipt"></i>No expenses recorded for this period.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  // Show what actually goes to the supplier as the form is filled in.
+  var amount = document.getElementById('exp-amount'), wht = document.getElementById('exp-wht'),
+      type = document.getElementById('exp-type'), vendor = document.getElementById('exp-vendor'),
+      wrap = document.getElementById('exp-type-wrap'), out = document.getElementById('exp-net');
+  if (!amount || !out) return;
+  function naira(n) { return '\u20a6' + n.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  function update() {
+    var v = vendor.options[vendor.selectedIndex], payee = type.value, exempt = false;
+    if (v && v.value) { payee = v.dataset.type || payee; exempt = !!v.dataset.exempt; wrap.style.opacity = .45; type.disabled = true; }
+    else { wrap.style.opacity = 1; type.disabled = false; }
+    var gross = parseFloat(amount.value) || 0, r = wht.options[wht.selectedIndex], rate = 0;
+    if (r && r.value && !exempt) rate = parseFloat(payee === 'INDIVIDUAL' ? r.dataset.individual : r.dataset.company) || 0;
+    if (!gross) { out.textContent = '\u2014'; return; }
+    var withheld = Math.round(gross * rate) / 100;
+    out.innerHTML = '<b style="color:var(--white)">' + naira(gross - withheld) + '</b>' +
+      (withheld ? ' &nbsp;\u00b7&nbsp; ' + naira(withheld) + ' withheld (' + rate + '%)' : (exempt && r.value ? ' &nbsp;\u00b7&nbsp; supplier is exempt' : ''));
+  }
+  [amount, wht, type, vendor].forEach(function (el) { el.addEventListener('input', update); el.addEventListener('change', update); });
+  update();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Gate Scan Log{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+.gsl-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:20px; }
+.gsl-toolbar h2{ color:var(--white); font-weight:600; margin:0; font-size:1.15rem; }
+.gsl-filters{ display:flex; gap:10px; flex-wrap:wrap; }
+.gsl-filters select, .gsl-filters input{ background:var(--surface2); color:var(--white); border:1px solid var(--rim);
+  border-radius:8px; padding:8px 12px; min-width:0; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:9px 16px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; white-space:nowrap; }
+
+.gsl-table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:12px; }
+.gsl-table{ width:100%; min-width:640px; border-collapse:collapse; background:var(--surface2); border-radius:12px; overflow:hidden; }
+.gsl-table th{ text-align:left; padding:12px 16px; font-size:.75rem; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--slate); border-bottom:1px solid var(--rim); white-space:nowrap; }
+.gsl-table td{ padding:12px 16px; border-bottom:1px solid var(--rim); color:var(--white); font-size:.9rem; }
+.badge{ padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:600; white-space:nowrap; }
+.badge.in{ background:var(--green-dim); color:var(--green); }
+.badge.out{ background:var(--blue-dim); color:var(--blue); }
+.badge.ok{ color:var(--green); }
+.badge.fail{ color:#ef6b73; }
+.pg{ display:flex; gap:8px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+.pg a, .pg span{ color:var(--white); padding:6px 12px; border:1px solid var(--rim); border-radius:6px; text-decoration:none; font-size:.85rem; }
+
+/* ── mobile: table becomes stacked cards ── */
+@media(max-width:700px){
+  .gsl-toolbar{ flex-direction:column; align-items:stretch; }
+  .gsl-toolbar form{ width:100%; }
+  .gsl-filters select, .gsl-filters input{ flex:1 1 140px; }
+  .gsl-toolbar .idc-btn{ width:100%; text-align:center; }
+
+  .gsl-table-wrap{ overflow-x:visible; }
+  .gsl-table{ min-width:0; }
+  .gsl-table thead{ display:none; }
+  .gsl-table, .gsl-table tbody, .gsl-table tr, .gsl-table td{ display:block; width:100%; }
+  .gsl-table tr{ background:var(--surface2); border:1px solid var(--rim); border-radius:12px; margin-bottom:12px; padding:6px 4px; }
+  .gsl-table td{ border-bottom:none; padding:6px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:right; }
+  .gsl-table td[data-label]::before{ content:attr(data-label); font-size:.68rem; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--slate); font-weight:600; text-align:left; flex-shrink:0; }
+  .gsl-table td.gsl-cell-name{ justify-content:flex-start; font-weight:700; padding-top:10px; }
+  .gsl-table td.gsl-cell-name::before{ content:none; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="gsl-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-door-open-fill"></i> Gate Scan Log</h2></div>
+  <form method="get" class="gsl-filters">
+    <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+    <select name="class_id" onchange="this.form.submit()">
+      <option value="">All Classes</option>
+      {% for c in classes %}
+        <option value="{{ c.id }}" {% if selected_class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <select name="direction" onchange="this.form.submit()">
+      <option value="">All</option>
+      <option value="IN" {% if selected_direction == "IN" %}selected{% endif %}>Arrived</option>
+      <option value="OUT" {% if selected_direction == "OUT" %}selected{% endif %}>Departed</option>
+    </select>
+  </form>
+  <a href="{% url 'idcards:reception_qr_page' %}" class="idc-btn"><i class="bi bi-qr-code"></i> Reception QR</a>
+</div>
+
+<div class="gsl-table-wrap">
+<table class="gsl-table">
+  <thead>
+    <tr><th>Student</th><th>Class</th><th>Status</th><th>Time</th><th>Notified?</th><th>Scanned By</th></tr>
+  </thead>
+  <tbody>
+    {% for log in page_obj %}
+    <tr>
+      <td class="gsl-cell-name">{{ log.student.full_name }}</td>
+      <td data-label="Class">{{ log.student.class_assigned.name|default:"—" }}</td>
+      <td data-label="Status"><span class="badge {% if log.direction == 'IN' %}in{% else %}out{% endif %}">{{ log.get_direction_display }}</span></td>
+      <td data-label="Time">{{ log.scanned_at|date:"H:i" }}</td>
+      <td data-label="Notified?">
+        {% if log.parent_notified %}<span class="badge ok"><i class="bi bi-check-circle-fill"></i> Sent</span>
+        {% else %}<span class="badge fail"><i class="bi bi-exclamation-triangle-fill"></i> {{ log.notify_error|default:"Failed" }}</span>{% endif %}
+      </td>
+      <td data-label="Scanned By">{{ log.scanned_by|default:"—" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" style="text-align:center; color:var(--slate); padding:30px;">No scans for this date.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="pg">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&date={{ selected_date }}&class_id={{ selected_class_id }}&direction={{ selected_direction }}">&laquo; Prev</a>
+  {% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&date={{ selected_date }}&class_id={{ selected_class_id }}&direction={{ selected_direction }}">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endblock %}

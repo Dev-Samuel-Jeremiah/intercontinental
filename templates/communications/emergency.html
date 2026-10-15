@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Emergency broadcast{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Emergency <em>broadcast</em></h1>
+  <p class="fin-sub">One message by SMS and email to every parent and member of staff — school closure, security alert, early dismissal. It reaches parents who opted out of ordinary messages.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem;border-color:var(--red-border)">{% csrf_token %}
+    <div><label>Subject (email)</label><input name="subject" required maxlength="160" placeholder="e.g. School closed today"></div>
+    <div><label>Message <span class="hint">up to {{ limit }} characters (3 SMS)</span></label><textarea name="message" rows="5" required maxlength="{{ limit }}" oninput="document.getElementById('n').textContent=this.value.length"></textarea><small class="hint"><span id="n">0</span> / {{ limit }}</small></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="to_parents" value="1" checked style="width:auto"> All parents and guardians</label>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="to_staff" value="1" checked style="width:auto"> All staff</label>
+    <div><label>Type SEND to confirm</label><input name="confirm" required autocomplete="off"></div>
+    <button class="fin-btn fin-btn-danger" type="submit"><i class="bi bi-exclamation-triangle-fill"></i> Send emergency broadcast</button>
+  </form>
+  <div class="panel"><div class="panel-h"><h3>Sent</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><thead><tr><th>When</th><th>Subject</th><th>SMS</th><th>Email</th></tr></thead><tbody>
+    {% for b in history %}<tr><td>{{ b.created_at|date:"j M Y H:i" }}<br><small class="hint">{{ b.sent_by.get_full_name|default:b.sent_by.username }}</small></td><td class="name">{{ b.subject }}<br><small class="hint">{{ b.message|truncatechars:90 }}</small></td>
+      <td>{% if b.finished_at %}{{ b.sms_sent }}{% if b.sms_failed %} <span class="chip red">{{ b.sms_failed }} failed</span>{% endif %}{% else %}<span class="chip amber">Sending…</span>{% endif %}</td>
+      <td>{% if b.finished_at %}{{ b.emails_sent }}{% if b.emails_failed %} <span class="chip red">{{ b.emails_failed }} failed</span>{% endif %}{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">None sent.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% endblock %}

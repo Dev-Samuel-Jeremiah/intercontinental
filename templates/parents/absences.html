@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Absences | {{ request.tenant.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root{--ink:#0a1d40;--surface:#112850;--surface2:#172f5c;--rim:rgba(255,255,255,.06);--rim2:rgba(255,255,255,.10);
+    --champagne:#f4d21f;--champagne-lt:#ffe066;--slate:rgba(255,255,255,.4);--slate2:rgba(255,255,255,.6);--white:#f2f5fb;
+    --green:#4ade80;--red:#e87070;--amber:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 0% 0%,rgba(244,210,31,.10),transparent 55%),var(--ink);color:var(--white);font-family:'Outfit',system-ui,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+  a.back{color:var(--slate2);text-decoration:none;font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center}
+  a.back:hover{color:var(--champagne-lt)}
+  h1{font-family:'Cormorant Garamond',serif;font-size:2.1rem;margin:.8rem 0 .2rem}
+  h1 em{color:var(--champagne-lt)}
+  .sub{color:var(--slate2);font-size:.9rem;margin:0 0 1.4rem;line-height:1.5}
+  .card{border:1px solid var(--rim2);background:var(--surface);border-radius:18px;padding:1.2rem;margin-bottom:1rem}
+  .card h2{font-size:1rem;margin:0 0 .9rem;display:flex;gap:.5rem;align-items:center}
+  label{display:block;font-size:.76rem;color:var(--slate2);font-weight:600;margin:.7rem 0 .3rem}
+  input,select{width:100%;padding:.75rem .85rem;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.95rem}
+  input:focus,select:focus{outline:none;border-color:var(--champagne);box-shadow:0 0 0 3px rgba(244,210,31,.15)}
+  select option{background:var(--surface2)}
+  button{margin-top:1rem;width:100%;padding:.85rem;border:0;border-radius:12px;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .msg{padding:.75rem .9rem;border-radius:12px;margin-bottom:1rem;font-size:.9rem;border:1px solid var(--rim2)}
+  .msg.success{border-color:rgba(74,222,128,.35);color:var(--green);background:rgba(74,222,128,.08)}
+  .msg.error{border-color:rgba(232,112,112,.35);color:var(--red);background:rgba(232,112,112,.08)}
+  .row{display:flex;justify-content:space-between;gap:.8rem;padding:.75rem 0;border-top:1px solid var(--rim)}
+  .row:first-child{border-top:0}
+  .hint{color:var(--slate);font-size:.8rem}
+  .chip{font-size:.72rem;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--rim2);white-space:nowrap;align-self:flex-start}
+  .chip.PENDING{color:var(--amber);border-color:rgba(251,191,36,.35)}
+  .chip.APPROVED{color:var(--green);border-color:rgba(74,222,128,.35)}
+  .chip.REJECTED{color:var(--red);border-color:rgba(232,112,112,.35)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Absences &amp; <em>reasons</em></h1>
+  <p class="sub">Tell the school why your child missed school — or let them know ahead of time, so you don't get an absence text that morning.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+
+  {% if unexplained %}
+  <div class="card">
+    <h2><i class="bi bi-exclamation-circle" style="color:var(--amber)"></i> Absences without a reason</h2>
+    {% for child, m in unexplained %}
+    <form method="post" class="row" style="flex-wrap:wrap;align-items:flex-end">{% csrf_token %}
+      <input type="hidden" name="child_id" value="{{ child.id }}"><input type="hidden" name="date" value="{{ m.date|date:'Y-m-d' }}">
+      <div style="flex:1 1 160px"><b>{{ m.date|date:"l j M" }}</b><div class="hint">{{ child.full_name }}</div></div>
+      <div style="flex:1 1 150px"><select name="reason" required>{% for v, l in reasons %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div style="flex:2 1 200px"><input name="note" maxlength="255" placeholder="A short note (optional)"></div>
+      <button type="submit" style="width:auto;margin:0;padding:.7rem 1rem">Send</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <h2><i class="bi bi-calendar-plus" style="color:var(--champagne-lt)"></i> Tell the school about an absence</h2>
+    <form method="post">{% csrf_token %}
+      {% if children|length > 1 %}<label>Child</label><select name="child_id" required>{% for c in children %}<option value="{{ c.id }}">{{ c.full_name }}</option>{% endfor %}</select>
+      {% else %}<input type="hidden" name="child_id" value="{{ children.0.id }}"><p class="hint" style="margin:0">For {{ children.0.full_name }}</p>{% endif %}
+      <label>Date</label><input type="date" name="date" required value="{{ today|date:'Y-m-d' }}" max="{{ latest|date:'Y-m-d' }}">
+      <label>Reason</label><select name="reason" required>{% for v, l in reasons %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select>
+      <label>Note <span class="hint">(optional)</span></label><input name="note" maxlength="255" placeholder="e.g. Dentist at 10am, back after lunch">
+      <button type="submit">Send to the school</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2><i class="bi bi-clock-history" style="color:var(--champagne-lt)"></i> Reasons you have given</h2>
+    {% for m in history %}
+    <div class="row"><div><b>{{ m.date|date:"D j M" }}</b> — {{ m.get_absence_reason_display }}<div class="hint">{{ m.student.full_name }}{% if m.reason_note %} · {{ m.reason_note }}{% endif %}</div></div>
+      <span class="chip {% if m.excused == 'EXCUSED' %}APPROVED{% elif m.excused == 'UNEXCUSED' %}REJECTED{% else %}PENDING{% endif %}">{% if m.excused == 'EXCUSED' %}Excused{% elif m.excused == 'UNEXCUSED' %}Not excused{% else %}Being checked{% endif %}</span></div>
+    {% empty %}<p class="hint" style="margin:0">None yet.</p>{% endfor %}
+  </div>
+</div>
+</body>
+</html>

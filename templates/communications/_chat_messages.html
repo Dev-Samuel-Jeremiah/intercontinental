@@ -1,0 +1,12 @@
+<div class="chat-list">
+{% for m in msgs %}
+  {% if not m.hidden or admin %}
+  <div class="bubble {% if m.sender_id == request.user.pk %}mine{% endif %}{% if m.hidden %} hid{% endif %}">
+    <div class="who">{% if m.sender_id == conv.parent_id %}{{ conv.parent.get_full_name|default:"Parent" }}{% else %}{{ conv.teacher.full_name }}{% endif %} · {{ m.created_at|date:"j M, H:i" }}{% if m.sender_id == request.user.pk and m.read_at %} · seen{% endif %}{% if m.flagged %} · reported{% endif %}{% if m.hidden %} · hidden by the school{% endif %}</div>
+    <div class="txt">{{ m.body|linebreaksbr }}</div>
+    {% if admin %}<form method="post" class="tools">{% csrf_token %}<input type="hidden" name="id" value="{{ m.pk }}"><input type="hidden" name="action" value="{% if m.hidden %}unhide{% else %}hide{% endif %}"><button type="submit">{% if m.hidden %}Show again{% else %}Hide{% endif %}</button></form>
+    {% elif member and m.sender_id != request.user.pk and not m.flagged %}<form method="post" class="tools" onsubmit="this.reason.value=prompt('What is wrong with this message?')||'';return this.reason.value!=='';">{% csrf_token %}<input type="hidden" name="id" value="{{ m.pk }}"><input type="hidden" name="action" value="flag"><input type="hidden" name="reason"><button type="submit">Report</button></form>{% endif %}
+  </div>
+  {% elif m.hidden %}<div class="bubble hid"><div class="txt"><i>This message was removed by the school.</i></div></div>{% endif %}
+{% empty %}<p class="hint">No messages yet.</p>{% endfor %}
+</div>

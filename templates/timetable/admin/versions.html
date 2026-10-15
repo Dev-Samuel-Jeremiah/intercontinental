@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Timetable versions{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ config.name }}</div>
+  <h1 class="fin-title">Version <em>history</em></h1>
+  <p class="fin-sub">A copy is kept every time the timetable is published. Compare any two, or bring an old one back.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'timetable:config_detail' config.pk %}"><i class="bi bi-arrow-left"></i> Back</a></div>
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-save"></i> Save the live timetable</h3></div><div class="panel-b">
+      {% if live %}<form method="post" class="fin-form">{% csrf_token %}
+        <div><label>Label <span class="hint">(optional)</span></label><input name="label" maxlength="120" placeholder="After moving SS3 Maths"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-save"></i> Save as a new version</button></form>
+      {% else %}<p class="hint" style="margin:0">Nothing is published for this configuration yet.</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Versions</h3></div>
+      {% if versions %}<table class="tbl"><thead><tr><th>#</th><th>Saved</th><th>Lessons</th><th></th></tr></thead><tbody>
+      {% for v in versions %}<tr><td class="name">v{{ v.number }}</td>
+        <td>{{ v.saved_at|date:"j M Y, H:i" }}<div class="hint">{{ v.label|default:"—" }}{% if v.saved_by %} · {{ v.saved_by.get_full_name|default:v.saved_by.username }}{% endif %}</div></td>
+        <td>{{ v.entry_count }}</td>
+        <td style="white-space:nowrap"><a class="fin-btn fin-btn-sm" href="?a={{ v.id }}" title="Compare with the live timetable"><i class="bi bi-arrow-left-right"></i></a>
+          <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ v.id }}"><button class="fin-btn fin-btn-sm" name="action" value="restore" title="Restore and publish" onclick="return confirm('Bring back version {{ v.number }} and publish it? The current timetable is kept as a draft.')"><i class="bi bi-arrow-counterclockwise"></i></button></form></td></tr>{% endfor %}
+      </tbody></table>{% else %}<div class="empty"><i class="bi bi-clock-history"></i><p>No versions yet — publish a timetable to start the history.</p></div>{% endif %}
+    </div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-arrow-left-right"></i> Compare</h3></div><div class="panel-b">
+    <form method="get" class="fin-form" style="margin-bottom:1rem"><div class="row2">
+      <div><label>Older</label><select name="a">{% for v in versions %}<option value="{{ v.id }}" {% if a and a.id == v.id %}selected{% endif %}>v{{ v.number }} — {{ v.saved_at|date:"j M" }}</option>{% endfor %}</select></div>
+      <div><label>Newer</label><select name="b"><option value="">Live timetable</option>{% for v in versions %}<option value="{{ v.id }}" {% if b and b.id == v.id %}selected{% endif %}>v{{ v.number }} — {{ v.saved_at|date:"j M" }}</option>{% endfor %}</select></div>
+    </div><div><button class="fin-btn" type="submit" {% if not versions %}disabled{% endif %}>Compare</button></div></form>
+    {% if a %}
+      <p class="hint">v{{ a.number }} → {% if b %}v{{ b.number }}{% else %}the live timetable{% endif %}: <b style="color:var(--white)">{{ diff|length }}</b> lesson{{ diff|length|pluralize }} different.</p>
+      {% if diff %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>When</th><th>Before</th><th>After</th></tr></thead><tbody>
+        {% for d in diff %}<tr><td class="name">{{ d.class }}</td><td>{{ d.day|slice:":3" }} · {{ d.period }}</td>
+          <td>{% if d.before %}<span class="chip {% if d.kind == 'removed' %}red{% endif %}">{{ d.before }}</span>{% else %}—{% endif %}</td>
+          <td>{% if d.after %}<span class="chip {% if d.kind == 'added' %}green{% else %}gold{% endif %}">{{ d.after }}</span>{% else %}<span class="chip red">free</span>{% endif %}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<p style="color:var(--green)"><i class="bi bi-check2-circle"></i> They are the same.</p>{% endif %}
+    {% else %}<div class="empty"><i class="bi bi-arrow-left-right"></i><p>Pick two versions to see what changed.</p></div>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

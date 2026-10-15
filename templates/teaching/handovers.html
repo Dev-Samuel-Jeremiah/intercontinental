@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Handover notes{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Handover <em>notes</em></h1>
+  <p class="fin-sub">Going on leave, changing classes, or passing on a subject — leave your colleague everything they need.</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">New handover</h3>
+    <div class="row2"><div><label>To</label><select name="to_staff" required><option value="">Choose…</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Class</label><select name="school_class"><option value="">—</option>{% for c in classes %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <div><label>Subject</label><select name="subject"><option value="">—</option>{% for s in subjects %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>From</label><input type="date" name="start"></div><div><label>To</label><input type="date" name="end"></div></div>
+    <div><label>What has been covered</label><textarea name="covered" rows="3"></textarea></div>
+    <div><label>What comes next</label><textarea name="next_steps" rows="3"></textarea></div>
+    <div><label>Students to watch (needs, behaviour)</label><textarea name="students" rows="3"></textarea></div>
+    <div><label>Anything else</label><textarea name="other" rows="2"></textarea></div>
+    <div><label>Attachment</label><input type="file" name="file"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send handover</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>For me</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for h in received %}<tr><td class="name"><a href="{% url 'teaching:handover' h.pk %}">{{ h.get_kind_display }}</a><br><small class="hint">from {{ h.from_staff.full_name }}{% if h.school_class %} · {{ h.school_class.name }}{% endif %}{% if h.subject %} {{ h.subject.name }}{% endif %}</small></td><td>{% if h.acknowledged_at %}<span class="chip green">Read</span>{% else %}<span class="chip gold">New</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>From me</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for h in given %}<tr><td class="name"><a href="{% url 'teaching:handover' h.pk %}">{{ h.get_kind_display }}</a><br><small class="hint">to {{ h.to_staff.full_name }}{% if h.school_class %} · {{ h.school_class.name }}{% endif %}</small></td><td>{% if h.acknowledged_at %}<span class="chip green">Read {{ h.acknowledged_at|date:"j M" }}</span>{% else %}<span class="chip">Not read yet</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

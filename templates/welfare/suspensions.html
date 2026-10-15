@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Suspensions{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Conduct</div>
+  <h1 class="fin-title"><em>Suspensions</em></h1>
+  <p class="fin-sub">The discipline team proposes; the principal approves. Approval marks the student suspended, emails the letter to the family and sets the return date. After the return meeting, record what was agreed and the student is back on the roll.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    {% for c in items %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{{ c.student.full_name }}</b> <span class="hint">{{ c.student.class_assigned|default:"" }} · {{ c.starts|date:"j M" }}–{{ c.ends|date:"j M Y" }} ({{ c.days }} day{{ c.days|pluralize }})</span> <span class="chip{% if c.status == 'APPROVED' %} red{% elif c.status == 'PROPOSED' %} gold{% elif c.status == 'RETURNED' %} ok{% endif %}">{{ c.get_status_display }}</span>
+      <div class="hint">{{ c.reason|truncatechars:200 }}{% if c.decision_note %} · {{ c.decision_note }}{% endif %}{% if c.meeting_at %} · meeting {{ c.meeting_at|date:"D j M H:i" }}{% endif %}</div>
+      {% if c.status == 'PROPOSED' and admin %}<form method="post" class="fin-form" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}"><input type="datetime-local" name="meeting_at" title="Return meeting" style="width:auto"><input name="note" placeholder="Note" style="flex:1;min-width:120px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form>{% endif %}
+      {% if c.status == 'APPROVED' %}<form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}"><input type="hidden" name="action" value="return"><input name="notes" placeholder="What was agreed at the return meeting" required style="flex:1;min-width:180px"><button class="fin-btn fin-btn-sm" type="submit">Returned</button></form>{% endif %}
+      {% if c.status == 'APPROVED' or c.status == 'RETURNED' %}<a class="hint" href="{% url 'welfare:letter' c.pk %}" target="_blank"><i class="bi bi-printer"></i> Letter</a>{% endif %}
+      {% if c.meeting_notes %}<div class="hint">Return meeting: {{ c.meeting_notes }}</div>{% endif %}</div>
+    {% empty %}<p class="empty">No suspensions.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="propose">
+    <h3 style="margin:0 0 .6rem">Propose a suspension</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>First day</label><input type="date" name="starts" required></div><div><label>Last day</label><input type="date" name="ends" required></div></div>
+    <div><label>Reason (goes in the letter)</label><textarea name="reason" rows="3" required></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send for approval</button>
+  </form>
+</div>
+{% endblock %}

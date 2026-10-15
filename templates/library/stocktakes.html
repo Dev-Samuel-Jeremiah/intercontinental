@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Stock-take{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Stock-take</em></h1>
+  <p class="fin-sub">Walk the shelves with a phone or scanner and count every copy. Copies that should be on the shelf but were not counted are listed — and can be marked missing when you close.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for st in items %}<tr><td class="name"><a href="{% url 'library:stocktake' st.pk %}">{{ st.started_at|date:"j M Y" }}{% if st.branch %} — {{ st.branch }}{% endif %}</a><br><small class="hint">{{ st.note }}</small></td><td>{% if st.closed_at %}<span class="chip">Closed · {{ st.missing_count }} missing</span>{% else %}<span class="chip gold">Open</span>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No stock-takes yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Start a stock-take</h3>
+    {% if branches %}<div><label>Branch</label><select name="branch"><option value="">Whole library</option>{% for br in branches %}<option value="{{ br.pk }}">{{ br }}</option>{% endfor %}</select></div>{% endif %}
+    <div><label>Note</label><input name="note" maxlength="255" placeholder="e.g. End of session count"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Start</button>
+  </form>
+</div>
+{% endblock %}

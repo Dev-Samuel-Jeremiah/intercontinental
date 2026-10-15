@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}AI assistants{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">AI assistants</div>
+  <h1 class="fin-title">Let AI do the <em>first draft</em></h1>
+  <p class="fin-sub">Every AI tool here writes a draft for you to check. Nothing reaches a parent until a member of staff has read and approved it.</p>
+</div>{% if is_admin %}<a class="fin-btn" href="{% url 'assistant:settings' %}"><i class="bi bi-sliders"></i> AI settings &amp; usage</a>{% endif %}</div>
+{% if not ready %}<div class="note"><i class="bi bi-plug"></i><span>No AI provider is connected yet. Add <code>OPENAI_API_KEY</code> to the server's .env file and restart.</span></div>
+{% elif not enabled %}<div class="note"><i class="bi bi-pause-circle"></i><span>AI is switched off for this school.{% if is_admin %} Switch it on under AI settings.{% endif %}</span></div>{% endif %}
+<div class="ai-tools">
+  <a class="ai-tool" href="{% url 'curriculum:note_new' %}"><i class="bi bi-journal-richtext"></i><h3>Lesson note drafts</h3><p>Open a new lesson note, pick the topic and press "Draft with AI". You edit it before sending it for review.</p></a>
+  <a class="ai-tool" href="{% url 'assistant:questions' %}"><i class="bi bi-patch-question"></i><h3>Question generator</h3><p>Multiple-choice or true/false questions with answers and explanations, from a topic or your own text, into the question bank.</p></a>
+  <a class="ai-tool" href="{% url 'assistant:new_message' %}"><i class="bi bi-envelope-paper-heart"></i><h3>Message to a parent</h3><p>Respectful drafts about fees, behaviour or attendance, in English, Hausa, Yoruba, Igbo or Pidgin.</p></a>
+  <a class="ai-tool" href="{% url 'assistant:drafts' %}"><i class="bi bi-inbox"></i><h3>Review queue{% if pending %} <span class="chip amber">{{ pending }}</span>{% endif %}</h3><p>{% if approver %}Check, edit and approve AI messages before they are sent.{% else %}Your drafts and whether they were sent.{% endif %}</p></a>
+  {% if is_admin or fees %}<a class="ai-tool" href="{% url 'assistant:ask' %}"><i class="bi bi-chat-square-quote"></i><h3>Ask about your records</h3><p>"How many JSS2 students owe more than ₦50,000?" — answers come straight from your records.</p></a>{% endif %}
+  <a class="ai-tool" href="{% url 'assistant:at_risk' %}"><i class="bi bi-exclamation-diamond"></i><h3>Early warning</h3><p>Students slipping on attendance or results, with AI-suggested next steps for the form teacher.</p></a>
+  <a class="ai-tool" href="{% url 'assistant:safety' %}"><i class="bi bi-shield-check"></i><h3>Held posts</h3><p>Class discussion posts the safety check held back for a teacher to look at.</p></a>
+  <a class="ai-tool" href="{% url 'announcements:announcement_list' %}"><i class="bi bi-translate"></i><h3>Translate notices</h3><p>Open an announcement and choose "Translate" to give parents Hausa, Yoruba, Igbo or Pidgin versions.</p></a>
+</div>
+<div class="panel"><div class="panel-b">
+  <div style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap"><b>This month's AI allowance</b><span class="hint">{{ used|intcomma }} of {{ cap|intcomma }} tokens</span></div>
+  <div class="meter{% if pct >= 90 %} hot{% endif %}"><i style="width:{{ pct }}%"></i></div>
+  <p class="hint" style="margin:0">About 1,000 tokens is a page of text. The allowance resets on the 1st.</p>
+</div></div>
+{% endblock %}

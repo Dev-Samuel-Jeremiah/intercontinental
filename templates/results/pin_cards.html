@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Result PIN cards{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(85mm,1fr));gap:4mm}
+  .pc{background:#fffdf8;color:#1c1917;border-radius:8px;padding:5mm 6mm;border:1px dashed #f4d21f;font-family:'Outfit',system-ui,sans-serif;break-inside:avoid}
+  .pc *{color:#1c1917}
+  .pc .s{font-weight:800;font-size:12px;letter-spacing:.06em}
+  .pc .p{font-size:20px;font-weight:800;letter-spacing:.18em;margin:2mm 0;padding:2mm;background:#f3ead8;border-radius:4px;text-align:center}
+  .pc .h{font-size:9.5px;color:#57534e!important;line-height:1.45}
+  @media print{body *{visibility:hidden!important}.cards,.cards *{visibility:visible!important}.cards{position:absolute;left:0;top:0;width:100%}@page{size:A4;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Result PINs</div>
+  <h1 class="fin-title">{{ batch.name }}</h1>
+  <p class="fin-sub">{{ pins|length }} card{{ pins|length|pluralize }}{% if unused_only %} not yet used{% endif %}. Print on A4 and cut along the dashed lines. Keep printed cards safe — anyone holding a card can use it.</p>
+</div><div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button><a class="fin-btn fin-btn-sm" href="{% url 'results:release' %}"><i class="bi bi-arrow-left"></i> Back</a></div></div>
+<div class="cards">{% for p in pins %}<div class="pc">
+  <div class="s">{{ school.name|upper }}</div>
+  <div class="h">Result checker card · Serial {{ p.serial }}{% if batch.price %} · ₦{{ batch.price|floatformat:0 }}{% endif %}</div>
+  <div class="p">{{ p.pin|slice:":4" }} {{ p.pin|slice:"4:8" }} {{ p.pin|slice:"8:" }}</div>
+  <div class="h">Log in to the parent portal at {{ portal }}, open the result and enter this PIN. Works for one child and one term, up to {{ p.max_uses }} times.</div>
+</div>{% empty %}<p class="hint">No cards to print.</p>{% endfor %}</div>
+{% endblock %}

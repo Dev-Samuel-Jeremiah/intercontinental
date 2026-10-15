@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Branding{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Administration</div>
+  <h1 class="fin-title"><em>Branding</em></h1>
+  <p class="fin-sub">Your colours and icon on every page your staff, students and parents see. The school's logo, name and motto are set in <a href="{% url 'school_settings:home' %}">School settings</a>.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="brand">
+    <h3 style="margin:0 0 .6rem">Look</h3>
+    <div class="row2"><div><label>Main colour</label><input type="color" name="primary" value="{{ b.primary|default:'#f4d21f' }}" style="height:42px"></div><div><label>Second colour</label><input type="color" name="accent" value="{{ b.accent|default:'#ffe580' }}" style="height:42px"></div></div>
+    <div><label>Browser icon (PNG, under 500 KB)</label><input type="file" name="favicon" accept="image/png,image/x-icon">{% if b.favicon %}<img src="{{ b.favicon.url }}" alt="" style="height:32px;margin-top:.4rem">{% endif %}</div>
+    <div><label>Message on the sign-in page</label><input name="login_message" value="{{ b.login_message|default:'' }}" maxlength="255" placeholder="Welcome to our school portal"></div>
+    <div><label>Name emails come from</label><input name="email_from_name" value="{{ b.email_from_name|default:'' }}" maxlength="80"></div>
+    <div><label>Portal name (optional — shown under the school name)</label><input name="brand_name" value="{{ b.brand_name|default:'' }}" maxlength="80" placeholder="School Portal"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

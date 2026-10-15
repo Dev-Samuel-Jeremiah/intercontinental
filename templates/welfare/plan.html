@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Support plan — {{ p.student.full_name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Care · {{ p.title }}</div>
+  <h1 class="fin-title"><em>{{ p.student.full_name }}</em></h1>
+  <p class="fin-sub">{{ p.student.class_assigned|default:"" }} · from {{ p.starts|date:"j M Y" }} · review {{ p.review_on|date:"j M Y" }}{% if p.owner %} · {{ p.owner.full_name }}{% endif %} · {{ p.get_status_display }}{% if p.parent_agreed %} · agreed with parents{% endif %}</p>
+</div><button class="fin-btn fin-btn-sm no-print" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b">
+      <h3 style="margin:0 0 .3rem">What they find hard</h3><p>{{ p.needs|linebreaksbr }}</p>
+      {% if p.strengths %}<h3 style="margin:.8rem 0 .3rem">Strengths</h3><p>{{ p.strengths|linebreaksbr }}</p>{% endif %}
+      <h3 style="margin:.8rem 0 .3rem">Goals</h3><ul>{% for g in p.goal_list %}<li>{{ g }}</li>{% endfor %}</ul>
+      <h3 style="margin:.8rem 0 .3rem">What we will do</h3><p>{{ p.strategies|linebreaksbr }}</p>
+      {% if support and support.adjustments %}<p class="hint">Exam and classroom adjustments: {{ support.adjustments|join:", " }}{% if support.classroom_notes %} · {{ support.classroom_notes }}{% endif %}</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Reviews</h3></div><div class="panel-b">
+      {% for r in reviews %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ r.date|date:"j M Y" }}</b> <span class="chip{% if r.rating == 'MET' %} ok{% elif r.rating == 'BEHIND' %} red{% else %} gold{% endif %}">{{ r.get_rating_display }}</span> <span class="hint">{{ r.by.get_full_name|default:r.by.username }}</span><div style="font-size:.9rem">{{ r.progress|linebreaksbr }}</div>{% if r.next_steps %}<div class="hint">Next: {{ r.next_steps }}</div>{% endif %}</div>
+      {% empty %}<p class="empty">Not reviewed yet.</p>{% endfor %}
+    </div></div>
+  </div>
+  {% if can %}<div style="display:grid;gap:1.2rem" class="no-print">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="review">
+      <h3 style="margin:0 0 .6rem">Review</h3>
+      <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Progress</label><select name="rating"><option value="SOME">Some progress</option><option value="MET">Goals met</option><option value="BEHIND">Not yet</option></select></div></div>
+      <div><label>How it has gone</label><textarea name="progress" rows="3" required></textarea></div>
+      <div><label>Next steps</label><textarea name="next_steps" rows="2"></textarea></div>
+      <div class="row2"><div><label>Next review</label><input type="date" name="next_review"></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="close"> Close the plan</label></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save review</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="edit">
+      <h3 style="margin:0 0 .6rem">Edit the plan</h3>
+      {% include "welfare/_plan_form.html" %}
+      <button class="fin-btn" type="submit">Save</button>
+    </form>
+  </div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% include "finance/_fin_styles.html" %}
+<style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}.pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .5rem .3rem 0;font-size:.85rem}.pill input{width:auto}
+.fnav{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem;align-items:center}.fnav small{color:var(--slate);font-size:.65rem;letter-spacing:1px;text-transform:uppercase;margin:0 .2rem 0 .5rem}
+.lines td{padding:.15rem .2rem}.lines input,.lines select{width:100%}</style>
+<div class="fnav no-print">
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:home' %}"><i class="bi bi-building-gear"></i> Overview</a>
+  <small>Buying</small>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:requisitions' %}">Requisitions</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:orders' %}">Orders</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:vendors' %}">Vendors</a>
+  <small>Assets</small>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:assets' %}">Register</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:disposals' %}">Disposals</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:counts' %}">Stock count</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:chemicals' %}">Lab chemicals</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:kitchen' %}">Kitchen</a>
+  <small>Site</small>
+  <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'facilities:maintenance' %}"><i class="bi bi-tools"></i> Report a fault</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:preventive' %}">Servicing</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:generators' %}">Generators</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:utilities' %}">Utilities</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:spaces' %}">Spaces</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:cleaning' %}">Cleaning</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:patrols' %}">Patrols</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:hire' %}">Hall hire</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:settings' %}"><i class="bi bi-gear"></i></a>
+</div>

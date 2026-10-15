@@ -1,0 +1,25 @@
+<div class="card">
+  <h2><i class="bi bi-link-45deg" style="color:var(--champagne-lt)"></i> Your private calendar link</h2>
+  <div class="url"><input id="feedurl" value="{{ url }}" readonly onclick="this.select()" aria-label="Calendar link">
+    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('feedurl').value).then(()=>{this.textContent='Copied'})">Copy</button></div>
+  <a class="btn" href="{{ webcal }}"><i class="bi bi-phone"></i> Open in my calendar app</a>
+  <a class="btn" href="{% url 'timetable:calendar_download' %}" style="background:none;border:1px solid var(--rim2);color:var(--slate2)"><i class="bi bi-download"></i> Download once (.ics)</a>
+  <p class="hint" style="margin-top:.9rem">Keep this link to yourself — anyone with it can see your calendar.{% if feed.last_used_at %} Last checked by a calendar app {{ feed.last_used_at|timesince }} ago.{% endif %}</p>
+</div>
+<div class="card">
+  <h2><i class="bi bi-google" style="color:var(--champagne-lt)"></i> Google Calendar</h2>
+  <ol><li>On a computer, open calendar.google.com.</li><li>Next to <b>Other calendars</b>, press <b>+</b> then <b>From URL</b>.</li><li>Paste the link above and press <b>Add calendar</b>. It shows on your phone too.</li></ol>
+</div>
+<div class="card">
+  <h2><i class="bi bi-apple" style="color:var(--champagne-lt)"></i> iPhone, iPad or Mac</h2>
+  <ol><li>Press <b>Open in my calendar app</b> above, then <b>Subscribe</b>.</li><li>Or go to Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar, and paste the link.</li></ol>
+</div>
+<div class="card">
+  <h2><i class="bi bi-microsoft" style="color:var(--champagne-lt)"></i> Outlook</h2>
+  <ol><li>In Outlook on the web, open the calendar and choose <b>Add calendar</b> → <b>Subscribe from web</b>.</li><li>Paste the link and give it a name.</li></ol>
+</div>
+<div class="card">
+  <h2><i class="bi bi-shield-lock" style="color:var(--champagne-lt)"></i> Lost your phone or shared the link?</h2>
+  <form method="post">{% csrf_token %}<p class="hint" style="margin:0">Make a new link. The old one stops working straight away, so you'll need to add the new one to your calendar again.</p>
+    <button class="ghost" type="submit" onclick="return confirm('Switch off the old link and make a new one?')">Make a new link</button></form>
+</div>

@@ -1,0 +1,761 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ action }} Configuration{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:980px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+.page-header{
+  margin-bottom:2rem;
+}
+
+.page-header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.55rem .9rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.18);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.header-divider{
+  position:relative;
+  margin-top:1.4rem;
+  border-top:1px solid var(--rim);
+}
+
+.header-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.25rem 1.5rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.panel-icon{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--purple-dim);
+  border:1px solid var(--purple-border);
+  color:var(--purple);
+  font-size:.95rem;
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.back-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  color:var(--champagne);
+  text-decoration:none;
+  font-size:.84rem;
+  font-weight:500;
+  transition:.25s ease;
+}
+
+.back-link:hover{
+  color:var(--champagne-lt);
+}
+
+.panel-body{
+  padding:2rem;
+}
+
+.alert-box{
+  display:flex;
+  align-items:flex-start;
+  gap:1rem;
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  margin-bottom:1.5rem;
+  animation:riseUp .45s ease both;
+}
+
+.alert-icon{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(239,68,68,.16);
+  color:var(--red);
+  flex-shrink:0;
+}
+
+.alert-content{
+  color:#ffb5b5;
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.form-grid{
+  display:grid;
+  gap:1.5rem;
+}
+
+.form-group{
+  animation:riseUp .45s ease both;
+}
+
+.form-label{
+  display:block;
+  margin-bottom:.7rem;
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:600;
+}
+
+.form-control{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:.95rem 1rem;
+  color:var(--white);
+  font-size:.94rem;
+  transition:.25s ease;
+  box-sizing:border-box;
+}
+
+.form-control:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+  outline:none;
+}
+
+.error-text{
+  margin-top:.45rem;
+  color:#ff8f8f;
+  font-size:.78rem;
+}
+
+.day-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.8rem;
+}
+
+.day-option{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.8rem 1rem;
+  border-radius:11px;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+  cursor:pointer;
+  transition:.25s ease;
+  font-size:.9rem;
+}
+
+.day-option:hover{
+  background:var(--surface3);
+  border-color:var(--champagne);
+}
+
+.day-option input{
+  accent-color:var(--champagne);
+}
+
+.slot-list{
+  border:1px solid var(--rim);
+  border-radius:14px;
+  overflow:hidden;
+  background:var(--surface2);
+}
+
+.slot-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1rem 1.1rem;
+  border-bottom:1px solid var(--rim);
+  transition:.2s ease;
+}
+
+.slot-row:last-child{
+  border-bottom:none;
+}
+
+.slot-row:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.slot-left{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+}
+
+.slot-check{
+  accent-color:var(--champagne);
+}
+
+.slot-avatar{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(
+    135deg,
+    rgba(139,92,246,.95),
+    rgba(244,210,31,.85)
+  );
+  color:#fff;
+  font-size:.82rem;
+  font-weight:700;
+  letter-spacing:.5px;
+}
+
+.slot-name{
+  color:var(--white);
+  font-size:.92rem;
+  font-weight:500;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.badge-break{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.inline-link{
+  color:var(--champagne);
+  text-decoration:none;
+  font-size:.78rem;
+  font-weight:600;
+}
+
+.inline-link:hover{
+  color:var(--champagne-lt);
+}
+
+.empty-state{
+  text-align:center;
+  padding:2.4rem 1rem;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  background:var(--surface3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--slate2);
+  font-size:1.8rem;
+}
+
+.empty-title{
+  margin:0 0 .45rem;
+  color:var(--white);
+  font-size:1rem;
+  font-weight:600;
+}
+
+.empty-subtitle{
+  margin:0;
+  color:var(--slate2);
+  font-size:.9rem;
+  line-height:1.6;
+}
+
+.toggle-row{
+  display:flex;
+  align-items:flex-start;
+  gap:.9rem;
+  background:var(--surface2);
+  border:1px solid var(--rim);
+  border-radius:14px;
+  padding:1rem 1.1rem;
+}
+
+.toggle-row input{
+  margin-top:.2rem;
+  accent-color:var(--champagne);
+}
+
+.toggle-title{
+  color:var(--white);
+  font-size:.94rem;
+  font-weight:600;
+  margin-bottom:.25rem;
+}
+
+.toggle-subtitle{
+  color:var(--slate2);
+  font-size:.82rem;
+  line-height:1.6;
+}
+
+.form-actions{
+  display:flex;
+  gap:1rem;
+  margin-top:2rem;
+  flex-wrap:wrap;
+}
+
+.btn-submit{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.65rem;
+  padding:.95rem 1.5rem;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  font-size:.92rem;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+  transition:.25s ease;
+}
+
+.btn-submit:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(244,210,31,.28);
+}
+
+.btn-cancel{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.6rem;
+  padding:.95rem 1.3rem;
+  border-radius:12px;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+  text-decoration:none;
+  font-size:.92rem;
+  font-weight:600;
+  transition:.25s ease;
+}
+
+.btn-cancel:hover{
+  background:var(--surface3);
+  border-color:var(--rim3);
+  color:var(--white);
+  transform:translateY(-2px);
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (max-width:768px){
+
+  .your-wrap{
+    padding:1.5rem 1.2rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.3rem;
+  }
+
+  .page-header-top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .panel-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .panel-body{
+    padding:1.4rem;
+  }
+
+  .slot-row{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .form-actions{
+    flex-direction:column;
+  }
+
+  .btn-submit,
+  .btn-cancel{
+    width:100%;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <div class="page-header">
+
+    <div class="page-header-top">
+
+      <div class="eyebrow">
+        Timetable Management
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-sliders2"></i>
+        {{ action }} Mode
+      </div>
+
+    </div>
+
+    <h1 class="page-title">
+      {{ action }} <em>Configuration</em>
+    </h1>
+
+    <div class="header-divider"></div>
+
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="panel-icon">
+          <i class="bi bi-calendar-week"></i>
+        </div>
+
+        <h3>Timetable Configuration Settings</h3>
+      </div>
+
+      <a href="{% url 'timetable:admin_index' %}" class="back-link">
+        <i class="bi bi-arrow-left"></i>
+        Back
+      </a>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% if messages %}
+        {% for msg in messages %}
+        <div class="alert-box">
+          <div class="alert-icon">
+            <i class="bi bi-exclamation-circle"></i>
+          </div>
+
+          <div class="alert-content">
+            {{ msg }}
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <!-- Name -->
+          <div class="form-group">
+
+            <label class="form-label">
+              Configuration Name
+            </label>
+
+            <input type="text"
+                   name="name"
+                   value="{{ form.name.value|default:'' }}"
+                   placeholder='e.g. "2024/2025 First Term"'
+                   class="form-control">
+
+            {% if form.name.errors %}
+            <p class="error-text">
+              {{ form.name.errors.0 }}
+            </p>
+            {% endif %}
+
+          </div>
+
+          <!-- Active Days -->
+          <div class="form-group">
+
+            <label class="form-label">
+              Active School Days
+            </label>
+
+            <div class="day-grid">
+
+              {% for value, label in form.fields.active_days_select.choices %}
+              <label class="day-option">
+
+                <input type="checkbox"
+                       name="active_days_select"
+                       value="{{ value }}"
+                       {% if value in form.fields.active_days_select.initial %}checked{% endif %}>
+
+                <span>{{ label }}</span>
+
+              </label>
+              {% endfor %}
+
+            </div>
+
+          </div>
+
+          <!-- Time Slots -->
+          <div class="form-group">
+
+            <label class="form-label">
+              Time Slots
+              <a href="{% url 'timetable:slot_create' %}"
+                 target="_blank"
+                 class="inline-link">
+                <i class="bi bi-plus-circle"></i>
+                Add New Slot
+              </a>
+            </label>
+
+            <div class="slot-list">
+
+              {% for slot in time_slots %}
+              <label class="slot-row">
+
+                <div class="slot-left">
+
+                  <input type="checkbox"
+                         name="time_slots"
+                         value="{{ slot.pk }}"
+                         class="slot-check"
+                         {% if slot in form.instance.time_slots.all %}checked{% endif %}>
+
+                  <div class="slot-avatar">
+                    TS
+                  </div>
+
+                  <div class="slot-name">
+                    {{ slot }}
+                  </div>
+
+                </div>
+
+                {% if slot.is_break %}
+                <span class="badge badge-break">
+                  <i class="bi bi-cup-hot"></i>
+                  Break
+                </span>
+                {% endif %}
+
+              </label>
+
+              {% empty %}
+
+              <div class="empty-state">
+
+                <div class="empty-icon">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+
+                <h4 class="empty-title">
+                  No Time Slots Available
+                </h4>
+
+                <p class="empty-subtitle">
+                  Create timetable slots before assigning them to a configuration.
+                  <br>
+                  <a href="{% url 'timetable:slot_create' %}" class="inline-link">
+                    Create a New Slot
+                  </a>
+                </p>
+
+              </div>
+
+              {% endfor %}
+
+            </div>
+
+          </div>
+
+          <!-- Active -->
+          <div class="form-group">
+
+            <div class="toggle-row">
+
+              <input type="checkbox"
+                     name="is_active"
+                     {% if form.is_active.value %}checked{% endif %}>
+
+              <div>
+
+                <div class="toggle-title">
+                  Set as Active Configuration
+                </div>
+
+                <div class="toggle-subtitle">
+                  Only one timetable configuration can remain active at a time.
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+
+          <button type="submit" class="btn-submit">
+            <i class="bi bi-check2-circle"></i>
+            {{ action }} Configuration
+          </button>
+
+          <a href="{% url 'timetable:admin_index' %}" class="btn-cancel">
+            <i class="bi bi-x-circle"></i>
+            Cancel
+          </a>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

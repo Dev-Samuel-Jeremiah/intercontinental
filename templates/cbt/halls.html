@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Exam halls{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">CBT &amp; Exams</div>
+  <h1 class="fin-title">Exam <em>halls</em></h1>
+  <p class="fin-sub">Halls and computer labs with their seat layout, used to build seating plans.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'cbt:timetables' %}"><i class="bi bi-calendar3"></i> Exam timetables</a></div>
+{% include "cbt/_bank_msgs.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add a hall</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Name</label><input name="name" required maxlength="80" placeholder="Main hall / Computer lab 1"></div>
+      <div class="row2"><div><label>Rows</label><input type="number" name="rows" value="6" min="1" max="40"></div><div><label>Seats per row</label><input type="number" name="columns" value="6" min="1" max="40"></div></div>
+      <div><label>Note <span class="hint">(optional)</span></label><input name="notes" maxlength="160" placeholder="30 working PCs"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add hall</button></form></div></div>
+  <div class="panel">{% if halls %}<table class="tbl"><thead><tr><th>Hall</th><th>Layout</th><th>Seats</th><th></th></tr></thead><tbody>
+    {% for h in halls %}<tr{% if not h.active %} style="opacity:.55"{% endif %}><td class="name">{{ h.name }}<div class="hint">{{ h.notes }}</div></td><td>{{ h.rows }} × {{ h.columns }}</td><td><b>{{ h.capacity }}</b></td>
+      <td><details><summary class="fin-btn fin-btn-sm" style="list-style:none"><i class="bi bi-pencil"></i></summary>
+        <form method="post" class="fin-form" style="margin-top:.5rem;min-width:240px">{% csrf_token %}<input type="hidden" name="id" value="{{ h.id }}">
+          <input name="name" value="{{ h.name }}" maxlength="80"><div class="row2"><input type="number" name="rows" value="{{ h.rows }}" min="1" max="40"><input type="number" name="columns" value="{{ h.columns }}" min="1" max="40"></div>
+          <input name="notes" value="{{ h.notes }}" maxlength="160">
+          <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="active" style="width:auto" {% if h.active %}checked{% endif %}> In use</label>
+          <div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold fin-btn-sm">Save</button><button class="fin-btn fin-btn-danger fin-btn-sm" name="action" value="delete" onclick="return confirm('Remove {{ h.name|escapejs }}? Seating plans using it are removed.')">Remove</button></div>
+        </form></details></td></tr>{% endfor %}
+  </tbody></table>{% else %}<div class="empty"><i class="bi bi-building"></i><p>No halls yet.</p></div>{% endif %}</div>
+</div>
+{% endblock %}

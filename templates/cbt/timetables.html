@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Exam timetables{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.cls{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.3rem .7rem;max-height:220px;overflow:auto}.cls label{display:flex;gap:.4rem;align-items:center;font-size:.85rem;color:var(--slate2)}.cls input{width:auto}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">CBT &amp; Exams</div>
+  <h1 class="fin-title">Exam <em>timetables</em></h1>
+  <p class="fin-sub">Choose the classes and dates — one paper per subject per level is placed so no class ever sits two papers at once, spread across the days.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'cbt:halls' %}"><i class="bi bi-building"></i> Exam halls</a></div>
+{% include "cbt/_bank_msgs.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-magic"></i> Build a timetable</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Name</label><input name="name" required maxlength="120" placeholder="First term examinations"></div>
+      <div class="row2"><div><label>Starts</label><input type="date" name="start_date" required></div><div><label>Ends</label><input type="date" name="end_date" required></div></div>
+      <div class="row2"><div><label>Term</label><select name="term"><option value="">—</option>{% for t in terms %}<option value="{{ t.id }}" {% if t.id == active_term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select></div><div><label>Minutes per paper</label><input type="number" name="paper_minutes" value="90" min="15" max="240"></div></div>
+      <div class="row2"><div><label>Morning paper</label><input type="time" name="morning_start" value="09:00"></div><div><label>Afternoon paper</label><input type="time" name="afternoon_start" value="12:00"></div></div>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="afternoon" checked style="width:auto"> Two papers a day</label>
+      <div><label>Classes</label><div class="cls">{% for c in classes %}<label><input type="checkbox" name="classes" value="{{ c.id }}" checked> {{ c.name }}</label>{% endfor %}</div></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-magic"></i> Build timetable</button>
+      <p class="hint" style="margin:0">Weekends and public holidays are skipped. Arms of a level (JSS 1A, JSS 1B) sit the same paper together.</p>
+    </form></div></div>
+  <div class="panel">{% if items %}<table class="tbl"><thead><tr><th>Timetable</th><th>Dates</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for t in items %}<tr><td class="name">{{ t.name }}<div class="hint">{{ t.classes.all|length }} classes</div></td><td>{{ t.start_date|date:"j M" }} – {{ t.end_date|date:"j M Y" }}</td><td>{% if t.published %}<span class="chip green">published</span>{% else %}<span class="chip">draft</span>{% endif %}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'cbt:timetable' t.id %}">Open</a></td></tr>{% endfor %}
+  </tbody></table>{% else %}<div class="empty"><i class="bi bi-calendar3"></i><p>No exam timetables yet.</p></div>{% endif %}</div>
+</div>
+{% endblock %}

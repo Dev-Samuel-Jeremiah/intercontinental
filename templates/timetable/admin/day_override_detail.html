@@ -1,0 +1,570 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ override.label }}{% endblock %}
+
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+  /* design tokens come from dashboard/base.html */
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Wrap ── */
+  .dod-wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── Breadcrumb ── */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--slate);
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+  }
+  .breadcrumb a { color: var(--slate2); text-decoration: none; transition: color .18s; }
+  .breadcrumb a:hover { color: var(--champagne); }
+  .breadcrumb i { font-size: .6rem; color: var(--slate); }
+  .breadcrumb span { color: var(--slate); }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 2rem; }
+  .eyebrow {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 1.6px;
+    text-transform: uppercase; color: var(--champagne); margin-bottom: 10px;
+  }
+  .eyebrow::before {
+    content: ''; display: block;
+    width: 28px; height: 1px;
+    background: var(--champagne); opacity: .7;
+  }
+  .header-row {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 1rem;
+  }
+  .header-left { flex: 1; min-width: 0; }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 600; line-height: 1.15;
+    color: var(--white); margin: 0;
+  }
+  .page-title em { font-style: italic; color: var(--champagne); }
+  .header-meta {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; margin-top: 8px;
+  }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.78rem; color: var(--slate);
+  }
+  .meta-chip i { font-size: .75rem; }
+  .meta-chip strong { color: var(--slate2); font-weight: 600; }
+  .meta-sep { color: var(--rim3); }
+  .badge-active {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--green-dim); border: 1px solid var(--green-border);
+    color: var(--green); font-size: 0.68rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .badge-inactive {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface3); border: 1px solid var(--rim2);
+    color: var(--slate); font-size: 0.68rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .override-desc {
+    font-size: 0.82rem; color: var(--slate2);
+    margin-top: 8px; line-height: 1.5;
+  }
+  .header-actions {
+    display: flex; gap: 8px; flex-shrink: 0;
+    flex-wrap: wrap; margin-top: 4px;
+  }
+  .btn-edit-outline {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: transparent; border: 1px solid var(--rim2);
+    color: var(--slate2); padding: 9px 16px; border-radius: 9px;
+    font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 600;
+    text-decoration: none;
+    transition: border-color .18s, color .18s, background .18s;
+  }
+  .btn-edit-outline:hover {
+    border-color: var(--rim3); color: var(--white);
+    background: var(--surface3);
+  }
+  .btn-add-slot {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44; padding: 9px 18px; border-radius: 9px;
+    font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+    transition: transform .18s, box-shadow .18s, filter .18s;
+  }
+  .btn-add-slot:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(244,210,31,.32);
+    filter: brightness(1.07); color: #fff;
+  }
+  .header-divider {
+    position: relative; height: 1px;
+    background: var(--rim); margin-top: 16px;
+  }
+  .header-divider::after {
+    content: ''; position: absolute;
+    left: 0; top: -0.5px; width: 80px; height: 2px;
+    background: var(--champagne); border-radius: 2px;
+  }
+
+  /* ── Flash messages ── */
+  .flash-msg {
+    display: flex; align-items: center; gap: 8px;
+    border-radius: 10px; padding: 11px 14px;
+    font-size: 0.82rem; font-weight: 500;
+    margin-bottom: 10px; animation: riseUp .35s ease both;
+  }
+  .flash-msg.error   { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
+  .flash-msg.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+
+  /* ── Panel base ── */
+  .panel {
+    position: relative; background: var(--surface);
+    border: 1px solid var(--rim); border-radius: 16px;
+    overflow: hidden; animation: riseUp .45s ease both;
+  }
+  .panel::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none; z-index: 1;
+  }
+  .panel-header {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+    padding: 18px 24px; border-bottom: 1px solid var(--rim);
+  }
+  .panel-header-left { display: flex; align-items: center; gap: 12px; }
+  .panel-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+  .panel-icon.amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+  .panel-icon.purple { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+  .panel-icon.blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+  .panel-header h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem; font-weight: 600;
+    color: var(--white); margin: 0;
+  }
+
+  /* ── Schedule Preview ── */
+  .preview-panel { margin-bottom: 20px; animation-delay: .08s; }
+  .preview-track {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    border-top: 1px solid var(--rim);
+  }
+  .preview-block {
+    padding: 20px 22px;
+    border-right: 1px solid var(--rim);
+    display: flex; flex-direction: column; gap: 4px;
+    transition: background .15s;
+  }
+  .preview-block:last-child { border-right: none; }
+  .preview-block:hover { background: rgba(255,255,255,.02); }
+
+  .preview-block-label {
+    font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .8px;
+    margin-bottom: 4px;
+  }
+  .preview-block-label.regular { color: var(--blue); }
+  .preview-block-label.club    { color: var(--amber); }
+  .preview-block-label.sport   { color: var(--green); }
+  .preview-block-label.exam    { color: var(--red); }
+  .preview-block-label.other   { color: var(--purple); }
+
+  .preview-block-time {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 600;
+    color: var(--white); line-height: 1;
+  }
+  .preview-block-name {
+    font-size: 0.8rem; font-weight: 600; color: var(--white);
+    margin-top: 2px;
+  }
+  .preview-block-sub { font-size: 0.75rem; color: var(--slate); }
+  .preview-block-venue {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.72rem; color: var(--slate); margin-top: 4px;
+  }
+
+  /* empty preview slot */
+  .preview-empty {
+    padding: 24px; display: flex;
+    align-items: center; justify-content: center;
+    border-right: none;
+  }
+  .preview-empty-inner {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; text-align: center;
+  }
+  .preview-empty-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--surface3); border: 1px dashed var(--rim2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; color: var(--slate);
+  }
+  .preview-empty-text { font-size: 0.75rem; color: var(--slate); }
+
+  /* ── Special Slots Table panel ── */
+  .slots-panel { animation-delay: .14s; }
+  .slots-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem;
+  }
+  .slots-table thead tr { border-bottom: 1px solid var(--rim2); }
+  .slots-table thead th {
+    padding: 10px 14px; font-size: 0.68rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px; color: var(--slate);
+    white-space: nowrap;
+  }
+  .slots-table thead th.center { text-align: center; }
+  .slots-table thead th.right  { text-align: right; }
+  .slots-table tbody tr {
+    border-bottom: 1px solid var(--rim);
+    transition: background .15s;
+  }
+  .slots-table tbody tr:last-child { border-bottom: none; }
+  .slots-table tbody tr:hover { background: rgba(255,255,255,.025); }
+  .slots-table td {
+    padding: 12px 14px; color: var(--slate2); vertical-align: middle;
+  }
+  .slots-table td.center { text-align: center; }
+  .slots-table td.right  { text-align: right; }
+
+  .slot-name-cell {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .slot-avatar {
+    width: 30px; height: 30px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; font-weight: 700;
+    letter-spacing: .4px; text-transform: uppercase; flex-shrink: 0;
+  }
+  .slot-avatar.club  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+  .slot-avatar.sport { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+  .slot-avatar.exam  { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+  .slot-avatar.other { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+  .slot-name-text { font-weight: 600; color: var(--white); }
+
+  .type-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 3px 9px; border-radius: 999px;
+  }
+  .type-badge.club  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+  .type-badge.sport { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+  .type-badge.exam  { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+  .type-badge.other { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+
+  .time-range {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 0.82rem; font-weight: 500; color: var(--white);
+    font-variant-numeric: tabular-nums;
+  }
+  .time-range i { color: var(--slate); font-size: .7rem; }
+  .dash-mark { color: var(--rim3); }
+
+  .applies-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--surface3); border: 1px solid var(--rim2);
+    color: var(--slate2); font-size: 0.7rem; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px;
+  }
+
+  .action-group { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+  .btn-edit-sm {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--blue-dim); border: 1px solid var(--blue-border);
+    color: var(--blue); font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem; font-weight: 600;
+    padding: 5px 12px; border-radius: 8px; text-decoration: none;
+    transition: background .18s, transform .15s;
+  }
+  .btn-edit-sm:hover { background: rgba(96,165,250,.18); transform: translateY(-1px); color: var(--blue); }
+  .btn-del-sm {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--red-dim); border: 1px solid var(--red-border);
+    color: var(--red); font-family: 'Outfit', sans-serif;
+    font-size: 0.75rem; font-weight: 600;
+    padding: 5px 12px; border-radius: 8px; text-decoration: none;
+    transition: background .18s, transform .15s;
+  }
+  .btn-del-sm:hover { background: rgba(248,113,113,.18); transform: translateY(-1px); color: var(--red); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 52px 24px; gap: 12px;
+  }
+  .empty-icon-box {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--surface3); border: 1px solid var(--rim2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; color: var(--slate); margin-bottom: 4px;
+  }
+  .empty-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; font-weight: 600; color: var(--white); margin: 0;
+  }
+  .empty-sub { font-size: 0.82rem; color: var(--slate); margin: 0; max-width: 300px; line-height: 1.5; }
+  .btn-empty-add {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--champagne-dim); border: 1px solid rgba(244,210,31,.25);
+    color: var(--champagne-lt); font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem; font-weight: 600;
+    padding: 9px 20px; border-radius: 10px; text-decoration: none; margin-top: 4px;
+    transition: background .18s, border-color .18s;
+  }
+  .btn-empty-add:hover { background: rgba(244,210,31,.2); border-color: rgba(244,210,31,.38); color: var(--champagne-lt); }
+
+  /* ── Add slot inline button in panel header ── */
+  .btn-add-sm {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44; padding: 7px 14px; border-radius: 8px;
+    font-family: 'Outfit', sans-serif; font-size: 0.775rem; font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(244,210,31,.2);
+    transition: transform .18s, filter .18s;
+  }
+  .btn-add-sm:hover { transform: translateY(-1px); filter: brightness(1.08); color: #fff; }
+</style>
+
+<div class="dod-wrap">
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb">
+    <a href="{% url 'timetable:admin_index' %}">Admin</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'timetable:config_detail' pk=config.pk %}">{{ config.name }}</a>
+    <i class="bi bi-chevron-right"></i>
+    <a href="{% url 'timetable:day_override_list' config_pk=config.pk %}">Day Overrides</a>
+    <i class="bi bi-chevron-right"></i>
+    <span>{{ override.get_day_display }}</span>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">Day Override · {{ config.name }}</div>
+    <div class="header-row">
+      <div class="header-left">
+        <h1 class="page-title"><em>{{ override.label }}</em></h1>
+        <div class="header-meta">
+          <span class="meta-chip">
+            <i class="bi bi-calendar3"></i>
+            <strong>{{ override.get_day_display }}</strong>
+          </span>
+          <span class="meta-sep">·</span>
+          <span class="meta-chip">
+            <i class="bi bi-clock"></i>
+            Lessons end <strong>{{ override.lessons_end_time|time:"H:i" }}</strong>
+          </span>
+          <span class="meta-sep">·</span>
+          {% if override.is_active %}
+            <span class="badge-active"><i class="bi bi-circle-fill" style="font-size:.45rem"></i> Active</span>
+          {% else %}
+            <span class="badge-inactive"><i class="bi bi-circle" style="font-size:.45rem"></i> Inactive</span>
+          {% endif %}
+        </div>
+        {% if override.description %}
+          <p class="override-desc">{{ override.description }}</p>
+        {% endif %}
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'timetable:day_override_edit' config_pk=config.pk pk=override.pk %}" class="btn-edit-outline">
+          <i class="bi bi-pencil"></i> Edit Override
+        </a>
+        <a href="{% url 'timetable:special_slot_create' override_pk=override.pk %}" class="btn-add-slot">
+          <i class="bi bi-plus-lg"></i> Add Special Slot
+        </a>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash-msg {% if message.tags == 'error' %}error{% else %}success{% endif %}">
+        <i class="bi bi-{% if message.tags == 'error' %}exclamation-triangle-fill{% else %}check-circle-fill{% endif %}"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Schedule Preview Panel -->
+  <div class="panel preview-panel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-icon amber"><i class="bi bi-calendar-week"></i></div>
+        <h3>{{ override.get_day_display }} Schedule Preview</h3>
+      </div>
+    </div>
+    <div class="preview-track">
+
+      <!-- Regular lessons block -->
+      <div class="preview-block">
+        <div class="preview-block-label regular">
+          <i class="bi bi-book"></i> Regular Lessons
+        </div>
+        <div class="preview-block-time">Until {{ override.lessons_end_time|time:"H:i" }}</div>
+        <div class="preview-block-sub">Standard timetable applies</div>
+      </div>
+
+      <!-- Special slot blocks -->
+      {% for ss in special_slots %}
+      <div class="preview-block">
+        <div class="preview-block-label
+          {% if ss.slot_type == 'CLUB' %}club
+          {% elif ss.slot_type == 'SPORT' %}sport
+          {% elif ss.slot_type == 'EXAM' %}exam
+          {% else %}other{% endif %}">
+          <i class="bi bi-{% if ss.slot_type == 'CLUB' %}star{% elif ss.slot_type == 'SPORT' %}trophy{% elif ss.slot_type == 'EXAM' %}journal-check{% else %}grid{% endif %}"></i>
+          {{ ss.get_slot_type_display }}
+        </div>
+        <div class="preview-block-name">{{ ss.name }}</div>
+        <div class="preview-block-sub">{{ ss.start_time|time:"H:i" }} – {{ ss.end_time|time:"H:i" }}</div>
+        {% if ss.venue %}
+          <span class="preview-block-venue"><i class="bi bi-geo-alt"></i> {{ ss.venue }}</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <!-- Empty placeholder if no special slots -->
+      {% if not special_slots %}
+      <div class="preview-block preview-empty">
+        <div class="preview-empty-inner">
+          <div class="preview-empty-icon"><i class="bi bi-plus-lg"></i></div>
+          <span class="preview-empty-text">Add a special slot</span>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+  <!-- Special Slots Table Panel -->
+  <div class="panel slots-panel">
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="panel-icon purple"><i class="bi bi-star"></i></div>
+        <h3>Special Time Slots</h3>
+      </div>
+      <a href="{% url 'timetable:special_slot_create' override_pk=override.pk %}" class="btn-add-sm">
+        <i class="bi bi-plus-lg"></i> Add Slot
+      </a>
+    </div>
+
+    {% if special_slots %}
+    <table class="slots-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th class="center">Type</th>
+          <th class="center">Time</th>
+          <th class="center">Venue</th>
+          <th class="center">Supervisor</th>
+          <th class="center">Applies To</th>
+          <th class="right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ss in special_slots %}
+        <tr>
+          <td>
+            <div class="slot-name-cell">
+              <div class="slot-avatar
+                {% if ss.slot_type == 'CLUB' %}club
+                {% elif ss.slot_type == 'SPORT' %}sport
+                {% elif ss.slot_type == 'EXAM' %}exam
+                {% else %}other{% endif %}">
+                {{ ss.name|slice:":2"|upper }}
+              </div>
+              <span class="slot-name-text">{{ ss.name }}</span>
+            </div>
+          </td>
+          <td class="center">
+            <span class="type-badge
+              {% if ss.slot_type == 'CLUB' %}club
+              {% elif ss.slot_type == 'SPORT' %}sport
+              {% elif ss.slot_type == 'EXAM' %}exam
+              {% else %}other{% endif %}">
+              {{ ss.get_slot_type_display }}
+            </span>
+          </td>
+          <td class="center">
+            <span class="time-range">
+              <i class="bi bi-clock"></i>
+              {{ ss.start_time|time:"H:i" }} – {{ ss.end_time|time:"H:i" }}
+            </span>
+          </td>
+          <td class="center">
+            {% if ss.venue %}{{ ss.venue }}{% else %}<span class="dash-mark">—</span>{% endif %}
+          </td>
+          <td class="center">
+            {% if ss.supervisor %}{{ ss.supervisor.full_name }}{% else %}<span class="dash-mark">—</span>{% endif %}
+          </td>
+          <td class="center">
+            {% if ss.applies_to_all_classes %}
+              <span class="applies-pill"><i class="bi bi-people"></i> All classes</span>
+            {% else %}
+              <span class="applies-pill"><i class="bi bi-person"></i> {{ ss.classes.count }} class{{ ss.classes.count|pluralize:"es" }}</span>
+            {% endif %}
+          </td>
+          <td class="right">
+            <div class="action-group">
+              <a href="{% url 'timetable:special_slot_edit' pk=ss.pk %}" class="btn-edit-sm">
+                <i class="bi bi-pencil"></i> Edit
+              </a>
+              <a href="{% url 'timetable:special_slot_delete' pk=ss.pk %}" class="btn-del-sm">
+                <i class="bi bi-trash3"></i> Delete
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box"><i class="bi bi-star"></i></div>
+      <p class="empty-title">No Special Slots Yet</p>
+      <p class="empty-sub">Add Computer Club, Sports periods, Exams, or any custom activity that runs on {{ override.get_day_display }}.</p>
+      <a href="{% url 'timetable:special_slot_create' override_pk=override.pk %}" class="btn-empty-add">
+        <i class="bi bi-plus-lg"></i> Add First Special Slot
+      </a>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

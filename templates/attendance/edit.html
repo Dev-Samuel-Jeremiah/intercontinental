@@ -1,0 +1,117 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit Attendance{% endblock %}
+
+{% block content %}
+<style>
+.ae-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1.6rem; }
+.ae-eyebrow { display:inline-flex; align-items:center; gap:.6rem; font-size:.68rem; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--champagne); margin-bottom:.45rem; }
+.ae-eyebrow::before { content:""; width:26px; height:1px; background:var(--champagne-border); }
+.ae-title { font-family:var(--serif); font-size:clamp(1.7rem,3vw,2.3rem); font-weight:600; line-height:1.15; }
+.ae-title em { font-style:italic; color:var(--champagne-lt); }
+.ae-sub { color:var(--slate2); font-size:.88rem; margin-top:.35rem; }
+
+.ae-card { border-radius:18px; overflow:hidden; background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border:1px solid var(--rim); }
+.ae-card-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; padding:1rem 1.25rem; border-bottom:1px solid var(--rim); }
+.ae-card-head h3 { font-size:.95rem; font-weight:600; display:flex; align-items:center; gap:.55rem; }
+.ae-card-head h3 i { color:var(--champagne-lt); }
+.ae-bulk { display:flex; gap:.5rem; }
+.ae-count { font-size:.78rem; color:var(--slate); }
+.ae-count b { color:var(--green); } .ae-count b.abs { color:var(--red); }
+
+.ae-table { width:100%; border-collapse:collapse; }
+.ae-table th { text-align:left; padding:.8rem 1.25rem; font-size:.68rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--slate); border-bottom:1px solid var(--rim2); }
+.ae-table td { padding:.75rem 1.25rem; border-bottom:1px solid var(--rim); color:var(--slate2); }
+.ae-table tr:last-child td { border-bottom:none; }
+.ae-table tbody tr:hover { background:rgba(255,255,255,.025); }
+.ae-num { color:var(--slate); font-variant-numeric:tabular-nums; width:48px; }
+.ae-name { color:var(--white); font-weight:500; }
+
+/* Present / Absent segmented toggle */
+.ae-toggle { display:inline-flex; padding:3px; border-radius:11px; background:rgba(0,0,0,.3); border:1px solid var(--rim2); }
+.ae-toggle input { position:absolute; opacity:0; pointer-events:none; }
+.ae-toggle label { padding:.38rem .9rem; border-radius:8px; font-size:.78rem; font-weight:600; cursor:pointer; color:var(--slate2); transition:background .2s, color .2s; user-select:none; }
+.ae-toggle input:focus-visible + label { outline:2px solid var(--champagne-lt); outline-offset:1px; }
+.ae-toggle input[value=P]:checked + label { background:var(--green-dim); color:var(--green); box-shadow:inset 0 0 0 1px var(--green-border); }
+.ae-toggle input[value=A]:checked + label { background:var(--red-dim); color:var(--red); box-shadow:inset 0 0 0 1px var(--red-border); }
+
+.ae-foot { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; padding:1rem 1.25rem; border-top:1px solid var(--rim); background:rgba(255,255,255,.015); }
+.ae-btn { display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1.3rem; border-radius:11px; font:inherit; font-size:.86rem; font-weight:600; cursor:pointer; border:1px solid var(--rim2); background:rgba(255,255,255,.04); color:var(--slate2); transition:transform .2s var(--ease), box-shadow .2s, color .2s, border-color .2s; }
+.ae-btn:hover { color:var(--champagne-lt); border-color:var(--champagne-border); }
+.ae-btn-gold { border-color:transparent; color:#0a1f44; background:linear-gradient(135deg, var(--champagne-lt), var(--champagne) 60%, var(--champagne-dk)); box-shadow:0 10px 24px -12px rgba(244,210,31,.8); }
+.ae-btn-gold:hover { color:#0a1f44; transform:translateY(-1px); }
+.ae-btn-sm { padding:.42rem .8rem; font-size:.76rem; border-radius:8px; }
+.ae-empty { text-align:center; padding:3rem 1rem; color:var(--slate); }
+@media (max-width:600px) { .ae-table th:first-child, .ae-table td:first-child { display:none; } .ae-table td, .ae-table th { padding:.7rem .9rem; } }
+</style>
+
+<div class="ae-head">
+  <div>
+    <div class="ae-eyebrow">Attendance</div>
+    <h1 class="ae-title">Edit <em>Attendance</em></h1>
+    <p class="ae-sub">{{ school_class.name }} · {{ date_selected|date:"l, j F Y" }}</p>
+  </div>
+  <a href="{% url 'users:view_attendance' class_id=school_class.id %}" class="ae-btn"><i class="bi bi-arrow-left"></i> Back to class attendance</a>
+</div>
+
+<form method="post" class="ae-card" id="attendanceForm">
+  {% csrf_token %}
+  <div class="ae-card-head">
+    <h3><i class="bi bi-calendar-check-fill"></i> Students</h3>
+    <div class="ae-bulk">
+      <span class="ae-count" id="aeCount"></span>
+      <button type="button" class="ae-btn ae-btn-sm" data-all="P"><i class="bi bi-check2-all"></i> All present</button>
+      <button type="button" class="ae-btn ae-btn-sm" data-all="A"><i class="bi bi-x-lg"></i> All absent</button>
+    </div>
+  </div>
+
+  {% if attendance_records %}
+  <div class="table-responsive">
+    <table class="ae-table">
+      <thead><tr><th>#</th><th>Student</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for record in attendance_records %}
+        <tr>
+          <td class="ae-num">{{ forloop.counter }}</td>
+          <td class="ae-name">{{ record.student.full_name }}</td>
+          <td>
+            <span class="ae-toggle" role="radiogroup" aria-label="Status for {{ record.student.full_name }}">
+              <input type="radio" id="p{{ record.student.id }}" name="status_{{ record.student.id }}" value="P" {% if record.status == 'P' %}checked{% endif %}>
+              <label for="p{{ record.student.id }}">Present</label>
+              <input type="radio" id="a{{ record.student.id }}" name="status_{{ record.student.id }}" value="A" {% if record.status != 'P' %}checked{% endif %}>
+              <label for="a{{ record.student.id }}">Absent</label>
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="ae-empty"><i class="bi bi-people" style="font-size:1.6rem;display:block;margin-bottom:.5rem"></i>No students in this class.</div>
+  {% endif %}
+
+  <div class="ae-foot">
+    <span class="ae-count" style="font-size:.8rem">Changes are saved for {{ date_selected|date:"j M Y" }} only.</span>
+    <button type="submit" class="ae-btn ae-btn-gold"><i class="bi bi-check2-circle"></i> Update Attendance</button>
+  </div>
+</form>
+
+<script>
+(function () {
+  var form = document.getElementById('attendanceForm'), count = document.getElementById('aeCount');
+  function tally() {
+    var p = form.querySelectorAll('input[value=P]:checked').length,
+        a = form.querySelectorAll('input[value=A]:checked').length;
+    count.innerHTML = '<b>' + p + '</b> present · <b class="abs">' + a + '</b> absent';
+  }
+  form.addEventListener('change', tally);
+  form.querySelectorAll('[data-all]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      form.querySelectorAll('input[value=' + btn.getAttribute('data-all') + ']').forEach(function (r) { r.checked = true; });
+      tally();
+    });
+  });
+  tally();
+})();
+</script>
+{% endblock %}

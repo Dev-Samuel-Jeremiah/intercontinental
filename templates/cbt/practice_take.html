@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Practice | {{ request.tenant.name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root{--ink:#0a1d40;--surface:#112850;--surface2:#172f5c;--rim:rgba(255,255,255,.07);--rim2:rgba(255,255,255,.12);--gold:#f4d21f;--gold-lt:#ffe066;--slate:rgba(255,255,255,.45);--white:#f2f5fb;--green:#4ade80;--red:#e87070}
+  *{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--white);font-family:Outfit,system-ui,sans-serif}
+  header{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.7rem 1rem;border-bottom:1px solid var(--rim);background:var(--surface);position:sticky;top:0;z-index:5;flex-wrap:wrap}
+  .timer{font-size:1.3rem;font-weight:700;color:var(--gold-lt);font-variant-numeric:tabular-nums}
+  .timer.low{color:var(--red)}
+  .tabs{display:flex;gap:.3rem;flex-wrap:wrap;padding:.6rem 1rem;border-bottom:1px solid var(--rim)}
+  .tabs button{padding:.45rem .9rem;border-radius:9px;border:1px solid var(--rim2);background:none;color:var(--slate);font:inherit;font-weight:600;cursor:pointer}
+  .tabs button.on{background:var(--gold);color:#0a1f44;border-color:transparent}
+  main{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:1rem;padding:1rem;max-width:1200px;margin:0 auto}
+  .q{display:none;background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:1.2rem}
+  .q.on{display:block}
+  .qn{font-size:.78rem;color:var(--slate);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+  .qt{font-size:1.08rem;line-height:1.6;margin:.5rem 0 1rem}
+  .passage{padding:.8rem 1rem;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--rim);margin-bottom:.8rem;font-size:.92rem;line-height:1.6;white-space:pre-wrap}
+  .opt{display:flex;gap:.7rem;align-items:center;padding:.75rem .9rem;margin:.4rem 0;border-radius:12px;border:1px solid var(--rim2);cursor:pointer}
+  .opt:hover{border-color:var(--gold)}
+  .opt.sel{border-color:var(--gold);background:rgba(244,210,31,.12)}
+  .opt .k{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;border:1px solid var(--rim2);font-weight:700;flex-shrink:0}
+  .opt.sel .k{background:var(--gold);color:#0a1f44;border-color:transparent}
+  .nav{display:flex;justify-content:space-between;margin-top:1rem}
+  button.b{padding:.7rem 1.2rem;border-radius:11px;border:1px solid var(--rim2);background:none;color:var(--white);font:inherit;font-weight:600;cursor:pointer}
+  button.gold{background:linear-gradient(135deg,var(--gold-lt),var(--gold));color:#0a1f44;border:0}
+  aside{background:var(--surface);border:1px solid var(--rim);border-radius:16px;padding:1rem;align-self:start;position:sticky;top:120px}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.3rem}
+  .grid button{aspect-ratio:1;border-radius:8px;border:1px solid var(--rim2);background:none;color:var(--slate);font:inherit;font-size:.78rem;cursor:pointer}
+  .grid button.done{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--green)}
+  .grid button.cur{outline:2px solid var(--gold)}
+  @media(max-width:860px){main{grid-template-columns:1fr}aside{position:static}}
+</style>
+</head>
+<body>
+<header><div><b>{{ request.tenant.name }}</b> · {{ session.get_mode_display }}{% if session.topic %} — {{ session.topic }}{% endif %}<div style="font-size:.8rem;color:var(--slate)">{{ request.user.student.full_name }} · <span id="ans">0</span>/{{ session.total }} answered</div></div>
+  <div style="display:flex;gap:.8rem;align-items:center"><span class="timer" id="timer">--:--</span>
+  <form method="post" id="submitForm">{% csrf_token %}<button class="b gold" type="submit" onclick="return confirm('Submit your practice now?')">Submit</button></form></div></header>
+<div class="tabs" role="tablist">{% for s in sections %}<button type="button" data-sec="{{ forloop.counter0 }}" class="{% if forloop.first %}on{% endif %}">{{ s.subject.name }} <small>({{ s.questions|length }})</small></button>{% endfor %}</div>
+<main>
+  <section id="qs">{% for s in sections %}{% with si=forloop.counter0 %}{% for q in s.questions %}
+    <div class="q" data-sec="{{ si }}" data-i="{{ forloop.counter0 }}" data-qid="{{ q.id }}">
+      <div class="qn">{{ s.subject.name }} · Question {{ forloop.counter }} of {{ s.questions|length }}</div>
+      {% if q.passage %}<div class="passage">{{ q.passage }}</div>{% endif %}
+      <div class="qt">{{ q.text|safe }}</div>
+      {% if q.image %}<img src="{{ q.image.url }}" alt="" style="max-width:100%;max-height:280px;border-radius:12px;margin-bottom:.6rem">{% endif %}
+      {% for o in q.ordered_options %}<div class="opt{% if q.chosen_id == o.id %} sel{% endif %}" data-oid="{{ o.id }}" role="button" tabindex="0"><span class="k">{% cycle 'A' 'B' 'C' 'D' 'E' 'F' %}</span><span>{{ o.text }}</span></div>{% endfor %}{% resetcycle %}
+    </div>{% endfor %}{% endwith %}{% endfor %}
+    <div class="nav"><button class="b" type="button" id="prev"><i class="bi bi-chevron-left"></i> Previous (P)</button><button class="b" type="button" id="next">Next (N) <i class="bi bi-chevron-right"></i></button></div>
+  </section>
+  <aside><div style="font-size:.8rem;color:var(--slate);margin-bottom:.5rem">Questions — tap to jump</div><div class="grid" id="grid"></div></aside>
+</main>
+{% include "cbt/_math.html" %}
+<script>
+(function(){
+  var LEFT={{ left }}, SAVE='{% url "cbt:practice_answer" session.id %}', CSRF='{{ csrf_token }}';
+  var qs=[].slice.call(document.querySelectorAll('.q')), sec=0, cur=0;
+  function inSec(){return qs.filter(q=>+q.dataset.sec===sec);}
+  function show(){var list=inSec();cur=Math.max(0,Math.min(cur,list.length-1));
+    qs.forEach(q=>q.classList.remove('on'));if(list[cur])list[cur].classList.add('on');
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',+b.dataset.sec===sec));
+    var g=document.getElementById('grid');g.innerHTML='';
+    list.forEach(function(q,i){var b=document.createElement('button');b.type='button';b.textContent=i+1;
+      if(q.querySelector('.opt.sel'))b.classList.add('done');if(i===cur)b.classList.add('cur');
+      b.onclick=function(){cur=i;show();};g.appendChild(b);});
+    document.getElementById('ans').textContent=document.querySelectorAll('.opt.sel').length;}
+  function pick(opt){var q=opt.closest('.q');q.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));opt.classList.add('sel');show();
+    fetch(SAVE,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body:JSON.stringify({question:q.dataset.qid,option:opt.dataset.oid})}).catch(function(){});}
+  document.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',()=>pick(o));o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(o);}});});
+  document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{sec=+b.dataset.sec;cur=0;show();}));
+  document.getElementById('prev').onclick=function(){if(cur>0)cur--;else if(sec>0){sec--;cur=1e9;}show();};
+  document.getElementById('next').onclick=function(){if(cur<inSec().length-1)cur++;else if(sec<{{ sections|length }}-1){sec++;cur=0;}show();};
+  document.addEventListener('keydown',function(e){if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;var k=e.key.toUpperCase();
+    if(k==='N')document.getElementById('next').click();else if(k==='P')document.getElementById('prev').click();
+    else if('ABCDEF'.indexOf(k)>=0&&k.length===1){var q=inSec()[cur],o=q&&q.querySelectorAll('.opt')['ABCDEF'.indexOf(k)];if(o)pick(o);}});
+  var t=document.getElementById('timer');
+  function tick(){var m=Math.floor(LEFT/60),s=LEFT%60;t.textContent=m+':'+(s<10?'0':'')+s;t.classList.toggle('low',LEFT<300);
+    if(LEFT<=0){document.getElementById('submitForm').submit();return;}LEFT--;}
+  tick();setInterval(tick,1000);show();
+})();
+</script>
+</body>
+</html>

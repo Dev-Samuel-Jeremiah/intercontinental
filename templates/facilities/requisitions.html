@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Requisitions{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Buying</div>
+  <h1 class="fin-title"><em>Requisitions</em></h1>
+  <p class="fin-sub">Ask for what you need. A store keeper approves requests up to ₦{{ limit|floatformat:0 }}; anything bigger goes to an administrator. You are emailed when it is decided.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if store %}All requisitions{% else %}Your requisitions{% endif %}</h3><form method="get"><select name="status" onchange="this.form.submit()"><option value="">All</option>{% for k, v in statuses %}<option value="{{ k }}" {% if k == status %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></form></div><div class="panel-b">
+    {% for r in rows %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{{ r.title }}</b> <span class="hint">{{ r.created_at|date:"j M" }}{% if store %} · {{ r.requested_by.get_full_name|default:r.requested_by.username }}{% endif %}{% if r.department %} · {{ r.department }}{% endif %}{% if r.needed_by %} · needed by {{ r.needed_by|date:"j M" }}{% endif %}</span>
+      <span class="chip{% if r.status == 'APPROVED' or r.status == 'DONE' %} ok{% elif r.status == 'DECLINED' %} red{% else %} gold{% endif %}">{{ r.get_status_display }}</span>
+      <div class="hint">{% for ln in r.lines.all %}{{ ln.quantity|floatformat:"-2" }} × {{ ln.description }}{% if ln.unit_cost %} @ ₦{{ ln.unit_cost|floatformat:2 }}{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %} — about ₦{{ r.total|floatformat:2 }}</div>
+      <div class="hint">{{ r.reason }}{% if r.decision_note %} · {{ r.decision_note }}{% endif %}</div>
+      {% if r.can %}<form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><input name="note" placeholder="Note" style="flex:1;min-width:120px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form>{% endif %}
+      {% if store and r.status == 'APPROVED' %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:orders' %}?from={{ r.pk }}">Make an order</a>{% endif %}</div>
+    {% empty %}<p class="empty">None.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="new">
+    <h3 style="margin:0 0 .6rem">Ask for items</h3>
+    <div><label>Title</label><input name="title" required maxlength="160" placeholder="e.g. Chemistry practical reagents"></div>
+    <div class="row2"><div><label>Department</label><input name="department" maxlength="80"></div><div><label>Needed by</label><input type="date" name="needed_by"></div></div>
+    {% with required=True %}{% include "facilities/_lines.html" %}{% endwith %}
+    <div><label>Why it is needed</label><textarea name="reason" rows="2" required></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send for approval</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit timetable{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .tg{width:100%;border-collapse:separate;border-spacing:4px;font-size:.8rem}
+  .tg th{color:var(--slate2);font-size:.68rem;letter-spacing:1px;text-transform:uppercase;padding:.4rem;text-align:left}
+  .tg td{border-radius:10px;border:1px dashed var(--rim2);height:64px;vertical-align:top;padding:0;min-width:120px;position:relative}
+  .tg td.brk{border:0;background:rgba(255,255,255,.03);height:26px;text-align:center;color:var(--slate);font-size:.68rem;letter-spacing:1px}
+  .tg td.ok{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.5)}
+  .tg td.no{background:rgba(232,112,112,.08);border-color:rgba(232,112,112,.3)}
+  .tg td.over{outline:2px solid var(--champagne)}
+  .ls{margin:3px;padding:.4rem .5rem;border-radius:8px;background:var(--champagne-dim);border:1px solid var(--champagne-border);cursor:grab;user-select:none}
+  .ls b{display:block;font-size:.82rem}
+  .ls small{color:var(--slate2);font-size:.7rem}
+  .ls.drag{opacity:.4}
+  #tip{position:fixed;z-index:9999;display:none;max-width:280px;padding:.45rem .6rem;border-radius:9px;background:#172f5c;border:1px solid var(--rim2);font-size:.76rem;color:var(--white);pointer-events:none}
+  #toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);z-index:9999;display:none;padding:.65rem 1rem;border-radius:12px;font-size:.85rem;font-weight:600}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Timetable · {% if tt.is_published %}<span style="color:var(--green)">published</span>{% else %}draft{% endif %}</div>
+  <h1 class="fin-title">Edit <em>{{ school_class.name }}</em></h1>
+  <p class="fin-sub">Drag a lesson to another period. Green periods are free for it; red ones show why not when you hover. Dropping on another lesson swaps them.{% if tt.is_published %} Teachers whose lessons move are emailed.{% endif %}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <form method="get"><select name="class" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for c in classes %}<option value="{{ c.id }}" {% if c.id == school_class.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></form>
+  <a class="fin-btn fin-btn-sm" href="{% url 'timetable:reports' tt.id %}"><i class="bi bi-clipboard-data"></i> Reports</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'timetable:print_all' tt.id %}?class={{ school_class.id }}"><i class="bi bi-printer"></i> Print</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'timetable:preview' tt.id %}"><i class="bi bi-arrow-left"></i> Preview</a>
+</div></div>
+{% if problems %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-b"><b style="color:var(--red)"><i class="bi bi-exclamation-triangle"></i> {{ problems|length }} problem{{ problems|length|pluralize }} to fix</b>{% for p in problems|slice:":6" %}<div class="hint">{{ p }}</div>{% endfor %}{% if problems|length > 6 %}<a class="hint" href="{% url 'timetable:reports' tt.id %}">see all</a>{% endif %}</div></div>{% endif %}
+<div class="panel"><div class="panel-b" style="overflow-x:auto">
+  <table class="tg"><thead><tr><th style="width:110px">Period</th>{% for c, l in days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in rows %}<tr><th><b>{{ r.slot.name }}</b><div class="hint" style="font-weight:400">{{ r.slot.start_time|time:"H:i" }}–{{ r.slot.end_time|time:"H:i" }}</div></th>
+      {% if r.slot.is_break %}<td class="brk" colspan="{{ days|length }}">BREAK</td>
+      {% else %}{% for cell in r.cells %}<td data-day="{{ cell.day }}" data-slot="{{ r.slot.id }}">{% if cell.entry %}<div class="ls" draggable="true" data-id="{{ cell.entry.id }}"><b>{{ cell.entry.subject.name }}</b><small>{{ cell.entry.teacher.full_name }}{% if cell.entry.room %} · {{ cell.entry.room.name }}{% endif %}</small></div>{% endif %}</td>{% endfor %}{% endif %}
+    </tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% if changes %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent changes</h3></div><table class="tbl"><tbody>
+  {% for c in changes %}<tr><td class="name">{{ c.school_class.name }} · {{ c.subject.name }}</td><td>{{ c.from_day }} {{ c.from_slot.name }} → <b>{{ c.to_day }} {{ c.to_slot.name }}</b></td><td class="hint">{{ c.changed_at|date:"j M H:i" }}{% if c.notified_at %} · teacher told{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<div id="tip"></div><div id="toast"></div>
+<script>
+(function(){
+  var CSRF='{{ csrf_token }}', tip=document.getElementById('tip'), toast=document.getElementById('toast'), reasons={}, dragging=null;
+  function show(msg,ok){toast.textContent=msg;toast.style.display='block';toast.style.background=ok?'rgba(74,222,128,.15)':'rgba(232,112,112,.15)';
+    toast.style.color=ok?'#4ade80':'#e87070';toast.style.border='1px solid '+(ok?'rgba(74,222,128,.4)':'rgba(232,112,112,.4)');setTimeout(()=>toast.style.display='none',4000);}
+  var cells=[].slice.call(document.querySelectorAll('td[data-day]'));
+  function clear(){cells.forEach(c=>c.classList.remove('ok','no','over'));reasons={};}
+  document.querySelectorAll('.ls').forEach(function(el){
+    el.addEventListener('dragstart',function(e){dragging=el;el.classList.add('drag');e.dataTransfer.setData('text/plain',el.dataset.id);
+      fetch('{% url "timetable:targets" 0 %}'.replace('/0/','/'+el.dataset.id+'/')).then(r=>r.json()).then(function(d){
+        reasons=d.targets||{};cells.forEach(function(c){var k=c.dataset.day+'-'+c.dataset.slot;if(c.contains(el))return;c.classList.add(reasons[k]?'no':'ok');});});});
+    el.addEventListener('dragend',function(){el.classList.remove('drag');dragging=null;clear();tip.style.display='none';});
+  });
+  cells.forEach(function(c){
+    c.addEventListener('dragover',function(e){if(!dragging)return;e.preventDefault();c.classList.add('over');
+      var why=reasons[c.dataset.day+'-'+c.dataset.slot];if(why){tip.textContent=why;tip.style.display='block';tip.style.left=(e.clientX+14)+'px';tip.style.top=(e.clientY+14)+'px';}else tip.style.display='none';});
+    c.addEventListener('dragleave',function(){c.classList.remove('over');});
+    c.addEventListener('drop',function(e){e.preventDefault();var id=e.dataTransfer.getData('text/plain');if(!id||c.contains(dragging))return;
+      fetch('{% url "timetable:move" 0 %}'.replace('/0/','/'+id+'/'),{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+        body:JSON.stringify({day:c.dataset.day,slot:c.dataset.slot})}).then(r=>r.json()).then(function(d){
+          if(d.ok){show('Moved'+(d.notified?' — the teacher has been emailed.':'.'),true);setTimeout(()=>location.reload(),700);}else show(d.error||'Could not move that lesson.',false);});});
+  });
+})();
+</script>
+{% endblock %}

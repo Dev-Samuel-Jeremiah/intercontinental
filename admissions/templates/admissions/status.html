@@ -1,0 +1,54 @@
+{% extends "admissions/public_base.html" %}
+{% block title %}Application status{% endblock %}
+{% block topright %}<a class="link" href="{% url 'apply' %}"><i class="bi bi-pencil-square"></i> New application</a>{% endblock %}
+{% block body %}
+<div class="eyebrow">Application status</div>
+<h1>Check your <em>application</em></h1>
+<p class="lead">Enter the reference number you received when you applied.</p>
+
+<form method="get" class="card" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+  <div class="field" style="flex:1 1 240px">
+    <label for="reference">Reference number</label>
+    <input type="text" id="reference" name="reference" value="{{ reference }}" placeholder="APP-2026-XXXXX" autocomplete="off">
+  </div>
+  <button class="btn" type="submit"><i class="bi bi-search"></i> Check</button>
+</form>
+
+{% if searched and not application %}
+<div class="note" style="margin-top:1.4rem;background:rgba(232,112,112,.1);border-color:rgba(232,112,112,.3);color:var(--red)">
+  <i class="bi bi-exclamation-circle" style="color:var(--red)"></i>
+  <div>We couldn't find an application with that reference at this school. Check the number and try again, or contact the school office.</div>
+</div>
+{% endif %}
+
+{% if application %}
+<div class="card">
+  <h2>{{ application.full_name }}</h2>
+  <p class="hint">{{ application.reference }}{% if application.applying_for %} · {{ application.applying_for.name }}{% endif %}</p>
+
+  {% with s=application.status %}
+  <div class="note" style="margin-bottom:1.2rem;
+    {% if s == 'ENROLLED' or s == 'ACCEPTED' or s == 'OFFERED' %}background:rgba(94,203,142,.1);border-color:rgba(94,203,142,.3);color:var(--green)
+    {% elif s == 'REJECTED' or s == 'WITHDRAWN' %}background:rgba(232,112,112,.1);border-color:rgba(232,112,112,.3);color:var(--red){% endif %}">
+    <i class="bi bi-info-circle-fill"></i>
+    <div>
+      <strong>{{ application.get_status_display }}</strong><br>
+      {% if s == 'NEW' %}Your application has been received and is waiting to be reviewed.
+      {% elif s == 'SCREENING' %}The school is reviewing your application.
+      {% elif s == 'EXAM' %}Your child has been scheduled for the entrance exam. The school will confirm the date.
+      {% elif s == 'INTERVIEW' %}Your child has reached the interview stage.
+      {% elif s == 'OFFERED' %}Congratulations — a place has been offered{% if application.offer_expires_on %}. Please respond before {{ application.offer_expires_on|date:"j F Y" }}{% endif %}. The school will contact you about the next steps.
+      {% elif s == 'ACCEPTED' %}Your acceptance has been recorded. The school will complete the enrolment.
+      {% elif s == 'ENROLLED' %}Your child is now enrolled. The school will send login details for the parent portal.
+      {% elif s == 'WAITLIST' %}Your child is on the waiting list. The school will contact you if a place opens.
+      {% elif s == 'REJECTED' %}The school is unable to offer a place at this time.
+      {% elif s == 'WITHDRAWN' %}This application was withdrawn.
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+
+  <p class="help">Applied on {{ application.created_at|date:"j F Y" }} · Last updated {{ application.updated_at|date:"j F Y" }}</p>
+</div>
+{% endif %}
+{% endblock %}

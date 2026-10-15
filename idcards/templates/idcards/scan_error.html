@@ -1,0 +1,10 @@
+{% extends "partials/status_base.html" %}
+{% block title %}Scan Not Recognised{% endblock %}
+{% block tone %}tone-red{% endblock %}
+{% block body %}
+<div class="icon"><i class="bi bi-qr-code-scan"></i></div>
+<div class="eyebrow">Scan not recognised</div>
+<h1>Couldn't record <em>this scan</em></h1>
+<p>{{ message|default:"This QR code isn't valid for this school." }}</p>
+<p class="help">If this keeps happening, the card may have been reissued — ask the school office for a new one.</p>
+{% endblock %}

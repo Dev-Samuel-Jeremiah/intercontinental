@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Parent satisfaction{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.bar{height:10px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;display:flex}.bar i{display:block;height:100%}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Parent experience</div>
+  <h1 class="fin-title">Parent <em>satisfaction</em></h1>
+  <p class="fin-sub">Net Promoter Score: the share of parents scoring 9–10 minus the share scoring 0–6, from −100 to +100.</p>
+</div></div>
+{% include "family/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>NPS — {{ rep.current.period }}</small><b>{% if rep.current.nps is not None %}{{ rep.current.nps }}{% else %}—{% endif %}</b></div>
+  <div class="fin-stat"><small>Families answered</small><b>{{ rep.current.count }}</b></div>
+  <div class="fin-stat"><small>Average score</small><b>{{ rep.current.average|default:"—" }}</b></div>
+  <div class="fin-stat"><small>All answers</small><b>{{ responses }}</b></div>
+</div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <h3 style="margin:0 0 .6rem">Settings</h3>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="satisfaction_enabled" value="1" style="width:auto" {% if cfg.satisfaction_enabled %}checked{% endif %}> Ask parents for a score once a term</label>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="digest_enabled" value="1" style="width:auto" {% if cfg.digest_enabled %}checked{% endif %}> Email families a daily summary (send_daily_digests)</label>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="magic_login" value="1" style="width:auto" {% if cfg.magic_login %}checked{% endif %}> Parents can sign in with an emailed link or SMS code</label>
+      <div><label>Days to resolve a complaint</label><input name="complaint_days" value="{{ cfg.complaint_days }}" inputmode="numeric"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+    </form>
+    <div class="panel"><div class="panel-h"><h3>By term</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><thead><tr><th>Term</th><th>NPS</th><th>Answers</th><th style="width:40%">Promoters / passives / detractors</th></tr></thead><tbody>
+      {% for t in rep.trend %}<tr><td>{{ t.period }}</td><td><b>{{ t.nps }}</b></td><td>{{ t.count }}</td><td><div class="bar"><i style="width:{% widthratio t.promoters t.count 100 %}%;background:#4ade80"></i><i style="width:{% widthratio t.passives t.count 100 %}%;background:#f4d21f"></i><i style="width:{% widthratio t.detractors t.count 100 %}%;background:#e87070"></i></div></td></tr>{% empty %}<tr><td class="empty">No answers yet.</td></tr>{% endfor %}
+      </tbody></table>
+    </div></div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3>What parents said</h3></div><div class="panel-b">
+    {% for r in rep.comments %}<div style="border-left:3px solid {% if r.score >= 9 %}#4ade80{% elif r.score <= 6 %}#e87070{% else %}#f4d21f{% endif %};padding:.3rem .8rem;margin:.5rem 0"><b>{{ r.score }}</b> · <small class="hint">{{ r.period }}</small><br>{{ r.comment|linebreaksbr }}</div>{% empty %}<p class="empty">No comments yet.</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

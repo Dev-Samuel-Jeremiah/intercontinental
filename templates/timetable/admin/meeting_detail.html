@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ ev.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .mg{border-collapse:separate;border-spacing:3px;font-size:.74rem}
+  .mg th{font-size:.64rem;color:var(--slate);font-weight:700;padding:.3rem;white-space:nowrap}
+  .mg td{border-radius:8px;padding:.35rem .45rem;min-width:84px;vertical-align:top;border:1px solid var(--rim)}
+  .mg td.who{min-width:150px;color:var(--white);font-weight:600;border:0}
+  .mg td.bk{background:var(--champagne-dim);border-color:var(--champagne-border);color:var(--champagne-lt)}
+  .mg td.bk form{display:inline}
+  .mg td.bk button{background:none;border:0;color:var(--red);cursor:pointer;padding:0 0 0 .2rem}
+  @media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}
+    .mg td,.mg th{color:#000!important;border-color:#999!important;background:#fff!important}.mg td.bk{background:#eee!important}.noprint{display:none!important}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'timetable:meetings' %}" style="color:inherit">Parent meetings</a></div>
+  <h1 class="fin-title">{{ ev.title }}</h1>
+  <p class="fin-sub">{{ ev.date|date:"l j F Y" }} · {{ ev.start_time|time:"H:i" }}–{{ ev.end_time|time:"H:i" }} · {{ ev.slot_minutes }}-minute slots{% if ev.location %} · {{ ev.location }}{% endif %}{% if classes %} · {% for c in classes %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %} · every class{% endif %}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="toggle">{% if ev.is_open %}<i class="bi bi-lock"></i> Close booking{% else %}<i class="bi bi-unlock"></i> Open booking{% endif %}</button></form>
+  <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  <form method="post">{% csrf_token %}<button class="fin-btn fin-btn-danger" name="action" value="delete" onclick="return confirm('Delete this session and all {{ total }} booking{{ total|pluralize }}?')"><i class="bi bi-trash"></i></button></form>
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Teachers</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Slots each</small><b>{{ times|length }}</b></div>
+  <div class="fin-stat"><small>Booked</small><b>{{ total }}</b></div>
+  <div class="fin-stat"><small>Booking</small><b style="font-size:1.2rem">{% if ev.is_open %}Open{% else %}Closed{% endif %}</b></div>
+</div>
+<div class="panel print"><div class="panel-h"><h3><i class="bi bi-grid-3x3"></i> Who is seeing whom</h3><span class="hint">{{ school.name }}</span></div>
+  <div class="panel-b" style="overflow-x:auto">
+  {% if rows %}<table class="mg"><thead><tr><th></th>{% for t in times %}<th>{{ t|time:"H:i" }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in rows %}<tr><td class="who">{{ r.teacher.full_name }}<div class="hint">{{ r.count }} booked</div></td>
+      {% for b in r.cells %}{% if b %}<td class="bk" title="{{ b.note }}">{{ b.student.full_name }}<div class="hint">{{ b.student.class_assigned.name }}</div>
+        <form method="post" class="noprint">{% csrf_token %}<input type="hidden" name="id" value="{{ b.id }}"><button name="action" value="cancel" title="Cancel this booking" onclick="return confirm('Cancel and tell the parent?')"><i class="bi bi-x-circle"></i></button></form></td>
+      {% else %}<td></td>{% endif %}{% endfor %}</tr>{% endfor %}
+  </tbody></table>
+  {% else %}<div class="empty"><i class="bi bi-person-x"></i><p>No teachers for this session — tick teachers, or publish a timetable so the school knows who teaches each class.</p></div>{% endif %}
+  </div></div>
+{% endblock %}

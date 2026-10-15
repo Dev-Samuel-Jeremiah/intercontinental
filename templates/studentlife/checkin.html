@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Check-in{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<style>.moods{display:flex;gap:.5rem;flex-wrap:wrap}.moods label{flex:1;min-width:80px;text-align:center;border:1px solid var(--rim2);border-radius:14px;padding:.7rem .3rem;cursor:pointer;margin:0}.moods input{display:none}.moods input:checked+span{color:var(--champagne-lt,#ffe066);font-weight:700}.moods .e{font-size:1.8rem;display:block}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a></div>
+  <h1 class="fin-title">How are you <em>today?</em></h1>
+  <p class="fin-sub">Only your form teacher and the school's wellbeing team can see this. Ticking "I'd like to talk" means someone will find you for a quiet chat.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div class="moods">{% for v, l in moods %}<label><input type="radio" name="mood" value="{{ v }}" required {% if today.mood == v %}checked{% endif %}><span><span class="e">{% if v == 5 %}😄{% elif v == 4 %}🙂{% elif v == 3 %}😐{% elif v == 2 %}🙁{% else %}😢{% endif %}</span>{{ l }}</span></label>{% endfor %}</div>
+    <div><label>Words that fit (optional)</label><div>{% for f in feelings %}<label class="pill"><input type="checkbox" name="feelings" value="{{ f }}" {% if f in today.feelings %}checked{% endif %}> {{ f }}</label>{% endfor %}</div></div>
+    <div><label>Hours of sleep last night</label><input name="sleep" inputmode="numeric" value="{{ today.sleep|default:'' }}" style="max-width:120px"></div>
+    <div><label>Anything you want to say (optional)</label><textarea name="note" rows="2" maxlength="500">{{ today.note|default:'' }}</textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="wants_talk" value="1" style="width:auto" {% if today.wants_talk %}checked{% endif %}> I'd like to talk to someone</label>
+    <button class="fin-btn fin-btn-gold" type="submit">{% if today %}Update{% else %}Check in{% endif %}</button>
+  </form>
+  <div class="panel"><div class="panel-h"><h3>My last two weeks</h3></div><div class="panel-b">
+    {% for c in history %}<div style="display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid var(--rim)"><span>{{ c.date|date:"D j M" }}</span><span>{{ c.get_mood_display }}</span></div>{% empty %}<p class="empty">No check-ins yet.</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

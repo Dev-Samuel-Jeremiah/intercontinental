@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Leaderboards{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{% if me %}<a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a>{% else %}Student experience{% endif %}</div>
+  <h1 class="fin-title"><em>Leaderboards</em></h1>
+  <p class="fin-sub">Only students who choose to join appear here — nobody is listed without saying yes. Last 90 days.</p>
+</div></div>
+{% if me %}<div class="panel" style="margin-bottom:1.2rem"><div class="panel-b">
+  {% if entry %}<form method="post" class="fin-form" style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">{% csrf_token %}<span>You are on the leaderboards as <b>{{ entry.nickname|default:"your name" }}</b>.</span><input type="hidden" name="action" value="leave"><button class="fin-btn fin-btn-sm" type="submit">Leave</button></form>
+  {% else %}<form method="post" class="fin-form" style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="join"><input name="nickname" maxlength="40" placeholder="Nickname (optional)" style="max-width:220px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Join the leaderboards</button></form>{% endif %}
+</div></div>{% endif %}
+<form method="get" class="fin-form" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem">
+  <select name="board" style="max-width:240px">{% for k, l in boards.items %}<option value="{{ k }}" {% if k == metric %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="level" style="max-width:180px"><option value="">Whole school</option>{% for lv in levels %}<option value="{{ lv }}" {% if lv == level %}selected{% endif %}>{{ lv }}</option>{% endfor %}</select>
+  <button class="fin-btn" type="submit">Show</button>
+</form>
+<div class="panel"><div class="panel-b"><table class="tbl" data-no-export><thead><tr><th>#</th><th>Name</th><th>Class</th><th>Score</th></tr></thead><tbody>
+{% for r in rows %}<tr{% if me and r.student_id == me.pk %} style="background:rgba(244,210,31,.08)"{% endif %}><td><b>{{ r.rank }}</b>{% if r.rank == 1 %} 🥇{% elif r.rank == 2 %} 🥈{% elif r.rank == 3 %} 🥉{% endif %}</td><td class="name">{{ r.name }}</td><td>{{ r.class }}</td><td><b>{{ r.value }}</b></td></tr>{% empty %}<tr><td colspan="4" class="empty">Nobody on this board yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if outlet == 'CANTEEN' %}Canteen till{% else %}Shop till{% endif %}{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .till{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:1.2rem;align-items:start}
+  @media(max-width:980px){.till{grid-template-columns:1fr}}
+  .till-tabs{display:inline-flex;padding:4px;border-radius:999px;border:1px solid var(--rim2);background:rgba(0,0,0,.22)}
+  .till-tabs a{padding:.5rem 1.05rem;border-radius:999px;color:var(--slate2);text-decoration:none;font-size:.84rem;font-weight:600;display:inline-flex;gap:.4rem;align-items:center}
+  .till-tabs a.on{color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .till-search{width:100%;padding:.75rem .95rem .75rem 2.4rem;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .till-search:focus{outline:none;border-color:var(--champagne);box-shadow:0 0 0 3px rgba(244,210,31,.15)}
+  .till-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.7rem;margin-top:.9rem}
+  .tile{position:relative;text-align:left;padding:.9rem .9rem .8rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(255,255,255,.02);color:var(--white);cursor:pointer;font:inherit;transition:transform .15s,border-color .15s,background .15s;display:flex;flex-direction:column;gap:.35rem;min-height:104px}
+  .tile:hover{transform:translateY(-2px);border-color:var(--champagne);background:rgba(244,210,31,.06)}
+  .tile:active{transform:scale(.97)}
+  .tile b{font-size:.86rem;line-height:1.3}
+  .tile .p{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--champagne-lt);margin-top:auto}
+  .tile .s{font-size:.7rem;color:var(--slate2)}
+  .tile .s.low{color:var(--amber)}
+  .tile[disabled]{opacity:.35;cursor:not-allowed;transform:none}
+  .tile .in{position:absolute;top:.5rem;right:.5rem;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--champagne);color:#0a1f44;font-size:.72rem;font-weight:800;display:none;align-items:center;justify-content:center}
+  .tile.has .in{display:inline-flex}
+  .basket{position:sticky;top:1rem}
+  .bl{display:grid;grid-template-columns:1fr auto auto;gap:.6rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--rim)}
+  .bl b{font-size:.84rem;font-weight:600}
+  .qty{display:inline-flex;align-items:center;border:1px solid var(--rim2);border-radius:9px;overflow:hidden}
+  .qty button{width:28px;height:28px;border:0;background:rgba(255,255,255,.04);color:var(--white);cursor:pointer;font-size:1rem}
+  .qty button:hover{background:rgba(244,210,31,.15)}
+  .qty span{min-width:28px;text-align:center;font-size:.84rem;font-weight:700}
+  .total{display:flex;justify-content:space-between;align-items:baseline;padding:1rem 0 .4rem}
+  .total b{font-family:'Cormorant Garamond',serif;font-size:2rem;color:var(--champagne-lt)}
+  .methods{display:grid;grid-template-columns:repeat(2,1fr);gap:.45rem;margin:.6rem 0}
+  .methods label{display:flex;gap:.45rem;align-items:center;justify-content:center;padding:.6rem;border-radius:10px;border:1px solid var(--rim2);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--slate2);transition:all .15s}
+  .methods input{display:none}
+  .methods input:checked + span{color:var(--white)}
+  .methods label:has(input:checked){border-color:var(--champagne);background:rgba(244,210,31,.1);color:var(--white)}
+  .who{position:relative}
+  .who-list{position:absolute;left:0;right:0;top:100%;z-index:20;margin-top:4px;border-radius:12px;border:1px solid var(--rim2);background:var(--surface2);max-height:280px;overflow:auto;display:none;box-shadow:0 18px 40px -18px rgba(0,0,0,.8)}
+  .who-list button{display:block;width:100%;text-align:left;padding:.6rem .8rem;border:0;background:none;color:var(--white);font:inherit;font-size:.82rem;cursor:pointer;border-bottom:1px solid var(--rim)}
+  .who-list button:hover{background:rgba(244,210,31,.1)}
+  .who-card{display:none;padding:.75rem .85rem;border-radius:12px;border:1px solid var(--rim2);background:rgba(244,210,31,.06);font-size:.8rem;margin-top:.5rem}
+  .till-in{width:100%;padding:.62rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.86rem}
+  .till-in:focus{outline:none;border-color:var(--champagne)}
+  .charge{width:100%;justify-content:center;padding:.9rem;font-size:.95rem;margin-top:.8rem}
+  .charge[disabled]{opacity:.45;cursor:not-allowed}
+  .warn{color:var(--amber);font-size:.78rem;margin-top:.4rem;min-height:1em}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">{% if outlet == 'CANTEEN' %}Canteen <em>till</em>{% else %}Shop <em>till</em>{% endif %}</h1>
+    <p class="fin-sub">Tap items into the basket, pick the student if paying from the family wallet, and charge.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+    <div class="till-tabs">
+      <a href="?outlet=SHOP" class="{% if outlet == 'SHOP' %}on{% endif %}"><i class="bi bi-bag"></i> Shop</a>
+      <a href="?outlet=CANTEEN" class="{% if outlet == 'CANTEEN' %}on{% endif %}"><i class="bi bi-cup-hot"></i> Canteen</a>
+    </div>
+    <a class="fin-btn" href="{% url 'finance:sales' %}?outlet={{ outlet }}"><i class="bi bi-clock-history"></i> Sales &amp; report</a>
+    <a class="fin-btn" href="{% url 'finance:manage_items' %}"><i class="bi bi-box-seam"></i> Items</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Sales today</small><b>{{ today_summary.count }}</b></div>
+  <div class="fin-stat"><small>Taken today</small><b style="color:var(--green)">₦{{ today_summary.total|floatformat:"-2"|intcomma }}</b></div>
+  <div class="fin-stat"><small>Cash, transfer &amp; card</small><b>₦{{ today_summary.takings|floatformat:"-2"|intcomma }}</b></div>
+  <div class="fin-stat"><small>From wallets</small><b style="color:var(--champagne-lt)">₦{{ today_summary.from_wallets|floatformat:"-2"|intcomma }}</b></div>
+</div>
+
+<div class="till">
+  <div class="panel">
+    <div class="panel-b">
+      <div style="position:relative">
+        <i class="bi bi-search" style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--slate2)"></i>
+        <input class="till-search" id="find" placeholder="Find an item by name or code…" autocomplete="off">
+      </div>
+      <div class="till-grid" id="grid">
+        {% for i in items %}
+        <button type="button" class="tile" data-id="{{ i.id }}" data-name="{{ i.name }}" data-price="{{ i.price }}" data-stock="{{ i.stock_qty }}" data-find="{{ i.name|lower }} {{ i.sku|lower }}"{% if i.stock_qty < 1 %} disabled{% endif %}>
+          <span class="in">0</span>
+          <b>{{ i.name }}</b>
+          <span class="s{% if i.is_low %} low{% endif %}">{% if i.stock_qty < 1 %}Out of stock{% else %}{{ i.stock_qty }} in stock{% endif %}{% if i.sku %} · {{ i.sku }}{% endif %}</span>
+          <span class="p">₦{{ i.price|floatformat:"-2"|intcomma }}</span>
+        </button>
+        {% empty %}
+        <div class="empty" style="grid-column:1/-1"><i class="bi bi-box-seam"></i><p>No {% if outlet == 'CANTEEN' %}canteen food or drink{% else %}shop items{% endif %} yet. <a href="{% url 'finance:manage_items' %}" style="color:var(--champagne-lt)">Add items</a>{% if outlet == 'CANTEEN' %} with the type “Canteen food &amp; drink”{% endif %}.</p></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <form method="post" class="panel basket" id="sale-form">{% csrf_token %}
+    <input type="hidden" name="outlet" value="{{ outlet }}">
+    <div class="panel-h"><h3><i class="bi bi-basket2"></i> Basket</h3><button type="button" class="fin-btn fin-btn-sm" id="clear">Clear</button></div>
+    <div class="panel-b">
+      <div id="lines"><p class="hint" id="empty-basket">Tap an item to add it.</p></div>
+      <div id="inputs"></div>
+      <div class="total"><span class="hint">Total</span><b id="total">₦0.00</b></div>
+
+      <div class="methods">
+        {% for v, l in methods %}
+        <label><input type="radio" name="method" value="{{ v }}"{% if forloop.first and outlet == 'CANTEEN' or v == 'CASH' and outlet != 'CANTEEN' %} checked{% endif %}><span>{{ l }}</span></label>
+        {% endfor %}
+      </div>
+
+      <div class="who">
+        <input class="till-in" id="who" placeholder="Student — name or admission no." autocomplete="off">
+        <input type="hidden" name="student_id" id="student-id">
+        <div class="who-list" id="who-list"></div>
+      </div>
+      <div class="who-card" id="who-card"></div>
+
+      <div id="cash-box" style="margin-top:.6rem">
+        <input class="till-in" name="tendered" id="tendered" type="number" step="0.01" min="0" placeholder="Cash handed over (optional)">
+        <div class="hint" id="change" style="margin-top:.35rem"></div>
+      </div>
+      <input class="till-in" name="customer_name" id="customer" maxlength="120" placeholder="Customer name (walk-in, optional)" style="margin-top:.6rem">
+
+      <div class="warn" id="warn"></div>
+      <button class="fin-btn fin-btn-gold charge" id="charge" type="submit" disabled><i class="bi bi-check2-circle"></i> Charge</button>
+    </div>
+  </form>
+</div>
+
+{% if recent %}
+<div class="panel" style="margin-top:1rem">
+  <div class="panel-h"><h3><i class="bi bi-receipt"></i> Latest sales</h3></div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Receipt</th><th>Customer</th><th>Paid by</th><th style="text-align:right">Total</th></tr></thead>
+    <tbody>{% for s in recent %}
+      <tr{% if s.status == 'VOIDED' %} style="opacity:.5"{% endif %}><td><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|time:"H:i" }}</span></td>
+      <td>{{ s.buyer }}</td><td>{{ s.get_method_display }}{% if s.status == 'VOIDED' %} <span class="chip red">voided</span>{% endif %}</td>
+      <td class="money" style="text-align:right">₦{{ s.total|floatformat:"-2"|intcomma }}</td></tr>
+    {% endfor %}</tbody>
+  </table></div>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var basket = {}, student = null, outlet = '{{ outlet }}';
+  var grid = document.getElementById('grid'), lines = document.getElementById('lines'),
+      inputs = document.getElementById('inputs'), totalEl = document.getElementById('total'),
+      charge = document.getElementById('charge'), warn = document.getElementById('warn'),
+      who = document.getElementById('who'), whoList = document.getElementById('who-list'),
+      whoCard = document.getElementById('who-card'), sid = document.getElementById('student-id'),
+      tendered = document.getElementById('tendered'), change = document.getElementById('change'),
+      cashBox = document.getElementById('cash-box'), customer = document.getElementById('customer');
+  function naira(n) { return '₦' + n.toLocaleString('en-NG', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function method() { var m = document.querySelector('input[name=method]:checked'); return m ? m.value : 'CASH'; }
+  function total() { var t = 0; for (var id in basket) t += basket[id].price * basket[id].qty; return Math.round(t * 100) / 100; }
+
+  function render() {
+    lines.innerHTML = ''; inputs.innerHTML = '';
+    var ids = Object.keys(basket);
+    if (!ids.length) lines.innerHTML = '<p class="hint">Tap an item to add it.</p>';
+    ids.forEach(function (id) {
+      var b = basket[id], row = document.createElement('div');
+      row.className = 'bl';
+      row.innerHTML = '<div><b>' + esc(b.name) + '</b><div class="hint">' + naira(b.price) + ' each</div></div>' +
+        '<div class="qty"><button type="button" data-d="-1">−</button><span>' + b.qty + '</span><button type="button" data-d="1">+</button></div>' +
+        '<div class="money" style="min-width:84px;text-align:right">' + naira(b.price * b.qty) + '</div>';
+      row.querySelectorAll('button').forEach(function (btn) {
+        btn.addEventListener('click', function () { add(id, parseInt(btn.dataset.d, 10)); });
+      });
+      lines.appendChild(row);
+      var hidden = document.createElement('input');
+      hidden.type = 'hidden'; hidden.name = 'item_' + id; hidden.value = b.qty;
+      inputs.appendChild(hidden);
+    });
+    grid.querySelectorAll('.tile').forEach(function (t) {
+      var b = basket[t.dataset.id];
+      t.classList.toggle('has', !!b);
+      t.querySelector('.in').textContent = b ? b.qty : 0;
+    });
+    totalEl.textContent = naira(total());
+    check();
+  }
+
+  function add(id, d) {
+    var tile = grid.querySelector('.tile[data-id="' + id + '"]');
+    var b = basket[id] || {name: tile.dataset.name, price: parseFloat(tile.dataset.price), stock: parseInt(tile.dataset.stock, 10), qty: 0};
+    b.qty += d;
+    if (b.qty > b.stock) { b.qty = b.stock; warn.dataset.flash = '1'; warn.textContent = 'Only ' + b.stock + ' ' + b.name + ' in stock.'; setTimeout(function () { delete warn.dataset.flash; check(); }, 1800); }
+    if (b.qty <= 0) delete basket[id]; else basket[id] = b;
+    render();
+  }
+
+  function check() {
+    var t = total(), m = method(), msg = '';
+    cashBox.style.display = m === 'CASH' ? '' : 'none';
+    customer.style.display = student ? 'none' : '';
+    var tend = parseFloat(tendered.value);
+    change.textContent = (m === 'CASH' && tend && t) ? (tend >= t ? 'Change: ' + naira(tend - t) : 'Short by ' + naira(t - tend)) : '';
+    if (!t) msg = '';
+    else if (m === 'WALLET' && !student) msg = 'Pick the student whose family wallet pays.';
+    else if (m === 'WALLET' && student) {
+      if (parseFloat(student.balance) < t) msg = 'The family wallet has only ' + naira(parseFloat(student.balance)) + '.';
+      else if (outlet === 'CANTEEN' && student.canteen_left !== null && parseFloat(student.canteen_left) < t)
+        msg = student.name + ' can spend ' + naira(parseFloat(student.canteen_left)) + ' more at the canteen today.';
+      else if (outlet === 'SHOP' && !student.shop_allowed) msg = 'A parent has not allowed shop purchases on the wallet.';
+    } else if (m === 'CASH' && tend && tend < t) msg = 'Cash handed over is less than the total.';
+    if (!warn.dataset.flash) warn.textContent = msg;
+    charge.disabled = !t || !!msg;
+    charge.innerHTML = '<i class="bi bi-check2-circle"></i> Charge ' + (t ? naira(t) : '');
+  }
+
+  grid.addEventListener('click', function (e) {
+    var tile = e.target.closest('.tile');
+    if (tile && !tile.disabled) add(tile.dataset.id, 1);
+  });
+  document.getElementById('clear').addEventListener('click', function () { basket = {}; render(); });
+  document.querySelectorAll('input[name=method]').forEach(function (r) { r.addEventListener('change', check); });
+  tendered.addEventListener('input', check);
+
+  document.getElementById('find').addEventListener('input', function () {
+    var q = this.value.trim().toLowerCase();
+    grid.querySelectorAll('.tile').forEach(function (t) { t.style.display = !q || t.dataset.find.indexOf(q) > -1 ? '' : 'none'; });
+  });
+
+  var timer;
+  who.addEventListener('input', function () {
+    clearTimeout(timer);
+    student = null; sid.value = ''; whoCard.style.display = 'none'; check();
+    var q = who.value.trim();
+    if (q.length < 2) { whoList.style.display = 'none'; return; }
+    timer = setTimeout(function () {
+      fetch('{% url "finance:till_students" %}?outlet=' + outlet + '&q=' + encodeURIComponent(q), {credentials: 'same-origin'})
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          whoList.innerHTML = '';
+          if (!data.results.length) { whoList.innerHTML = '<div class="hint" style="padding:.7rem .8rem">No student found.</div>'; }
+          data.results.forEach(function (s) {
+            var b = document.createElement('button'); b.type = 'button';
+            b.innerHTML = '<b>' + esc(s.name) + '</b> <span class="hint">' + esc(s.admission) + (s['class'] ? ' · ' + esc(s['class']) : '') + '</span>';
+            b.addEventListener('click', function () { pick(s); });
+            whoList.appendChild(b);
+          });
+          whoList.style.display = 'block';
+        });
+    }, 220);
+  });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.who')) whoList.style.display = 'none'; });
+
+  function pick(s) {
+    student = s; sid.value = s.id; who.value = s.name + ' (' + s.admission + ')'; whoList.style.display = 'none';
+    var parts = ['Family wallet: <b style="color:var(--white)">' + naira(parseFloat(s.balance)) + '</b>'];
+    if (outlet === 'CANTEEN' && s.canteen_left !== null) parts.push('Canteen left today: <b style="color:var(--white)">' + naira(parseFloat(s.canteen_left)) + '</b>');
+    if (outlet === 'SHOP' && !s.shop_allowed) parts.push('<span style="color:var(--amber)">Shop purchases on the wallet not allowed</span>');
+    whoCard.innerHTML = parts.join('<br>') + ' <a href="#" id="unpick" style="float:right;color:var(--champagne-lt)">change</a>';
+    whoCard.style.display = 'block';
+    document.getElementById('unpick').addEventListener('click', function (e) { e.preventDefault(); student = null; sid.value = ''; who.value = ''; whoCard.style.display = 'none'; check(); who.focus(); });
+    var wallet = document.querySelector('input[name=method][value=WALLET]');
+    if (wallet) wallet.checked = true;
+    check();
+  }
+
+  document.getElementById('sale-form').addEventListener('submit', function () { charge.disabled = true; charge.textContent = 'Charging…'; });
+  render();
+})();
+</script>
+{% endblock %}

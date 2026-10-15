@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Support register{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Support <em>register</em></h1>
+    <p class="fin-sub">Students on the roll who need adjustments in class and in exams — for exam officers and teachers.</p>
+  </div>
+  <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th><th>Class</th><th>Adjustments</th><th>What teachers should do</th><th>Review</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{% url 'users:student_profile' r.student.id %}#support" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a><br><span class="hint">{{ r.student.admission_number }}</span></td>
+      <td>{{ r.student.class_assigned.name|default:"—" }}</td>
+      <td>{% for a in r.adjustments %}<span class="chip amber" style="display:inline-block;margin:.1rem">{{ a }}</span>{% endfor %}</td>
+      <td class="hint">{{ r.classroom_notes|default:"—" }}</td>
+      <td>{% if r.review_on %}<span{% if r.review_on < today %} style="color:var(--red)"{% endif %}>{{ r.review_on|date:"j M Y" }}</span>{% else %}—{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty"><i class="bi bi-heart-pulse"></i><p>No student has support needs recorded. Add them from a student's profile.</p></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

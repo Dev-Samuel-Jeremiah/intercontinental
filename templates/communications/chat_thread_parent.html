@@ -1,0 +1,20 @@
+{% include "communications/_portal_head.html" %}
+{% include "communications/_chat_style.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'communications:chat' %}"><i class="bi bi-arrow-left"></i> All conversations</a>
+  <h1>{{ conv.subject }}</h1>
+  <p class="sub">With {{ conv.teacher.full_name }} about {{ conv.student.full_name }}.{% if not open_now %} Teachers reply during office hours ({{ hours }}).{% endif %}</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% include "communications/_chat_messages.html" %}
+  {% if conv.closed %}<div class="card"><p class="sub" style="margin:0">This conversation is closed.</p></div>
+  {% else %}
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="send">
+    <textarea name="body" rows="4" required maxlength="4000" placeholder="Write a reply"></textarea>
+    <button type="submit">Send</button>
+  </form>
+  {% endif %}
+</div>
+</body>
+</html>

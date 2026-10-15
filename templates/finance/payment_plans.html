@@ -1,0 +1,100 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Payment plans{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Payment <em>plans</em></h1>
+    <p class="fin-sub">Let a family clear a term's fees in agreed instalments, and remind them before each date.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:debtors' %}"><i class="bi bi-telephone"></i> Debtors</a>
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:send_plan_reminders' %}"
+       onclick="return confirm('Send reminders for instalments due in the next 7 days?')"><i class="bi bi-send"></i> Send reminders</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Active plans</small><b>{{ plans|length }}</b></div>
+  <div class="fin-stat"><small>Due within 7 days</small><b style="color:var(--champagne-lt)">{{ upcoming|length }}</b></div>
+  <div class="fin-stat"><small>Overdue</small><b style="color:var(--red)">{{ overdue|length }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-calendar2-plus"></i> New plan</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="create">
+        <div><label>Student</label>
+          <select name="student_id" required>
+            <option value="">— choose a student —</option>
+            {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}
+          </select>
+        </div>
+        <div><label>Total to spread (₦)</label><input type="number" name="total_amount" step="0.01" min="1" required placeholder="150000"></div>
+        <div class="row2">
+          <div><label>Instalments</label><input type="number" name="instalments" value="3" min="1" max="12"></div>
+          <div><label>Days apart</label><input type="number" name="every_days" value="30" min="7" max="90"></div>
+        </div>
+        <div><label>First payment due</label><input type="date" name="first_due" value="{{ default_due }}"></div>
+        <div><label>Note</label><textarea name="note" rows="2" placeholder="Agreed with the father on 2 Oct"></textarea></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Create plan</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    {% if overdue %}
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Overdue instalments</h3><span class="chip red">{{ overdue|length }}</span></div>
+      <table class="tbl">
+        <tbody>
+          {% for i in overdue %}
+          <tr>
+            <td class="name">{{ i.plan.student.full_name }}<br><span class="hint">{{ i.plan.student.parent_phone }}</span></td>
+            <td>due {{ i.due_date|date:"j M Y" }}</td>
+            <td class="money">₦{{ i.balance|floatformat:0 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-list-check"></i> All plans</h3></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Student</th><th>Total</th><th>Paid</th><th>Balance</th><th>Next due</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for p in plans %}
+            <tr>
+              <td class="name">{{ p.student.full_name }}<br><span class="hint">{{ p.installments.count }} instalment{{ p.installments.count|pluralize }}</span></td>
+              <td class="money">₦{{ p.total_amount|floatformat:0 }}</td>
+              <td class="money" style="color:var(--green)">₦{{ p.paid|floatformat:0 }}</td>
+              <td class="money">₦{{ p.balance|floatformat:0 }}</td>
+              <td>{% with n=p.next_due %}{% if n %}{{ n.due_date|date:"j M Y" }}{% if n.is_overdue %} <span class="chip red">late</span>{% endif %}{% else %}—{% endif %}{% endwith %}</td>
+              <td>{% if p.status == 'COMPLETED' %}<span class="chip green">Completed</span>{% elif p.status == 'CANCELLED' %}<span class="chip">Cancelled</span>{% else %}<span class="chip gold">Active</span>{% endif %}</td>
+              <td style="white-space:nowrap">
+                {% with n=p.next_due %}{% if n %}
+                <form method="post" style="display:flex;gap:.3rem">{% csrf_token %}
+                  <input type="hidden" name="action" value="record"><input type="hidden" name="instalment_id" value="{{ n.id }}">
+                  <input type="number" name="amount" step="0.01" min="1" value="{{ n.balance|floatformat:2 }}" style="width:100px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+                  <button class="fin-btn fin-btn-sm" type="submit">Record</button>
+                </form>
+                {% endif %}{% endwith %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7"><div class="empty"><i class="bi bi-calendar2-x"></i>No payment plans yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

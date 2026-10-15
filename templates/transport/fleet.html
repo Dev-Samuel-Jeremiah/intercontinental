@@ -1,0 +1,62 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Vehicles{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Vehicles</em></h1>
+  <p class="fin-sub">Seats, papers, servicing and fuel for each bus. The office is emailed before any paper expires.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="panel"><div class="panel-h"><h3>Fleet — last 90 days</h3></div><div class="panel-b"><table class="tbl">
+  <thead><tr><th>Vehicle</th><th class="num">Seats</th><th class="num">Fuel (L)</th><th class="num">Fuel cost</th><th class="num">km</th><th class="num">km / L</th><th class="num">Cost / km</th><th class="num">Repairs</th><th>Alerts</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.vehicle.name }}<br><small class="hint">{{ r.vehicle.plate }} · {{ r.vehicle.make_model }}</small></td><td class="num">{{ r.vehicle.capacity }}</td><td class="num">{{ r.litres|floatformat:1 }}</td><td class="num">{{ r.cost|floatformat:2 }}</td><td class="num">{{ r.km|default:"—" }}</td><td class="num">{{ r.km_per_litre|default:"—" }}</td><td class="num">{{ r.cost_per_km|default:"—" }}</td><td class="num">{{ r.maintenance|floatformat:2 }}</td>
+    <td>{% if r.due %}<span class="chip gold">{{ r.due }}</span>{% endif %}{% if r.docs %} <span class="chip red">{{ r.docs }} expired paper{{ r.docs|pluralize }}</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="9" class="empty">No vehicles yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+<div class="fin-grid" style="margin-top:1.2rem">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Papers</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for d in docs %}<tr><td class="name">{{ d.vehicle.name }} — {{ d.get_kind_display }}<br><small class="hint">{{ d.number }}</small></td><td>{% if d.expires_on %}{% if d.expires_on < today %}<span class="chip red">Expired {{ d.expires_on|date:"j M Y" }}</span>{% else %}{{ d.expires_on|date:"j M Y" }}{% endif %}{% endif %}</td><td>{% if d.file %}<a href="{% url 'transport:document_file' d.pk %}">View</a>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No papers recorded.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent servicing</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for m in services %}<tr><td>{{ m.date|date:"j M" }}</td><td class="name">{{ m.vehicle.name }} — {{ m.get_kind_display }}<br><small class="hint">{{ m.description }}{% if m.garage %} · {{ m.garage }}{% endif %}</small></td><td class="num">{{ m.cost|floatformat:2 }}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing logged.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent fuel</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for f in fuels %}<tr><td>{{ f.date|date:"j M" }}</td><td class="name">{{ f.vehicle.name }}{% if f.odometer %}<br><small class="hint">{{ f.odometer }} km</small>{% endif %}</td><td class="num">{{ f.litres }} L</td><td class="num">{{ f.cost|floatformat:2 }}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing logged.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="vehicle">
+      <h3 style="margin:0 0 .6rem">Add a vehicle</h3>
+      <div class="row2"><div><label>Name</label><input name="name" required maxlength="60" placeholder="Bus 1"></div><div><label>Plate</label><input name="plate" required maxlength="20"></div></div>
+      <div class="row2"><div><label>Make / model</label><input name="make_model" maxlength="80"></div><div><label>Seats (children)</label><input name="capacity" value="30" inputmode="numeric"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button></form>
+    {% if rows %}
+    <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="doc">
+      <h3 style="margin:0 0 .6rem">Add a paper</h3>
+      <div class="row2"><div><label>Vehicle</label><select name="vehicle">{% for r in rows %}<option value="{{ r.vehicle.pk }}">{{ r.vehicle.name }}</option>{% endfor %}</select></div><div><label>Paper</label><select name="kind">{% for k, v in doc_kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+      <div class="row2"><div><label>Number</label><input name="number" maxlength="60"></div><div><label>Expires</label><input type="date" name="expires_on"></div></div>
+      <div><label>Scan (PDF or photo)</label><input type="file" name="file"></div>
+      <button class="fin-btn" type="submit">Save</button></form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="service">
+      <h3 style="margin:0 0 .6rem">Log servicing / repair</h3>
+      <div class="row2"><div><label>Vehicle</label><select name="vehicle">{% for r in rows %}<option value="{{ r.vehicle.pk }}">{{ r.vehicle.name }}</option>{% endfor %}</select></div><div><label>Kind</label><select name="kind">{% for k, v in maint_kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+      <div><label>Work done</label><input name="description" required maxlength="255"></div>
+      <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Cost</label><input name="cost" value="0" inputmode="decimal"></div></div>
+      <div class="row2"><div><label>Odometer (km)</label><input name="odometer" inputmode="numeric"></div><div><label>Garage</label><input name="garage" maxlength="120"></div></div>
+      <div class="row2"><div><label>Next service date</label><input type="date" name="next_due_date"></div><div><label>…or at km</label><input name="next_due_km" inputmode="numeric"></div></div>
+      <button class="fin-btn" type="submit">Save</button></form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="fuel">
+      <h3 style="margin:0 0 .6rem">Log fuel</h3>
+      <div class="row2"><div><label>Vehicle</label><select name="vehicle">{% for r in rows %}<option value="{{ r.vehicle.pk }}">{{ r.vehicle.name }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+      <div class="row2"><div><label>Litres</label><input name="litres" required inputmode="decimal"></div><div><label>Cost</label><input name="cost" required inputmode="decimal"></div></div>
+      <div class="row2"><div><label>Odometer (km)</label><input name="odometer" inputmode="numeric"></div><div><label>Station</label><input name="station" maxlength="120"></div></div>
+      <p class="hint" style="margin:0">Fill the tank each time and give the odometer to get km per litre.</p>
+      <button class="fin-btn" type="submit">Save</button></form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

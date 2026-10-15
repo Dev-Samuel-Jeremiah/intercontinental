@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Sports and fitness{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Care</div>
+  <h1 class="fin-title"><em>Sports &amp; fitness</em></h1>
+  <p class="fin-sub">Team selections, captains and fitness test results. Students see their teams and personal bests on "My wellbeing".</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% for t in teams %}<div class="panel"><div class="panel-h"><h3>{{ t.name }}</h3><span class="hint">{{ t.sport }}{% if t.season %} · {{ t.season }}{% endif %}{% if t.coach %} · coach {{ t.coach.full_name }}{% endif %}</span></div><div class="panel-b">
+      {% for m in t.members.all %}<form method="post" style="display:flex;justify-content:space-between;align-items:center;padding:.2rem 0">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ m.pk }}"><span>{{ m.student.full_name }} <span class="hint">{{ m.student.class_assigned|default:"" }}{% if m.position %} · {{ m.position }}{% endif %}</span>{% if m.captain %} <span class="chip gold">Captain</span>{% endif %}</span><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form>{% empty %}<p class="empty">No players yet.</p>{% endfor %}
+      <details><summary>Select players</summary><form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="member"><input type="hidden" name="team" value="{{ t.pk }}">
+        <select name="students" multiple size="6" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select>
+        <div class="row2"><div><label>Position</label><input name="position" maxlength="40"></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="captain"> Captain</label></div></div>
+        <button class="fin-btn fin-btn-sm" type="submit">Add</button></form></details>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No teams yet.</p></div></div>{% endfor %}
+    <div class="panel"><div class="panel-h"><h3>Best results</h3><form method="get"><select name="test" onchange="this.form.submit()">{% for k, v in tests %}<option value="{{ k }}" {% if k == test %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></form></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for f in board %}<tr><td>{{ forloop.counter }}</td><td class="name">{{ f.student.full_name }}<br><small class="hint">{{ f.student.class_assigned|default:"" }}</small></td><td class="num">{{ f.value|floatformat:"-2" }}</td><td class="hint">{{ f.date|date:"j M Y" }}</td></tr>{% empty %}<tr><td class="empty">No results yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel fin-form" style="padding:1.2rem">
+      <h3 style="margin:0 0 .6rem">Record a fitness test for a class</h3>
+      <form method="get" style="margin-bottom:.5rem"><input type="hidden" name="test" value="{{ test }}"><select name="class" onchange="this.form.submit()"><option value="">Choose a class…</option>{% for k in classes %}<option value="{{ k.pk }}" {% if k == cls %}selected{% endif %}>{{ k.name }}</option>{% endfor %}</select></form>
+      {% if cls %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="fitness">
+        <div class="row2"><div><label>Test</label><select name="test">{% for k, v in tests %}<option value="{{ k }}" {% if k == test %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+        {% for s in class_students %}<div style="display:flex;justify-content:space-between;gap:.4rem;align-items:center;margin:.2rem 0"><span>{{ s.full_name }}</span><input name="v_{{ s.pk }}" inputmode="decimal" style="width:90px"></div>{% endfor %}
+        <button class="fin-btn fin-btn-gold" type="submit">Save results</button></form>{% endif %}
+    </div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="team">
+      <h3 style="margin:0 0 .6rem">New team</h3>
+      <div class="row2"><div><label>Name</label><input name="name" required maxlength="80" placeholder="U-15 Boys Football"></div><div><label>Sport</label><input name="sport" required maxlength="60"></div></div>
+      <div class="row2"><div><label>Coach</label><select name="coach"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div><div><label>Season</label><input name="season" maxlength="40"></div></div>
+      <button class="fin-btn" type="submit">Create</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

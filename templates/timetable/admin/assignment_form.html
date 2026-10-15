@@ -1,0 +1,523 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ action }} Assignment{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:860px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+.page-header{
+  margin-bottom:2rem;
+}
+
+.page-header-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  padding:.55rem .9rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.18);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.page-subtitle{
+  margin:1rem 0 0;
+  color:var(--slate2);
+  font-size:.95rem;
+  line-height:1.7;
+  max-width:700px;
+}
+
+.header-divider{
+  position:relative;
+  margin-top:1.4rem;
+  border-top:1px solid var(--rim);
+}
+
+.header-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.back-link{
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  margin-bottom:1.4rem;
+  color:var(--champagne);
+  text-decoration:none;
+  font-size:.85rem;
+  font-weight:500;
+}
+
+.back-link:hover{
+  color:var(--champagne-lt);
+}
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+  animation-delay:.08s;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel-header{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+  padding:1.35rem 1.5rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-icon{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  background:var(--purple-dim);
+  border:1px solid var(--purple-border);
+  color:var(--purple);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.92rem;
+  flex-shrink:0;
+}
+
+.panel-header h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.7rem;
+}
+
+.alert{
+  display:flex;
+  align-items:flex-start;
+  gap:.8rem;
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#fca5a5;
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  margin-bottom:1.3rem;
+  font-size:.88rem;
+}
+
+.alert i{
+  font-size:1rem;
+  margin-top:1px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.2rem;
+}
+
+.form-group{
+  margin-bottom:1.2rem;
+}
+
+.form-group.full{
+  grid-column:1 / -1;
+}
+
+label{
+  display:block;
+  margin-bottom:.55rem;
+  font-size:.73rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+}
+
+label .helper{
+  display:block;
+  margin-top:.35rem;
+  text-transform:none;
+  letter-spacing:0;
+  font-size:.78rem;
+  font-weight:400;
+  color:var(--slate);
+  line-height:1.5;
+}
+
+select,
+input[type=number],
+input[type=text]{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:.95rem 1rem;
+  color:var(--white);
+  font-size:.92rem;
+  font-family:'Outfit',sans-serif;
+  outline:none;
+  transition:.25s ease;
+  box-sizing:border-box;
+}
+
+select:focus,
+input[type=number]:focus,
+input[type=text]:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+select option{
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.error-text{
+  margin:.45rem 0 0;
+  color:#fca5a5;
+  font-size:.78rem;
+}
+
+.form-footer{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+  margin-top:2rem;
+  flex-wrap:wrap;
+}
+
+.submit-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  padding:.95rem 1.4rem;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  font-size:.9rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:.25s ease;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.submit-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(244,210,31,.28);
+}
+
+.cancel-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.5rem;
+  padding:.95rem 1.25rem;
+  border-radius:12px;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+  text-decoration:none;
+  font-size:.9rem;
+  font-weight:600;
+  transition:.25s ease;
+}
+
+.cancel-btn:hover{
+  background:var(--surface3);
+  transform:translateY(-1px);
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (max-width:768px){
+
+  .your-wrap{
+    padding:1.5rem 1.2rem 3rem;
+  }
+
+  .page-header-top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .page-title{
+    font-size:2.3rem;
+  }
+
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .panel-body{
+    padding:1.25rem;
+  }
+
+  .form-footer{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .submit-btn,
+  .cancel-btn{
+    width:100%;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <div class="page-header">
+
+    <div class="page-header-top">
+
+      <div class="eyebrow">
+        Timetable Assignment
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-diagram-3"></i>
+        {{ action }} Mode
+      </div>
+
+    </div>
+
+    <h1 class="page-title">
+      {{ action }} <em>Assignment</em>
+    </h1>
+
+    <p class="page-subtitle">
+      Assign a teacher to handle a subject for a specific class
+      and define how many periods the subject should appear weekly.
+    </p>
+
+    <div class="header-divider"></div>
+
+  </div>
+
+  <a href="{% url 'timetable:config_detail' config.pk %}" class="back-link">
+    <i class="bi bi-arrow-left"></i>
+    Back to {{ config.name }}
+  </a>
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-icon">
+        <i class="bi bi-journal-check"></i>
+      </div>
+
+      <h3>Teacher Assignment Form</h3>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% if messages %}
+        {% for msg in messages %}
+        <div class="alert">
+          <i class="bi bi-exclamation-triangle"></i>
+          <div>{{ msg }}</div>
+        </div>
+        {% endfor %}
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>
+              Teacher
+            </label>
+
+            {{ form.staff }}
+
+            {% if form.staff.errors %}
+            <p class="error-text">
+              {{ form.staff.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>
+              Subject
+            </label>
+
+            {{ form.subject }}
+
+            {% if form.subject.errors %}
+            <p class="error-text">
+              {{ form.subject.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="form-group full">
+            <label>
+              Class
+            </label>
+
+            {{ form.school_class }}
+
+            {% if form.school_class.errors %}
+            <p class="error-text">
+              {{ form.school_class.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="form-group full">
+            <label>
+              Periods Per Week
+
+              <span class="helper">
+                Define how many times this subject should appear
+                in the timetable during the week.
+              </span>
+            </label>
+
+            {{ form.periods_per_week }}
+
+            {% if form.periods_per_week.errors %}
+            <p class="error-text">
+              {{ form.periods_per_week.errors.0 }}
+            </p>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>Double periods <span class="helper">How many of those periods come as back-to-back doubles, e.g. for practicals. Each double uses two periods.</span></label>
+            {{ form.double_periods }}
+            {% if form.double_periods.errors %}<p class="error-text">{{ form.double_periods.errors.0 }}</p>{% endif %}
+            {% if form.non_field_errors %}<p class="error-text">{{ form.non_field_errors.0 }}</p>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label>Room needed <span class="helper">Lessons that need a lab, computer room or hall get a free one of that kind.</span></label>
+            {{ form.room_kind }}
+          </div>
+
+        </div>
+
+        <div class="form-footer">
+
+          <button type="submit" class="submit-btn">
+            <i class="bi bi-check-circle"></i>
+            {{ action }} Assignment
+          </button>
+
+          <a href="{% url 'timetable:config_detail' config.pk %}" class="cancel-btn">
+            <i class="bi bi-x-circle"></i>
+            Cancel
+          </a>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+<h2>Assign Subject to Student</h2>
+<div class="card">
+  {% if messages %}
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      {% for message in messages %}
+        Swal.fire({
+          icon: "{{ message.tags }}".includes("success") ? "success" :
+                "{{ message.tags }}".includes("error") ? "error" :
+                "{{ message.tags }}".includes("warning") ? "warning" : "info",
+          title: "{{ message.tags|title }}",
+          text: "{{ message|escapejs }}",
+          confirmButtonColor: "#2563eb"
+        });
+      {% endfor %}
+    });
+    </script>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Assign Subject</button>
+  </form>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <h3>Existing Student-Subject Assignments</h3>
+  <ul>
+    {% for a in assignments %}
+      <li>{{ a.student.full_name }} → {{ a.subject.name }}</li>
+    {% empty %}
+      <li>No assignments yet.</li>
+    {% endfor %}
+  </ul>
+</div>

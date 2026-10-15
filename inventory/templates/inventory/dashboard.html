@@ -1,0 +1,568 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Inventory Dashboard{% endblock %}
+{% block breadcrumb %}Inventory Dashboard{% endblock %}
+{% block content %}
+
+<style>
+  /* ── Design Tokens ── */
+  /* design tokens come from dashboard/base.html */
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Page Wrap ── */
+  .inv-wrap {
+    max-width: 1380px;
+    padding: 2rem 2.5rem 4rem;
+    margin: 0 auto;
+    animation: riseUp .4s ease both;
+    font-family: "Outfit", system-ui, sans-serif;
+  }
+
+  /* ── Page Header ── */
+  .pg-header {
+    margin-bottom: 2.25rem;
+    animation: riseUp .45s ease both;
+  }
+  .pg-eyebrow {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: .6rem;
+  }
+  .pg-eyebrow-line {
+    width: 28px; height: 1px;
+    background: var(--champagne); opacity: .6;
+  }
+  .pg-eyebrow-label {
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    color: var(--champagne);
+  }
+  .pg-title-row {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .pg-title {
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 2.1rem; font-weight: 600;
+    color: var(--white); line-height: 1.15;
+    letter-spacing: -.3px; margin: 0;
+  }
+  .pg-title em {
+    font-style: italic; color: var(--champagne);
+  }
+  .pg-count-badge {
+    display: inline-flex; align-items: center; gap: .45rem;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.25);
+    border-radius: 50px; padding: .38rem 1rem;
+    font-size: .75rem; font-weight: 600;
+    color: var(--champagne); white-space: nowrap;
+    margin-top: .3rem;
+  }
+  .pg-header-divider {
+    margin-top: 1.25rem; height: 1px;
+    background: var(--rim2); position: relative;
+  }
+  .pg-header-divider::after {
+    content: "";
+    position: absolute; left: 0; top: 0;
+    width: 80px; height: 1px;
+    background: var(--champagne); opacity: .5;
+  }
+
+  /* ── KPI Grid ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 1rem; margin-bottom: 1.75rem;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.35rem;
+    display: flex; align-items: center; gap: 1rem;
+    position: relative; overflow: hidden;
+    animation: riseUp .45s ease both;
+    transition: border-color .2s, transform .2s;
+  }
+  .kpi-card::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  }
+  .kpi-card:hover {
+    border-color: var(--rim3);
+    transform: translateY(-2px);
+  }
+  .kpi-icon-wrap {
+    width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+  }
+  .kpi-icon-wrap.champagne { background: var(--champagne-dim); color: var(--champagne); }
+  .kpi-icon-wrap.green     { background: var(--green-dim);     color: var(--green); }
+  .kpi-icon-wrap.amber     { background: var(--amber-dim);     color: var(--amber); }
+  .kpi-icon-wrap.red       { background: var(--red-dim);       color: var(--red); }
+  .kpi-icon-wrap.blue      { background: var(--blue-dim);      color: var(--blue); }
+  .kpi-label {
+    font-size: .71rem; font-weight: 600; letter-spacing: .4px;
+    text-transform: uppercase; color: var(--slate); margin-bottom: .25rem;
+  }
+  .kpi-value {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.85rem; font-weight: 600;
+    color: var(--white); line-height: 1;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    animation: riseUp .45s ease both;
+  }
+  .panel::before {
+    content: "";
+    display: block; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  }
+  .panel-header {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: .75rem;
+    padding: 1rem 1.35rem;
+    border-bottom: 1px solid var(--rim);
+    flex-wrap: wrap;
+  }
+  .panel-title-group {
+    display: flex; align-items: center; gap: .75rem;
+  }
+  .panel-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; flex-shrink: 0;
+  }
+  .panel-icon.green  { background: var(--green-dim);  color: var(--green); }
+  .panel-icon.amber  { background: var(--amber-dim);  color: var(--amber); }
+  .panel-icon.blue   { background: var(--blue-dim);   color: var(--blue); }
+  .panel-icon.red    { background: var(--red-dim);    color: var(--red); }
+  .panel-icon.purple { background: var(--purple-dim); color: var(--purple); }
+  .panel-icon.teal   { background: var(--teal-dim);   color: var(--teal); }
+  .panel-icon.champagne { background: var(--champagne-dim); color: var(--champagne); }
+  .panel-h3 {
+    font-size: .88rem; font-weight: 600;
+    color: var(--white); margin: 0;
+    font-family: "Outfit", sans-serif;
+  }
+  .panel-body { padding: 0; }
+
+  /* ── Quick Actions ── */
+  .quick-actions {
+    display: flex; flex-wrap: wrap; gap: .65rem;
+    padding: 1.25rem 1.35rem;
+  }
+  .qa-btn {
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .5rem 1rem; border-radius: var(--radius-xs);
+    font-size: .78rem; font-weight: 600;
+    transition: all .15s; text-decoration: none;
+    border: 1px solid;
+  }
+  .qa-btn i { font-size: .85rem; }
+  .qa-btn.primary {
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    border-color: transparent; color: #0a1f44;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  }
+  .qa-btn.primary:hover { box-shadow: 0 6px 24px rgba(244,210,31,.35); filter: brightness(1.07); }
+  .qa-btn.green   { background: var(--green-dim);  border-color: var(--green-border);  color: var(--green); }
+  .qa-btn.amber   { background: var(--amber-dim);  border-color: var(--amber-border);  color: var(--amber); }
+  .qa-btn.blue    { background: var(--blue-dim);   border-color: var(--blue-border);   color: var(--blue); }
+  .qa-btn.purple  { background: var(--purple-dim); border-color: var(--purple-border); color: var(--purple); }
+  .qa-btn.outline {
+    background: transparent; border-color: var(--rim3);
+    color: var(--slate2);
+  }
+  .qa-btn.outline:hover { background: var(--rim2); color: var(--white); }
+  .qa-btn.green:hover  { background: rgba(94,203,142,.22); }
+  .qa-btn.amber:hover  { background: rgba(245,158,11,.22); }
+  .qa-btn.blue:hover   { background: rgba(96,168,232,.22); }
+  .qa-btn.purple:hover { background: rgba(168,144,240,.22); }
+
+  /* ── Small link button ── */
+  .btn-sm-link {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .32rem .8rem; border-radius: var(--radius-xs);
+    font-size: .72rem; font-weight: 600;
+    background: transparent; border: 1px solid var(--rim3);
+    color: var(--slate2); text-decoration: none;
+    transition: all .15s; white-space: nowrap;
+  }
+  .btn-sm-link:hover { background: var(--rim2); color: var(--white); }
+
+  /* ── Two-col grid ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media(max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* ── Table ── */
+  .inv-table { width: 100%; border-collapse: collapse; font-size: .81rem; }
+  .inv-table th {
+    font-size: .65rem; font-weight: 700; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--slate);
+    padding: .75rem 1.35rem; text-align: left;
+    border-bottom: 1px solid var(--rim);
+    background: var(--surface2);
+  }
+  .inv-table td {
+    padding: .85rem 1.35rem; color: var(--slate2);
+    border-bottom: 1px solid var(--rim);
+    vertical-align: middle;
+  }
+  .inv-table tbody tr:last-child td { border-bottom: none; }
+  .inv-table tbody tr {
+    transition: background .13s;
+  }
+  .inv-table tbody tr:hover { background: rgba(255,255,255,.025); }
+  .inv-table td strong { color: var(--white); font-weight: 600; }
+  .inv-table small { font-size: .72rem; color: var(--slate); }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: .2rem .65rem; border-radius: 50px;
+    font-size: .68rem; font-weight: 700; letter-spacing: .3px;
+    border: 1px solid;
+  }
+  .badge-green  { background: var(--green-dim);  border-color: var(--green-border);  color: var(--green); }
+  .badge-red    { background: var(--red-dim);    border-color: var(--red-border);    color: var(--red); }
+  .badge-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  color: var(--amber); }
+  .badge-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   color: var(--blue); }
+  .badge-purple { background: var(--purple-dim); border-color: var(--purple-border); color: var(--purple); }
+  .badge-slate  { background: var(--rim2); border-color: var(--rim3); color: var(--slate2); }
+
+  /* ── Stock-in action btn ── */
+  .tbl-action {
+    display: inline-flex; align-items: center; gap: .3rem;
+    padding: .28rem .7rem; border-radius: var(--radius-xs);
+    font-size: .71rem; font-weight: 600; text-decoration: none;
+    border: 1px solid; transition: all .13s;
+  }
+  .tbl-action.green { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+  .tbl-action.green:hover { background: rgba(94,203,142,.22); }
+  .tbl-action.red   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red); }
+  .tbl-action.red:hover { background: rgba(232,112,112,.18); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 3rem 1.5rem; gap: .75rem; text-align: center;
+  }
+  .empty-icon-box {
+    width: 56px; height: 56px; border-radius: 14px;
+    background: var(--surface3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; color: var(--slate);
+    margin-bottom: .25rem;
+  }
+  .empty-title { font-size: .88rem; font-weight: 600; color: var(--slate2); margin: 0; }
+  .empty-sub   { font-size: .78rem; color: var(--slate); margin: 0; }
+
+  /* ── Stagger delays ── */
+  .kpi-card:nth-child(1) { animation-delay: .05s; }
+  .kpi-card:nth-child(2) { animation-delay: .10s; }
+  .kpi-card:nth-child(3) { animation-delay: .15s; }
+  .kpi-card:nth-child(4) { animation-delay: .20s; }
+  .kpi-card:nth-child(5) { animation-delay: .25s; }
+  .panel:nth-of-type(1)  { animation-delay: .10s; }
+  .panel:nth-of-type(2)  { animation-delay: .18s; }
+  .panel:nth-of-type(3)  { animation-delay: .24s; }
+  .panel:nth-of-type(4)  { animation-delay: .30s; }
+  .panel:nth-of-type(5)  { animation-delay: .36s; }
+
+  @media(max-width: 600px) {
+    .inv-wrap { padding: 1.25rem .9rem 3rem; }
+    .pg-title { font-size: 1.6rem; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+
+<div class="inv-wrap">
+
+  <!-- ═══ Page Header ═══ -->
+  <div class="pg-header">
+    <div class="pg-eyebrow">
+      <span class="pg-eyebrow-line"></span>
+      <span class="pg-eyebrow-label">Asset Management</span>
+    </div>
+    <div class="pg-title-row">
+      <h1 class="pg-title">Inventory <em>Dashboard</em></h1>
+      <span class="pg-count-badge">
+        <i class="bi bi-boxes"></i>
+        {{ metrics.total_assets }} Total Assets
+      </span>
+    </div>
+    <div class="pg-header-divider"></div>
+  </div>
+
+  <!-- ═══ KPI Cards ═══ -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap champagne"><i class="bi bi-clipboard2-data-fill"></i></div>
+      <div>
+        <div class="kpi-label">Total Assets</div>
+        <div class="kpi-value">{{ metrics.total_assets }}</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap green"><i class="bi bi-tag-fill"></i></div>
+      <div>
+        <div class="kpi-label">Fixed Assets</div>
+        <div class="kpi-value">{{ metrics.fixed_assets }}</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap amber"><i class="bi bi-box-seam-fill"></i></div>
+      <div>
+        <div class="kpi-label">Consumables</div>
+        <div class="kpi-value">{{ metrics.consumables }}</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap red"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div>
+        <div class="kpi-label">Low Stock</div>
+        <div class="kpi-value">{{ metrics.low_stock_count }}</div>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon-wrap blue"><i class="bi bi-link-45deg"></i></div>
+      <div>
+        <div class="kpi-label">Active Assignments</div>
+        <div class="kpi-value">{{ metrics.active_assignments }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Quick Actions ═══ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-icon champagne"><i class="bi bi-lightning-fill"></i></div>
+        <h3 class="panel-h3">Quick Actions</h3>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="quick-actions">
+        <a href="{% url 'inventory:add_asset' %}" class="qa-btn primary">
+          <i class="bi bi-plus-circle-fill"></i> Add Asset
+        </a>
+        <a href="{% url 'inventory:stock_in' %}" class="qa-btn green">
+          <i class="bi bi-box-arrow-in-down"></i> Stock In
+        </a>
+        <a href="{% url 'inventory:issue_asset' %}" class="qa-btn amber">
+          <i class="bi bi-box-arrow-up"></i> Issue Asset
+        </a>
+        <a href="{% url 'inventory:return_asset' %}" class="qa-btn blue">
+          <i class="bi bi-arrow-return-left"></i> Return Asset
+        </a>
+        <a href="{% url 'inventory:stock_adjust' %}" class="qa-btn purple">
+          <i class="bi bi-sliders"></i> Adjust Stock
+        </a>
+        <a href="{% url 'inventory:add_maintenance' %}" class="qa-btn outline">
+          <i class="bi bi-tools"></i> Log Maintenance
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Two-Column: Low Stock + Recent Movements ═══ -->
+  <div class="two-col">
+
+    <!-- Low Stock Alerts -->
+    {% if low_stock_assets %}
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="panel-icon red"><i class="bi bi-exclamation-circle-fill"></i></div>
+          <h3 class="panel-h3">Low Stock Alerts</h3>
+        </div>
+        <a href="{% url 'inventory:asset_list' %}" class="btn-sm-link">
+          <i class="bi bi-grid-3x3-gap"></i> View All
+        </a>
+      </div>
+      <div class="panel-body">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Stock</th>
+              <th>Reorder</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in low_stock_assets %}
+            <tr>
+              <td>
+                <strong>{{ a.name }}</strong><br>
+                <small>{{ a.asset_code }}</small>
+              </td>
+              <td><span class="badge badge-red">{{ a.current_stock }} {{ a.unit }}</span></td>
+              <td><span class="badge badge-slate">{{ a.reorder_level }}</span></td>
+              <td>
+                <a href="{% url 'inventory:stock_in' %}?asset={{ a.id }}" class="tbl-action green">
+                  <i class="bi bi-box-arrow-in-down"></i> Stock In
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="panel-icon red"><i class="bi bi-exclamation-circle-fill"></i></div>
+          <h3 class="panel-h3">Low Stock Alerts</h3>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="empty-state">
+          <div class="empty-icon-box"><i class="bi bi-check2-circle"></i></div>
+          <p class="empty-title">All stock levels healthy</p>
+          <p class="empty-sub">No items are below their reorder threshold.</p>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Movements -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="panel-icon teal"><i class="bi bi-activity"></i></div>
+          <h3 class="panel-h3">Recent Movements</h3>
+        </div>
+        <a href="{% url 'inventory:stock_ledger' %}" class="btn-sm-link">
+          <i class="bi bi-journal-bookmark"></i> Full Ledger
+        </a>
+      </div>
+      <div class="panel-body">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Type</th>
+              <th>Qty</th>
+              <th>By</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for m in recent_movements %}
+            <tr>
+              <td><strong>{{ m.asset.name }}</strong></td>
+              <td>
+                {% if m.movement_type == 'IN' %}
+                  <span class="badge badge-green">IN</span>
+                {% elif m.movement_type == 'OUT' %}
+                  <span class="badge badge-red">OUT</span>
+                {% else %}
+                  <span class="badge badge-amber">ADJUST</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--white); font-weight:600;">{{ m.quantity }}</td>
+              <td>{{ m.performed_by.get_full_name|default:m.performed_by.username }}</td>
+              <td style="white-space:nowrap; font-size:.75rem; color:var(--slate);">
+                {{ m.date|date:"M j, H:i" }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon-box"><i class="bi bi-clock-history"></i></div>
+                  <p class="empty-title">No movements yet</p>
+                  <p class="empty-sub">Stock ins and issues will appear here.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>{# end two-col #}
+
+  <!-- ═══ Active Assignments ═══ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="panel-icon purple"><i class="bi bi-link-45deg"></i></div>
+        <h3 class="panel-h3">Active Assignments</h3>
+      </div>
+      <a href="{% url 'inventory:assignment_report' %}" class="btn-sm-link">
+        <i class="bi bi-file-earmark-text"></i> Full Report
+      </a>
+    </div>
+    <div class="panel-body">
+      <div style="overflow-x:auto;">
+        <table class="inv-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Assigned To</th>
+              <th>Location</th>
+              <th>Qty</th>
+              <th>Issued</th>
+              <th>Due Back</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in recent_assignments %}
+            <tr>
+              <td><strong>{{ a.asset.name }}</strong></td>
+              <td>{{ a.assigned_to_user.get_full_name|default:a.assigned_to_user|default:"—" }}</td>
+              <td>{{ a.location|default:"—" }}</td>
+              <td style="color:var(--white); font-weight:600;">{{ a.quantity }}</td>
+              <td style="white-space:nowrap; font-size:.78rem;">{{ a.issued_at|date:"M j, Y" }}</td>
+              <td>
+                {% if a.expected_return_date %}
+                  {% if a.expected_return_date < today %}
+                    <span class="badge badge-red"><i class="bi bi-exclamation-circle" style="font-size:.68rem;margin-right:2px;"></i>{{ a.expected_return_date|date:"M j, Y" }}</span>
+                  {% else %}
+                    <span class="badge badge-blue">{{ a.expected_return_date|date:"M j, Y" }}</span>
+                  {% endif %}
+                {% else %}
+                  <span style="color:var(--slate);">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-icon-box"><i class="bi bi-inbox"></i></div>
+                  <p class="empty-title">No active assignments</p>
+                  <p class="empty-sub">Assets issued to staff or rooms will appear here.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>{# end inv-wrap #}
+{% endblock %}

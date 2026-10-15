@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Who read it — {{ ann.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'announcements:announcement_list' %}" style="color:inherit">Announcements</a></div>
+  <h1 class="fin-title">{{ ann.title }}</h1>
+  <p class="fin-sub">{{ rep.read }} of {{ rep.total }} families have opened it on the parent portal ({{ rep.pct }}%).</p>
+</div></div>
+{% if ann.audience == 'students' %}<div class="panel"><div class="panel-b"><p class="empty">This announcement is for students only, so parents are not tracked.</p></div></div>{% else %}
+{% if rep.read < rep.total %}
+<form method="post" class="fin-form" style="display:flex;gap:.6rem;align-items:center;margin-bottom:1.2rem;flex-wrap:wrap">{% csrf_token %}
+  <select name="channel" style="max-width:200px"><option value="BOTH">SMS and email</option><option value="EMAIL">Email only</option><option value="SMS">SMS only</option></select>
+  <button class="fin-btn fin-btn-gold" type="submit">Remind families who have not read it</button>
+</form>{% endif %}
+{% if reminders %}<p class="hint">Reminders sent: {% for r in reminders %}{{ r.sent_at|date:"j M H:i" }} ({{ r.families }} families){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+<div class="panel"><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Family</th><th>Children</th><th>Read</th></tr></thead><tbody>
+  {% for r in rep.rows %}<tr><td class="name">{{ r.first.parent_name|default:"—" }}</td><td>{% for c in r.children %}{{ c.full_name }}{% if c.class_assigned %} ({{ c.class_assigned.name }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+    <td>{% if r.read %}<span class="chip green">Read</span>{% else %}<span class="chip">Not yet</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="3" class="empty">No families in this audience.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endif %}
+{% endblock %}

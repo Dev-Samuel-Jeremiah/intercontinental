@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Corrections from parents{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Corrections from <em>parents</em></h1>
+    <p class="fin-sub">Parents point out mistakes on their child's record. Nothing changes until you approve it.</p>
+  </div>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+    {% for v, l in statuses %}<a class="fin-btn fin-btn-sm{% if status == v %} fin-btn-gold{% endif %}" href="?status={{ v }}">{{ l }}{% if v == 'PENDING' and waiting %} ({{ waiting }}){% endif %}</a>{% endfor %}
+  </div>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th><th>What</th><th>Now</th><th>Should be</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{% url 'users:student_profile' r.student.id %}" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a><br><span class="hint">asked {{ r.created_at|date:"j M Y" }}</span></td>
+      <td>{{ r.get_field_display }}{% if r.note %}<br><span class="hint">“{{ r.note }}”</span>{% endif %}</td>
+      <td class="hint">{{ r.current_value|default:"—" }}</td>
+      <td><b style="color:var(--champagne-lt)">{{ r.new_value }}</b></td>
+      <td style="white-space:nowrap">
+        {% if r.status == 'PENDING' %}
+        <form method="post" style="display:flex;gap:.3rem;flex-wrap:wrap">{% csrf_token %}
+          <input type="hidden" name="request_id" value="{{ r.id }}">
+          <input name="review_note" placeholder="Note (optional)" maxlength="255" style="width:130px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem">
+          <button class="fin-btn fin-btn-sm fin-btn-gold" name="decision" value="approve" type="submit">Approve</button>
+          <button class="fin-btn fin-btn-sm fin-btn-danger" name="decision" value="reject" type="submit">Decline</button>
+        </form>
+        {% else %}<span class="chip {% if r.status == 'APPROVED' %}green{% else %}red{% endif %}">{{ r.get_status_display|lower }}</span>
+          <br><span class="hint">{{ r.reviewed_at|date:"j M Y" }}{% if r.review_note %} · {{ r.review_note }}{% endif %}</span>{% endif %}
+      </td></tr>
+  {% empty %}<tr><td colspan="5" class="empty"><i class="bi bi-inbox"></i><p>Nothing here.</p></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

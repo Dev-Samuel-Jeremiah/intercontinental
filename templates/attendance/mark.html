@@ -1,0 +1,650 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+    background: #0f2348;
+    color: var(--white);
+    font-family: 'Outfit', sans-serif;
+}
+
+.your-wrap{
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+}
+
+/* ================= HEADER ================= */
+
+.page-header{
+    margin-bottom: 2rem;
+}
+
+.page-header-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1.2rem;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    color:var(--champagne);
+    text-transform:uppercase;
+    letter-spacing:3px;
+    font-size:.72rem;
+    font-weight:600;
+}
+
+.eyebrow::before{
+    content:"";
+    width:42px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.7;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    padding:.65rem 1rem;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.22);
+    color:var(--champagne-lt);
+    font-size:.85rem;
+    font-weight:500;
+    white-space:nowrap;
+}
+
+.page-title{
+    margin:0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:3rem;
+    font-weight:700;
+    color:var(--white);
+    line-height:1.05;
+    letter-spacing:-.5px;
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+    font-weight:600;
+}
+
+.page-subtitle{
+    margin-top:.7rem;
+    color:var(--slate2);
+    font-size:.98rem;
+}
+
+.header-divider{
+    position:relative;
+    height:1px;
+    background:var(--rim);
+    margin-top:1.7rem;
+}
+
+.header-divider::after{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:80px;
+    height:1px;
+    background:var(--champagne);
+}
+
+/* ================= PANELS ================= */
+
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+    animation-delay:.08s;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        var(--rim3),
+        transparent
+    );
+}
+
+.panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:1.2rem 1.4rem;
+    border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:var(--blue);
+    flex-shrink:0;
+}
+
+.panel-title h3{
+    margin:0;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+.panel-body{
+    padding:1.5rem;
+}
+
+/* ================= FORMS ================= */
+
+.form-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 320px));
+    gap:1rem;
+    margin-bottom:1.6rem;
+}
+
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:.55rem;
+}
+
+.form-group label{
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+.form-control{
+    width:100%;
+    height:48px;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    color:var(--white);
+    padding:0 1rem;
+    font-family:'Outfit', sans-serif;
+    transition:.25s ease;
+}
+
+.form-control:focus{
+    outline:none;
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* ================= TABLE ================= */
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+.attendance-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.attendance-table thead th{
+    padding:1rem 1rem;
+    color:var(--slate2);
+    font-size:.76rem;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    font-weight:600;
+    border-bottom:1px solid var(--rim);
+}
+
+.attendance-table tbody td{
+    padding:1rem;
+    border-bottom:1px solid var(--rim);
+    vertical-align:middle;
+    color:var(--white);
+}
+
+.attendance-table tbody tr{
+    transition:.22s ease;
+}
+
+.attendance-table tbody tr:hover{
+    background:rgba(255,255,255,.025);
+}
+
+.student-cell{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+}
+
+.student-avatar{
+    width:42px;
+    height:42px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg, #3a3a50, #1a3360);
+    border:1px solid var(--rim2);
+    color:var(--champagne-lt);
+    font-size:.82rem;
+    font-weight:700;
+    text-transform:uppercase;
+    flex-shrink:0;
+}
+
+.student-meta{
+    display:flex;
+    flex-direction:column;
+    gap:.18rem;
+}
+
+.student-name{
+    font-weight:500;
+    color:var(--white);
+}
+
+.student-id{
+    font-size:.8rem;
+    color:var(--slate);
+}
+
+/* ================= STATUS ================= */
+
+.status-box{
+    display:flex;
+    align-items:center;
+    gap:.85rem;
+    flex-wrap:wrap;
+}
+
+.status-option{
+    position:relative;
+}
+
+.status-option input{
+    position:absolute;
+    opacity:0;
+}
+
+.status-option label{
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    padding:.7rem .95rem;
+    border-radius:999px;
+    border:1px solid var(--rim2);
+    background:var(--surface2);
+    color:var(--slate2);
+    cursor:pointer;
+    transition:.25s ease;
+    font-size:.92rem;
+    font-weight:500;
+}
+
+.status-option label i{
+    font-size:.9rem;
+}
+
+.status-option input:checked + label.present-label{
+    background:var(--green-dim);
+    border-color:var(--green-border);
+    color:var(--green);
+}
+
+.status-option input:checked + label.absent-label{
+    background:var(--red-dim);
+    border-color:var(--red-border);
+    color:var(--red);
+}
+
+/* ================= BUTTON ================= */
+
+.submit-area{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:1.8rem;
+}
+
+.btn-submit{
+    border:none;
+    border-radius:12px;
+    padding:.95rem 1.45rem;
+    background:linear-gradient(135deg, #f4d21f, #d1ad00);
+    color:#0a1f44;
+    font-weight:600;
+    font-family:'Outfit', sans-serif;
+    display:inline-flex;
+    align-items:center;
+    gap:.7rem;
+    cursor:pointer;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+    transition:.3s ease;
+}
+
+.btn-submit:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 28px rgba(244,210,31,.28);
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty-state{
+    padding:3rem 1rem;
+    text-align:center;
+}
+
+.empty-icon{
+    width:74px;
+    height:74px;
+    margin:0 auto 1rem;
+    border-radius:18px;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--champagne);
+    font-size:1.5rem;
+}
+
+.empty-state h4{
+    margin-bottom:.45rem;
+    color:var(--white);
+}
+
+.empty-state p{
+    margin:0;
+    color:var(--slate2);
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px){
+
+    .your-wrap{
+        padding:1.4rem 1rem 3rem;
+    }
+
+    .page-header-top{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .page-title{
+        font-size:2.3rem;
+    }
+
+    .attendance-table{
+        min-width:760px;
+    }
+
+    .status-box{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+</style>
+
+<div class="your-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+
+        <div class="page-header-top">
+
+            <div>
+                <div class="eyebrow">
+                    Attendance Register
+                </div>
+
+                <h1 class="page-title">
+                    Mark <em>Attendance</em>
+                </h1>
+
+                <div class="page-subtitle">
+                    Record and manage daily student attendance for
+                    <strong>{{ school_class.name }}</strong>
+                </div>
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-people"></i>
+                {{ students|length }} Students
+            </div>
+
+        </div>
+
+        <div class="header-divider"></div>
+
+    </div>
+
+    <!-- Panel -->
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+                <div class="icon-badge">
+                    <i class="bi bi-calendar2-check"></i>
+                </div>
+
+                <h3>Attendance Sheet</h3>
+            </div>
+
+        </div>
+
+        <div class="panel-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Date -->
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label>Select Date</label>
+
+                        <input
+                            type="date"
+                            name="date"
+                            class="form-control"
+                            value="{{ date_today|date:'Y-m-d' }}"
+                        >
+                    </div>
+
+                </div>
+
+                {% if students %}
+
+                <!-- Table -->
+                <div class="table-wrap">
+
+                    <table class="attendance-table">
+
+                        <thead>
+                            <tr>
+                                <th style="width:6%;">#</th>
+                                <th style="width:44%;">Student</th>
+                                <th style="width:50%;">Attendance Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for student in students %}
+                            <tr>
+
+                                <td>
+                                    {{ forloop.counter }}
+                                </td>
+
+                                <td>
+
+                                    <div class="student-cell">
+
+                                        <div class="student-avatar">
+                                            {{ student.full_name|slice:":2" }}
+                                        </div>
+
+                                        <div class="student-meta">
+                                            <div class="student-name">
+                                                {{ student.full_name }}
+                                            </div>
+
+                                            <div class="student-id">
+                                                Student Record
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    <div class="status-box">
+
+                                        <div class="status-option">
+
+                                            <input
+                                                type="radio"
+                                                id="present_{{ student.id }}"
+                                                name="status_{{ student.id }}"
+                                                value="P"
+                                                checked
+                                            >
+
+                                            <label
+                                                for="present_{{ student.id }}"
+                                                class="present-label"
+                                            >
+                                                <i class="bi bi-check-circle"></i>
+                                                Present
+                                            </label>
+
+                                        </div>
+
+                                        <div class="status-option">
+
+                                            <input
+                                                type="radio"
+                                                id="absent_{{ student.id }}"
+                                                name="status_{{ student.id }}"
+                                                value="A"
+                                            >
+
+                                            <label
+                                                for="absent_{{ student.id }}"
+                                                class="absent-label"
+                                            >
+                                                <i class="bi bi-x-circle"></i>
+                                                Absent
+                                            </label>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                <!-- Submit -->
+                <div class="submit-area">
+
+                    <button type="submit" class="btn-submit">
+                        <i class="bi bi-save2"></i>
+                        Save Attendance
+                    </button>
+
+                </div>
+
+                {% else %}
+
+                <!-- Empty State -->
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        <i class="bi bi-journal-x"></i>
+                    </div>
+
+                    <h4>No Students Found</h4>
+
+                    <p>
+                        There are currently no students available for attendance marking.
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

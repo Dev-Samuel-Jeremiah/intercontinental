@@ -1,0 +1,42 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Curriculum{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">Syllabus <em>coverage</em></h1>
+  <p class="fin-sub">{% if term %}{{ term.name }}{% if week %} — week {{ week }}{% else %} — not started yet{% endif %}. Topics taught against what the scheme of work says should be done by now.{% else %}Set the current term to track coverage.{% endif %}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn fin-btn-gold" href="{% url 'curriculum:note_new' %}"><i class="bi bi-pencil"></i> Write a lesson note</a>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Schemes this term</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Falling behind</small><b style="{% if behind %}color:var(--red){% endif %}">{{ behind }}</b></div>
+  <div class="fin-stat"><small>Without a scheme</small><b style="{% if missing %}color:var(--amber){% endif %}">{{ missing|length }}</b></div>
+  {% if is_hod or can_manage %}<div class="fin-stat"><small>Notes to review</small><b>{{ to_review }}</b></div>{% endif %}
+</div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart-steps"></i> Coverage by class and subject</h3><span class="hint">gold line = where they should be</span></div>
+    {% if rows %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>Subject</th><th>Taught</th><th style="width:30%">Progress</th><th></th></tr></thead><tbody>
+    {% for r in rows %}<tr>
+      <td class="name">{{ r.scheme.school_class.name }}</td><td>{{ r.scheme.subject.name }}</td>
+      <td>{{ r.taught }} / {{ r.total }}</td>
+      <td><div class="bar {{ r.state }}"><i style="width:{{ r.percent }}%"></i><u style="left:{{ r.expected_percent }}%"></u></div></td>
+      <td>{% if r.state == 'behind' %}<span class="chip red">{{ r.behind }} behind</span>{% elif r.state == 'empty' %}<span class="chip amber">no topics</span>{% elif r.state == 'ahead' %}<span class="chip gold">ahead</span>{% else %}<span class="chip green">on track</span>{% endif %}
+        <a class="fin-btn fin-btn-sm" href="{% url 'curriculum:scheme' r.scheme.id %}">Open</a></td>
+    </tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="empty"><i class="bi bi-journal-text"></i><p>No schemes of work this term yet.</p><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:schemes' %}">Start one</a></div>{% endif %}
+  </div>
+  <div>
+    {% if missing %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-diamond"></i> No scheme yet</h3></div><div class="panel-b">
+      {% for subject, cls in missing|slice:":12" %}<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.35rem 0"><span>{{ cls.name }} · {{ subject.name }}</span></div>{% endfor %}
+      {% if missing|length > 12 %}<p class="hint">and {{ missing|length|add:"-12" }} more</p>{% endif %}
+      <a class="fin-btn fin-btn-sm" href="{% url 'curriculum:schemes' %}" style="margin-top:.6rem">Write schemes</a>
+    </div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-event"></i> Coming up</h3><a class="hint" href="{% url 'curriculum:calendar' %}">Calendar</a></div><div class="panel-b">
+      {% for e in upcoming %}<div style="display:flex;gap:.6rem;align-items:center;padding:.35rem 0"><span style="width:10px;height:10px;border-radius:3px;background:{{ e.colour }}"></span><span style="flex:1">{{ e.title }}</span><span class="hint">{{ e.start_date|date:"j M" }}{% if e.end_date %}–{{ e.end_date|date:"j M" }}{% endif %}</span></div>
+      {% empty %}<p class="hint" style="margin:0">Nothing on the calendar in the next two months.</p>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

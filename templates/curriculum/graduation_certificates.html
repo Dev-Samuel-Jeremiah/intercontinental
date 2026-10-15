@@ -1,0 +1,53 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Graduation certificates{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .gc{max-width:277mm;aspect-ratio:297/210;margin:1rem auto;background:#fffdf8;color:#1c1917;padding:16mm 20mm;border-radius:6px;position:relative;box-shadow:0 30px 60px -40px rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;text-align:center;font-family:'Outfit',system-ui,sans-serif}
+  .gc *{color:#1c1917}
+  .gc:before{content:'';position:absolute;inset:6mm;border:3px double #f4d21f;border-radius:4px;pointer-events:none}
+  .gc .sch{font-weight:800;letter-spacing:.12em;font-size:17px;margin-top:2mm}
+  .gc .addr{font-size:11px;color:#57534e!important}
+  .gc .logo{height:20mm;margin-bottom:2mm}
+  .gc h1{font-family:'Cormorant Garamond',serif;font-size:42px;margin:6mm 0 2mm;color:#0a1f44!important;font-style:italic}
+  .gc .lead{font-size:14px;color:#57534e!important;margin:0}
+  .gc .name{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:600;margin:4mm 0 2mm;border-bottom:1px solid #f4d21f;padding:0 10mm 1mm}
+  .gc p{font-size:14px;line-height:1.7;max-width:200mm;margin:2mm 0}
+  .gc .foot{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end}
+  .gc .sig{border-top:1px solid #57534e;width:62mm;font-size:11px;padding-top:2px}
+  .gc .qr{text-align:right;font-size:9px;color:#78716c!important}
+  .gc .qr img{width:24mm;height:24mm;display:block;margin-left:auto}
+  .yrs{display:flex;gap:.4rem;flex-wrap:wrap}
+  @media print{body *{visibility:hidden!important}.gc,.gc *{visibility:visible!important}
+    .gc{position:relative;left:0;top:0;margin:0;box-shadow:none;max-width:none;width:100%;height:190mm;page-break-after:always;border-radius:0}
+    .print-area{position:absolute;left:0;top:0;width:100%}@page{size:A4 landscape;margin:10mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Graduation</div>
+  <h1 class="fin-title">Graduation <em>certificates</em></h1>
+  <p class="fin-sub">One certificate per graduate, ready to print on A4 landscape. Each carries a code anyone can scan to check it is genuine.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if certs %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print {{ certs|length }}</button>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'users:alumni_register' %}"><i class="bi bi-mortarboard"></i> Alumni register</a>
+</div></div>
+{% if years %}<div class="yrs" style="margin-bottom:1rem">{% for y in years %}<a class="fin-btn fin-btn-sm{% if y|stringformat:'s' == year %} fin-btn-gold{% endif %}" href="?year={{ y }}">{{ y }}</a>{% endfor %}</div>{% endif %}
+<div class="print-area">
+{% for c in certs %}
+<div class="gc">
+  {% if school.logo %}<img class="logo" src="{{ school.logo.url }}" alt="">{% endif %}
+  <div class="sch">{{ school.name|upper }}</div>
+  <div class="addr">{{ school.address|default:"" }}</div>
+  <h1>Certificate of Graduation</h1>
+  <p class="lead">This is to certify that</p>
+  <div class="name">{{ c.student.full_name }}</div>
+  <p>admission number {{ c.student.admission_number }}, having satisfactorily completed the prescribed course of study{% if c.from_class %} up to <b>{{ c.from_class }}</b>{% endif %}, has graduated from {{ school.name }}{% if c.graduated_on %} on <b>{{ c.graduated_on|date:"j F Y" }}</b>{% endif %}.</p>
+  <div class="foot">
+    <div class="sig">Head of School</div>
+    <div class="sig">Chairman, Board of Governors</div>
+    <div class="qr"><img src="{% url 'curriculum:graduation_qr' c.reference %}" alt="">Scan to verify</div>
+  </div>
+</div>
+{% empty %}<div class="panel"><div class="empty"><i class="bi bi-mortarboard"></i><p>No graduates{% if year %} in {{ year }}{% endif %} yet. Students graduate when you apply promotion for a final-year class.</p></div></div>
+{% endfor %}
+</div>
+{% endblock %}

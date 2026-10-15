@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Peer tutoring{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a></div>
+  <h1 class="fin-title">Peer <em>tutoring</em></h1>
+  <p class="fin-sub">Students helping students, at school only. Tutors are approved by a teacher.</p>
+</div></div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Find a tutor</h3></div><div class="panel-b">
+      <form method="get" class="fin-form" style="display:flex;gap:.4rem;margin-bottom:.6rem"><select name="subject"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.pk }}" {% if subject and s.pk == subject.pk %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select><button class="fin-btn fin-btn-sm" type="submit">Filter</button></form>
+      {% for t in tutors %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ t.student.full_name }}</b> <span class="hint">{{ t.student.class_assigned.name|default:"" }}</span> · {{ t.subject.name }}<div class="hint">{{ t.about }}{% if t.when %} · {{ t.when }}{% endif %}</div>
+        <form method="post" class="fin-form" style="display:flex;gap:.4rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="request"><input type="hidden" name="id" value="{{ t.pk }}"><input name="topic" placeholder="What do you need help with?" required style="flex:2;min-width:160px"><input name="proposed" placeholder="When (at school)" style="flex:1;min-width:120px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Ask</button></form></div>
+      {% empty %}<p class="empty">No tutors for this subject yet.</p>{% endfor %}
+    </div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="offer">
+      <h3 style="margin:0 0 .6rem">Offer to tutor</h3>
+      <div class="row2"><div><label>Subject</label><select name="subject">{% for s in subjects %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}</select></div><div><label>When you are free</label><input name="when" maxlength="120" placeholder="Break time, Tue after school"></div></div>
+      <div><label>Topics you are good at</label><input name="about" maxlength="255"></div>
+      <button class="fin-btn" type="submit">Offer</button>
+      {% for o in my_offers %}<p class="hint" style="margin:.4rem 0 0">{{ o.subject.name }}: {% if not o.active %}stopped{% elif o.approved %}live{% else %}waiting for a teacher{% endif %}</p>{% endfor %}
+    </form>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Requests to me</h3></div><div class="panel-b">
+      {% for s in incoming %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)"><b>{{ s.learner.full_name }}</b> · {{ s.offer.subject.name }} — {{ s.topic }}<div class="hint">{{ s.proposed }} · {{ s.get_status_display }}{% if s.rating %} · rated {{ s.rating }}★{% endif %}</div>
+        <div style="display:flex;gap:.3rem;margin-top:.3rem">{% if s.status == 'REQUESTED' %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="action" value="accept"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Accept</button></form><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="action" value="decline"><button class="fin-btn fin-btn-sm" type="submit">Decline</button></form>{% elif s.status == 'ACCEPTED' %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="action" value="done"><button class="fin-btn fin-btn-sm" type="submit">We met</button></form>{% endif %}</div></div>
+      {% empty %}<p class="empty">None yet.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>My requests</h3></div><div class="panel-b">
+      {% for s in outgoing %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)">{{ s.offer.student.full_name }} · {{ s.offer.subject.name }} — {{ s.topic }}<div class="hint">{{ s.get_status_display }}</div>
+        {% if s.status == 'DONE' and not s.rating %}<form method="post" style="display:flex;gap:.3rem;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="action" value="rate"><select name="rating" style="width:auto"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select><button class="fin-btn fin-btn-sm" type="submit">Rate</button></form>{% elif s.status == 'REQUESTED' or s.status == 'ACCEPTED' %}<form method="post" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><input type="hidden" name="action" value="cancel"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form>{% endif %}</div>
+      {% empty %}<p class="empty">None yet.</p>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

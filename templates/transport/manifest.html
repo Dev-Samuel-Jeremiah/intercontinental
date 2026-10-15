@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Manifest — {{ route.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}.panel{border:0}}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ request.tenant.name }} · bus manifest</div>
+  <h1 class="fin-title"><em>{{ route.name }}</em> — {% if leg == 'PM' %}afternoon{% else %}morning{% endif %}</h1>
+  <p class="fin-sub">{{ day|date:"l j F Y" }} · {{ route.vehicle|default:"" }} · driver {{ route.driver.name|default:"—" }}{% if route.driver.phone %} ({{ route.driver.phone }}){% endif %} · attendant {{ route.attendant.name|default:"—" }}</p>
+</div><div class="no-print"><button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div></div>
+<div class="panel"><div class="panel-b"><table class="tbl" data-no-export>
+  <thead><tr><th>Stop / time</th><th>Student</th><th>Class</th><th>Parent phone</th><th>On</th><th>Off</th></tr></thead><tbody>
+  {% for stop, time, riders in rows %}
+    {% for r in riders %}<tr>{% if forloop.first %}<td rowspan="{{ riders|length }}" class="name">{{ stop.name|default:"No stop set" }}<br><small class="hint">{{ time|time:"H:i"|default:"" }}</small></td>{% endif %}
+      <td>{{ r.student.full_name }}</td><td>{{ r.student.class_assigned|default:"" }}</td><td>{{ r.student.parent_phone|default:"" }}</td><td>☐</td><td>☐</td></tr>{% endfor %}
+  {% empty %}<tr><td colspan="6" class="empty">No riders on this leg.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

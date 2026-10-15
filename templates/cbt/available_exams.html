@@ -1,0 +1,491 @@
+{% extends "dashboard/student_base.html" %}
+
+{% block title %}Available Exams{% endblock %}
+
+{% block content %}
+<style>
+/* ─── CSS VARIABLES ──────────────────────────────── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── ANIMATION ──────────────────────────────────── */
+@keyframes riseUp {
+  from { opacity:0; transform:translateY(18px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─── PAGE WRAP ──────────────────────────────────── */
+.exams-wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+  font-family: 'Outfit', system-ui, sans-serif;
+}
+
+/* ─── BACK BUTTON ────────────────────────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  color: var(--slate2);
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  margin-bottom: 2rem;
+}
+.btn-back:hover {
+  border-color: var(--champagne);
+  color: var(--champagne);
+  background: var(--champagne-dim);
+  transform: translateX(-2px);
+}
+
+/* ─── PAGE HEADER ────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 1px;
+  background: var(--champagne);
+}
+.page-header-left {}
+.page-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .65rem;
+  font-weight: 600;
+  color: var(--champagne);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 8px;
+}
+.page-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .5;
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+}
+.page-title em {
+  font-style: italic;
+  color: var(--champagne);
+}
+.exam-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.22);
+  color: var(--champagne);
+  padding: 7px 16px;
+  border-radius: 99px;
+  font-size: .78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* ─── GRID ───────────────────────────────────────── */
+.exams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  gap: 20px;
+}
+
+/* ─── EXAM PANEL ─────────────────────────────────── */
+.exam-panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  transition: border-color .25s, box-shadow .25s;
+  animation: riseUp .45s ease both;
+}
+.exam-panel:nth-child(2)  { animation-delay: .08s; }
+.exam-panel:nth-child(3)  { animation-delay: .16s; }
+.exam-panel:nth-child(4)  { animation-delay: .24s; }
+.exam-panel:nth-child(5)  { animation-delay: .32s; }
+.exam-panel:nth-child(6)  { animation-delay: .40s; }
+
+.exam-panel::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  z-index: 1;
+}
+.exam-panel:hover {
+  border-color: var(--rim2);
+  box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+
+/* Panel header */
+.exam-panel-header {
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+.exam-panel-header::after {
+  content: '';
+  position: absolute; bottom:-1px; left:24px;
+  width: 50px; height: 1px;
+  background: var(--champagne);
+  opacity: .5;
+}
+
+.exam-icon-badge {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--purple-dim);
+  border: 1px solid var(--purple-border);
+  color: var(--purple);
+  display: flex; align-items:center; justify-content:center;
+  font-size: .95rem;
+  margin-bottom: 12px;
+}
+
+.exam-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.exam-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  color: var(--slate2);
+  padding: 4px 11px;
+  border-radius: 99px;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.meta-chip i { color: var(--champagne); font-size: .75rem; }
+
+/* Panel body — parts */
+.exam-panel-body {
+  padding: 16px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.part-row {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 13px;
+  overflow: hidden;
+  position: relative;
+}
+.part-row::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+
+.part-row-info {
+  padding: 12px 16px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.part-type-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.part-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.part-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .68rem;
+  font-weight: 600;
+  color: var(--slate);
+}
+.part-stat i { font-size: .72rem; }
+
+.part-row-action {
+  padding: 0 12px 12px;
+}
+
+/* ─── PART ACTION BUTTONS ────────────────────────── */
+.btn-part {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: all .2s;
+  letter-spacing: .2px;
+}
+
+/* Start — champagne gold */
+.btn-part-start {
+  background: linear-gradient(135deg, var(--champagne), #d1ad00);
+  color: #112850;
+  box-shadow: 0 4px 16px rgba(244,210,31,.22);
+}
+.btn-part-start:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 6px 22px rgba(244,210,31,.35);
+  transform: translateY(-1px);
+  color: #112850;
+}
+
+/* Retake — teal */
+.btn-part-retake {
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  color: var(--teal);
+}
+.btn-part-retake:hover {
+  background: rgba(45,212,191,.2);
+  box-shadow: 0 4px 16px rgba(45,212,191,.15);
+  transform: translateY(-1px);
+  color: var(--teal);
+}
+
+/* Completed — green muted */
+.btn-part-done {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+  cursor: not-allowed;
+  opacity: .75;
+}
+
+/* Not started — amber */
+.btn-part-pending {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+  cursor: not-allowed;
+  opacity: .8;
+}
+
+/* Closed — red */
+.btn-part-closed {
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  cursor: not-allowed;
+  opacity: .8;
+}
+
+/* ─── EMPTY STATE ────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 40px;
+  background: var(--surface3);
+  border: 1px solid var(--rim);
+  border-radius: 18px;
+  margin-top: 8px;
+  animation: riseUp .45s ease both;
+  position: relative;
+  overflow: hidden;
+}
+.empty-state::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.empty-icon-box {
+  width: 72px; height: 72px;
+  border-radius: 18px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items:center; justify-content:center;
+  font-size: 1.8rem;
+  color: var(--slate);
+  margin-bottom: 20px;
+}
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.empty-sub {
+  font-size: .84rem;
+  color: var(--slate);
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────── */
+@media(max-width:900px){
+  .exams-grid { grid-template-columns: 1fr; }
+  .exams-wrap { padding: 1.5rem 1.25rem 3rem; }
+}
+@media(max-width:480px){
+  .page-title { font-size: 1.6rem; }
+  .exam-panel-header, .exam-panel-body { padding-left:16px; padding-right:16px; }
+}
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<div class="exams-wrap">
+
+  <!-- Back -->
+  <a href="/" class="btn-back">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-eyebrow">Student Portal</div>
+      <h1 class="page-title">Available <em>Exams</em></h1>
+    </div>
+    {% if exams %}
+    <div class="exam-count-badge">
+      <i class="bi bi-journal-bookmark-fill"></i>
+      {{ exams|length }} Exam{% if exams|length != 1 %}s{% endif %} Available
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Exams Grid -->
+  {% if exams %}
+  <div class="exams-grid">
+    {% for exam in exams %}
+    <div class="exam-panel">
+
+      <!-- Panel Header -->
+      <div class="exam-panel-header">
+        <div class="exam-icon-badge">
+          <i class="bi bi-file-earmark-text-fill"></i>
+        </div>
+        <div class="exam-title">{{ exam.title }}</div>
+        <div class="exam-meta">
+          <span class="meta-chip">
+            <i class="bi bi-book"></i> {{ exam.subject }}
+          </span>
+          <span class="meta-chip">
+            <i class="bi bi-play-circle"></i> {{ exam.start_time|date:"M d, Y H:i" }}
+          </span>
+          <span class="meta-chip">
+            <i class="bi bi-stop-circle"></i> {{ exam.end_time|date:"M d, Y H:i" }}
+          </span>
+          {% if exam.seat %}<span class="meta-chip" style="color:#ffe066;border-color:rgba(244,210,31,.4)">
+            <i class="bi bi-geo-alt-fill"></i> {{ exam.seat.hall.name }}, seat {{ exam.seat.label }}
+          </span>{% endif %}
+        </div>
+      </div>
+
+      <!-- Parts -->
+      <div class="exam-panel-body">
+        {% for part in exam.parts %}
+        <div class="part-row">
+          <div class="part-row-info">
+            <div class="part-type-label">
+              <i class="bi bi-layers"></i> {{ part.part_type }}
+            </div>
+            <div class="part-stats">
+              <span class="part-stat"><i class="bi bi-star"></i> {{ part.total_marks }} marks</span>
+              <span class="part-stat"><i class="bi bi-clock"></i> {{ part.duration_minutes }} min</span>
+            </div>
+          </div>
+          <div class="part-row-action">
+            {% if part.is_completed and part.allow_retake %}
+              <a href="{% url 'cbt:take_exam' exam.id part.part_type %}" class="btn-part btn-part-retake">
+                <i class="bi bi-arrow-repeat"></i> Retake {{ part.part_type }}
+              </a>
+            {% elif part.is_completed %}
+              <button class="btn-part btn-part-done" disabled>
+                <i class="bi bi-check-circle-fill"></i> {{ part.part_type }} Completed
+              </button>
+              {% if part.review_attempt %}<a href="{% url 'cbt:review_answers' part.review_attempt %}" class="btn-part btn-part-retake" style="margin-top:.35rem"><i class="bi bi-lightbulb"></i> Review answers</a>{% endif %}
+            {% elif not part.has_started %}
+              <button class="btn-part btn-part-pending" disabled>
+                <i class="bi bi-hourglass-split"></i> {{ part.part_type }} Not Started
+              </button>
+            {% elif part.has_ended %}
+              <button class="btn-part btn-part-closed" disabled>
+                <i class="bi bi-x-circle-fill"></i> {{ part.part_type }} Closed
+              </button>
+            {% else %}
+              <a href="{% url 'cbt:take_exam' exam.id part.part_type %}" class="btn-part btn-part-start">
+                <i class="bi bi-play-fill"></i> Start {{ part.part_type }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-icon-box">
+      <i class="bi bi-journal-x"></i>
+    </div>
+    <div class="empty-title">No Exams Available</div>
+    <div class="empty-sub">There are no exams scheduled for your class at the moment. Check back later or contact your teacher.</div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

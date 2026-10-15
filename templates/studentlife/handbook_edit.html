@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit handbook{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:handbook' %}" style="color:inherit">Handbook</a></div>
+  <h1 class="fin-title">Edit the <em>handbook</em></h1>
+  <p class="fin-sub">Version {{ rep.version }}: {{ rep.done }} of {{ rep.total }} students have confirmed they read it.</p>
+</div><form method="post">{% csrf_token %}<input type="hidden" name="action" value="version"><button class="fin-btn fin-btn-gold" type="submit" onclick="return confirm('Publish a new version? Everyone will be asked to read it again.')">Publish new version</button></form></div>
+{% include "studentlife/_staffnav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1rem">
+    {% for s in sections %}<form method="post" class="panel fin-form" style="padding:1rem">{% csrf_token %}<input type="hidden" name="action" value="save"><input type="hidden" name="id" value="{{ s.pk }}">
+      <div class="row2"><div><label>Title</label><input name="title" value="{{ s.title }}"></div><div><label>Order</label><input name="order" value="{{ s.order }}" inputmode="numeric"></div></div>
+      <div><label>Text</label><textarea name="body" rows="4">{{ s.body }}</textarea></div>
+      <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="published" value="1" style="width:auto" {% if s.published %}checked{% endif %}> Show</label>
+      <button class="fin-btn fin-btn-sm" type="submit">Save</button></form>{% endfor %}
+    <form method="post" class="panel fin-form" style="padding:1rem">{% csrf_token %}<input type="hidden" name="action" value="add"><h3 style="margin:0 0 .4rem">New section</h3><input name="title" placeholder="Title" required><textarea name="body" rows="3"></textarea><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Add</button></form>
+  </div>
+  <div class="panel"><div class="panel-h"><h3>Not read yet ({{ rep.missing|length }})</h3></div><div class="panel-b"><table class="tbl"><tbody>{% for s in rep.missing %}<tr><td class="name">{{ s.full_name }}</td><td>{{ s.class_assigned.name|default:"" }}</td></tr>{% empty %}<tr><td class="empty">Everyone has read it.</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My work reports{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+<style>
+  .rm-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.4rem}
+  @media(max-width:860px){.rm-cards{grid-template-columns:1fr}}
+  .rm-card{position:relative;overflow:hidden;padding:1.3rem 1.4rem;border-radius:var(--radius);background:var(--surface);border:1px solid var(--rim);
+    display:flex;flex-direction:column;gap:.8rem}
+  .rm-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--champagne-dk),var(--champagne))}
+  .rm-card small{font-size:.66rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--champagne)}
+  .rm-card h3{margin:.2rem 0 0;font-family:var(--serif);font-size:1.5rem;font-weight:500;color:var(--white)}
+  .rm-card p{margin:0;color:var(--slate2);font-size:.85rem}
+  .rm-row{display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
+</style>
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">People &amp; HR &middot; Work reports</div>
+    <h1 class="rp-title">My work <em>reports</em></h1>
+    <p class="rp-sub">Tell the school what you did each day or week. Drafts stay private until you submit them.</p>
+  </div>
+  <div class="rp-actions"><span class="rp-muted" style="font-size:.84rem">{{ total }} submitted &middot; {{ reviewed_count }} reviewed</span></div>
+</div>
+
+<div class="rm-cards">
+  {% with r=today_report %}
+  <div class="rm-card">
+    <div class="rm-row"><div><small>Daily report</small><h3>Today</h3></div>
+      {% if not r.pk %}<span class="rp-chip grey">Not started</span>
+      {% elif r.status == 'DRAFT' %}<span class="rp-chip amber"><i class="bi bi-pencil"></i> Draft</span>
+      {% elif r.status == 'REVIEWED' %}<span class="rp-chip green"><i class="bi bi-check2-all"></i> Reviewed</span>
+      {% else %}<span class="rp-chip blue"><i class="bi bi-send-check"></i> Submitted</span>{% endif %}</div>
+    <p>{{ today_label }}</p>
+    <div class="rm-row">
+      {% if r.pk and r.status != 'DRAFT' %}
+        <a class="rp-btn" href="{% url 'hr:report' r.pk %}"><i class="bi bi-eye"></i> View</a>
+        {% if r.editable %}<a class="rp-btn" href="{% url 'hr:write_report' %}?period=daily"><i class="bi bi-pencil"></i> Edit</a>{% endif %}
+      {% else %}
+        <a class="rp-btn gold" href="{% url 'hr:write_report' %}?period=daily"><i class="bi bi-pencil-square"></i> {% if r.pk %}Continue draft{% else %}Write today's report{% endif %}</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+  {% with r=week_report %}
+  <div class="rm-card">
+    <div class="rm-row"><div><small>Weekly report</small><h3>This week</h3></div>
+      {% if not r.pk %}<span class="rp-chip grey">Not started</span>
+      {% elif r.status == 'DRAFT' %}<span class="rp-chip amber"><i class="bi bi-pencil"></i> Draft</span>
+      {% elif r.status == 'REVIEWED' %}<span class="rp-chip green"><i class="bi bi-check2-all"></i> Reviewed</span>
+      {% else %}<span class="rp-chip blue"><i class="bi bi-send-check"></i> Submitted</span>{% endif %}</div>
+    <p>{{ week_label }}</p>
+    <div class="rm-row">
+      {% if r.pk and r.status != 'DRAFT' %}
+        <a class="rp-btn" href="{% url 'hr:report' r.pk %}"><i class="bi bi-eye"></i> View</a>
+        {% if r.editable %}<a class="rp-btn" href="{% url 'hr:write_report' %}?period=weekly"><i class="bi bi-pencil"></i> Edit</a>{% endif %}
+      {% else %}
+        <a class="rp-btn gold" href="{% url 'hr:write_report' %}?period=weekly"><i class="bi bi-pencil-square"></i> {% if r.pk %}Continue draft{% else %}Write this week's report{% endif %}</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endwith %}
+</div>
+
+<div class="rp-panel">
+  <div class="rp-panel-h"><h3><i class="bi bi-clock-history"></i> My reports</h3></div>
+  <div style="overflow-x:auto">
+    <table class="rp-table">
+      <thead><tr><th>Period</th><th>Type</th><th>Status</th><th>Summary</th><th style="text-align:right"></th></tr></thead>
+      <tbody>
+        {% for r in page %}
+        <tr>
+          <td data-label="Period"><b>{% if r.period == 'WEEKLY' %}Week of {{ r.period_start|date:"j M" }}{% else %}{{ r.period_start|date:"D j M Y" }}{% endif %}</b></td>
+          <td data-label="Type">{{ r.get_period_display }}</td>
+          <td data-label="Status">
+            {% if r.status == 'DRAFT' %}<span class="rp-chip amber">Draft</span>
+            {% elif r.status == 'REVIEWED' %}<span class="rp-chip green"><i class="bi bi-check2-all"></i> Reviewed</span>
+            {% elif r.late %}<span class="rp-chip red">Submitted late</span>
+            {% else %}<span class="rp-chip blue">Submitted</span>{% endif %}
+            {% if r.feedback %}<span class="rp-chip gold" title="The administrator left feedback"><i class="bi bi-chat-left-text"></i> Feedback</span>{% endif %}
+          </td>
+          <td data-label="Summary"><div class="rp-snip">{{ r.work_done|default:"—" }}</div></td>
+          <td style="text-align:right">
+            {% if r.status == 'DRAFT' %}<a class="rp-btn sm gold" href="{% url 'hr:write_report' %}?period={{ r.period|lower }}&date={{ r.period_start|date:'Y-m-d' }}">Continue</a>
+            {% else %}<a class="rp-btn sm" href="{% url 'hr:report' r.pk %}">Open</a>{% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="rp-empty"><i class="bi bi-journal-text"></i>No reports yet. Start with today's report above.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% if page.paginator.num_pages > 1 %}
+<div class="rp-actions" style="justify-content:center">
+  {% if page.has_previous %}<a class="rp-btn sm" href="?page={{ page.previous_page_number }}">&laquo; Newer</a>{% endif %}
+  <span class="rp-muted" style="font-size:.82rem">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="rp-btn sm" href="?page={{ page.next_page_number }}">Older &raquo;</a>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

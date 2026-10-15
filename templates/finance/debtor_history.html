@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Follow-up history{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">{{ student.full_name }}</h1>
+    <p class="fin-sub">{{ student.admission_number }}{% if student.parent_name %} · {{ student.parent_name }}{% endif %}{% if student.parent_phone %} · {{ student.parent_phone }}{% endif %}</p>
+  </div>
+  <a class="fin-btn" href="{% url 'finance:debtors' %}"><i class="bi bi-arrow-left"></i> Debtors</a>
+</div>
+
+<div class="panel">
+  <div class="panel-h"><h3><i class="bi bi-clock-history"></i> Every follow-up</h3></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>When</th><th>How</th><th>Outcome</th><th>Promised</th><th>Note</th><th>By</th></tr></thead>
+      <tbody>
+        {% for c in contacts %}
+        <tr>
+          <td>{{ c.created_at|date:"j M Y, g:i a" }}</td>
+          <td>{{ c.get_method_display }}</td>
+          <td>
+            {% if c.outcome == 'PAID' %}<span class="chip green">{{ c.get_outcome_display }}</span>
+            {% elif c.outcome == 'PROMISED' %}<span class="chip amber">{{ c.get_outcome_display }}</span>
+            {% elif c.outcome == 'DISPUTED' %}<span class="chip red">{{ c.get_outcome_display }}</span>
+            {% else %}<span class="chip">{{ c.get_outcome_display }}</span>{% endif %}
+          </td>
+          <td>{% if c.promise_date %}{{ c.promise_date|date:"j M Y" }}{% if c.amount_promised %}<br><span class="hint">₦{{ c.amount_promised|floatformat:0 }}</span>{% endif %}{% else %}—{% endif %}</td>
+          <td>{{ c.note|default:"—" }}</td>
+          <td>{% if c.contacted_by %}{{ c.contacted_by.get_full_name|default:c.contacted_by.username }}{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="bi bi-journal"></i>No follow-ups recorded for this family.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

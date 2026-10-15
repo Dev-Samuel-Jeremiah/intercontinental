@@ -1,0 +1,856 @@
+{% load custom_filters assessment %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Term Result</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <style>
+  /* ═══════════════════════════════════════════
+     DESIGN TOKENS
+  ═══════════════════════════════════════════ */
+  :root {
+    --ink:              #0c1f42;
+    --surface:          #112850;
+    --surface2:         #172f5c;
+    --surface3:         #1c3766;
+    --rim:              rgba(255,255,255,.06);
+    --rim2:             rgba(255,255,255,.10);
+    --rim3:             rgba(255,255,255,.16);
+    --champagne:        #f4d21f;
+    --champagne-lt:     #ffe066;
+    --champagne-dim:    rgba(244,210,31,.12);
+    --champagne-border: rgba(244,210,31,.28);
+    --slate:            rgba(255,255,255,.38);
+    --slate2:           rgba(255,255,255,.58);
+    --white:            #f2f5fb;
+
+    --green:   #4ade80; --green-dim:  rgba(74,222,128,.12);  --green-border:  rgba(74,222,128,.28);
+    --red:     #f87171; --red-dim:    rgba(248,113,113,.12); --red-border:    rgba(248,113,113,.28);
+    --blue:    #60a5fa; --blue-dim:   rgba(96,165,250,.12);  --blue-border:   rgba(96,165,250,.28);
+    --purple:  #c084fc; --purple-dim: rgba(192,132,252,.12); --purple-border: rgba(192,132,252,.28);
+    --teal:    #2dd4bf; --teal-dim:   rgba(45,212,191,.12);  --teal-border:   rgba(45,212,191,.28);
+    --amber:   #fbbf24; --amber-dim:  rgba(251,191,36,.12);  --amber-border:  rgba(251,191,36,.28);
+
+    /* Paper */
+    --paper:         #f7f4ef;
+    --paper2:        #ede9e2;
+    --paper3:        #e2ddd5;
+    --paper-ink:     #1c1917;
+    --paper-ink2:    #44403c;
+    --paper-ink3:    #78716c;
+    --paper-gold:    #0a1f44;
+    --paper-gold-lt: #f4d21f;
+    --paper-rim:     rgba(10,31,68,.18);
+    --paper-rim2:    rgba(10,31,68,.10);
+  }
+
+  /* ═══════════════════════════════════════════
+     RESULT SHEET THEMES — override the paper
+     tokens per school (Settings → Result Sheet Layout)
+  ═══════════════════════════════════════════ */
+  .report-paper[data-theme="classic_gold"]{
+    --paper:#f7f4ef; --paper2:#ede9e2; --paper-ink:#1c1917; --paper-ink2:#44403c; --paper-ink3:#78716c;
+    --paper-gold:#0a1f44; --paper-gold-lt:#f4d21f; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+  }
+  .report-paper[data-theme="royal_navy"]{
+    --paper:#eef2f8; --paper2:#dbe4f0; --paper-ink:#0f2247; --paper-ink2:#33456b; --paper-ink3:#61708c;
+    --paper-gold:#1d3f7a; --paper-gold-lt:#3861ab; --paper-rim:rgba(29,63,122,.18); --paper-rim2:rgba(29,63,122,.10);
+  }
+  .report-paper[data-theme="emerald_prestige"]{
+    --paper:#f2f7f2; --paper2:#e1ede1; --paper-ink:#0f2f1c; --paper-ink2:#2d4d3a; --paper-ink3:#5a7768;
+    --paper-gold:#1f6b3f; --paper-gold-lt:#2e9256; --paper-rim:rgba(31,107,63,.18); --paper-rim2:rgba(31,107,63,.10);
+  }
+  .report-paper[data-theme="burgundy_elegance"]{
+    --paper:#f8f1ef; --paper2:#efe0dc; --paper-ink:#3a0d10; --paper-ink2:#5c2a2c; --paper-ink3:#845452;
+    --paper-gold:#7a1f2b; --paper-gold-lt:#a53a45; --paper-rim:rgba(122,31,43,.18); --paper-rim2:rgba(122,31,43,.10);
+  }
+  .report-paper[data-theme="sapphire_scholar"]{
+    --paper:#f0f4f8; --paper2:#dde6ee; --paper-ink:#0b2942; --paper-ink2:#2c4a63; --paper-ink3:#5e7d94;
+    --paper-gold:#1a5c96; --paper-gold-lt:#3c85c4; --paper-rim:rgba(26,92,150,.18); --paper-rim2:rgba(26,92,150,.10);
+  }
+  .report-paper[data-theme="rose_quartz"]{
+    --paper:#faf3f2; --paper2:#f3e3e1; --paper-ink:#3d1f22; --paper-ink2:#6b3f42; --paper-ink3:#977173;
+    --paper-gold:#b76e6e; --paper-gold-lt:#d18f8a; --paper-rim:rgba(183,110,110,.20); --paper-rim2:rgba(183,110,110,.10);
+  }
+  .report-paper[data-theme="midnight_platinum"]{
+    --paper:#161a20; --paper2:#1f242c; --paper-ink:#eef1f5; --paper-ink2:#c3cbd4; --paper-ink3:#8894a3;
+    --paper-gold:#a9b4c2; --paper-gold-lt:#c8d1db; --paper-rim:rgba(169,180,194,.25); --paper-rim2:rgba(169,180,194,.12);
+  }
+  .report-paper[data-theme="forest_academia"]{
+    --paper:#f4f2ea; --paper2:#e8e4d5; --paper-ink:#22280f; --paper-ink2:#454f27; --paper-ink3:#6e7852;
+    --paper-gold:#0a1f44; --paper-gold-lt:#e0b800; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+  }
+  .report-paper[data-theme="coral_sunrise"]{
+    --paper:#fdf5ee; --paper2:#f8e6d5; --paper-ink:#5a2a0f; --paper-ink2:#7c4526; --paper-ink3:#a37455;
+    --paper-gold:#d9722c; --paper-gold-lt:#f0904d; --paper-rim:rgba(217,114,44,.20); --paper-rim2:rgba(217,114,44,.10);
+  }
+  .report-paper[data-theme="slate_minimal"]{
+    --paper:#f5f5f6; --paper2:#e6e6e8; --paper-ink:#132951; --paper-ink2:#2a4a82; --paper-ink3:#6b6e76;
+    --paper-gold:#454850; --paper-gold-lt:#65686f; --paper-rim:rgba(69,72,80,.18); --paper-rim2:rgba(69,72,80,.10);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* ═══ ANIMATIONS ═══ */
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ═══════════════════════════════════════════
+     OUTER SHELL (dark card)
+  ═══════════════════════════════════════════ */
+  .result-shell {
+    max-width: 1040px;
+    margin: 0 auto;
+    animation: riseUp .5s ease both;
+  }
+
+  /* ── Shell header (dark topbar) ── */
+  .shell-header {
+    display: flex; align-items: center; gap: .85rem;
+    padding: 1rem 1.4rem;
+    background: var(--surface2);
+    border: 1px solid var(--rim);
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+  }
+  .shell-header-eyebrow {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .7rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--champagne);
+  }
+  .shell-header-eyebrow::before {
+    content: ''; display: block; width: 22px; height: 1px; background: var(--champagne);
+  }
+  .shell-header-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 700; color: var(--white); margin-left: .5rem;
+  }
+  .shell-header-title em { color: var(--champagne); font-style: italic; }
+  .shell-header-right { margin-left: auto; display: flex; align-items: center; gap: .6rem; }
+
+  .shell-icon {
+    width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .95rem;
+    background: var(--champagne-dim); color: var(--champagne);
+    border: 1px solid var(--champagne-border);
+  }
+
+  /* Context badge */
+  .context-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: .38rem .9rem; border-radius: 999px;
+    background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+    color: var(--champagne-lt); font-size: .78rem; font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ═══════════════════════════════════════════
+     REPORT PAPER
+  ═══════════════════════════════════════════ */
+  .report-paper {
+    background: var(--paper);
+    color: var(--paper-ink);
+    font-family: 'Outfit', sans-serif;
+    position: relative; overflow: hidden;
+    border: 1px solid rgba(10,31,68,.22);
+    border-top: none;
+  }
+
+  /* Watermark */
+  .paper-watermark {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    display: flex; flex-wrap: wrap;
+    align-content: space-around; justify-content: space-around;
+  }
+  .paper-watermark span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 700;
+    color: rgba(10,31,68,.065);
+    transform: rotate(-30deg); white-space: nowrap; margin: 50px;
+  }
+
+  /* ── Letterhead ── */
+  .letterhead-top-rule {
+    height: 6px;
+    background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+  }
+  .letterhead {
+    position: relative; z-index: 1;
+    border-bottom: 3px solid var(--paper-gold);
+  }
+  .letterhead-body {
+    display: table; width: 100%; table-layout: fixed;
+    padding: 1.3rem 1.8rem;
+  }
+  .letterhead-logo {
+    display: table-cell; width: 120px;
+    text-align: center; vertical-align: middle;
+  }
+  .letterhead-logo img { width: 92px; height: auto; border-radius: 6px; }
+  .letterhead-initials {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--paper2), var(--paper));
+    border: 2px solid var(--paper-gold);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.9rem; font-weight: 700; color: var(--paper-gold);
+  }
+  .letterhead-identity {
+    display: table-cell; vertical-align: middle;
+    text-align: center; padding: 0 1rem;
+  }
+  .school-name-main {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.85rem; font-weight: 700; color: var(--paper-gold);
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  .school-motto {
+    font-family: 'IM Fell English', serif;
+    font-style: italic; font-size: .9rem;
+    color: var(--paper-ink2); margin-top: .2rem;
+  }
+  .school-report-label {
+    display: inline-block; margin-top: .5rem;
+    font-size: .68rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--paper);
+    background: var(--paper-gold); padding: .2rem .8rem; border-radius: 999px;
+  }
+
+  /* Passport */
+  .letterhead-passport {
+    display: table-cell; width: 110px;
+    text-align: right; vertical-align: middle;
+  }
+  .passport-frame {
+    width: 100px; height: 126px;
+    border: 2px solid var(--paper-gold); border-radius: 6px; overflow: hidden;
+    background: var(--paper2);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: .2rem;
+  }
+  .passport-frame img { width: 100%; height: 100%; object-fit: cover; }
+  .passport-frame i { font-size: 2.2rem; color: var(--paper-ink3); }
+  .passport-frame span { font-size: .66rem; color: var(--paper-ink3); }
+
+  /* ── Info band ── */
+  .info-band {
+    position: relative; z-index: 1;
+    display: block; overflow: hidden; /* clearfix for floated cells */
+    border-top: 1px solid var(--paper-rim);
+  }
+  .info-cell {
+    float: left; width: 33.3333%; box-sizing: border-box;
+    padding: .55rem .9rem;
+    border-right: 1px solid var(--paper-rim);
+    border-bottom: 1px solid var(--paper-rim);
+  }
+  .info-cell:nth-child(3n) { border-right: none; }
+  .info-cell-label {
+    font-size: .62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--paper-gold); margin-bottom: .16rem;
+  }
+  .info-cell-value {
+    font-size: .9rem; font-weight: 600; color: var(--paper-ink); line-height: 1.3;
+  }
+
+  /* ── Section header (gold bar) ── */
+  .paper-section-head {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: .7rem;
+    padding: .52rem 1.2rem;
+    background: var(--paper-gold);
+    border-top: 1px solid rgba(10,31,68,.3);
+  }
+  .paper-section-head i { color: var(--paper); font-size: .88rem; }
+  .paper-section-head span {
+    font-size: .7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--paper);
+  }
+
+  /* ── Results table ── */
+  .results-table-wrap { position: relative; z-index: 1; overflow-x: auto; }
+  .results-table {
+    width: 100%; border-collapse: collapse;
+    font-family: 'Outfit', sans-serif; font-size: .83rem;
+  }
+  .results-table thead tr { background: var(--paper2); }
+  .results-table th {
+    padding: .6rem .75rem; text-align: center;
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--paper-gold);
+    border-bottom: 2px solid var(--paper-rim);
+    border-right: 1px solid var(--paper-rim); white-space: nowrap;
+  }
+  .results-table th:last-child { border-right: none; }
+  .results-table th.col-subj { text-align: left; padding-left: 1rem; }
+  .results-table tbody tr { border-bottom: 1px solid var(--paper-rim2); transition: background .15s; }
+  .results-table tbody tr:last-child { border-bottom: none; }
+  .results-table tbody tr:hover { background: rgba(10,31,68,.04); }
+  .results-table td {
+    padding: .6rem .75rem; text-align: center;
+    color: var(--paper-ink2); border-right: 1px solid var(--paper-rim2);
+  }
+  .results-table td:last-child { border-right: none; }
+  .results-table td.col-subj {
+    text-align: left; padding-left: 1rem;
+    font-weight: 600; color: var(--paper-ink);
+  }
+
+  .score-num { font-weight: 600; color: var(--paper-ink); font-size: .88rem; }
+  .score-total {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 38px; padding: .18rem .55rem; border-radius: 5px;
+    font-weight: 700; font-size: .86rem;
+  }
+  .score-pass { background: rgba(74,222,128,.12);   color: #166534; border: 1px solid rgba(74,222,128,.3);  }
+  .score-fair { background: rgba(251,191,36,.10);   color: #92400e; border: 1px solid rgba(251,191,36,.3);  }
+  .score-fail { background: rgba(248,113,113,.12);  color: #991b1b; border: 1px solid rgba(248,113,113,.3); }
+
+  .grade-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 50%;
+    font-weight: 800; font-size: .85rem; border: 2px solid;
+  }
+  .grade-A { background: rgba(74,222,128,.15);  color: #166534; border-color: rgba(74,222,128,.5);   }
+  .grade-B { background: rgba(45,212,191,.12);  color: #0f766e; border-color: rgba(45,212,191,.45);  }
+  .grade-C { background: rgba(96,165,250,.12);  color: #1d4ed8; border-color: rgba(96,165,250,.4);   }
+  .grade-D { background: rgba(251,191,36,.12);  color: #92400e; border-color: rgba(251,191,36,.45);  }
+  .grade-F { background: rgba(248,113,113,.12); color: #991b1b; border-color: rgba(248,113,113,.45); }
+
+  /* Remark cell — readonly display */
+  .remark-text {
+    font-size: .78rem; color: var(--paper-ink3); font-style: italic;
+    line-height: 1.4; text-align: left; padding: .1rem .2rem;
+  }
+
+  /* ── Totals band ── */
+  .totals-band {
+    position: relative; z-index: 1;
+    display: table; width: 100%; table-layout: fixed;
+    border-top: 2px solid var(--paper-gold); background: var(--paper2);
+  }
+  .totals-cell {
+    display: table-cell;
+    padding: .7rem .9rem; text-align: center; vertical-align: middle;
+    border-right: 1px solid var(--paper-rim);
+  }
+  .totals-cell:last-child { border-right: none; }
+  .totals-cell-label {
+    font-size: .62rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--paper-gold); font-weight: 700; margin-bottom: .13rem;
+  }
+  .totals-cell-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 700; color: var(--paper-ink); line-height: 1;
+  }
+  .totals-cell.highlight .totals-cell-value { color: var(--paper-gold); }
+
+  /* ── Remarks ── */
+  .paper-remarks-wrap {
+    position: relative; z-index: 1;
+    display: table; width: 100%; table-layout: fixed;
+    border-top: 1px solid var(--paper-rim);
+  }
+  .paper-remark-col {
+    display: table-cell; vertical-align: top;
+    padding: 1rem 1.2rem; border-right: 1px solid var(--paper-rim);
+  }
+  .paper-remark-col:last-child { border-right: none; }
+  .paper-remark-col-label {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--paper-gold);
+    margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem;
+  }
+  .paper-remark-text {
+    font-size: .88rem; color: var(--paper-ink2); line-height: 1.6;
+    padding: .55rem .8rem;
+    background: var(--paper2); border: 1px solid var(--paper-rim);
+    border-radius: 6px; min-height: 60px;
+  }
+
+  /* Signature */
+  .paper-signature {
+    position: relative; z-index: 1;
+    text-align: center; padding: .8rem 1.2rem 1rem;
+    border-top: 1px solid var(--paper-rim);
+  }
+  .sig-img { height: 24px; display: block; margin: 0 auto .25rem; }
+  .sig-line {
+    width: 220px; height: 1px;
+    background: var(--paper-gold);
+    margin: .3rem auto .3rem; opacity: .5;
+  }
+  .sig-label {
+    font-size: .65rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--paper-ink3);
+  }
+
+  /* Next term strip */
+  .next-term-strip {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; gap: .7rem;
+    padding: .7rem 1.4rem;
+    background: var(--paper2); border-top: 2px solid var(--paper-gold);
+  }
+  .next-term-strip i { color: var(--paper-gold); font-size: 1rem; }
+  .next-term-lbl {
+    font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--paper-ink3);
+  }
+  .next-term-date { font-weight: 700; color: var(--paper-ink); font-size: .9rem; }
+
+  /* ── Skills & Behaviour ── */
+  .sb-wrapper { position: relative; z-index: 1; border-top: 1px solid var(--paper-rim); }
+  .sb-grid-inner { display: table; width: 100%; table-layout: fixed; }
+  .sb-col { display: table-cell; vertical-align: top; border-right: 1px solid var(--paper-rim); }
+  .sb-col:last-child { border-right: none; }
+  .sb-col-head {
+    display: table; width: 100%; table-layout: fixed;
+    background: var(--paper2); border-bottom: 1px solid var(--paper-rim);
+    padding: .44rem .8rem;
+    font-size: .62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: var(--paper-gold);
+  }
+  .sb-col-head span { display: table-cell; width: 28px; text-align: center; }
+  .sb-col-head span:first-child { width: auto; text-align: left; }
+  .sb-row {
+    display: table; width: 100%; table-layout: fixed;
+    border-bottom: 1px solid var(--paper-rim2); padding: .4rem .8rem;
+    transition: background .15s;
+  }
+  .sb-row:last-child { border-bottom: none; }
+  .sb-row:hover { background: rgba(10,31,68,.04); }
+  .sb-name { display: table-cell; vertical-align: middle; font-size: .79rem; color: var(--paper-ink2); font-weight: 500; }
+  .sb-check { display: table-cell; width: 28px; text-align: center; vertical-align: middle; }
+  .sb-check input[type="checkbox"] {
+    width: 13px; height: 13px;
+    accent-color: var(--paper-gold);
+    pointer-events: none; /* readonly */
+  }
+
+  /* Key bar */
+  .key-bar {
+    display: flex; flex-wrap: wrap; gap: .45rem;
+    padding: .65rem 1.2rem;
+    background: var(--paper2); border-top: 1px solid var(--paper-rim);
+  }
+  .key-item { display: flex; align-items: center; gap: .35rem; }
+  .key-num {
+    width: 19px; height: 19px; border-radius: 4px; flex-shrink: 0;
+    background: var(--paper-gold); color: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .67rem; font-weight: 800;
+  }
+  .key-desc { font-size: .71rem; color: var(--paper-ink3); }
+
+  /* Bottom footer rule */
+  .paper-footer-rule {
+    height: 5px;
+    background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+  }
+
+  /* ═══════════════════════════════════════════
+     ACTION BAR (dark UI, below the paper)
+  ═══════════════════════════════════════════ */
+  .shell-footer {
+    display: flex; justify-content: center; gap: .85rem;
+    flex-wrap: wrap; padding: 1.4rem;
+    background: var(--surface2);
+    border: 1px solid var(--rim);
+    border-top: none;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .65rem 1.4rem; border-radius: 10px;
+    font-family: 'Outfit', sans-serif; font-size: .9rem; font-weight: 600;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: transform .2s, box-shadow .2s, background .2s;
+  }
+  .btn-gold {
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  }
+  .btn-gold:hover {
+    transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.38); color: #fff;
+  }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--rim2); color: var(--slate2);
+  }
+  .btn-ghost:hover { background: var(--rim); transform: translateY(-1px); color: var(--white); }
+
+  /* ═══ RESPONSIVE ═══
+     Skipped entirely for the PDF export (is_pdf): wkhtmltopdf's renderer
+     evaluates these max-width breakpoints as if the viewport were always
+     narrow, which collapses the report card into a single stacked column.
+     Excluding them keeps the PDF matching the desktop browser layout. */
+  {% if not is_pdf %}
+  @media (max-width: 820px) {
+    body { padding: 1rem .75rem 3rem; }
+    .letterhead-logo { width: 90px; }
+    .letterhead-passport { width: 90px; }
+    .info-cell { width: 50%; }
+    .info-cell:nth-child(3n) { border-right: 1px solid var(--paper-rim); }
+    .info-cell:nth-child(2n) { border-right: none; }
+    .sb-grid-inner, .sb-col { display: block; width: auto; }
+    .sb-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+    .paper-remarks-wrap, .paper-remark-col { display: block; width: auto; }
+    .paper-remark-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+    .shell-header-title { font-size: 1.2rem; }
+  }
+  @media (max-width: 560px) {
+    .letterhead-body, .letterhead-logo, .letterhead-identity, .letterhead-passport {
+      display: block; width: auto; text-align: center;
+    }
+    .totals-band, .totals-cell { display: block; width: auto; }
+    .totals-cell { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+  }
+  {% endif %}
+
+  /* ═══ PRINT ═══ */
+  @media print {
+    body { background: #fff; padding: 0; }
+    .shell-header, .shell-footer { display: none !important; }
+    .report-paper {
+      border-radius: 0; border: 1px solid #888;
+      border-top: none;
+    }
+    .result-shell { max-width: 100%; }
+    .letterhead-top-rule, .paper-footer-rule,
+    .paper-section-head { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .score-pass, .score-fair, .score-fail,
+    .grade-A, .grade-B, .grade-C, .grade-D, .grade-F {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+  }
+  </style>
+</head>
+<body>
+{% if message %}<div style="max-width:720px;margin:24px auto;padding:14px 18px;border-radius:14px;border:1px solid rgba(244,210,31,.4);background:rgba(244,210,31,.1);color:#ffe066;font-family:Outfit,system-ui,sans-serif;text-align:center"><i class="bi bi-hourglass-split"></i> {{ message }} Please check back later.</div>{% endif %}
+
+<div class="result-shell">
+
+  <!-- ── Dark topbar ── -->
+  <div class="shell-header">
+    <div class="shell-icon"><i class="bi bi-file-earmark-text"></i></div>
+    <div>
+      <div class="shell-header-eyebrow"><i class="bi bi-award"></i> Academic Records</div>
+      <div class="shell-header-title">Student Term <em>Result</em></div>
+    </div>
+    <div class="shell-header-right">
+      <span class="context-badge">
+        <i class="bi bi-journal-text"></i> Official Report Sheet
+      </span>
+    </div>
+  </div>
+
+  <!-- ══════════════ REPORT PAPER ══════════════ -->
+  <div class="report-paper" data-theme="{{ result_settings.theme|default:'classic_gold' }}">
+
+    <!-- Watermark -->
+    <div class="paper-watermark">
+      {% for i in "0123456789012345678901234567890123456789012345678901234567890123456789"|make_list %}
+        <span>{{ tenant.name|upper }}</span>
+      {% endfor %}
+    </div>
+
+    <!-- Top gold rule -->
+    <div class="letterhead-top-rule"></div>
+
+    <!-- Letterhead -->
+    <div class="letterhead">
+      <div class="letterhead-body">
+        <div class="letterhead-logo">
+          {% if tenant.logo %}
+            <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}">
+          {% else %}
+            <div class="letterhead-initials">{{ tenant.name|slice:":2"|upper }}</div>
+          {% endif %}
+        </div>
+        <div class="letterhead-identity">
+          <div class="school-name-main">{{ tenant.name|upper }}</div>
+          {% if tenant.motto %}
+            <div class="school-motto">{{ tenant.motto }}</div>
+          {% endif %}
+          <span class="school-report-label">
+            {{ term.name }} Term &nbsp;·&nbsp; {{ session.name }} &nbsp;·&nbsp; End of Term Report
+          </span>
+        </div>
+        <div class="letterhead-passport">
+          {% if student and student.passport %}
+            <div class="passport-frame"><img src="{{ student.passport.url }}" alt="Photo"></div>
+          {% else %}
+            <div class="passport-frame">
+              <i class="bi bi-person-bounding-box"></i>
+              <span>No Photo</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Info -->
+    <div class="info-band">
+      <div class="info-cell"><div class="info-cell-label">Full Name</div><div class="info-cell-value">{{ student.full_name }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Admission No.</div><div class="info-cell-value">{{ student.admission_number }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Sex</div><div class="info-cell-value">{{ gender }}</div></div>
+
+      <div class="info-cell"><div class="info-cell-label">Class</div><div class="info-cell-value">{{ student.class_assigned.name }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Term</div><div class="info-cell-value">{{ term.name }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Session</div><div class="info-cell-value">{{ session.name }}</div></div>
+
+      <div class="info-cell"><div class="info-cell-label">Age</div><div class="info-cell-value">{{ age }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Class Age Avg</div><div class="info-cell-value">{{ class_age_avg|default:"—" }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">No. in Class</div><div class="info-cell-value">{{ no_in_class }}</div></div>
+
+      <div class="info-cell"><div class="info-cell-label">Days School Opened</div><div class="info-cell-value">{{ school_days_open }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Times Present</div><div class="info-cell-value">{{ total_present }}</div></div>
+      <div class="info-cell"><div class="info-cell-label">Closing Date</div><div class="info-cell-value">{{ term.closing_date|date:"d M Y" }}</div></div>
+    </div>
+
+    <!-- Section: Academic Performance -->
+    <div class="paper-section-head">
+      <i class="bi bi-table"></i>
+      <span>Academic Performance — Subject Results</span>
+    </div>
+
+    <div class="results-table-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th class="col-subj">Subject</th>
+            {% ca_scheme as ca %}
+            {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<th>{{ c.label }}{% if c.max %} <small>({{ c.max }})</small>{% endif %}</th>{% endfor %}
+            {% else %}<th>CA <small>({{ ca.ca_max }})</small></th>{% endif %}
+            {% if ca.essay_max %}<th>{{ ca.essay_label }} <small>({{ ca.essay_max }})</small></th>{% endif %}
+            <th>{{ ca.exam_label }} ({{ ca.exam_max }}%)</th>
+            <th>Total (100%)</th>
+            <th>Grade</th>
+            <th style="text-align:left;padding-left:.6rem;min-width:130px;">Remark</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tr in results %}
+          <tr>
+            <td class="col-subj">{{ tr.subject.name }}</td>
+            {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<td><span class="score-num">{{ tr|score:c.field|floatformat:"-1" }}</span></td>{% endfor %}
+            {% else %}<td><span class="score-num">{{ tr|ca_total:ca|floatformat:"-1" }}</span></td>{% endif %}
+            {% if ca.essay_max %}<td><span class="score-num">{{ tr.essay_score|floatformat:"-1" }}</span></td>{% endif %}
+            <td><span class="score-num">{{ tr.exam_score|floatformat:"-1" }}</span></td>
+            <td>
+              <span class="score-total
+                {% if tr.percent >= 70 %}score-pass{% elif tr.percent >= 50 %}score-fair{% else %}score-fail{% endif %}">
+                {{ tr.percent|floatformat:0 }}
+              </span>
+            </td>
+            <td>
+              <span class="grade-pill grade-{{ tr.grade }}">{{ tr.grade }}</span>{% if result_settings.show_subject_position and tr.subject_position %}<div style="font-size:.66rem;opacity:.65;margin-top:2px">{{ tr.subject_position }}</div>{% endif %}
+            </td>
+            <td style="text-align:left;padding-left:.6rem;">
+              <div class="remark-text">{{ tr.remark|default:"—" }}</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals -->
+    <div class="totals-band">
+      <div class="totals-cell">
+        <div class="totals-cell-label">Subjects Offered</div>
+        <div class="totals-cell-value">{{ results|length }}</div>
+      </div>
+      <div class="totals-cell">
+        <div class="totals-cell-label">Mark Obtained</div>
+        <div class="totals-cell-value">{{ total_obtained|floatformat:2 }}</div>
+      </div>
+      <div class="totals-cell">
+        <div class="totals-cell-label">Mark Obtainable</div>
+        <div class="totals-cell-value">{{ total_obtainable|floatformat:2 }}</div>
+      </div>
+      {% if result_settings.show_class_average %}
+      <div class="totals-cell">
+        <div class="totals-cell-label">Class Average</div>
+        <div class="totals-cell-value">
+          {% if results %}{% with first=results|first %}{{ first.class_avg|default:"—" }}{% endwith %}{% else %}—{% endif %}
+        </div>
+      </div>
+      {% endif %}
+      <div class="totals-cell highlight">
+        <div class="totals-cell-label">Learner's Average</div>
+        <div class="totals-cell-value">{{ overall_percentage|floatformat:2 }}%</div>
+      </div>
+      {% if result_settings.show_position and class_position %}
+      <div class="totals-cell">
+        <div class="totals-cell-label">Position</div>
+        <div class="totals-cell-value">{{ class_position }} <small style="font-size:.55em;opacity:.7">of {{ ranked_in_class }}</small></div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if verify_ref and results %}<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:6px 0 2px;font-size:10px;color:#78716c"><span style="text-align:right;line-height:1.3">Scan to check this report card<br>against the school's records</span><img src="{{ verify_qr }}" alt="Verification code" style="width:64px;height:64px"></div>{% endif %}
+    <!-- Section: Skills & Behaviour -->
+    {% if result_settings.show_skills_section or result_settings.show_behaviour_section %}
+    <div class="paper-section-head">
+      <i class="bi bi-stars"></i>
+      <span>Skills &amp; Behaviour Assessment</span>
+    </div>
+
+    <div class="sb-wrapper">
+      <div class="sb-grid-inner">
+        <!-- Skills -->
+        {% if result_settings.show_skills_section %}
+        <div class="sb-col">
+          <div class="sb-col-head">
+            <span>Skills</span>
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          </div>
+          {% for skill in skills %}
+          {% if skill.category == "skill" %}
+          <div class="sb-row">
+            <span class="sb-name">{{ skill.name }}</span>
+            {% for rate in ratings %}
+            <span class="sb-check">
+              <input type="checkbox"
+                data-skill="{{ skill.id }}"
+                data-student="{{ student.id }}"
+                data-term="{{ term.id }}"
+                data-session="{{ session.id }}"
+                data-value="{{ rate }}"
+                data-group="skill_{{ skill.id }}"
+                {% if assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                disabled
+              >
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+        <!-- Behaviour -->
+        {% if result_settings.show_behaviour_section %}
+        <div class="sb-col">
+          <div class="sb-col-head">
+            <span>Behaviour</span>
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+          </div>
+          {% for skill in skills %}
+          {% if skill.category == "behaviour" %}
+          <div class="sb-row">
+            <span class="sb-name">{{ skill.name }}</span>
+            {% for rate in ratings %}
+            <span class="sb-check">
+              <input type="checkbox"
+                data-skill="{{ skill.id }}"
+                data-student="{{ student.id }}"
+                data-term="{{ term.id }}"
+                data-session="{{ session.id }}"
+                data-value="{{ rate }}"
+                data-group="skill_{{ skill.id }}"
+                {% if assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                disabled
+              >
+            </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="key-bar">
+        <div class="key-item"><span class="key-num">5</span><span class="key-desc">Excellent degree of observable traits</span></div>
+        <div class="key-item"><span class="key-num">4</span><span class="key-desc">High level of observable traits</span></div>
+        <div class="key-item"><span class="key-num">3</span><span class="key-desc">Acceptable level of observable traits</span></div>
+        <div class="key-item"><span class="key-num">2</span><span class="key-desc">Minimal level of observable traits</span></div>
+        <div class="key-item"><span class="key-num">1</span><span class="key-desc">No regards for observable traits</span></div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% include "results/_awards.html" %}
+    <!-- Section: Remarks -->
+    <div class="paper-section-head">
+      <i class="bi bi-chat-quote"></i>
+      <span>Teacher &amp; Head of School Remarks</span>
+    </div>
+
+    <div class="paper-remarks-wrap">
+      <div class="paper-remark-col">
+        <div class="paper-remark-col-label">
+          <i class="bi bi-person-badge"></i> Class Teacher's Remark
+        </div>
+        <div class="paper-remark-text">{{ class_teacher_remark|default:"No remark provided." }}</div>
+      </div>
+      <div class="paper-remark-col">
+        <div class="paper-remark-col-label">
+          <i class="bi bi-shield-check"></i> Head Teacher's Remark
+        </div>
+        <div class="paper-remark-text">{{ hos_remark|default:"No remark provided." }}</div>
+      </div>
+    </div>
+
+    <!-- Signature -->
+    <div class="paper-signature">
+      {% if head_teacher_signature %}
+        <img src="{{ head_teacher_signature }}" class="sig-img" alt="Signature">
+      {% endif %}
+      <div class="sig-line"></div>
+      <div class="sig-label">Head Teacher's Signature &amp; School Stamp</div>
+    </div>
+
+    <!-- Next term -->
+    <div class="next-term-strip">
+      <i class="bi bi-arrow-right-circle-fill"></i>
+      <span class="next-term-lbl">Next Term Begins:</span>
+      <span class="next-term-date">{{ resumption_date_next_term|date:"d M Y" }}</span>
+    </div>
+
+    <!-- Footer gold rule -->
+    <div class="paper-footer-rule"></div>
+
+    {% if result_settings.footer_note %}
+    <div style="text-align:center;font-size:.78rem;color:var(--paper-ink3);margin-top:.6rem;position:relative;z-index:1;">
+      {{ result_settings.footer_note }}
+    </div>
+    {% endif %}
+
+  </div><!-- /.report-paper -->
+
+  <!-- ── Action bar (dark footer) ── -->
+  <div class="shell-footer">
+    <a href="?download=pdf" class="btn btn-gold">
+      <i class="bi bi-download"></i> Download PDF
+    </a>
+    <button class="btn btn-ghost" onclick="window.print()">
+      <i class="bi bi-printer"></i> Print Result
+    </button>
+    {% if results %}<a href="{% url 'results:progress' student.id %}" class="btn btn-ghost"><i class="bi bi-graph-up"></i> Progress</a>
+    <a href="{% url 'results:query_new' student.id term.id %}" class="btn btn-ghost"><i class="bi bi-chat-left-text"></i> Ask about a score</a>{% endif %}
+  </div>
+
+</div><!-- /.result-shell -->
+
+</body>
+</html>

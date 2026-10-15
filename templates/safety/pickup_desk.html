@@ -1,0 +1,105 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Pickup desk{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .pk-search{position:relative;max-width:560px}
+  .pk-search input{width:100%;padding:.9rem 1rem .9rem 2.6rem;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:1rem}
+  .pk-search input:focus{outline:none;border-color:var(--champagne)}
+  .pk-search i{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--slate2)}
+  .pk-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.6rem;margin-top:.8rem}
+  .pk-res{display:flex;gap:.6rem;align-items:center;padding:.6rem;border-radius:12px;border:1px solid var(--rim2);text-decoration:none;color:var(--white)}
+  .pk-res:hover{border-color:var(--champagne)}
+  .pk-res img,.pk-res .ini{width:40px;height:48px;border-radius:8px;object-fit:cover;flex:none}
+  .pk-res .ini,.pk-person .ini{display:flex;align-items:center;justify-content:center;background:rgba(244,210,31,.15);color:var(--champagne-lt);font-weight:700}
+  .pk-child{display:flex;gap:1.1rem;align-items:center}
+  .pk-child img,.pk-child .ini{width:120px;height:150px;border-radius:14px;object-fit:cover;border:2px solid rgba(244,210,31,.5)}
+  .pk-people{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.7rem}
+  .pk-person{position:relative;display:flex!important;gap:.7rem;align-items:center;margin:0;padding:.8rem;border-radius:14px;border:2px solid var(--rim2);cursor:pointer;transition:border-color .15s,background .15s}
+  .pk-person img,.pk-person .ini{width:62px;height:74px;border-radius:10px;object-fit:cover;flex:none}
+  .pk-person input{position:absolute;opacity:0;pointer-events:none}
+  .pk-person:has(input:checked){border-color:var(--champagne);background:rgba(244,210,31,.08)}
+  .pk-person.no{border-color:var(--red-border);background:var(--red-dim)}
+  .pk-person.no:has(input:checked){border-color:var(--red)}
+  .pk-in input,.pk-in select{width:100%;padding:.6rem .75rem;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .pk-in label{font-size:.74rem;color:var(--slate2);font-weight:600;display:block;margin:.6rem 0 .25rem}
+  .pk-code{font-size:1.6rem!important;letter-spacing:.4em;text-align:center;font-family:ui-monospace,monospace}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Pickup <em>desk</em></h1>
+  <p class="fin-sub">Find the child, check who is collecting, and release. The family is told at once.</p>
+</div><a class="fin-btn" href="{% url 'safety:pickup_log' %}"><i class="bi bi-list-check"></i> Today's pickups</a></div>
+
+<form method="get" class="pk-search"><i class="bi bi-search"></i><input name="q" value="{{ q }}" placeholder="Child's name or admission number" autofocus autocomplete="off"></form>
+{% if results %}<div class="pk-results">{% for s in results %}
+  <a class="pk-res" href="?student={{ s.id }}">{% if s.passport %}<img src="{{ s.passport.url }}" alt="">{% else %}<span class="ini">{{ s.full_name|slice:":1" }}</span>{% endif %}
+    <span><b>{{ s.full_name }}</b><br><span class="hint">{{ s.admission_number }} · {{ s.class_assigned.name|default:"" }}</span></span></a>
+{% endfor %}</div>{% elif q %}<p class="hint" style="margin-top:.6rem">No child found.</p>{% endif %}
+
+{% if student %}
+<div class="fin-grid" style="margin-top:1.2rem">
+  <div class="panel"><div class="panel-b">
+    <div class="pk-child">
+      {% if student.passport %}<img src="{{ student.passport.url }}" alt="">{% else %}<span class="ini" style="font-size:2.5rem">{{ student.full_name|slice:":1" }}</span>{% endif %}
+      <div>
+        <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--white)">{{ student.full_name }}</h2>
+        <div class="hint">{{ student.admission_number }} · {{ student.class_assigned.name|default:"no class" }}</div>
+        <div style="margin-top:.5rem">
+          {% if mark %}{% if mark.status == 'P' %}<span class="chip green">in school today{% if mark.arrived_at %} · arrived {{ mark.arrived_at|time:"H:i" }}{% endif %}</span>{% else %}<span class="chip red">marked absent today</span>{% endif %}{% else %}<span class="chip">not marked today</span>{% endif %}
+          {% if early_now %}<span class="chip amber">early pickup</span>{% endif %}
+        </div>
+        {% if already %}<div class="chip red" style="margin-top:.5rem;display:inline-block">Already collected today by {{ already.collector_name }} at {{ already.released_at|time:"H:i" }}</div>{% endif %}
+      </div>
+    </div>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-key"></i> Pickup codes for today</h3></div><div class="panel-b">
+    {% for p in passes %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ p.collector_name }}</b>{% if p.relationship %} <span class="hint">· {{ p.relationship }}</span>{% endif %}<div class="hint">until {{ p.expires_at|time:"H:i" }}{% if p.reason %} · {{ p.reason }}{% endif %}</div></div>
+    {% empty %}<p class="hint">The parent has not issued a code today.</p>{% endfor %}
+    {% if locked %}<p class="chip red" style="margin-top:.6rem">Too many wrong codes today — release only with the head's approval.</p>{% endif %}
+  </div></div>
+</div>
+
+<form method="post" class="panel pk-in" style="margin-top:1rem">{% csrf_token %}
+  <input type="hidden" name="student_id" value="{{ student.id }}">
+  <div class="panel-h"><h3><i class="bi bi-person-check"></i> Who is collecting?</h3></div>
+  <div class="panel-b">
+    <div class="pk-people">
+      {% for c in collectors %}
+      <label class="pk-person{% if not c.allowed %} no{% endif %}">
+        <input type="radio" name="collector" value="{{ c.id }}" required>
+        {% if c.photo %}<img src="{{ c.photo.url }}" alt="">{% else %}<span class="ini">{{ c.name|slice:":1" }}</span>{% endif %}
+        <span><b style="color:var(--white)">{{ c.name }}</b><br><span class="hint">{{ c.relationship }}{% if c.phone %} · {{ c.phone }}{% endif %}</span><br>
+          {% if c.allowed %}<span class="chip green">may collect</span>{% else %}<span class="chip red">NOT allowed</span>{% endif %}
+          {% if c.note %}<br><span class="hint" style="color:var(--amber)">{{ c.note }}</span>{% endif %}</span>
+      </label>
+      {% endfor %}
+      <label class="pk-person"><input type="radio" name="collector" value="other"><span class="ini"><i class="bi bi-person-plus"></i></span>
+        <span><b style="color:var(--white)">Someone else</b><br><span class="hint">needs the parent's pickup code{% if can_override %} or your approval{% endif %}</span></span></label>
+    </div>
+    <div id="other-box" style="display:none;max-width:520px">
+      <label>Pickup code from the parent</label><input name="code" inputmode="numeric" maxlength="6" class="pk-code" autocomplete="off" placeholder="••••••">
+      {% if can_override %}
+      <details style="margin-top:.6rem"><summary class="hint" style="cursor:pointer;color:var(--champagne-lt)">No code — approve as head</summary>
+        <label>Their name</label><input name="other_name" maxlength="120">
+        <label>Relationship</label><input name="relationship" maxlength="60" placeholder="Uncle, driver…">
+        <label>Why you are approving</label><input name="override_reason" maxlength="255" placeholder="Spoke to the mother on the phone at 11:05">
+      </details>{% endif %}
+    </div>
+    <div style="max-width:520px"><label>Reason {% if early_now %}for leaving early{% else %}(optional){% endif %}</label><input name="reason" maxlength="200" placeholder="Hospital appointment"></div>
+    <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:1rem;padding:.85rem 1.4rem;font-size:.95rem"><i class="bi bi-box-arrow-right"></i> Release {{ student.full_name }}</button>
+  </div>
+</form>
+<script>
+  (function(){var box=document.getElementById('other-box');
+  document.querySelectorAll('input[name=collector]').forEach(function(r){r.addEventListener('change',function(){box.style.display=r.value==='other'&&r.checked?'block':'none';});});})();
+</script>
+{% endif %}
+
+{% if today_releases %}
+<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Collected today</h3></div>
+  <div style="overflow-x:auto"><table class="tbl"><tbody>{% for r in today_releases %}
+    <tr><td style="white-space:nowrap">{{ r.released_at|time:"H:i" }}</td><td><b>{{ r.student.full_name }}</b></td><td>{{ r.collector_name }} <span class="hint">· {{ r.get_checked_by_display|lower }}</span></td><td>{% if r.early %}<span class="chip amber">early</span>{% endif %}</td></tr>
+  {% endfor %}</tbody></table></div></div>
+{% endif %}
+{% endblock %}

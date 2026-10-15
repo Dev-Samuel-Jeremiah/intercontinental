@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ po.number }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Purchase order · {{ po.get_status_display }}</div>
+  <h1 class="fin-title"><em>{{ po.number }}</em></h1>
+  <p class="fin-sub"><a href="{% url 'facilities:vendor' po.vendor_id %}">{{ po.vendor }}</a> · {{ po.order_date|date:"j M Y" }}{% if po.expected_by %} · expected {{ po.expected_by|date:"j M" }}{% endif %}{% if po.sent_at %} · sent {{ po.sent_at|date:"j M" }}{% endif %} · ₦{{ po.total|floatformat:2 }}</p>
+</div><div class="no-print" style="display:flex;gap:.3rem;flex-wrap:wrap">
+  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:order_print' po.pk %}" target="_blank"><i class="bi bi-printer"></i> Print</a>
+  {% if po.status == 'DRAFT' or po.status == 'SENT' %}<form method="post" style="display:flex;gap:.3rem">{% csrf_token %}{% if po.vendor.email %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="send">Email to vendor</button>{% endif %}{% if po.status == 'DRAFT' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="sent">Mark sent</button>{% endif %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="cancel" onclick="return confirm('Cancel this order?')">Cancel</button></form>{% endif %}
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form">{% csrf_token %}<input type="hidden" name="action" value="receive"><div class="panel-h"><h3>Items</h3></div><div class="panel-b"><table class="tbl" data-no-export>
+      <thead><tr><th>Item</th><th class="num">Ordered</th><th class="num">Received</th><th class="num">Price</th>{% if po.status == 'SENT' or po.status == 'PART' or po.status == 'DRAFT' %}<th>Delivered now</th><th>Rejected</th>{% endif %}</tr></thead><tbody>
+      {% for ln in lines %}<tr><td class="name">{{ ln.description }}{% if ln.item %}<br><small class="hint">stock: {{ ln.item.name }}</small>{% endif %}</td><td class="num">{{ ln.quantity|floatformat:"-2" }}</td><td class="num">{{ ln.received|floatformat:"-2" }}</td><td class="num">₦{{ ln.unit_price|floatformat:2 }}</td>
+        {% if po.status == 'SENT' or po.status == 'PART' or po.status == 'DRAFT' %}<td>{% if ln.outstanding %}<input name="got_{{ ln.pk }}" inputmode="decimal" style="width:80px" placeholder="{{ ln.outstanding|floatformat:'-2' }}">{% endif %}</td><td>{% if ln.outstanding %}<input name="bad_{{ ln.pk }}" inputmode="decimal" style="width:70px">{% endif %}</td>{% endif %}</tr>{% endfor %}
+      </tbody></table>
+      {% if po.status == 'SENT' or po.status == 'PART' or po.status == 'DRAFT' %}<div class="row2" style="margin-top:.5rem"><div><label>Delivery note / waybill no.</label><input name="delivery_note" maxlength="60"></div><div><label>Note</label><input name="note" maxlength="255"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Record goods received</button>{% endif %}
+    </div></form>
+    {% if receipts %}<div class="panel"><div class="panel-h"><h3>Goods received notes</h3></div><div class="panel-b">{% for g in receipts %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)"><b>{{ g.number }}</b> <span class="hint">{{ g.received_at|date:"j M Y H:i" }}{% if g.delivery_note %} · waybill {{ g.delivery_note }}{% endif %}</span><div class="hint">{% for l in g.lines.all %}{{ l.quantity|floatformat:"-2" }} × {{ l.line.description }}{% if l.rejected %} ({{ l.rejected|floatformat:"-2" }} rejected){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</div></div>{% endfor %}</div></div>{% endif %}
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    {% if po.notes or po.deliver_to %}<div class="panel"><div class="panel-b">{% if po.deliver_to %}<p>Deliver to: {{ po.deliver_to }}</p>{% endif %}{{ po.notes|linebreaks }}</div></div>{% endif %}
+    {% if po.status == 'RECEIVED' and not rated %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="rate">
+      <h3 style="margin:0 0 .6rem">Rate this vendor</h3>
+      <div class="row2"><div><label>Quality</label><select name="quality">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div><div><label>On time</label><select name="delivery">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div></div>
+      <div class="row2"><div><label>Price</label><select name="price">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div><div><label>Comment</label><input name="comment" maxlength="255"></div></div>
+      <button class="fin-btn" type="submit">Save rating</button>
+    </form>{% endif %}
+  </div>
+</div>
+{% endblock %}

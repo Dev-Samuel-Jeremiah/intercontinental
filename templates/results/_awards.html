@@ -1,0 +1,13 @@
+{% if awards %}
+<div class="report-awards" style="margin:.9rem 0;padding:.7rem .9rem;border:1px dashed rgba(244,210,31,.55);border-radius:10px">
+  <div style="font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c9a800;margin-bottom:.35rem">
+    <i class="bi bi-award"></i> Awards &amp; achievements this term
+  </div>
+  {% for a in awards %}
+  <div style="font-size:.84rem;padding:.12rem 0">
+    <b>{{ a.title }}</b>{% if a.position %} — {{ a.position }}{% endif %}
+    <span style="opacity:.75">({{ a.get_level_display }}{% if a.category != 'OTHER' %}, {{ a.get_category_display|lower }}{% endif %}, {{ a.awarded_on|date:"j M Y" }})</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}

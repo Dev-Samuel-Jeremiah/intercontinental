@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Enrolled{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div style="max-width:560px;margin:4vh auto 0">
+  <div class="panel">
+    <div class="panel-b" style="text-align:center">
+      <div style="width:70px;height:70px;margin:0 auto 1.2rem;border-radius:20px;display:grid;place-items:center;font-size:1.8rem;
+                  color:var(--green);background:var(--green-dim);border:1px solid var(--green-border)"><i class="bi bi-check2-circle"></i></div>
+      <div class="adm-eyebrow" style="justify-content:center">Enrolment complete</div>
+      <h1 class="adm-title" style="font-size:1.9rem">{{ student.full_name }} is now a <em>student</em></h1>
+      <p class="adm-sub">Write these down or print this page — the passwords are only shown once.</p>
+
+      <div class="cred">
+        <div><span>Admission number</span><code>{{ credentials.admission_number }}</code></div>
+        <div><span>Student password</span><code>{{ credentials.student_password }}</code></div>
+        <div><span>Parent password</span><code>{{ credentials.parent_password }}</code></div>
+      </div>
+
+      <p class="adm-sub" style="font-size:.8rem">The parent signs in with the admission number and the parent password. Both are always available later on <strong>All Students</strong>.</p>
+
+      <div class="adm-actions" style="justify-content:center;margin-top:1.4rem">
+        <button class="adm-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+        <a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-kanban"></i> Back to pipeline</a>
+        <a class="adm-btn adm-btn-gold" href="/students/all/"><i class="bi bi-people-fill"></i> All students</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

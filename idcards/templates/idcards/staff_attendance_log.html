@@ -1,0 +1,84 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Staff Attendance{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+.sal-toolbar{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:20px; }
+.sal-toolbar h2{ color:var(--white); font-weight:600; margin:0; font-size:1.15rem; }
+.sal-toolbar input{ background:var(--surface2); color:var(--white); border:1px solid var(--rim);
+  border-radius:8px; padding:8px 12px; min-width:0; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:9px 16px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; white-space:nowrap; }
+.sal-table-wrap{ width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:12px; }
+.sal-table{ width:100%; min-width:480px; border-collapse:collapse; background:var(--surface2); border-radius:12px; overflow:hidden; }
+.sal-table th{ text-align:left; padding:12px 16px; font-size:.75rem; text-transform:uppercase;
+  letter-spacing:.05em; color:var(--slate); border-bottom:1px solid var(--rim); white-space:nowrap; }
+.sal-table td{ padding:12px 16px; border-bottom:1px solid var(--rim); color:var(--white); font-size:.9rem; }
+.badge{ padding:3px 10px; border-radius:20px; font-size:.75rem; font-weight:600; white-space:nowrap; }
+.badge.in{ background:var(--green-dim); color:var(--green); }
+.badge.out{ background:var(--amber-dim); color:var(--amber); }
+.pg{ display:flex; gap:8px; justify-content:center; margin-top:18px; flex-wrap:wrap; }
+.pg a, .pg span{ color:var(--white); padding:6px 12px; border:1px solid var(--rim); border-radius:6px; text-decoration:none; font-size:.85rem; }
+
+/* ── mobile: table becomes stacked cards ── */
+@media(max-width:700px){
+  .sal-toolbar{ flex-direction:column; align-items:stretch; }
+  .sal-toolbar form{ width:100%; }
+  .sal-toolbar input{ width:100%; }
+  .sal-toolbar .idc-btn{ width:100%; text-align:center; }
+
+  .sal-table-wrap{ overflow-x:visible; }
+  .sal-table{ min-width:0; }
+  .sal-table thead{ display:none; }
+  .sal-table, .sal-table tbody, .sal-table tr, .sal-table td{ display:block; width:100%; }
+  .sal-table tr{ background:var(--surface2); border:1px solid var(--rim); border-radius:12px; margin-bottom:12px; padding:6px 4px; }
+  .sal-table td{ border-bottom:none; padding:6px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; text-align:right; }
+  .sal-table td[data-label]::before{ content:attr(data-label); font-size:.68rem; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--slate); font-weight:600; text-align:left; flex-shrink:0; }
+  .sal-table td.sal-cell-name{ justify-content:flex-start; font-weight:700; padding-top:10px; }
+  .sal-table td.sal-cell-name::before{ content:none; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="sal-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-person-check-fill"></i> Staff Attendance (Clock In/Out)</h2></div>
+  <form method="get" style="display:flex; gap:10px;">
+    <input type="date" name="date" value="{{ selected_date }}" onchange="this.form.submit()">
+  </form>
+  <a href="{% url 'idcards:reception_qr_page' %}" class="idc-btn"><i class="bi bi-qr-code"></i> Reception QR</a>
+</div>
+
+<div class="sal-table-wrap">
+<table class="sal-table">
+  <thead>
+    <tr><th>Staff</th><th>Role</th><th>Status</th><th>Time</th></tr>
+  </thead>
+  <tbody>
+    {% for log in page_obj %}
+    <tr>
+      <td class="sal-cell-name">{{ log.staff.full_name }}</td>
+      <td data-label="Role">{{ log.staff.get_role_display }}</td>
+      <td data-label="Status"><span class="badge {% if log.direction == 'IN' %}in{% else %}out{% endif %}">{{ log.get_direction_display }}</span></td>
+      <td data-label="Time">{{ log.scanned_at|date:"H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4" style="text-align:center; color:var(--slate); padding:30px;">No clock-ins for this date.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+<div class="pg">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}&date={{ selected_date }}">&laquo; Prev</a>
+  {% endif %}
+  <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}&date={{ selected_date }}">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endblock %}

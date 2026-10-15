@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Inventory Access{% endblock %}
+{% block content %}
+<style>
+.inv-denied { max-width:560px; margin:6vh auto 0; text-align:center; padding:2.6rem 2rem; border-radius:22px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border:1px solid var(--rim); }
+.inv-denied .ic { width:76px; height:76px; margin:0 auto 1.4rem; border-radius:22px; display:grid; place-items:center; font-size:1.9rem;
+  color:var(--amber); background:var(--amber-dim); border:1px solid var(--amber-border); }
+.inv-denied .eb { font-size:.68rem; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--champagne); margin-bottom:.6rem; }
+.inv-denied h1 { font-family:var(--serif); font-weight:600; font-size:2.1rem; line-height:1.15; margin-bottom:.8rem; }
+.inv-denied h1 em { font-style:italic; color:var(--champagne-lt); }
+.inv-denied p { color:var(--slate2); line-height:1.65; }
+.inv-denied .actions { margin-top:1.8rem; display:flex; justify-content:center; gap:.7rem; flex-wrap:wrap; }
+.inv-denied a { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.2rem; border-radius:11px; font-weight:600; font-size:.88rem;
+  border:1px solid var(--rim2); background:rgba(255,255,255,.04); color:var(--slate2); }
+.inv-denied a:hover { color:var(--champagne-lt); border-color:var(--champagne-border); }
+</style>
+<div class="inv-denied">
+  <div class="ic"><i class="bi bi-shield-lock"></i></div>
+  <div class="eb">Inventory</div>
+  <h1>You don't have <em>access</em></h1>
+  <p>{{ reason|default:"You do not have permission to access the Inventory module." }}</p>
+  <p style="margin-top:.6rem;font-size:.86rem;color:var(--slate)">Ask your school administrator if you need access.</p>
+  <div class="actions"><a href="{% url 'dashboard:router' %}"><i class="bi bi-arrow-left"></i> Back to dashboard</a></div>
+</div>
+{% endblock %}

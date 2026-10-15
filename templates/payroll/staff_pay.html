@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Pay details — {{ staff.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'payroll:dashboard' %}" style="color:inherit">Payroll</a></div>
+  <h1 class="fin-title">{{ staff.full_name }}</h1>
+  <p class="fin-sub">{{ staff.get_role_display }} · salary, allowances, bank, tax, pension and loans.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0;font-size:.95rem">Monthly pay</h3>
+    <div class="row2"><div><label>Basic</label><input name="basic_salary" value="{{ pr.basic_salary|default:'0' }}" inputmode="decimal"></div><div><label>Housing</label><input name="housing" value="{{ pr.housing|default:'0' }}" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Transport</label><input name="transport" value="{{ pr.transport|default:'0' }}" inputmode="decimal"></div><div><label>Other allowances</label><input name="other_allowances" value="{{ pr.other_allowances|default:'0' }}" inputmode="decimal"></div></div>
+    <h3 style="margin:.4rem 0 0;font-size:.95rem">Bank</h3>
+    <div class="row2"><div><label>Bank</label><input name="bank_name" value="{{ pr.bank_name }}" maxlength="100"></div><div><label>Account number</label><input name="account_no" value="{{ pr.account_no }}" maxlength="20" inputmode="numeric"></div></div>
+    <div><label>Account name</label><input name="account_name" value="{{ pr.account_name }}" maxlength="200"></div>
+    <h3 style="margin:.4rem 0 0;font-size:.95rem">Tax, pension and NHF</h3>
+    <div class="row2"><div><label>Tax ID (TIN)</label><input name="tax_id" value="{{ pr.tax_id }}" maxlength="20"></div><div><label>Yearly rent paid <span class="hint">(with receipts)</span></label><input name="annual_rent" value="{{ pr.annual_rent|default:'0' }}" inputmode="decimal"></div></div>
+    <div><label>Other yearly reliefs <span class="hint">(health/life insurance, mortgage interest — with evidence)</span></label><input name="other_reliefs" value="{{ pr.other_reliefs|default:'0' }}" inputmode="decimal"></div>
+    <div class="row2"><div><label>Pension PIN</label><input name="pension_pin" value="{{ pr.pension_pin }}" maxlength="20"></div><div><label>PFA</label><input name="pfa_name" value="{{ pr.pfa_name }}" maxlength="100" placeholder="e.g. Stanbic IBTC Pension"></div></div>
+    <div class="row2"><div><label>NHF number</label><input name="nhf_number" value="{{ pr.nhf_number }}" maxlength="20"></div><div><label>Union dues a month</label><input name="union_dues" value="{{ pr.union_dues|default:'0' }}" inputmode="decimal"></div></div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="pays_tax" value="1" style="width:auto" {% if pr.pays_tax %}checked{% endif %}> Pays PAYE</label>
+      <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="pays_pension" value="1" style="width:auto" {% if pr.pays_pension %}checked{% endif %}> Pension</label>
+      <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="pays_nhf" value="1" style="width:auto" {% if pr.pays_nhf %}checked{% endif %}> NHF (has agreed)</label>
+      <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="is_active" value="1" style="width:auto" {% if pr.is_active or not pr.pk %}checked{% endif %}> On payroll</label>
+    </div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save pay details</button>
+  </form>
+  <div>
+    {% if preview %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-calculator"></i> A month's pay, as things stand</h3></div><div class="panel-b">
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>Gross</span><b>₦{{ preview.gross|floatformat:2|intcomma }}</b></div>
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>PAYE</span><span>−₦{{ preview.paye|floatformat:2|intcomma }}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>Pension (staff)</span><span>−₦{{ preview.pension_employee|floatformat:2|intcomma }}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>NHF</span><span>−₦{{ preview.nhf|floatformat:2|intcomma }}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>Union dues</span><span>−₦{{ preview.union_dues|floatformat:2|intcomma }}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>Loans</span><span>−₦{{ preview.loan_repayment|floatformat:2|intcomma }}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:.45rem 0;border-top:1px solid var(--rim2)"><b>Net</b><b style="color:var(--green)">₦{{ preview.net|floatformat:2|intcomma }}</b></div>
+      <p class="hint" style="margin-bottom:0">{% if preview.workings.exempt %}{{ preview.workings.exempt }}{% else %}Yearly chargeable income ₦{{ preview.workings.chargeable|floatformat:0|intcomma }}; tax ₦{{ preview.workings.yearly_tax|floatformat:0|intcomma }} a year. The school also pays ₦{{ preview.pension_employer|floatformat:2|intcomma }} pension.{% endif %}</p>
+    </div></div>{% endif %}
+    {% if pr.pk %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Loans and advances</h3></div><div class="panel-b">
+      {% for l in loans %}<div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;padding:.35rem 0;border-bottom:1px solid var(--rim)"><span><b>{{ l.get_kind_display }}</b> ₦{{ l.amount|floatformat:0|intcomma }} <span class="hint">₦{{ l.monthly_repayment|floatformat:0|intcomma }}/month from {{ l.start_month }}/{{ l.start_year }}{% if l.note %} · {{ l.note }}{% endif %}</span></span>
+        <span>{% if l.active %}<span class="chip amber">₦{{ l.balance|floatformat:0|intcomma }} left</span> <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="loan" value="{{ l.id }}"><button class="fin-btn fin-btn-sm" name="action" value="stop_loan" onclick="return confirm('Stop repayments?')">Stop</button></form>{% else %}<span class="chip green">Done</span>{% endif %}</span></div>{% empty %}<p class="hint" style="margin-top:0">None.</p>{% endfor %}
+      <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}<input type="hidden" name="action" value="loan">
+        <div class="row2"><div><label>Kind</label><select name="kind"><option value="LOAN">Loan</option><option value="ADVANCE">Salary advance</option></select></div><div><label>Amount</label><input name="amount" inputmode="decimal" required></div></div>
+        <div class="row2"><div><label>Repay each month</label><input name="monthly_repayment" inputmode="decimal" required></div><div><label>Starting (month / year)</label><div style="display:flex;gap:.3rem"><input name="start_month" type="number" min="1" max="12" placeholder="MM"><input name="start_year" type="number" min="2020" max="2100" placeholder="YYYY"></div></div></div>
+        <div><label>Note</label><input name="note" maxlength="200"></div>
+        <button class="fin-btn" type="submit">Add</button></form>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-receipt"></i> Payslips</h3></div><div class="panel-b">{% for s in slips %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><a href="{% url 'payroll:payslip_v2' s.id %}" style="color:inherit">{{ s.run }}</a><span>₦{{ s.net|floatformat:2|intcomma }} <span class="hint">{{ s.run.get_status_display }}</span></span></div>{% empty %}<p class="hint" style="margin:0">None yet.</p>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

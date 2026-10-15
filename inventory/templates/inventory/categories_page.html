@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+<div class="inv-page">
+  <div class="inv-header">
+    <h1>🏷️ Asset Categories</h1>
+    <p>Organize assets into logical groups for easy management</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+    <div class="inv-card">
+      <div class="inv-card-header"><h2>➕ Add Category</h2></div>
+      <div class="inv-card-body">
+        <form method="POST">
+          {% csrf_token %}
+          {% for field in form %}
+          <div class="form-group" style="margin-bottom:14px;">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<div style="color:var(--inv-danger);font-size:.82rem;margin-top:4px;">{{ field.errors|join:", " }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn-inv btn-inv-primary">➕ Add Category</button>
+        </form>
+      </div>
+    </div>
+    <div class="inv-card">
+      <div class="inv-card-header"><h2>📋 Existing Categories ({{ categories|length }})</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="inv-table">
+          <thead><tr><th>Name</th><th>Assets</th><th></th></tr></thead>
+          <tbody>
+          {% for c in categories %}
+          <tr>
+            <td data-label="Name"><strong>{{ c.name }}</strong>{% if c.description %}<br><small style="color:#6b7280;">{{ c.description }}</small>{% endif %}</td>
+            <td data-label="Assets"><span class="badge badge-info">{{ c.asset_count }}</span></td>
+            <td>
+              {% if c.asset_count == 0 %}
+              <a href="{% url 'inventory:delete_category' c.id %}" class="btn-inv btn-inv-danger btn-inv-sm" onclick="return confirm('Delete this category?')">Delete</a>
+              {% else %}
+              <span style="color:#9ca3af;font-size:.8rem;">In use</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3" style="text-align:center;padding:30px;color:#9ca3af;">No categories yet</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

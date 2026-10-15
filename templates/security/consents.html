@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Consent{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Parental <em>consent</em></h1>
+  <p class="fin-sub">For uses that need consent — photos online, naming pupils publicly, marketing messages — the parent's choice for each child. Parents can change it on the portal; you can record paper forms here.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<div class="fin-stats">{% for c in coverage %}<div class="fin-stat"><small>{{ c.purpose.name }}</small><b>{{ c.pct }}%</b><span class="hint">{{ c.granted }} yes · {{ c.refused }} no · {{ c.unanswered }} not answered</span></div>{% empty %}<div class="fin-stat"><small>No consent-based purposes</small><b>—</b></div>{% endfor %}</div>
+<form method="get" class="panel fin-form" style="padding:1rem;grid-template-columns:1fr auto;align-items:end;max-width:520px">
+  <div><label>Class</label><select name="class">{% for c in classes %}<option value="{{ c.pk }}" {% if cls.pk == c.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+  <button class="fin-btn fin-btn-gold">Show</button>
+</form>
+{% if cls %}<div class="panel" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Pupil</th>{% for p in purposes %}<th>{{ p.name }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr><td class="name">{{ r.s.full_name }}</td>{% for p, c in r.cells %}<td>
+  {% if c %}<span class="chip {% if c.granted %}green{% else %}red{% endif %}" title="{{ c.given_by }} · {{ c.get_method_display }} · {{ c.updated_at|date:'j M Y' }}">{% if c.granted %}Yes{% else %}No{% endif %}</span>{% else %}<span class="chip">Not answered</span>{% endif %}
+  <details style="display:inline-block"><summary class="hint" style="cursor:pointer">record</summary>
+    <form method="post" class="fin-form" style="min-width:220px;margin-top:.4rem">{% csrf_token %}<input type="hidden" name="student" value="{{ r.s.pk }}"><input type="hidden" name="purpose" value="{{ p.pk }}"><input type="hidden" name="class" value="{{ cls.pk }}">
+      <input name="given_by" placeholder="Parent's name" value="{{ r.s.parent_name|default:'' }}">
+      <select name="method">{% for v, l in methods %}<option value="{{ v }}" {% if v == 'PAPER' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+      <div style="display:flex;gap:.3rem"><button class="fin-btn fin-btn-sm" name="granted" value="1">Yes</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="granted" value="0">No</button></div>
+    </form></details></td>{% endfor %}</tr>
+{% empty %}<tr><td colspan="9" class="empty">No pupils in this class.</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% endblock %}

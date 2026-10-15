@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ b.event }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hall hire · {{ b.get_status_display }}{% if b.invoice_number %} · {{ b.invoice_number }}{% endif %}</div>
+  <h1 class="fin-title"><em>{{ b.event }}</em></h1>
+  <p class="fin-sub">{{ b.client }}{% if b.phone %} · {{ b.phone }}{% endif %}{% if b.email %} · {{ b.email }}{% endif %} · {{ b.space }} · {{ b.starts|date:"l j F Y H:i" }} to {{ b.ends|date:"H:i" }}{% if b.guests %} · {{ b.guests }} guests{% endif %}</p>
+</div><div class="no-print" style="display:flex;gap:.3rem;flex-wrap:wrap">{% if b.invoice_number %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:invoice_print' b.pk %}" target="_blank"><i class="bi bi-printer"></i> Invoice</a>{% endif %}
+  <form method="post" style="display:flex;gap:.3rem">{% csrf_token %}{% if b.status == 'ENQUIRY' %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="confirm">Confirm &amp; invoice</button>{% endif %}{% if b.invoice_number and b.email %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="invoice">Email invoice</button>{% endif %}{% if b.status == 'CONFIRMED' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="DONE">Mark held</button>{% endif %}{% if b.status == 'ENQUIRY' or b.status == 'CONFIRMED' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="CANCELLED" onclick="return confirm('Cancel this booking?')">Cancel</button>{% endif %}</form></div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    <tr><td>Hire</td><td class="num">₦{{ b.amount|floatformat:2 }}</td></tr>
+    {% if b.extras %}<tr><td>Extras{% if b.extras_note %} — {{ b.extras_note }}{% endif %}</td><td class="num">₦{{ b.extras|floatformat:2 }}</td></tr>{% endif %}
+    {% if b.caution_fee %}<tr><td>Caution fee (refundable)</td><td class="num">₦{{ b.caution_fee|floatformat:2 }}</td></tr>{% endif %}
+    <tr><td><b>Total</b></td><td class="num"><b>₦{{ b.total|floatformat:2 }}</b></td></tr>
+    <tr><td>Paid</td><td class="num">₦{{ b.paid|floatformat:2 }}</td></tr>
+    <tr><td><b>Balance</b></td><td class="num"><b>₦{{ b.balance|floatformat:2 }}</b></td></tr>
+  </tbody></table>
+  {% for p in payments %}<p class="hint" style="margin:.2rem 0">{{ p.date|date:"j M Y" }} — {{ p.get_method_display }} ₦{{ p.amount|floatformat:2 }}{% if p.reference %} · {{ p.reference }}{% endif %}</p>{% endfor %}
+  {% if b.notes %}<p>{{ b.notes|linebreaksbr }}</p>{% endif %}</div></div>
+  {% if b.status != 'CANCELLED' %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="pay">
+    <h3 style="margin:0 0 .6rem">Record a payment</h3>
+    <div class="row2"><div><label>Amount ₦</label><input name="amount" required inputmode="decimal" value="{% if b.balance > 0 %}{{ b.balance|floatformat:2 }}{% endif %}"></div><div><label>How</label><select name="method"><option value="TRANSFER">Bank transfer</option><option value="CASH">Cash</option><option value="POS">POS</option><option value="REFUND">Caution refund</option></select></div></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Reference</label><input name="reference" maxlength="80"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

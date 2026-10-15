@@ -1,0 +1,20 @@
+# Exact versions the portal is tested with. Upgrade on purpose, run the tests,
+# then update these pins.
+Django==5.2.6
+python-decouple==3.8
+python-dotenv==1.2.2
+django-widget-tweaks==1.5.0
+Pillow==11.0.0
+python-docx==1.2.0
+pandas==3.0.2
+openpyxl==3.1.5
+xlrd==2.0.2
+requests==2.34.2
+cryptography==48.0.0
+pdfkit==1.0.0
+qrcode==8.2
+reportlab==5.0.1
+gunicorn==23.0.0
+# Only needed with DB_ENGINE=postgresql / REDIS_URL — harmless otherwise
+psycopg[binary]==3.2.3
+redis==5.1.1

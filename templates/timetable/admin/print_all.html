@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Print timetables{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .sheet{background:#fff;color:#1c1917;border-radius:6px;padding:9mm;margin:0 auto 1rem;max-width:277mm;font-family:Outfit,system-ui,sans-serif}
+  .sheet *{color:#1c1917}
+  .sheet .hd{display:flex;align-items:center;gap:4mm;border-bottom:3px solid {{ colour }};padding-bottom:2mm;margin-bottom:3mm}
+  .sheet .hd img{height:14mm}
+  .sheet h2{margin:0;font-size:20px}
+  .sheet table{width:100%;border-collapse:collapse;font-size:10.5px;table-layout:fixed}
+  .sheet th{background:{{ colour }};color:#fff!important;padding:2mm;font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+  .sheet td{border:1px solid #d6d3d1;padding:1.6mm;height:13mm;vertical-align:top}
+  .sheet td b{display:block;font-size:11px}
+  .sheet td small{color:#57534e!important}
+  .sheet tr.brk td{height:5mm;background:#f5f0e6;text-align:center;font-size:9px;letter-spacing:.2em;color:#78716c!important}
+  .sheet .pt{width:22mm;font-weight:700;background:#faf7f0}
+  @media print{body *{visibility:hidden!important}.sheets,.sheets *{visibility:visible!important}.sheets{position:absolute;left:0;top:0;width:100%}.sheet{page-break-after:always;max-width:none;margin:0;padding:0;border-radius:0}@page{size:A4 landscape;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ tt.config.name }}</div>
+  <h1 class="fin-title">{% if personal %}My <em>timetable</em>{% elif teachers_mode %}Teacher <em>timetables</em>{% else %}Printable <em>timetables</em>{% endif %}</h1>
+  <p class="fin-sub">{% if personal %}Your weekly lessons on one A4 landscape page.{% elif teachers_mode %}One A4 landscape page per teacher, to hand out or pin in the staff room.{% else %}One A4 landscape page per class in the school's colour, for notice boards.{% endif %}</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if personal %}<a class="fin-btn" href="{% url 'timetable:calendar_sync' %}"><i class="bi bi-calendar-plus"></i> Add to my phone calendar</a>
+  {% elif teachers_mode %}<a class="fin-btn" href="{% url 'timetable:print_all' tt.id %}"><i class="bi bi-people"></i> Class timetables</a>
+  {% else %}<a class="fin-btn" href="{% url 'timetable:print_teachers' tt.id %}"><i class="bi bi-person-badge"></i> Teacher timetables</a>{% endif %}
+  <button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print {{ sheets|length }} page{{ sheets|length|pluralize }}</button></div></div>
+<div class="sheets">{% for s in sheets %}<div class="sheet">
+  <div class="hd">{% if school.logo %}<img src="{{ school.logo.url }}" alt="">{% endif %}<div><div style="font-weight:800;letter-spacing:.08em;font-size:12px">{{ school.name|upper }}</div><h2>{{ s.title }}</h2><div style="font-size:10px;color:#78716c!important">{{ tt.config.name }}</div></div></div>
+  <table><thead><tr><th class="pt" style="background:{{ colour }}">Period</th>{% for c, l in s.days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in s.rows %}{% if r.slot.is_break %}<tr class="brk"><td class="pt">{{ r.slot.start_time|time:"H:i" }}</td><td colspan="{{ s.days|length }}">{{ r.slot.name|upper }}</td></tr>
+    {% else %}<tr><td class="pt">{{ r.slot.name }}<br><small>{{ r.slot.start_time|time:"H:i" }}–{{ r.slot.end_time|time:"H:i" }}</small></td>{% for cell in r.cells %}<td>{% if cell.entry %}<b>{{ cell.entry.subject.name }}</b><small>{% if s.kind == 'teacher' %}{{ cell.entry.school_class.name }}{% else %}{{ cell.entry.teacher.full_name }}{% endif %}{% if cell.entry.room %} · {{ cell.entry.room.name }}{% endif %}</small>{% endif %}</td>{% endfor %}</tr>{% endif %}{% endfor %}
+  </tbody></table>
+</div>{% empty %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>Nothing to print yet.</p></div></div>{% endfor %}</div>
+{% endblock %}

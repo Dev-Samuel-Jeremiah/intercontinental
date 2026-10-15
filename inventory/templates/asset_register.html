@@ -1,0 +1,6 @@
+<h1>Asset Register</h1>
+<ul>
+{% for asset in assets %}
+  <li>{{ asset.name }} ({{ asset.asset_code }})</li>
+{% endfor %}
+</ul>

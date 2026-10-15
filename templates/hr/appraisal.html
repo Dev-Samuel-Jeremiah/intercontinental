@@ -1,0 +1,51 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Appraisal — {{ a.staff.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.scale{display:flex;gap:.3rem}.scale label{display:flex;align-items:center;gap:.2rem;margin:0;font-size:.85rem}.scale input{width:auto}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hr:appraisals' %}" style="color:inherit">Appraisals</a> · {{ a.cycle.title }}</div>
+  <h1 class="fin-title">{{ a.staff.full_name }}</h1>
+  <p class="fin-sub">{{ a.get_status_display }}{% if a.reviewer %} · Reviewer: {{ a.reviewer.full_name }}{% endif %}{% if a.overall %} · Overall <b>{{ a.overall }}</b> out of 5{% endif %}</p>
+</div></div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Lesson notes</small><b>{{ facts.lesson_notes }}</b></div>
+  <div class="fin-stat"><small>Notes approved</small><b>{{ facts.notes_approved }}</b></div>
+  <div class="fin-stat"><small>Sent back</small><b>{{ facts.notes_returned }}</b></div>
+  <div class="fin-stat"><small>Cover lessons</small><b>{{ facts.cover_lessons }}</b></div>
+  <div class="fin-stat"><small>Training hours</small><b>{{ facts.training_hours }}</b></div>
+  <div class="fin-stat"><small>Queries / warnings</small><b>{{ facts.queries }}</b></div>
+</div>
+<p class="hint" style="margin-top:-.8rem">From school records for the term before and during this cycle.</p>
+
+{% if own and a.status == 'SELF' and a.cycle.open %}
+<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="self">
+  <h3 style="margin:0 0 .6rem">Your self-review</h3>
+  <table class="tbl" data-no-export><tbody>{% for r in rows %}<tr><td class="name">{{ r.name }} <small class="hint">weight {{ r.weight }}</small></td>
+    <td><div class="scale">{% for n in scale %}<label><input type="radio" name="s{{ r.i }}" value="{{ n }}" required>{{ n }}</label>{% endfor %}</div></td></tr>{% endfor %}</tbody></table>
+  <div><label>Comments — what went well, what you need support with</label><textarea name="self_comment" rows="5"></textarea></div>
+  <button class="fin-btn fin-btn-gold" type="submit">Send to my reviewer</button>
+</form>
+{% else %}
+<div class="panel"><div class="panel-b">
+  <table class="tbl" data-no-export><thead><tr><th>Area</th><th>Weight</th><th>Self</th><th>Reviewer</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.name }}</td><td>{{ r.weight }}</td><td>{{ r.self|default:"—" }}</td><td>{{ r.score|default:"—" }}</td></tr>{% endfor %}
+  </tbody></table>
+  {% if a.self_comment %}<p><b>Self-review:</b> {{ a.self_comment|linebreaksbr }}</p>{% endif %}
+  {% if a.reviewer_comment %}<p><b>Reviewer:</b> {{ a.reviewer_comment|linebreaksbr }}</p>{% endif %}
+  {% if own and a.status == 'SELF' %}<p class="hint">Self-reviews for this cycle are closed.</p>{% endif %}
+</div></div>
+{% endif %}
+
+{% if reviewer and a.status != 'DONE' %}
+<form method="post" class="panel fin-form" style="padding:1.2rem;margin-top:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="review">
+  <h3 style="margin:0 0 .6rem">Reviewer's scores</h3>
+  {% if a.status == 'SELF' %}<p class="hint">{{ a.staff.full_name }} has not sent a self-review yet. You can still complete the appraisal.</p>{% endif %}
+  <table class="tbl" data-no-export><tbody>{% for r in rows %}<tr><td class="name">{{ r.name }}{% if r.self %} <small class="hint">self: {{ r.self }}</small>{% endif %}</td>
+    <td><div class="scale">{% for n in scale %}<label><input type="radio" name="r{{ r.i }}" value="{{ n }}" required>{{ n }}</label>{% endfor %}</div></td></tr>{% endfor %}</tbody></table>
+  <div><label>Comments and targets for next term</label><textarea name="reviewer_comment" rows="5"></textarea></div>
+  <button class="fin-btn fin-btn-gold" type="submit">Complete appraisal</button>
+</form>
+{% endif %}
+{% endblock %}

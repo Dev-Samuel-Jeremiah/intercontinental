@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ask about a result | {{ school.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root{--ink:#0a1d40;--surface:#112850;--surface2:#172f5c;--rim:rgba(255,255,255,.06);--rim2:rgba(255,255,255,.10);
+    --champagne:#f4d21f;--champagne-lt:#ffe066;--slate:rgba(255,255,255,.4);--slate2:rgba(255,255,255,.6);--white:#f2f5fb;
+    --green:#4ade80;--red:#e87070;--amber:#fbbf24}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:radial-gradient(120% 80% at 0% 0%,rgba(244,210,31,.10),transparent 55%),var(--ink);color:var(--white);font-family:'Outfit',system-ui,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+  a.back{color:var(--slate2);text-decoration:none;font-size:.85rem;display:inline-flex;gap:.4rem;align-items:center}
+  a.back:hover{color:var(--champagne-lt)}
+  h1{font-family:'Cormorant Garamond',serif;font-size:2.1rem;margin:.8rem 0 .2rem}
+  h1 em{color:var(--champagne-lt)}
+  .sub{color:var(--slate2);font-size:.9rem;margin:0 0 1.4rem;line-height:1.5}
+  .card{border:1px solid var(--rim2);background:var(--surface);border-radius:18px;padding:1.2rem;margin-bottom:1rem}
+  .card h2{font-size:1rem;margin:0 0 .9rem;display:flex;gap:.5rem;align-items:center}
+  label{display:block;font-size:.76rem;color:var(--slate2);font-weight:600;margin:.7rem 0 .3rem}
+  input,select{width:100%;padding:.75rem .85rem;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.95rem}
+  input:focus,select:focus{outline:none;border-color:var(--champagne);box-shadow:0 0 0 3px rgba(244,210,31,.15)}
+  select option{background:var(--surface2)}
+  button{margin-top:1rem;width:100%;padding:.85rem;border:0;border-radius:12px;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .msg{padding:.75rem .9rem;border-radius:12px;margin-bottom:1rem;font-size:.9rem;border:1px solid var(--rim2)}
+  .msg.success{border-color:rgba(74,222,128,.35);color:var(--green);background:rgba(74,222,128,.08)}
+  .msg.error{border-color:rgba(232,112,112,.35);color:var(--red);background:rgba(232,112,112,.08)}
+  .row{display:flex;justify-content:space-between;gap:.8rem;padding:.75rem 0;border-top:1px solid var(--rim)}
+  .row:first-child{border-top:0}
+  .hint{color:var(--slate);font-size:.8rem}
+  .chip{font-size:.72rem;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--rim2);white-space:nowrap;align-self:flex-start}
+  .chip.PENDING{color:var(--amber);border-color:rgba(251,191,36,.35)}
+  .chip.APPROVED{color:var(--green);border-color:rgba(74,222,128,.35)}
+  .chip.REJECTED{color:var(--red);border-color:rgba(232,112,112,.35)}
+  textarea{width:100%;padding:.75rem .85rem;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.95rem;min-height:110px}
+  .chip.OPEN{color:var(--amber);border-color:rgba(251,191,36,.35)}.chip.ANSWERED{color:var(--slate2)}.chip.CORRECTED{color:var(--green);border-color:rgba(74,222,128,.35)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{{ back }}"><i class="bi bi-arrow-left"></i> Back to the report card</a>
+  <h1>Ask about a <em>result</em></h1>
+  <p class="sub">Think a score for {{ student.full_name }} in {{ term.name }}, {{ term.session.name }} is wrong? Tell the subject teacher — they'll check and reply here and by email.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if published %}<div class="card"><form method="post">{% csrf_token %}
+    <label>Subject</label><select name="subject" required>{% for tr in published %}<option value="{{ tr.subject_id }}">{{ tr.subject.name }} — {{ tr.total_score|floatformat:"-1" }}</option>{% endfor %}</select>
+    <label>What do you think is wrong?</label><textarea name="message" required maxlength="2000" placeholder="My child's test script showed 18/20 but the report card shows 12."></textarea>
+    <button type="submit">Send to the teacher</button></form></div>
+  {% else %}<div class="card"><p class="hint" style="margin:0">There are no published results for this term.</p></div>{% endif %}
+  {% if queries %}<div class="card"><h2><i class="bi bi-chat-left-text" style="color:var(--champagne-lt)"></i> Your requests</h2>
+    {% for q in queries %}<div class="row" style="flex-direction:column;gap:.35rem"><div style="display:flex;justify-content:space-between;gap:.5rem"><b>{{ q.subject.name }} · {{ q.term.name }}</b><span class="chip {{ q.status }}">{{ q.get_status_display }}</span></div>
+      <span class="hint">{{ q.message }}</span>
+      {% if q.response %}<div style="border-left:3px solid var(--champagne);padding-left:.7rem;color:var(--slate2)">{{ q.response }}{% if q.status == 'CORRECTED' %}<div style="color:var(--green);margin-top:.25rem">Score changed from {{ q.score_when_raised|floatformat:"-1" }} to {{ q.score_after|floatformat:"-1" }}</div>{% endif %}</div>{% endif %}</div>{% endfor %}
+  </div>{% endif %}
+</div>
+</body>
+</html>

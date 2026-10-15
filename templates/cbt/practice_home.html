@@ -1,0 +1,59 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Practice{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.5rem}
+  .sub{display:flex;gap:.55rem;align-items:center;padding:.65rem .8rem;border-radius:12px;border:1px solid var(--rim2);cursor:pointer}
+  .sub:has(input:checked){border-color:var(--champagne);background:var(--champagne-dim)}
+  .sub input{width:auto}
+  .tabs{display:flex;gap:.35rem;margin-bottom:.9rem}
+  .tabs button{padding:.45rem .9rem;border-radius:99px;border:1px solid var(--rim2);background:none;color:var(--slate2);font:inherit;font-weight:600;cursor:pointer}
+  .tabs button.on{background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;border-color:transparent}
+  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--red-border);color:var(--red);background:var(--red-dim)}
+  .msgs .info{border-color:var(--champagne-border);color:var(--champagne-lt);background:var(--champagne-dim)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">My learning</div>
+  <h1 class="fin-title">Practice &amp; <em>mock exams</em></h1>
+  <p class="fin-sub">A timed UTME-style mock across up to {{ max_subjects }} subjects, or a quick drill on one topic. Marked straight away, with explanations.</p>
+</div></div>
+{% if current %}<div class="panel" style="border-color:var(--champagne-border)"><div class="panel-b" style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;align-items:center">
+  <span><i class="bi bi-hourglass-split" style="color:var(--champagne-lt)"></i> You have a practice in progress ({% for s in current.subjects.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}).</span>
+  <a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'cbt:practice_take' current.id %}">Continue</a></div></div>{% endif %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-play-circle"></i> Start practising</h3></div><div class="panel-b">
+    {% if not available %}<p class="hint" style="margin:0">Your teachers haven't added practice questions for your class yet.</p>{% else %}
+    <div class="tabs"><button type="button" class="on" data-t="JAMB">UTME-style mock</button><button type="button" data-t="TOPIC">Topic drill</button></div>
+    <form method="post" id="pf-JAMB" class="fin-form">{% csrf_token %}<input type="hidden" name="mode" value="JAMB">
+      <div class="subs">{% for s, n, topics in available %}<label class="sub"><input type="checkbox" name="subjects" value="{{ s.id }}" class="js-sub"> <span>{{ s.name }}<span class="hint" style="display:block">{{ n }} questions</span></span></label>{% endfor %}</div>
+      <div class="row2"><div><label>Questions per subject</label><input type="number" name="per_subject" value="40" min="5" max="60"></div><div><label>Time</label><input id="tm" disabled value="About 40 seconds a question"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-stopwatch"></i> Start the mock</button>
+      <p class="hint" style="margin:0">Use A–D to answer, N and P for next and previous — as in the real UTME.</p></form>
+    <form method="post" id="pf-TOPIC" class="fin-form" style="display:none">{% csrf_token %}<input type="hidden" name="mode" value="TOPIC">
+      <div><label>Subject</label><select name="subject" id="tsub">{% for s, n, topics in available %}<option value="{{ s.id }}" data-topics="{{ topics|join:'|' }}">{{ s.name }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Topic</label><select name="topic" id="ttop"></select></div><div><label>Questions</label><input type="number" name="per_subject" value="15" min="5" max="60"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-lightning"></i> Start the drill</button></form>
+    {% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-bullseye"></i> My topics</h3></div><div class="panel-b">{% include "cbt/_mastery_body.html" %}</div></div>
+</div>
+{% if sessions %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent practice</h3></div><table class="tbl"><thead><tr><th>When</th><th>Type</th><th>Subjects</th><th>Score</th><th></th></tr></thead><tbody>
+  {% for s in sessions %}<tr><td>{{ s.started_at|date:"j M, H:i" }}</td><td>{{ s.get_mode_display }}{% if s.topic %} · {{ s.topic }}{% endif %}</td><td class="hint">{% for x in s.subjects.all %}{{ x.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+    <td>{% if s.finished %}<b>{{ s.score }}/{{ s.total }}</b> <span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span>{% else %}<span class="chip">unfinished</span>{% endif %}</td>
+    <td>{% if s.finished %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:practice_result' s.id %}">Review</a>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+<script>
+(function(){
+  document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+    ['JAMB','TOPIC'].forEach(t=>{var f=document.getElementById('pf-'+t);if(f)f.style.display=t===b.dataset.t?'':'none';});});});
+  var subs=document.querySelectorAll('.js-sub');subs.forEach(function(c){c.addEventListener('change',function(){
+    var n=document.querySelectorAll('.js-sub:checked').length;subs.forEach(x=>{if(!x.checked)x.disabled=n>={{ max_subjects }};});});});
+  var ts=document.getElementById('tsub'),tt=document.getElementById('ttop');
+  function fill(){if(!ts)return;var o=ts.selectedOptions[0],t=(o.dataset.topics||'').split('|').filter(Boolean);
+    tt.innerHTML='<option value="">All topics</option>'+t.map(x=>'<option>'+x.replace(/</g,'&lt;')+'</option>').join('');}
+  if(ts){ts.addEventListener('change',fill);fill();}
+})();
+</script>
+{% endblock %}

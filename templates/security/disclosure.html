@@ -1,0 +1,24 @@
+{% extends "saas_admin/_public_base.html" %}
+{% block title %}Report a security problem — {{ tenant.name|default:'School Portal' }}{% endblock %}
+{% block content %}
+<h1>Report a security problem</h1>
+<p class="sub">We welcome reports from security researchers and users. If you have found a weakness in this portal, tell us here and we will work with you to fix it.</p>
+{% for m in messages %}<div class="err">{{ m }}</div>{% endfor %}
+<div class="card art">
+  <h3 style="margin-top:0">Our promise</h3>
+  <ul><li>We reply within 5 working days and keep you updated.</li><li>We will not take legal action against good-faith research that follows these rules.</li><li>We credit you (if you wish) once it is fixed, and may offer a reward for serious findings.</li></ul>
+  <h3>Please</h3>
+  <ul><li>Only test with accounts you own or a school that has agreed. Never access, change or keep other people's data — stop as soon as you see any.</li><li>No denial-of-service, spam, social engineering or physical attacks.</li><li>Give us reasonable time to fix the problem before telling anyone else.</li></ul>
+  <p class="hint">Machine-readable contact details: <a href="/.well-known/security.txt">/.well-known/security.txt</a></p>
+</div>
+{% if done %}<div class="card"><h3 style="margin-top:0">Thank you</h3><p>Your reference is <b>{{ done.reference }}</b>. We have emailed you a confirmation.</p></div>
+{% else %}
+<form method="post" class="card">{% csrf_token %}<input name="website" style="position:absolute;left:-5000px" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <div class="row"><div><label>Your name</label><input name="reporter_name" required value="{{ form.reporter_name|default:'' }}"></div><div><label>Email</label><input type="email" name="email" required value="{{ form.email|default:'' }}"></div></div>
+  <div class="row"><div><label>Title</label><input name="title" required maxlength="200" value="{{ form.title|default:'' }}"></div><div><label>How serious do you think it is?</label><select name="severity">{% for v, l in severities %}<option value="{{ v }}" {% if v == 'MEDIUM' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+  <label>Affected address (URL)</label><input name="url" placeholder="https://school.{{ root }}/…" value="{{ form.url|default:'' }}">
+  <label>Details and steps to reproduce</label><textarea name="details" rows="8" required>{{ form.details|default:'' }}</textarea>
+  <p style="margin-top:1rem"><button class="btn gold" type="submit">Send report</button></p>
+</form>
+{% endif %}
+{% endblock %}

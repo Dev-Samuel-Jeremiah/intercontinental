@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}AI question generator{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">Question <em>generator</em></h1>
+  <p class="fin-sub">The AI writes questions with answers and explanations. Check every one — fix anything wrong, untick any you don't want — then add them to the question bank.</p>
+</div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-magic"></i> What to write</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Subject</label><select name="subject" required>{% for s in subjects %}<option value="{{ s.id }}" {% if form.subject == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Class level</label><input name="level" maxlength="40" value="{{ form.level }}" placeholder="SS 2"></div>
+        <div><label>How many</label><input type="number" name="count" min="1" max="20" value="{{ form.count|default:'5' }}"></div></div>
+      <div><label>Topic</label><input name="topic" maxlength="120" value="{{ form.topic }}" placeholder="Simultaneous equations"></div>
+      <div class="row2"><div><label>Difficulty</label><select name="difficulty">{% for v, l in difficulties %}<option value="{{ v }}" {% if form.difficulty == v or not form.difficulty and v == 'MEDIUM' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        <div><label>Type</label><select name="qtype"><option value="MCQ">Multiple choice</option><option value="TF" {% if form.qtype == 'TF' %}selected{% endif %}>True / false</option></select></div></div>
+      <div><label>From your own text <span class="hint">(optional — a passage, notes or a textbook page)</span></label><textarea name="source" rows="6" maxlength="6000">{{ form.source }}</textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-stars"></i> Write questions</button>
+    </form></div></div>
+  <div>
+  {% if generated %}
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="subject" value="{{ form.subject }}"><input type="hidden" name="level" value="{{ form.level }}"><input type="hidden" name="topic" value="{{ form.topic }}"><input type="hidden" name="difficulty" value="{{ form.difficulty }}"><input type="hidden" name="qtype" value="{{ form.qtype }}">
+      {% for q in generated %}{% with i=forloop.counter0 %}
+      <div class="gq fin-form">
+        <label style="display:flex;gap:.5rem;align-items:center;margin:0"><input type="checkbox" name="keep" value="{{ i }}" checked style="width:auto"> <b>Question {{ forloop.counter }}</b> <span class="hint">— untick to leave it out</span></label>
+        <textarea name="q{{ i }}_text" rows="2">{{ q.text }}</textarea>
+        {% for o in q.slots %}<div class="opt"><input type="radio" name="q{{ i }}_correct" value="{{ forloop.counter0 }}" {% if forloop.counter0 == q.correct %}checked{% endif %} title="Correct answer">
+          {% if form.qtype == 'TF' %}<input type="hidden" name="q{{ i }}_option_{{ forloop.counter0 }}" value="{{ o }}"><span>{{ o }}</span>{% else %}<input type="text" name="q{{ i }}_option_{{ forloop.counter0 }}" value="{{ o }}" maxlength="255" placeholder="(optional extra option)">{% endif %}</div>{% endfor %}
+        <div><label>Explanation</label><input name="q{{ i }}_explanation" value="{{ q.explanation }}"></div>
+      </div>{% endwith %}{% endfor %}
+      <button class="fin-btn fin-btn-gold" name="action" value="save"><i class="bi bi-database-add"></i> Add ticked questions to the bank</button>
+    </form>
+  {% else %}
+    <div class="panel"><div class="empty"><i class="bi bi-patch-question"></i><p>Questions appear here for you to check.</p></div></div>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

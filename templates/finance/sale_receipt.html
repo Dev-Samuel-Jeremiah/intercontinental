@@ -1,0 +1,69 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Receipt {{ sale.number }}{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .rc-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem}
+  .rc{width:100%;max-width:340px;background:#fff;color:#1c1917;border-radius:6px;padding:1.3rem 1.2rem 1.1rem;font-family:'Outfit',system-ui,sans-serif;font-size:.82rem;box-shadow:0 24px 50px -28px rgba(0,0,0,.9);position:relative}
+  .rc h2{margin:0;text-align:center;font-size:1rem;letter-spacing:.02em}
+  .rc .c{text-align:center;color:#57534e;font-size:.72rem;line-height:1.45}
+  .rc hr{border:0;border-top:1px dashed #a8a29e;margin:.7rem 0}
+  .rc table{width:100%;border-collapse:collapse;background:none;border:0;margin:0}
+  /* The portal's dark theme styles every table and <b>; a paper receipt must not inherit that. */
+  .rc tr,.rc td,.rc b,.rc h2{color:#1c1917!important;background:none!important;border:0!important;
+    font-family:inherit!important;letter-spacing:normal;text-transform:none}
+  .rc td{padding:.18rem 0!important;vertical-align:top;font-size:.82rem}
+  .rc td.m{color:#57534e!important}
+  .rc td.r{text-align:right;white-space:nowrap}
+  .rc .big td{font-size:1rem!important;font-weight:800;padding-top:.35rem!important}
+  .rc .void{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .rc .void span{transform:rotate(-22deg);border:3px solid #b91c1c;color:#b91c1c;font-weight:900;font-size:2rem;padding:.2rem 1rem;border-radius:8px;opacity:.75;letter-spacing:.12em}
+  .rc-actions{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center}
+  @media print{
+    body *{visibility:hidden!important}
+    .rc,.rc *{visibility:visible!important}
+    .rc{position:absolute;left:0;top:0;box-shadow:none;max-width:80mm;border-radius:0}
+  }
+</style>
+
+<div class="rc-wrap">
+  <div class="rc">
+    {% if sale.status == 'VOIDED' %}<div class="void"><span>VOID</span></div>{% endif %}
+    <h2>{{ school.name }}</h2>
+    <div class="c">{{ sale.get_outlet_display }}{% if school.address %}<br>{{ school.address }}{% endif %}{% if school.phone %}<br>{{ school.phone }}{% endif %}</div>
+    <hr>
+    <table>
+      <tr><td>Receipt</td><td class="r"><b>{{ sale.number }}</b></td></tr>
+      <tr><td>Date</td><td class="r">{{ sale.created_at|date:"j M Y, H:i" }}</td></tr>
+      <tr><td>Customer</td><td class="r">{{ sale.buyer }}</td></tr>
+      {% if sale.student %}<tr><td>Admission no.</td><td class="r">{{ sale.student.admission_number }}</td></tr>{% endif %}
+    </table>
+    <hr>
+    <table>
+      {% for l in lines %}
+      <tr><td colspan="2"><b>{{ l.name }}</b></td></tr>
+      <tr><td class="m">{{ l.quantity }} × ₦{{ l.unit_price|floatformat:"-2"|intcomma }}</td><td class="r">₦{{ l.total|floatformat:"-2"|intcomma }}</td></tr>
+      {% endfor %}
+    </table>
+    <hr>
+    <table>
+      <tr class="big"><td>Total</td><td class="r">₦{{ sale.total|floatformat:"-2"|intcomma }}</td></tr>
+      <tr><td>Paid by</td><td class="r">{{ sale.get_method_display }}</td></tr>
+      {% if sale.amount_tendered is not None %}
+      <tr><td>Tendered</td><td class="r">₦{{ sale.amount_tendered|floatformat:"-2"|intcomma }}</td></tr>
+      <tr><td>Change</td><td class="r">₦{{ sale.change_due|floatformat:"-2"|intcomma }}</td></tr>
+      {% endif %}
+      {% if wallet and sale.status != 'VOIDED' %}<tr><td>Wallet balance now</td><td class="r">₦{{ wallet.balance|floatformat:"-2"|intcomma }}</td></tr>{% endif %}
+    </table>
+    <hr>
+    <div class="c">Served by {% if sale.sold_by.get_full_name %}{{ sale.sold_by.get_full_name }}{% else %}{{ sale.sold_by.username|default:"—" }}{% endif %}
+      {% if sale.status == 'VOIDED' %}<br><b style="color:#b91c1c!important">Voided {{ sale.voided_at|date:"j M Y H:i" }} — {{ sale.void_reason }}</b>{% else %}<br>Thank you{% endif %}</div>
+  </div>
+
+  <div class="rc-actions">
+    <button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print receipt</button>
+    <a class="fin-btn" href="{% url 'finance:till' %}?outlet={{ sale.outlet }}"><i class="bi bi-plus-circle"></i> Next sale</a>
+    <a class="fin-btn" href="{% url 'finance:sales' %}?outlet={{ sale.outlet }}"><i class="bi bi-clock-history"></i> All sales</a>
+  </div>
+</div>
+{% endblock %}

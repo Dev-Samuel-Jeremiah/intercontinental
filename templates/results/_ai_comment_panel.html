@@ -1,0 +1,111 @@
+{% comment %}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AI COMMENT GENERATOR — INCLUDE SNIPPET
+  File: templates/results/_ai_comment_panel.html
+
+  HOW TO USE:
+  In templates/results/term_results.html, find the
+  <!-- REMARKS --> section (around line 841) and insert:
+
+      {% include "results/_ai_comment_panel.html" %}
+
+  Place it IMMEDIATELY BEFORE the existing
+  <div class="remarks-grid"> block, still inside the
+  {% if student %} block so it only renders when a
+  student result is being displayed.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{% endcomment %}
+
+{% if student and term and session %}
+<!-- ══ AI COMMENT GENERATOR PANEL ══ -->
+<div class="ai-comment-panel" id="aiCommentPanel">
+
+  <!-- Panel header -->
+  <div class="panel-header" style="border-top:1px solid var(--rim);">
+    <div class="panel-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+      <i class="bi bi-stars" style="color:var(--purple);"></i>
+    </div>
+    <h3 style="display:flex;align-items:center;gap:.6rem;">
+      AI Comment Generator
+      <span class="ai-badge">Claude AI</span>
+    </h3>
+    <div style="margin-left:auto;display:flex;gap:.6rem;align-items:center;">
+      <span id="aiTimestamp" class="ai-timestamp"></span>
+      <button class="btn btn-ai-generate" id="btnGenerateAI"
+              data-student="{{ student.id }}"
+              data-term="{{ term.id }}"
+              data-session="{{ session.id }}"
+              type="button">
+        <i class="bi bi-magic" id="aiSpinIcon"></i>
+        <span id="aiBtnLabel">Generate Comments</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Info bar -->
+  <div class="ai-info-bar" id="aiInfoBar">
+    <i class="bi bi-info-circle"></i>
+    <span>
+      Click <strong>Generate Comments</strong> to create personalised AI remarks
+      for <strong>{{ student.full_name }}</strong> based on {{ term }} performance.
+      Generated comments auto-fill the remark fields below — you can edit them before saving.
+    </span>
+  </div>
+
+  <!-- Error bar (hidden by default) -->
+  <div class="ai-error-bar" id="aiErrorBar" style="display:none;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span id="aiErrorMsg">An error occurred. Please try again.</span>
+  </div>
+
+  <!-- Generated comment cards (hidden until generation succeeds) -->
+  <div class="ai-results-grid" id="aiResultsGrid" style="display:none;">
+
+    <!-- Teacher comment -->
+    <div class="ai-comment-card">
+      <div class="ai-comment-card-header">
+        <i class="bi bi-person-badge"></i>
+        Class Teacher's Comment
+        <button class="ai-copy-btn" data-target="teacherRemark" title="Copy to remark field">
+          <i class="bi bi-clipboard-check"></i> Use This
+        </button>
+      </div>
+      <p class="ai-comment-text" id="aiTeacherComment"></p>
+    </div>
+
+    <!-- HOS comment -->
+    <div class="ai-comment-card">
+      <div class="ai-comment-card-header">
+        <i class="bi bi-shield-check"></i>
+        Head of School's Comment
+        <button class="ai-copy-btn" data-target="hosRemark" title="Copy to HOS remark field">
+          <i class="bi bi-clipboard-check"></i> Use This
+        </button>
+      </div>
+      <p class="ai-comment-text" id="aiHosComment"></p>
+    </div>
+
+    <!-- Overall summary -->
+    <div class="ai-comment-card ai-comment-card--full">
+      <div class="ai-comment-card-header">
+        <i class="bi bi-bar-chart-line"></i>
+        Overall Summary
+      </div>
+      <p class="ai-comment-text" id="aiOverallSummary"></p>
+    </div>
+
+    <!-- Apply all button -->
+    <div class="ai-apply-row">
+      <button class="btn btn-ai-apply" id="btnApplyAll" type="button">
+        <i class="bi bi-check2-all"></i>
+        Apply All to Remark Fields
+      </button>
+      <span class="ai-apply-note">
+        <i class="bi bi-pencil-square"></i>
+        Comments are applied to the remark fields below. You can edit before saving.
+      </span>
+    </div>
+
+  </div>
+</div>
+{% endif %}

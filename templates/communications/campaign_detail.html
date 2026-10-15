@@ -1,0 +1,681 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Campaign — {{ campaign.title }}{% endblock %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background:var(--ink); color:var(--white); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+a { text-decoration: none; color:inherit; }
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.camp-wrap {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   MESSAGES
+════════════════════════════════════════════ */
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem 1.1rem;
+  border-radius: 10px;
+  margin-bottom: .85rem;
+  font-size: .86rem;
+  font-weight: 500;
+  border:1px solid;
+}
+.msg.success { background:var(--green-dim); border-color:var(--green-border); color:var(--green); }
+.msg.error   { background:var(--red-dim);   border-color:var(--red-border);   color:var(--red);   }
+.msg.info    { background:var(--blue-dim);  border-color:var(--blue-border);  color:var(--blue);  }
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom:1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background:var(--champagne);
+  border-radius: 2px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color:var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background:var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color:var(--white);
+  margin-bottom: .5rem;
+}
+
+.page-meta {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .25rem .7rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  gap: .65rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding-top: .3rem;
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.15rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border:none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-champagne {
+  background:linear-gradient(135deg, #f4d21f, #d1ad00);
+  color:#0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.36); }
+
+.btn-success {
+  background:linear-gradient(135deg, var(--green), #15803d);
+  color:#fff;
+  box-shadow: 0 4px 16px rgba(74,222,128,.18);
+}
+.btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(74,222,128,.28); }
+
+.btn-ghost {
+  background:var(--surface3);
+  color:var(--slate2);
+  border:1px solid var(--rim2);
+}
+.btn-ghost:hover { background:var(--rim2); color:var(--white); }
+
+/* ════════════════════════════════════════════
+   STAT CARDS
+════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  animation: riseUp .45s ease both;
+  transition: border-color .2s, transform .2s;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:linear-gradient(180deg, var(--rim3) 0%, transparent 4%);
+  pointer-events: none; border-radius: inherit;
+}
+.stat-card:hover { border-color:var(--rim3); transform: translateY(-3px); }
+.stat-card:nth-child(1) { animation-delay: .05s; }
+.stat-card:nth-child(2) { animation-delay: .10s; }
+.stat-card:nth-child(3) { animation-delay: .15s; }
+.stat-card:nth-child(4) { animation-delay: .20s; }
+.stat-card:nth-child(5) { animation-delay: .25s; }
+.stat-card:nth-child(6) { animation-delay: .30s; }
+
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+.stat-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color:var(--slate);
+  margin-bottom: .3rem;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color:var(--white);
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease .32s both;
+}
+.panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none; z-index: 0; border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom:1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.panel-title { display: flex; align-items: center; gap: .75rem; }
+
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem; font-weight: 600; color:var(--white);
+}
+
+.log-count {
+  font-size: .78rem;
+  font-weight: 500;
+  color:var(--slate2);
+  padding: .28rem .75rem;
+  background:var(--surface3);
+  border:1px solid var(--rim2);
+  border-radius: 999px;
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: 100%; border-collapse: collapse; }
+
+thead tr { border-bottom:1px solid var(--rim2); }
+thead th {
+  padding: .8rem 1.25rem;
+  font-size: .7rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  color:var(--slate); text-align: left; white-space: nowrap;
+  background:var(--surface2);
+}
+thead th:first-child { padding-left: 1.5rem; }
+thead th:last-child  { padding-right: 1.5rem; }
+
+tbody tr { border-bottom:1px solid var(--rim); transition: background .18s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,.025); }
+
+tbody td {
+  padding: .9rem 1.25rem;
+  font-size: .84rem;
+  color:var(--slate2);
+  vertical-align: middle;
+}
+tbody td:first-child { padding-left: 1.5rem; }
+tbody td:last-child  { padding-right: 1.5rem; }
+
+/* ════════════════════════════════════════════
+   STUDENT CELL
+════════════════════════════════════════════ */
+.student-cell { display: flex; align-items: center; gap: .7rem; }
+
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 700; color:#fff;
+  flex-shrink: 0;
+}
+.av-champagne { background:linear-gradient(135deg, #f4d21f, #c9a800); }
+.av-blue      { background:linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.av-purple    { background:linear-gradient(135deg, #a855f7, #6d28d9); }
+.av-teal      { background:linear-gradient(135deg, #14b8a6, #0f766e); }
+.av-green     { background:linear-gradient(135deg, #22c55e, #15803d); }
+
+.student-name { font-weight: 600; color:var(--white); font-size: .86rem; line-height: 1.3; }
+.student-adm  { font-size: .72rem; color:var(--slate); font-family: 'Courier New', monospace; }
+
+/* ════════════════════════════════════════════
+   RECIPIENT
+════════════════════════════════════════════ */
+.recipient-text {
+  font-size: .79rem;
+  color:var(--slate2);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════
+   ERROR TEXT
+════════════════════════════════════════════ */
+.error-text {
+  font-size: .74rem;
+  color:var(--red);
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* ════════════════════════════════════════════
+   DATE
+════════════════════════════════════════════ */
+.date-text {
+  font-size: .76rem;
+  color:var(--slate);
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: .32rem;
+  padding: .25rem .65rem; border-radius: 999px;
+  font-size: .72rem; font-weight: 600; white-space: nowrap;
+}
+.badge-green  { background:var(--green-dim);  border:1px solid var(--green-border);  color:var(--green);  }
+.badge-red    { background:var(--red-dim);    border:1px solid var(--red-border);    color:var(--red);    }
+.badge-blue   { background:var(--blue-dim);   border:1px solid var(--blue-border);   color:var(--blue);   }
+.badge-amber  { background:var(--amber-dim);  border:1px solid var(--amber-border);  color:var(--amber);  }
+.badge-ghost  { background:var(--surface3);   border:1px solid var(--rim2);          color:var(--slate2); }
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 4.5rem 2rem;
+}
+.empty-icon-box {
+  width: 64px; height: 64px;
+  background:var(--surface3); border:1px solid var(--rim2);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.75rem; color:var(--slate);
+  margin-bottom: 1.1rem;
+}
+.empty-state h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem; font-weight: 600; color:var(--white);
+  margin-bottom: .4rem;
+}
+.empty-state p { font-size: .85rem; color:var(--slate2); max-width: 280px; }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .camp-wrap  { padding: 1.5rem 1.25rem 3rem; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 768px) {
+  .camp-wrap  { padding: 1rem .9rem 2.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  .page-title { font-size: 1.75rem; }
+
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background:var(--surface3); border:1px solid var(--rim2);
+    border-radius: 12px; padding: 1rem; margin-bottom: .85rem;
+  }
+  table td {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: .5rem 0; border:none; border-bottom:1px solid var(--rim);
+    font-size: .82rem; gap: .5rem;
+  }
+  table td:last-child { border-bottom:none; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color:var(--slate);
+    flex-shrink: 0; white-space: nowrap;
+  }
+  .student-cell  { flex-direction: column; align-items: flex-end; }
+  .recipient-text, .error-text { max-width: 160px; }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.6rem; }
+}
+</style>
+
+<!-- ══ MESSAGES ══════════════════════════════════════════ -->
+{% if messages %}
+{% for m in messages %}
+<div class="msg {% if m.tags == 'success' %}success{% elif m.tags == 'error' %}error{% else %}info{% endif %}">
+  <i class="bi {% if m.tags == 'success' %}bi-check-circle-fill{% elif m.tags == 'error' %}bi-x-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+  {{ m }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="camp-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════ -->
+  <header class="page-header">
+    <div>
+      <div class="eyebrow">Campaign Detail</div>
+      <h1 class="page-title">{{ campaign.title }}</h1>
+      <div class="page-meta">
+        <!-- Channel badge -->
+        {% if campaign.channel == 'EMAIL' %}
+          <span class="meta-pill" style="background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue);">
+            <i class="bi bi-envelope-fill"></i> {{ campaign.channel }}
+          </span>
+        {% elif campaign.channel == 'SMS' %}
+          <span class="meta-pill" style="background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber);">
+            <i class="bi bi-phone-fill"></i> {{ campaign.channel }}
+          </span>
+        {% else %}
+          <span class="meta-pill" style="background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal);">
+            <i class="bi bi-broadcast"></i> {{ campaign.channel }}
+          </span>
+        {% endif %}
+
+        <!-- Audience -->
+        <span class="meta-pill" style="background:var(--surface3);border:1px solid var(--rim2);color:var(--slate2);">
+          <i class="bi bi-people-fill"></i> {{ campaign.get_audience_display }}
+        </span>
+
+        <!-- Class if set -->
+        {% if campaign.school_class %}
+        <span class="meta-pill" style="background:var(--surface3);border:1px solid var(--rim2);color:var(--slate2);">
+          <i class="bi bi-building"></i> {{ campaign.school_class.name }}
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="header-actions">
+      {% if campaign.status == 'DRAFT' or campaign.status == 'SCHEDULED' %}
+      <form method="POST" action="{% url 'communications:campaign_send' campaign.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success"
+          onclick="return confirm('Send this campaign now to {{ recipients|length }} recipients?')">
+          <i class="bi bi-send-fill"></i> Send Now
+        </button>
+      </form>
+      {% endif %}
+      {% if campaign.status == 'PENDING' %}<span class="btn btn-ghost" style="cursor:default"><i class="bi bi-hourglass-split"></i> Waiting for approval</span>{% endif %}
+      {% if campaign.status == 'REJECTED' %}<span class="btn btn-ghost" style="cursor:default" title="{{ campaign.review_note }}"><i class="bi bi-x-circle"></i> Not approved: {{ campaign.review_note|truncatechars:60 }}</span>{% endif %}
+      {% if campaign.logs.exists %}<a href="{% url 'communications:campaign_report' campaign.id %}" class="btn btn-ghost"><i class="bi bi-clipboard-data"></i> Delivery report</a>{% endif %}
+      <a href="{% url 'communications:campaign_list' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i> All Campaigns
+      </a>
+    </div>
+  </header>
+
+  <!-- ══ STAT CARDS ══════════════════════════════════════ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green-dim);">
+        <i class="bi bi-people-fill" style="color:var(--green);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Recipients</div>
+        <div class="stat-value">{{ campaign.total_recipients }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-dim);">
+        <i class="bi bi-envelope-fill" style="color:var(--blue);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Emails Sent</div>
+        <div class="stat-value">{{ campaign.emails_sent }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-dim);">
+        <i class="bi bi-envelope-x-fill" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Emails Failed</div>
+        <div class="stat-value">{{ campaign.emails_failed }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-dim);">
+        <i class="bi bi-phone-fill" style="color:var(--amber);"></i>
+      </div>
+      <div>
+        <div class="stat-label">SMS Sent</div>
+        <div class="stat-value">{{ campaign.sms_sent }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-dim);">
+        <i class="bi bi-phone-slash-fill" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-label">SMS Failed</div>
+        <div class="stat-value">{{ campaign.sms_failed }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--champagne-dim);">
+        <i class="bi bi-graph-up-arrow" style="color:var(--champagne);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Success Rate</div>
+        <div class="stat-value">{{ campaign.success_rate }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DELIVERY LOG PANEL ══════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--purple-dim);">
+          <i class="bi bi-bar-chart-fill" style="color:var(--purple);"></i>
+        </div>
+        <h3>Delivery Log</h3>
+      </div>
+      <span class="log-count">{{ logs|length }} entr{{ logs|length|pluralize:"y,ies" }}</span>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Channel</th>
+            <th>Recipient</th>
+            <th>Status</th>
+            <th>Sent At</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+          <tr>
+
+            <!-- Student -->
+            <td data-label="Student">
+              <div class="student-cell">
+                {% with n=forloop.counter %}
+                <div class="avatar {% if n|divisibleby:5 %}av-teal{% elif n|divisibleby:4 %}av-green{% elif n|divisibleby:3 %}av-purple{% elif n|divisibleby:2 %}av-blue{% else %}av-champagne{% endif %}">
+                  {{ log.student.full_name|slice:":2"|upper }}
+                </div>
+                {% endwith %}
+                <div>
+                  <div class="student-name">{{ log.student.full_name }}</div>
+                  <div class="student-adm">{{ log.student.admission_number }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Channel -->
+            <td data-label="Channel">
+              {% if log.channel == 'EMAIL' %}
+                <span class="badge badge-blue"><i class="bi bi-envelope-fill"></i> Email</span>
+              {% else %}
+                <span class="badge badge-amber"><i class="bi bi-phone-fill"></i> SMS</span>
+              {% endif %}
+            </td>
+
+            <!-- Recipient -->
+            <td data-label="Recipient">
+              <span class="recipient-text">{{ log.recipient }}</span>
+            </td>
+
+            <!-- Status -->
+            <td data-label="Status">
+              {% if log.status == 'SENT' or log.status == 'DELIVERED' %}
+                <span class="badge badge-green">
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ log.status|capfirst }}
+                </span>
+              {% elif log.status == 'FAILED' %}
+                <span class="badge badge-red">
+                  <i class="bi bi-x-circle-fill"></i> Failed
+                </span>
+              {% else %}
+                <span class="badge badge-ghost">{{ log.status }}</span>
+              {% endif %}
+            </td>
+
+            <!-- Sent At -->
+            <td data-label="Sent At">
+              <span class="date-text">{{ log.sent_at|date:"d M Y H:i"|default:"—" }}</span>
+            </td>
+
+            <!-- Error -->
+            <td data-label="Error">
+              {% if log.error_message %}
+              <span class="error-text">{{ log.error_message|truncatechars:40 }}</span>
+              {% else %}
+              <span style="color:var(--slate);font-size:.78rem;">—</span>
+              {% endif %}
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <div class="empty-icon-box">
+                  <i class="bi bi-bar-chart"></i>
+                </div>
+                <h4>No Delivery Records Yet</h4>
+                <p>Send the campaign first to see delivery logs here.</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /camp-wrap -->
+
+{% endblock %}

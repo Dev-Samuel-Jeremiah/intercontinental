@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Topic mastery{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .mx-wrap{overflow:auto;max-height:70vh}
+  .mx{border-collapse:separate;border-spacing:0;font-size:.78rem;min-width:100%}
+  .mx th,.mx td{border-bottom:1px solid var(--rim);border-right:1px solid var(--rim);padding:.4rem .5rem;text-align:center;white-space:nowrap}
+  .mx thead th{position:sticky;top:0;background:var(--surface2,#172f5c);color:var(--slate2);font-size:.68rem;z-index:2}
+  .mx .nm{position:sticky;left:0;background:var(--surface2,#172f5c);text-align:left;color:var(--white);font-weight:600;z-index:1}
+  .mx td.mastered{background:var(--green-dim);color:var(--green)} .mx td.developing{background:var(--amber-dim);color:var(--amber)}
+  .mx td.weak{background:var(--red-dim);color:var(--red)} .mx td.few{color:var(--slate)} .mx td.none{color:rgba(255,255,255,.2)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">CBT &amp; Exams</div>
+  <h1 class="fin-title">Topic <em>mastery</em></h1>
+  <p class="fin-sub">From practice and from exam questions taken from the question bank. Green ≥ 80%, amber 50–79%, red below 50% (with at least 3 answers).</p>
+</div><form method="get" style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <select name="class" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for c in classes %}<option value="{{ c.id }}" {% if c.id == school_class.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="subject" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for s in subjects %}<option value="{{ s.id }}" {% if s.id == subject.id %}selected{% endif %}>{{ s.name }}</option>{% empty %}<option>No bank questions yet</option>{% endfor %}</select>
+</form></div>
+{% if not data or not data.topics %}<div class="panel"><div class="empty"><i class="bi bi-bullseye"></i><p>No answers on tagged topics for this class and subject yet.</p></div></div>{% else %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-diamond"></i> Topics to reteach</h3></div><table class="tbl"><thead><tr><th>Topic</th><th>Class average</th><th>Answers</th><th>Needs work</th></tr></thead><tbody>
+  {% for a in data.averages %}<tr><td class="name">{{ a.topic }}</td><td>{% if a.percent is not None %}<span class="chip {% if a.percent >= 80 %}green{% elif a.percent >= 50 %}amber{% else %}red{% endif %}">{{ a.percent }}%</span>{% else %}—{% endif %}</td><td>{{ a.n }}</td>
+    <td class="hint">{% for s in a.weak|slice:":6" %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if a.weak|length > 6 %} and {{ a.weak|length|add:"-6" }} more{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="panel"><div class="mx-wrap"><table class="mx"><thead><tr><th class="nm">Student</th>{% for t in data.topics %}<th>{{ t }}</th>{% endfor %}</tr></thead><tbody>
+  {% for r in data.rows %}<tr><td class="nm"><a href="{% url 'cbt:mastery_student' r.student.id %}" style="color:inherit;text-decoration:none">{{ r.student.full_name }}</a></td>{% for c in r.cells %}<td class="{{ c.label }}" title="{{ c.n }} answer{{ c.n|pluralize }}">{% if c.percent is not None %}{{ c.percent }}%{% else %}·{% endif %}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></div>{% endif %}
+{% endblock %}

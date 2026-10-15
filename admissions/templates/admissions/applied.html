@@ -1,0 +1,37 @@
+{% extends "admissions/public_base.html" %}
+{% block title %}Application received{% endblock %}
+{% block body %}
+<div style="text-align:center;padding:2rem 0">
+  <div style="width:76px;height:76px;margin:0 auto 1.6rem;border-radius:22px;display:grid;place-items:center;font-size:1.9rem;
+              color:var(--green);background:rgba(94,203,142,.14);border:1px solid rgba(94,203,142,.35)">
+    <i class="bi bi-check2-circle"></i>
+  </div>
+  <div class="eyebrow" style="margin-bottom:.8rem">Application received</div>
+  <h1>Thank you, <em>{{ application.parent_name|default:"parent" }}</em></h1>
+  <p class="lead" style="margin:0 auto">We have received the application for <strong style="color:var(--text)">{{ application.full_name }}</strong>{% if application.applying_for %} into {{ application.applying_for.name }}{% endif %}. The school will review it and contact you.</p>
+
+  <div class="card" style="max-width:420px;margin:2rem auto 0;text-align:center">
+    <p class="hint" style="margin-bottom:.5rem">Your reference number</p>
+    <div style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:1.6rem;letter-spacing:.1em;color:var(--gold-lt)">{{ application.reference }}</div>
+    <p class="help" style="margin-top:.8rem">Keep this. You'll need it to check your status.</p>
+  </div>
+
+  {% if application.fee_amount and not application.fee_paid %}
+  <div class="card" style="max-width:420px;margin:1.2rem auto 0">
+    <h2 style="font-size:1.1rem">Application fee</h2>
+    <p class="hint" style="margin-bottom:1rem">₦{{ application.fee_amount|floatformat:0 }} is due for this application.</p>
+    <a class="btn" href="{% url 'pay_fee' application.reference %}" style="width:100%"><i class="bi bi-credit-card"></i> Pay online now</a>
+    <p class="help" style="margin-top:.7rem">Or pay at the school office and quote your reference.</p>
+  </div>
+  {% elif application.fee_paid %}
+  <div class="note" style="max-width:420px;margin:1.2rem auto 0;background:rgba(94,203,142,.1);border-color:rgba(94,203,142,.3);color:var(--green)">
+    <i class="bi bi-check-circle-fill" style="color:var(--green)"></i><div>Application fee paid. Thank you.</div>
+  </div>
+  {% endif %}
+
+  <div style="margin-top:1.6rem;display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap">
+    <a class="btn" href="{% url 'apply_status' %}?reference={{ application.reference }}"><i class="bi bi-search"></i> Check status</a>
+    <a class="btn ghost" href="{% url 'apply' %}"><i class="bi bi-plus-lg"></i> Apply for another child</a>
+  </div>
+</div>
+{% endblock %}

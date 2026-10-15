@@ -1,0 +1,184 @@
+{% extends 'dashboard/base.html' %}
+{% load dict_filters %}
+{% load static %}
+{% block title %}{{ course.name }} | Quiz Results{% endblock %}
+{% block extra_css %}
+<style>
+        #content{font-family: 'Inter', Arial, sans-serif;color:var(--white);}
+
+        .results-container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .page-header {
+            background:linear-gradient(135deg, #2563eb, #1e40af);
+            color:#fff;
+            padding: 30px;
+            border-radius: 18px;
+            margin-bottom: 35px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .page-header h2 {
+            font-size: 1rem;
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        /* Quiz Card */
+        .quiz-card {
+            background:rgba(255,255,255,.03);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .quiz-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 45px rgba(0,0,0,0.12);
+        }
+
+        .quiz-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color:var(--blue);
+            margin-bottom: 20px;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            background:#2563eb;
+            color:#ffffff;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        td {
+            padding: 12px;
+            font-size: 0.9rem;
+            border-bottom:1px solid var(--rim2);
+        }
+
+        tr:hover td {
+            background:#f1f5ff;
+        }
+
+        .score-badge {
+            display: inline-block;
+            background:#ecfeff;
+            color:var(--blue);
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+        }
+
+        /* Empty */
+        .empty-text {
+            color:var(--slate2);
+            font-size: 0.95rem;
+            margin-top: 10px;
+        }
+
+        /* Back Button */
+        .btn-back {
+            display: inline-block;
+            margin-top: 20px;
+            background:rgba(255,255,255,.03);
+            color:var(--blue);
+            border:1px solid #2563eb;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            background:#2563eb;
+            color:#ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+
+            th, td {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+{% endblock %}
+{% block content %}
+
+<div class="results-container">
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>Quiz Results</h1>
+        <h2>{{ course.name }} • Section: {{ section.title }}</h2>
+    </div>
+
+    {% for quiz in quizzes %}
+        <div class="quiz-card">
+            <div class="quiz-title">{{ quiz.title }}</div>
+
+            {% with submissions=quiz_results|get_item:quiz.id %}
+                {% if submissions %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Score</th>
+                                <th>Total</th>
+                                <th>Date Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in submissions %}
+                                <tr>
+                                    <td>{{ sub.student.get_full_name|default:sub.student.username }}</td>
+                                    <td>
+                                        <span class="score-badge">{{ sub.score }}</span>
+                                    </td>
+                                    <td>{{ sub.total_questions }}</td>
+                                    <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p class="empty-text">No submissions yet for this quiz.</p>
+                {% endif %}
+            {% endwith %}
+        </div>
+    {% empty %}
+        <p class="empty-text">No quizzes in this section.</p>
+    {% endfor %}
+
+    <!-- Back Button -->
+    <a href="{% url 'classroom:teacher_course_detail' course.id %}" class="btn-back">
+        ← Back to Course
+    </a>
+
+</div>
+{% endblock %}

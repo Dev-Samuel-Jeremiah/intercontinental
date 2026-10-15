@@ -1,0 +1,33 @@
+{% load dict_filters %}
+
+<h2>{{ student.full_name }} — {{ term.name }} Skills</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%;">
+        <thead>
+            <tr style="background:#f0f0f0;">
+                <th>Skill / Behavior</th>
+                {% for rating in ratings %}
+                    <th>{{ rating }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for skill in skills %}
+            <tr>
+                <td>{{ skill.name }} ({{ skill.category }})</td>
+                {% for rating in ratings %}
+                <td style="text-align:center;">
+                    <input type="radio" name="skill_{{ skill.id }}" value="{{ rating }}"
+                        {% if assessment_dict|get_item:skill.id == rating %}checked{% endif %}>
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+
+        </tbody>
+    </table>
+
+    <button type="submit" style="margin-top:15px; padding:8px 16px;">Save Ratings</button>
+</form>

@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Message to a parent{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">Message to a <em>parent</em></h1>
+  <p class="fin-sub">Write the facts in a few words; the AI turns them into a calm, respectful message. You'll see the draft before anything is sent.</p>
+</div></div>
+<div class="note"><i class="bi bi-shield-check"></i><span>Only put down what the parent should be told. The AI is told to use your facts only — check that it did.</span></div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:760px">{% csrf_token %}
+  <div><label>Student</label><select name="student" required><option value="">Choose…</option>{% for s in students %}<option value="{{ s.id }}" {% if picked == s.id|stringformat:"s" %}selected{% endif %}>{{ s.full_name }} — {{ s.class_assigned.name|default:"no class" }}</option>{% endfor %}</select></div>
+  <div class="row2"><div><label>About</label><select name="purpose">{% for v, l in purposes %}<option value="{{ v }}" {% if request.POST.purpose == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label>Send by</label><select name="channel">{% for v, l in channels %}<option value="{{ v }}" {% if request.POST.channel == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+  <div><label>The points to make</label><textarea name="points" rows="5" required maxlength="4000" placeholder="Second-term fees of ₦45,000 still outstanding. Exams start 12 March. Happy to agree a payment plan.">{{ request.POST.points }}</textarea></div>
+  <div class="row2"><div><label>Tone</label><select name="tone">{% for v, l in tones %}<option value="{{ v }}" {% if request.POST.tone == v %}selected{% endif %}>{{ l|capfirst }}</option>{% endfor %}</select></div>
+    <div><label>Language</label><select name="language">{% for v, l in languages %}<option value="{{ v }}" {% if request.POST.language == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+  <div><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-stars"></i> Write the draft</button></div>
+</form>
+{% endblock %}

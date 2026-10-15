@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Stock counts{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Assets</div>
+  <h1 class="fin-title"><em>Stock counts</em></h1>
+  <p class="fin-sub">Count every consumable in the store, see what is short or over against the ledger (with its value at the last price paid), and correct the ledger when you close.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for sc in rows %}<tr><td class="name"><a href="{% url 'facilities:count' sc.pk %}">{{ sc.title }}</a><br><small class="hint">{{ sc.started_at|date:"j M Y" }}</small></td><td>{% if sc.closed_at %}<span class="chip ok">Closed{% if sc.adjusted %} · ledger corrected{% endif %}</span>{% else %}<span class="chip gold">Open</span>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No counts yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Start a count</h3>
+    <div><label>Title</label><input name="title" value="End of session stock-take" maxlength="120"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Start</button>
+  </form>
+</div>
+{% endblock %}

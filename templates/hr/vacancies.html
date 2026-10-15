@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Recruitment{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">People &amp; HR</div>
+  <h1 class="fin-title"><em>Recruitment</em></h1>
+  <p class="fin-sub">Post jobs on your public careers page — <a href="{{ careers_url }}" target="_blank">{{ careers_url }}</a> — and work through the applications.</p>
+</div></div>
+{% include "hr/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-plus-circle"></i> New vacancy</h3>
+    <div><label>Job title</label><input name="title" required maxlength="160" placeholder="e.g. Mathematics Teacher (SS)"></div>
+    <div class="row2"><div><label>Department</label><input name="department" maxlength="80"></div><div><label>Closing date</label><input type="date" name="closing_date" required></div></div>
+    <div><label>Description</label><textarea name="description" rows="5" required></textarea></div>
+    <div><label>Requirements</label><textarea name="requirements" rows="4" placeholder="e.g. B.Sc/B.Ed Mathematics, TRCN registration, 3 years' experience"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Publish</button>
+  </form>
+  <div class="panel"><div class="panel-b">
+    <table class="tbl" data-no-export><thead><tr><th>Job</th><th>Closes</th><th>Applications</th><th></th></tr></thead><tbody>
+    {% for v in items %}<tr><td class="name"><a href="{% url 'hr:vacancy' v.pk %}">{{ v.title }}</a>{% if v.department %}<br><small class="hint">{{ v.department }}</small>{% endif %}</td>
+      <td>{{ v.closing_date|date:"j M Y" }}</td><td>{{ v.count }}{% if v.new %} <span class="chip gold">{{ v.new }} new</span>{% endif %}</td>
+      <td>{% if not v.published %}<span class="chip">Hidden</span>{% elif v.closing_date < today %}<span class="chip">Closed</span>{% else %}<span class="chip green">Open</span>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty">No vacancies yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% endblock %}

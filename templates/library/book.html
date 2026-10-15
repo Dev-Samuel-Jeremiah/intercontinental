@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ b.title }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library · catalogue</div>
+  <h1 class="fin-title"><em>{{ b.title }}</em></h1>
+  <p class="fin-sub">{{ b.authors }}{% if b.publisher %} · {{ b.publisher }}{% endif %}{% if b.year %} · {{ b.year }}{% endif %}{% if b.isbn %} · ISBN {{ b.isbn }}{% endif %}</p>
+</div><div class="no-print"><a class="fin-btn fin-btn-sm" href="{% url 'library:labels' %}?book={{ b.pk }}" target="_blank"><i class="bi bi-upc"></i> Print labels</a></div></div>
+{% include "library/_nav.html" %}
+<datalist id="subj"></datalist>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Copies</h3><span class="hint">{% for r in avail.rows %}{{ r.branch|default:"Library" }}: {{ r.in }}/{{ r.total }} in{% if not forloop.last %} · {% endif %}{% endfor %}</span></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for c in copies %}<tr><td class="name">{{ c.barcode }}<br><small class="hint">{{ c.branch|default:"" }} {{ c.shelf }}{% if c.donation %} · gift of {{ c.donation.donor_name }}{% endif %}</small></td>
+        <td><span class="chip{% if c.status == 'IN' %} ok{% elif c.status == 'OUT' or c.status == 'HELD' %} gold{% else %} red{% endif %}">{{ c.get_status_display }}</span><br><small class="hint">{{ c.get_condition_display }}</small></td>
+        <td><form method="post" class="fin-form" style="display:flex;gap:.25rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="copy"><input type="hidden" name="id" value="{{ c.pk }}">
+          <select name="status" style="width:auto"><option value="">Status…</option><option value="IN">On shelf / found</option><option value="REPAIR">Repair</option><option value="GONE">Withdraw</option></select>
+          <select name="condition" style="width:auto">{% for k, v in conditions %}<option value="{{ k }}" {% if k == c.condition %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+          <input name="shelf" value="{{ c.shelf }}" placeholder="Shelf" style="width:80px">
+          {% if branches %}<select name="branch" style="width:auto"><option value="">—</option>{% for br in branches %}<option value="{{ br.pk }}" {% if br.pk == c.branch_id %}selected{% endif %}>{{ br }}</option>{% endfor %}</select>{% endif %}
+          <button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td></tr>
+      {% empty %}<tr><td class="empty">No copies yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if queue %}<div class="panel"><div class="panel-h"><h3>Reserved by</h3></div><div class="panel-b">{% for r in queue %}<p style="margin:.2rem 0">{{ forloop.counter }}. {{ r.borrower_name }} — {{ r.get_status_display }}</p>{% endfor %}</div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>Recent loans</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for l in loans %}<tr><td>{{ l.issued_at|date:"j M Y" }}</td><td class="name">{{ l.borrower_name }}</td><td>{{ l.copy.barcode }}</td><td>{% if l.lost %}<span class="chip red">Lost</span>{% elif l.returned_at %}back {{ l.returned_at|date:"j M" }}{% else %}due {{ l.due_on|date:"j M" }}{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">Never borrowed.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="copies">
+      <h3 style="margin:0 0 .6rem">Add copies</h3>
+      <div class="row2"><div><label>How many</label><input name="count" value="1" inputmode="numeric"></div><div><label>Shelf</label><input name="shelf" maxlength="40"></div></div>
+      <div><label>Or their existing barcodes (one per line)</label><textarea name="barcodes" rows="2"></textarea></div>
+      <div class="row2">{% if branches %}<div><label>Branch</label><select name="branch">{% for br in branches %}<option value="{{ br.pk }}">{{ br }}</option>{% endfor %}</select></div>{% endif %}
+      <div><label>Price (blank = replacement cost)</label><input name="price" inputmode="decimal"></div></div>
+      <div><label>Donated by</label><select name="donation"><option value="">— bought —</option>{% for d in donations %}<option value="{{ d.pk }}">{{ d }}</option>{% endfor %}</select></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="edit">
+      <h3 style="margin:0 0 .6rem">Details</h3>
+      {% include "library/_book_form.html" %}
+      <button class="fin-btn" type="submit">Save</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

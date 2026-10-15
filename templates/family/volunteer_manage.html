@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Volunteers{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Parent experience</div>
+  <h1 class="fin-title">Parent <em>volunteers</em></h1>
+  <p class="fin-sub">Post a need; parents sign up on their portal.</p>
+</div></div>
+{% include "family/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div><label>What help is needed</label><input name="title" required maxlength="160" placeholder="e.g. Inter-house sports marshals"></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" required></div><div><label>Places <span class="hint">empty = no limit</span></label><input name="places" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>From</label><input type="time" name="start_time"></div><div><label>To</label><input type="time" name="end_time"></div></div>
+    <div><label>Details</label><textarea name="details" rows="3"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Post</button>
+  </form>
+  <div style="display:grid;gap:1rem">{% for o in opps %}
+    <div class="panel"><div class="panel-h"><h3>{{ o.title }} — {{ o.date|date:"j M Y" }}{% if o.cancelled %} <span class="chip red">Cancelled</span>{% elif o.date < today %} <span class="chip">Past</span>{% endif %}</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for s in o.signups.all %}<tr><td class="name">{{ s.name }}</td><td>{{ s.phone }}</td><td>{{ s.note }}</td></tr>{% empty %}<tr><td class="empty">Nobody yet{% if o.places %} ({{ o.places }} places){% endif %}.</td></tr>{% endfor %}</tbody></table>
+      <form method="post" style="margin-top:.5rem">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="id" value="{{ o.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if o.cancelled %}Reopen{% else %}Cancel{% endif %}</button></form>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">Nothing posted yet.</p></div></div>{% endfor %}</div>
+</div>
+{% endblock %}

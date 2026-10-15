@@ -1,0 +1,31 @@
+<style>
+  .pg-chart{width:100%;height:auto;display:block}
+  .pg-chart .grid line{stroke:rgba(255,255,255,.07)}
+  .pg-chart .grid text{fill:rgba(255,255,255,.4);font-size:9px}
+  .pg-chart polyline{fill:none;stroke:#ffe066;stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+  .pg-chart circle{fill:#ffe066}
+  .pg-subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.7rem}
+  .pg-sub{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:.75rem .85rem;background:rgba(255,255,255,.02)}
+  .pg-sub .top{display:flex;justify-content:space-between;align-items:baseline;gap:.5rem}
+  .pg-sub svg{width:100%;height:56px;margin-top:.35rem}
+  .pg-sub polyline{fill:none;stroke:#f4d21f;stroke-width:2}
+  .up{color:#4ade80}.down{color:#e87070}.flat{color:rgba(255,255,255,.45)}
+</style>
+{% if not data.terms %}<div class="pg-empty" style="text-align:center;padding:2.4rem 1rem;color:rgba(255,255,255,.45)"><i class="bi bi-graph-up" style="font-size:1.6rem;display:block;margin-bottom:.4rem"></i>No {% if who == 'family' %}published {% endif %}results yet.</div>
+{% else %}
+<div class="pg-card" style="border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:1rem 1.1rem;margin-bottom:1rem;background:rgba(255,255,255,.02)">
+  <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;align-items:baseline"><b>Average across subjects</b>
+    <span style="color:rgba(255,255,255,.6);font-size:.85rem">{% for t in data.terms %}{{ t.term.name }} {{ t.term.session.name }}: <b style="color:#ffe066">{{ t.average }}</b>{% if not forloop.last %} · {% endif %}{% endfor %}</span></div>
+  {% if data.terms|length > 1 %}<svg class="pg-chart" viewBox="0 0 600 190" role="img" aria-label="Average score by term">
+    <g class="grid"><line x1="12" x2="588" y1="12" y2="12"/><text x="0" y="15">100</text>
+      <line x1="12" x2="588" y1="80" y2="80"/><text x="2" y="83">50</text>
+      <line x1="12" x2="588" y1="148" y2="148"/><text x="6" y="151">0</text></g>
+    <polyline points="{{ avg_points }}"/>
+    {% for x, t in x_labels %}<text x="{{ x }}" y="176" text-anchor="middle" style="fill:rgba(255,255,255,.55);font-size:10px">{{ t.name }}</text><text x="{{ x }}" y="188" text-anchor="middle" style="fill:rgba(255,255,255,.35);font-size:8px">{{ t.session.name }}</text>{% endfor %}
+  </svg>{% else %}<p style="color:rgba(255,255,255,.5);font-size:.85rem;margin:.6rem 0 0">The chart appears once there are results for a second term.</p>{% endif %}
+</div>
+<div class="pg-subs">{% for s in data.subjects %}<div class="pg-sub">
+  <div class="top"><b>{{ s.subject.name }}</b><span>{{ s.latest|floatformat:"-1"|default:"—" }}{% if s.change is not None %} <small class="{% if s.change > 0 %}up{% elif s.change < 0 %}down{% else %}flat{% endif %}">{% if s.change > 0 %}▲{% elif s.change < 0 %}▼{% else %}■{% endif %} {{ s.change|floatformat:"-1" }}</small>{% endif %}</span></div>
+  {% if data.terms|length > 1 %}<svg viewBox="0 0 260 70" preserveAspectRatio="none"><line x1="6" x2="254" y1="35" y2="35" stroke="rgba(255,255,255,.07)"/><polyline points="{{ s.points }}"/></svg>{% endif %}
+</div>{% endfor %}</div>
+{% endif %}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+{# Self-contained on purpose: rendered for 500s without request context. #}
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#081a3a">
+  <meta name="robots" content="noindex">
+  <title>{{ label }}{% if school_name %} | {{ school_name }}{% endif %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root { --ink:#081a3a; --rim:rgba(255,255,255,.06); --rim2:rgba(255,255,255,.10); --gold:#f4d21f; --gold-lt:#ffe580; --gold-dk:#c9a800; --gold-rim:rgba(244,210,31,.3);
+            --text:#f2f5fb; --text-2:rgba(242,245,251,.64); --text-3:rgba(242,245,251,.42); --ease:cubic-bezier(.22,1,.36,1);
+            --tone:#f4d21f; --tone-rgb:244,210,31; }
+    .tone-amber { --tone:#f59e0b; --tone-rgb:245,158,11; }
+    .tone-red   { --tone:#e87070; --tone-rgb:232,112,112; }
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      min-height:100vh; min-height:100svh; display:grid; place-items:center; padding:24px 16px; overflow-x:hidden;
+      font-family:"Outfit", system-ui, -apple-system, sans-serif; color:var(--text); -webkit-font-smoothing:antialiased;
+      background:
+        radial-gradient(700px 460px at 50% -8%, rgba(var(--tone-rgb),.16), transparent 65%),
+        radial-gradient(600px 500px at 100% 110%, rgba(30,80,190,.10), transparent 60%),
+        var(--ink);
+    }
+    body::before {
+      content:""; position:fixed; inset:0; pointer-events:none;
+      background-image:linear-gradient(to right, rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:56px 56px;
+      mask-image:radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%);
+      -webkit-mask-image:radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%);
+    }
+    a { color:inherit; text-decoration:none; }
+    :focus-visible { outline:2px solid var(--gold-lt); outline-offset:3px; }
+    main { position:relative; width:min(560px,100%); text-align:center; animation:rise .8s var(--ease) both; }
+    @keyframes rise { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+    .school { display:inline-flex; align-items:center; gap:.6rem; margin-bottom:2rem; padding:.35rem .9rem .35rem .35rem; border-radius:99px; background:rgba(255,255,255,.035); border:1px solid var(--rim2); font-size:.84rem; font-weight:600; }
+    .school span { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:.82rem; color:#0a1f44; background:linear-gradient(135deg,var(--gold-lt),var(--gold-dk)); }
+    .code {
+      font-family:"Cormorant Garamond", Georgia, serif; font-weight:600; line-height:.9; letter-spacing:-.02em;
+      font-size:clamp(6rem, 26vw, 10rem); margin-bottom:.4rem;
+      background:linear-gradient(180deg, rgba(var(--tone-rgb),.95), rgba(var(--tone-rgb),.15));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      font-variant-numeric:lining-nums;
+    }
+    .icon { width:64px; height:64px; margin:-2.4rem auto 1.4rem; position:relative; border-radius:20px; display:grid; place-items:center; font-size:1.6rem; color:var(--tone);
+            background:linear-gradient(135deg, rgba(var(--tone-rgb),.24), rgba(var(--tone-rgb),.06)), #0d2144; border:1px solid rgba(var(--tone-rgb),.4); box-shadow:0 18px 40px -16px rgba(var(--tone-rgb),.6); }
+    .eyebrow { display:inline-flex; align-items:center; gap:.6rem; font-size:.68rem; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--tone); margin-bottom:.7rem; }
+    .eyebrow::before, .eyebrow::after { content:""; width:22px; height:1px; background:rgba(var(--tone-rgb),.4); }
+    h1 { font-family:"Cormorant Garamond", Georgia, serif; font-weight:600; font-size:clamp(1.9rem,5.5vw,2.6rem); line-height:1.1; letter-spacing:-.01em; margin-bottom:.9rem; }
+    p { color:var(--text-2); font-weight:300; line-height:1.7; }
+    .actions { display:flex; flex-wrap:wrap; justify-content:center; gap:.7rem; margin-top:2rem; }
+    .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.85rem 1.35rem; border-radius:12px; font-weight:600; font-size:.92rem; cursor:pointer;
+           border:1px solid var(--rim2); background:rgba(255,255,255,.04); color:var(--text); font-family:inherit; transition:transform .25s var(--ease), box-shadow .25s, border-color .2s, color .2s; }
+    .btn:hover { border-color:var(--gold-rim); color:var(--gold-lt); transform:translateY(-1px); }
+    .btn-gold { border-color:transparent; color:#0a1f44; background:linear-gradient(135deg,var(--gold-lt),var(--gold) 60%,var(--gold-dk)); box-shadow:0 14px 30px -12px rgba(244,210,31,.7), inset 0 1px 0 rgba(255,255,255,.45); }
+    .btn-gold:hover { color:#0a1f44; box-shadow:0 18px 36px -12px rgba(244,210,31,.85); }
+    .ref { display:inline-flex; align-items:center; gap:.55rem; margin-top:1.8rem; padding:.55rem .9rem; border-radius:10px; font-size:.82rem; color:var(--text-2); background:rgba(255,255,255,.03); border:1px solid var(--rim); }
+    .ref code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:var(--gold-lt); letter-spacing:.08em; }
+    .help { margin-top:1.6rem; font-size:.84rem; color:var(--text-3); }
+    .help a { color:var(--gold-lt); border-bottom:1px solid var(--gold-rim); }
+    @media (prefers-reduced-motion: reduce) { main { animation:none; } }
+  </style>
+</head>
+<body class="tone-{{ tone }}">
+  <main>
+    {% if school_name %}<div class="school"><span>{{ school_initials }}</span>{{ school_name }}</div>{% endif %}
+    <div class="code" aria-hidden="true">{{ code }}</div>
+    <div class="icon" aria-hidden="true"><i class="bi {{ icon }}"></i></div>
+    <div class="eyebrow">{{ label }}</div>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+
+    <div class="actions">
+      <a href="{{ home_url }}" class="btn btn-gold"><i class="bi bi-house-door"></i> {{ home_label }}</a>
+      <button type="button" class="btn" onclick="history.length > 1 ? history.back() : location.assign('{{ home_url }}')"><i class="bi bi-arrow-left"></i> Go back</button>
+      {% if code == 500 %}
+      <button type="button" class="btn" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Try again</button>
+      {% endif %}
+    </div>
+
+    {% if ref %}
+    <div class="ref"><i class="bi bi-hash"></i> Error reference <code>{{ ref }}</code></div>
+    {% endif %}
+    <p class="help">
+      {% if ref %}If this keeps happening, contact the school's ICT office{% if tenant.email %} at <a href="mailto:{{ tenant.email }}?subject=Error%20{{ ref }}">{{ tenant.email }}</a>{% endif %} and quote the reference above.
+      {% else %}Need help? Contact the school's ICT office{% if tenant.email %} at <a href="mailto:{{ tenant.email }}">{{ tenant.email }}</a>{% endif %}.{% endif %}
+    </p>
+  </main>
+</body>
+</html>

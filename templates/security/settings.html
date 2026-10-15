@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Security rules{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Sign-in <em>rules</em></h1>
+  <p class="fin-sub">These apply to staff accounts. Students and parents keep their simple printed passwords.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<form method="post" class="fin-grid">{% csrf_token %}
+  <div class="panel fin-form" style="padding:1.2rem">
+    <h3 style="margin:0">Two-step sign-in</h3>
+    <div><label>Who must use it</label><select name="require_2fa">{% for v, l in cfg.TWO_FACTOR %}<option value="{{ v }}" {% if cfg.require_2fa == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+      <p class="hint">People it applies to set it up at their next sign-in, with an authenticator app, email codes or SMS codes.</p></div>
+    <h3 style="margin:.6rem 0 0">Failed sign-ins</h3>
+    <div class="row2"><div><label>Lock after this many failures</label><input name="lockout_attempts" value="{{ cfg.lockout_attempts }}" inputmode="numeric"></div><div><label>Lock for (minutes)</label><input name="lockout_minutes" value="{{ cfg.lockout_minutes }}" inputmode="numeric"></div></div>
+    <label class="pill"><input type="checkbox" name="notify_admins_lockout" {% if cfg.notify_admins_lockout %}checked{% endif %}> Email administrators when an account is locked</label>
+    <label class="pill"><input type="checkbox" name="alert_new_device" {% if cfg.alert_new_device %}checked{% endif %}> Email staff when their account signs in from a new device</label>
+    <div><label>Sign staff out after this many idle minutes (0 = never)</label><input name="idle_minutes" value="{{ cfg.idle_minutes }}" inputmode="numeric"></div>
+  </div>
+  <div class="panel fin-form" style="padding:1.2rem">
+    <h3 style="margin:0">Staff passwords</h3>
+    <div class="row2"><div><label>Fewest characters</label><input name="min_length" value="{{ cfg.min_length }}" inputmode="numeric"></div><div><label>New password every (days, 0 = never)</label><input name="expiry_days" value="{{ cfg.expiry_days }}" inputmode="numeric"></div></div>
+    <label class="pill"><input type="checkbox" name="require_mix" {% if cfg.require_mix %}checked{% endif %}> Must use letters and numbers</label>
+    <label class="pill"><input type="checkbox" name="require_symbol" {% if cfg.require_symbol %}checked{% endif %}> Must include a symbol</label>
+    <div><label>Cannot reuse the last … passwords (0 = no limit)</label><input name="history" value="{{ cfg.history }}" inputmode="numeric"></div>
+    <p class="hint">Common and easily guessed passwords are always refused.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Save rules</button>
+  </div>
+</form>
+{% endblock %}

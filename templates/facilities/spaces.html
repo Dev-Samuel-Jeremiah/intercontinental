@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Spaces{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Site</div>
+  <h1 class="fin-title"><em>Spaces</em></h1>
+  <p class="fin-sub">Every classroom, lab, hall and office with its capacity. A class based in a room is checked against the capacity; rooms that outside groups can hire carry their rates.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl">
+    <thead><tr><th>Space</th><th>Class</th><th class="num">Seats</th><th class="num">Use</th><th class="num">Assets</th><th class="num">Open jobs</th></tr></thead><tbody>
+    {% for r in rows %}<tr><td class="name">{{ r.space }}<br><small class="hint">{{ r.space.get_kind_display }}{% if r.space.features %} · {{ r.space.features }}{% endif %}{% if r.space.hireable %} · hireable{% endif %}{% if r.space.teaching_room %} · timetable room{% endif %}</small></td>
+      <td>{{ r.space.home_class|default:"" }}{% if r.students is not None %} <small class="hint">({{ r.students }})</small>{% endif %}</td><td class="num">{{ r.space.capacity|default:"—" }}</td>
+      <td class="num">{% if r.fill is not None %}<span class="chip{% if r.over %} red{% elif r.fill >= 90 %} gold{% else %} ok{% endif %}">{{ r.fill }}%</span>{% endif %}</td><td class="num">{{ r.assets }}</td><td class="num">{{ r.jobs }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">No spaces yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add or update a space</h3>
+    <div><label>Update an existing one</label><select name="id"><option value="">— new space —</option>{% for r in rows %}<option value="{{ r.space.pk }}">{{ r.space }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="80"></div><div><label>Building / block</label><input name="building" maxlength="80"></div></div>
+    <div class="row2"><div><label>Kind</label><select name="kind">{% for k, v in kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Seats</label><input name="capacity" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>Class based here</label><select name="home_class"><option value="">—</option>{% for c in classes %}<option value="{{ c.pk }}">{{ c.name }}</option>{% endfor %}</select></div><div><label>Timetable room</label><select name="teaching_room"><option value="">—</option>{% for t in rooms %}<option value="{{ t.pk }}">{{ t.name }}</option>{% endfor %}</select></div></div>
+    <div><label>Features</label><input name="features" maxlength="255" placeholder="Projector, 2 ACs, whiteboard"></div>
+    <label class="pill"><input type="checkbox" name="hireable"> Outside groups can hire it</label>
+    <div class="row2"><div><label>Rate per hour ₦</label><input name="hire_rate_hour" inputmode="decimal"></div><div><label>Rate per day ₦</label><input name="hire_rate_day" inputmode="decimal"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

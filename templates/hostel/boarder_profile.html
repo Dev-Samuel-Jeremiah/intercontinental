@@ -1,0 +1,1238 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ student.full_name }} — Boarder Profile{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --bg:#081939;
+  --bg2:#0b1120;
+  --panel:#0f172a;
+  --panel2:#111c34;
+  --line:rgba(255,255,255,.08);
+  --text:#e2e8f0;
+  --muted:#94a3b8;
+  --cyan:#06b6d4;
+}
+
+.page-wrap{
+  animation:fade .35s ease;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:none;}
+}
+
+.glass{
+  background:linear-gradient(180deg,rgba(15,23,42,.96),rgba(15,23,42,.88));
+  border:1px solid var(--line);
+  backdrop-filter:blur(18px);
+  box-shadow:var(--shadow);
+}
+
+.card{
+  border-radius:24px;
+  padding:24px;
+  margin-bottom:20px;
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  border-radius:30px;
+  padding:32px;
+  margin-bottom:22px;
+  background:
+    radial-gradient(circle at top right, rgba(59,130,246,.25), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(139,92,246,.22), transparent 30%),
+    linear-gradient(145deg,#0f172a,#111c34 65%,#172554);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 18px 45px rgba(0,0,0,.45);
+}
+
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg,transparent,rgba(255,255,255,.03),transparent);
+  animation:shine 6s linear infinite;
+}
+
+@keyframes shine{
+  from{transform:translateX(-100%);}
+  to{transform:translateX(100%);}
+}
+
+.hero-grid{
+  display:grid;
+  grid-template-columns:1.4fr auto;
+  gap:20px;
+  position:relative;
+  z-index:2;
+}
+
+.hero-name{
+  font-size:2rem;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:-.03em;
+}
+
+.hero-sub{
+  color:#cbd5e1;
+  font-size:.9rem;
+  margin-top:8px;
+}
+
+.hero-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+
+.hero-tag{
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.08);
+  color:#fff;
+  font-size:.76rem;
+  font-weight:700;
+  backdrop-filter:blur(10px);
+}
+
+.hero-side{
+  text-align:right;
+}
+
+.hero-label{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#94a3b8;
+  margin-bottom:5px;
+}
+
+.hero-value{
+  color:#fff;
+  font-weight:900;
+  font-size:1.1rem;
+}
+
+.hero-mini{
+  color:#cbd5e1;
+  font-size:.82rem;
+}
+
+.top-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+
+.action-group{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:14px;
+  border:none;
+  cursor:pointer;
+  text-decoration:none;
+  font-size:.82rem;
+  font-weight:800;
+  transition:.25s ease;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+}
+
+.btn-primary{
+  color:#fff;
+  background:linear-gradient(135deg,var(--blue),#1d4ed8);
+  box-shadow:0 10px 25px rgba(59,130,246,.35);
+}
+
+.btn-success{
+  color:#fff;
+  background:linear-gradient(135deg,var(--green),#15803d);
+  box-shadow:0 10px 25px rgba(34,197,94,.28);
+}
+
+.btn-danger{
+  color:#fff;
+  background:linear-gradient(135deg,var(--red),#b91c1c);
+  box-shadow:0 10px 25px rgba(239,68,68,.25);
+}
+
+.btn-ghost{
+  color:#cbd5e1;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.btn-ghost:hover{
+  background:rgba(255,255,255,.08);
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.sec{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:18px;
+  font-size:.9rem;
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.02em;
+}
+
+.sec i{
+  color:var(--blue);
+}
+
+.info-list{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.info-row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding-bottom:12px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.il{
+  color:#94a3b8;
+  font-size:.84rem;
+}
+
+.iv{
+  color:#fff;
+  font-size:.85rem;
+  font-weight:700;
+  text-align:right;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:.7rem;
+  font-weight:800;
+  letter-spacing:.03em;
+}
+
+.bg{
+  background:rgba(34,197,94,.15);
+  color:#4ade80;
+  border:1px solid rgba(34,197,94,.2);
+}
+
+.ba{
+  background:rgba(245,158,11,.15);
+  color:#fbbf24;
+  border:1px solid rgba(245,158,11,.2);
+}
+
+.br{
+  background:rgba(239,68,68,.15);
+  color:#f87171;
+  border:1px solid rgba(239,68,68,.2);
+}
+
+.bb{
+  background:rgba(59,130,246,.15);
+  color:#60a5fa;
+  border:1px solid rgba(59,130,246,.2);
+}
+
+.bn{
+  background:rgba(148,163,184,.12);
+  color:#cbd5e1;
+  border:1px solid rgba(148,163,184,.16);
+}
+
+.tbl-wrap{
+  overflow-x:auto;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:620px;
+}
+
+.tbl th{
+  background:rgba(255,255,255,.04);
+  color:#94a3b8;
+  text-align:left;
+  padding:14px;
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+
+.tbl td{
+  padding:14px;
+  border-top:1px solid rgba(255,255,255,.05);
+  color:#e2e8f0;
+  font-size:.82rem;
+}
+
+.tbl tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+.notice{
+  padding:14px 16px;
+  border-radius:16px;
+  font-size:.82rem;
+  margin-top:12px;
+}
+
+.notice-danger{
+  background:rgba(239,68,68,.12);
+  color:#fca5a5;
+  border:1px solid rgba(239,68,68,.18);
+}
+
+.notice-success{
+  background:rgba(34,197,94,.12);
+  color:#86efac;
+  border:1px solid rgba(34,197,94,.18);
+}
+
+.billing-box{
+  background:linear-gradient(180deg,rgba(34,197,94,.08),rgba(15,23,42,.4));
+  border:1px solid rgba(34,197,94,.15);
+  border-radius:20px;
+  padding:18px;
+}
+
+.bill-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+  font-size:.82rem;
+}
+
+.bill-label{
+  color:#94a3b8;
+}
+
+.bill-value{
+  color:#fff;
+  font-weight:700;
+}
+
+.timeline{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.timeline-item{
+  position:relative;
+  padding:14px 14px 14px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.timeline-item::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  border-radius:10px;
+  background:linear-gradient(180deg,var(--blue),var(--purple));
+}
+
+.modal-ov{
+  position:fixed;
+  inset:0;
+  background:rgba(2,6,23,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:9999;
+  backdrop-filter:blur(6px);
+}
+
+.modal-ov.active{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:560px;
+  max-height:92vh;
+  overflow-y:auto;
+  border-radius:28px;
+  padding:26px;
+  background:linear-gradient(180deg,#0f172a,#111827);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 25px 60px rgba(0,0,0,.55);
+}
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.modal-title{
+  color:#fff;
+  font-size:1rem;
+  font-weight:900;
+}
+
+.modal-close{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  border:none;
+  cursor:pointer;
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:1.1rem;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.fg label{
+  color:#cbd5e1;
+  font-size:.76rem;
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  padding:13px 14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  font-size:.86rem;
+  outline:none;
+  transition:.25s ease;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  border-color:rgba(59,130,246,.6);
+  box-shadow:0 0 0 4px rgba(59,130,246,.15);
+}
+
+.fg textarea{
+  resize:vertical;
+}
+
+.empty{
+  text-align:center;
+  padding:28px 14px;
+  color:#94a3b8;
+  font-size:.84rem;
+}
+
+@media(max-width:980px){
+  .grid-2,
+  .hero-grid,
+  .form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero-side{
+    text-align:left;
+  }
+}
+
+@media(max-width:768px){
+  .card{
+    padding:18px;
+  }
+
+  .hero{
+    padding:24px;
+  }
+
+  .hero-name{
+    font-size:1.5rem;
+  }
+
+  .top-actions{
+    align-items:stretch;
+  }
+
+  .action-group{
+    width:100%;
+  }
+
+  .action-group .btn{
+    flex:1;
+  }
+}
+</style>
+
+<script>
+function openModal(id){
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(modal=>{
+    modal.addEventListener('click',e=>{
+      if(e.target===modal){
+        modal.classList.remove('active');
+      }
+    });
+  });
+});
+</script>
+
+<div class="page-wrap">
+
+{% if messages %}
+  {% for m in messages %}
+  <div class="notice {% if m.tags == 'success' %}notice-success{% else %}notice-danger{% endif %}">
+    {{ m }}
+  </div>
+  {% endfor %}
+{% endif %}
+
+<div class="top-actions">
+  <a href="{% url 'hostel:boarder_list' %}" class="btn btn-ghost">
+    <i class="bi bi-arrow-left"></i> Back to Boarders
+  </a>
+
+  <div class="action-group">
+
+    {% if profile.status == 'ACTIVE' %}
+    <button onclick="openModal('exeatModal')" class="btn btn-primary">
+      <i class="bi bi-door-open"></i> Grant Exeat
+    </button>
+
+    <button onclick="openModal('checkoutModal')" class="btn btn-danger">
+      <i class="bi bi-box-arrow-right"></i> Check Out
+    </button>
+    {% endif %}
+
+    <button onclick="openModal('visitorModal')" class="btn btn-ghost">
+      <i class="bi bi-person-badge"></i> Visitor
+    </button>
+
+    <button onclick="openModal('incidentModal')" class="btn btn-ghost">
+      <i class="bi bi-exclamation-triangle"></i> Incident
+    </button>
+
+    <button onclick="openModal('editProfileModal')" class="btn btn-success">
+      <i class="bi bi-pencil-square"></i> Edit Profile
+    </button>
+
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-grid">
+
+    <div>
+      <div class="hero-name">{{ student.full_name }}</div>
+
+      <div class="hero-sub">
+        {{ student.admission_number }} · {{ student.class_assigned.name|default:"No Class Assigned" }}
+      </div>
+
+      <div class="hero-tags">
+
+        <span class="hero-tag">
+          {{ profile.get_student_type_display }}
+        </span>
+
+        <span class="hero-tag">
+          {% if profile.status == 'ACTIVE' %}
+            ✓ Active
+          {% elif profile.status == 'EXEAT' %}
+            ↗ On Exeat
+          {% elif profile.status == 'SUSPENDED' %}
+            ⚠ Suspended
+          {% else %}
+            {{ profile.get_status_display }}
+          {% endif %}
+        </span>
+
+      </div>
+    </div>
+
+    <div class="hero-side">
+      {% if profile.bed %}
+      <div class="hero-label">Bed Assignment</div>
+      <div class="hero-value">{{ profile.hostel.name }}</div>
+      <div class="hero-mini">
+        Room {{ profile.room.room_number }} · Bed {{ profile.bed.bed_number }}
+      </div>
+      {% else %}
+      <div class="hero-label">Assignment</div>
+      <div class="hero-value">No Bed Assigned</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<div class="grid-2">
+
+  <!-- LEFT -->
+  <div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-person-circle"></i>
+        Student Information
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span class="il">Full Name</span>
+          <span class="iv">{{ student.full_name }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Admission No.</span>
+          <span class="iv">{{ student.admission_number }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Class</span>
+          <span class="iv">{{ student.class_assigned.name|default:"—" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Gender</span>
+          <span class="iv">{{ student.gender|default:"—" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Parent</span>
+          <span class="iv">{{ student.parent_name|default:"—" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Parent Phone</span>
+          <span class="iv">{{ student.parent_phone|default:"—" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Blood Group</span>
+          <span class="iv">{{ profile.blood_group|default:"—" }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-telephone-fill"></i>
+        Emergency Contact
+      </div>
+
+      <div class="info-list">
+
+        <div class="info-row">
+          <span class="il">Name</span>
+          <span class="iv">{{ profile.emergency_name|default:"Not set" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Phone</span>
+          <span class="iv">{{ profile.emergency_phone|default:"Not set" }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="il">Relationship</span>
+          <span class="iv">{{ profile.emergency_rel|default:"—" }}</span>
+        </div>
+
+      </div>
+
+      {% if profile.medical_conditions %}
+      <div class="notice notice-danger">
+        <strong>Medical Conditions:</strong><br>
+        {{ profile.medical_conditions }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-credit-card-2-front-fill"></i>
+        Hostel Billing
+      </div>
+
+      {% if current_billing %}
+      <div class="billing-box">
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="color:#cbd5e1;font-size:.8rem;">
+            {{ current_billing.term }} / {{ current_billing.session }}
+          </div>
+
+          <span class="badge {% if current_billing.status == 'PAID' %}bg{% elif current_billing.status == 'PARTIAL' %}ba{% else %}br{% endif %}">
+            {{ current_billing.get_status_display }}
+          </span>
+        </div>
+
+        <div class="bill-row">
+          <span class="bill-label">Boarding</span>
+          <span class="bill-value">₦{{ current_billing.boarding_fee|floatformat:2 }}</span>
+        </div>
+
+        <div class="bill-row">
+          <span class="bill-label">Meals</span>
+          <span class="bill-value">₦{{ current_billing.meal_fee|floatformat:2 }}</span>
+        </div>
+
+        <div class="bill-row">
+          <span class="bill-label">Laundry</span>
+          <span class="bill-value">₦{{ current_billing.laundry_fee|floatformat:2 }}</span>
+        </div>
+
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0;">
+
+        <div class="bill-row">
+          <span class="bill-label">Total</span>
+          <span class="bill-value">₦{{ current_billing.total_fee|floatformat:2 }}</span>
+        </div>
+
+        <div class="bill-row">
+          <span class="bill-label" style="color:#4ade80;">Paid</span>
+          <span class="bill-value" style="color:#4ade80;">
+            ₦{{ current_billing.amount_paid|floatformat:2 }}
+          </span>
+        </div>
+
+        <div class="bill-row">
+          <span class="bill-label" style="color:#f87171;">Balance Due</span>
+          <span class="bill-value" style="color:#f87171;">
+            ₦{{ current_billing.balance_due|floatformat:2 }}
+          </span>
+        </div>
+
+        {% if current_billing.balance_due > 0 %}
+        <button onclick="openModal('payBillModal')" class="btn btn-success" style="width:100%;margin-top:16px;">
+          <i class="bi bi-cash-coin"></i>
+          Pay Hostel Bill
+        </button>
+        {% endif %}
+
+      </div>
+      {% else %}
+      <div class="empty">
+        No billing records available.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-arrow-left-right"></i>
+        Movement History
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Date / Time</th>
+              <th>Return</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for mv in movements %}
+            <tr>
+
+              <td>
+                {% if mv.movement_type == 'CHECK_IN' %}
+                  <span class="badge bg">Check In</span>
+
+                {% elif mv.movement_type == 'CHECK_OUT' %}
+                  <span class="badge bn">Check Out</span>
+
+                {% elif mv.movement_type == 'EXEAT' %}
+                  <span class="badge ba">Exeat</span>
+
+                {% elif mv.movement_type == 'RETURN' %}
+                  <span class="badge bb">Returned</span>
+
+                {% else %}
+                  <span class="badge br">{{ mv.get_movement_type_display }}</span>
+                {% endif %}
+              </td>
+
+              <td>{{ mv.datetime|date:"d M Y H:i" }}</td>
+
+              <td>
+                {% if mv.expected_return %}
+                  {{ mv.expected_return|date:"d M Y H:i" }}
+
+                  {% if mv.actual_return %}
+                  <div style="color:#4ade80;font-size:.74rem;margin-top:4px;">
+                    Returned {{ mv.actual_return|date:"d M Y H:i" }}
+                  </div>
+                  {% endif %}
+
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="empty">
+                No movement records.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-person-badge"></i>
+        Visitors
+      </div>
+
+      <div class="timeline">
+
+        {% for v in visitors %}
+        <div class="timeline-item">
+
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-weight:800;color:#fff;">
+                {{ v.visitor_name }}
+              </div>
+
+              <div style="font-size:.76rem;color:#94a3b8;margin-top:4px;">
+                {{ v.get_relationship_display }}
+              </div>
+            </div>
+
+            <span class="badge
+              {% if v.status == 'APPROVED' %}bg
+              {% elif v.status == 'DENIED' %}br
+              {% elif v.status == 'COMPLETED' %}bb
+              {% else %}ba{% endif %}">
+              {{ v.get_status_display }}
+            </span>
+          </div>
+
+          <div style="margin-top:10px;color:#cbd5e1;font-size:.78rem;">
+            {{ v.visit_date|date:"d M Y" }}
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="empty">
+          No visitors logged.
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+    <div class="card glass">
+      <div class="sec">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        Incidents
+      </div>
+
+      <div class="timeline">
+
+        {% for inc in incidents %}
+        <div class="timeline-item"
+             style="border-left:4px solid
+             {% if inc.severity == 'CRITICAL' %}#ef4444
+             {% elif inc.severity == 'HIGH' %}#f59e0b
+             {% else %}#64748b{% endif %};">
+
+          <div style="font-weight:800;color:#fff;">
+            {{ inc.title }}
+          </div>
+
+          <div style="margin-top:5px;font-size:.76rem;color:#94a3b8;">
+            {{ inc.incident_date|date:"d M Y" }}
+            · {{ inc.get_severity_display }}
+            · {{ inc.get_status_display }}
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="empty">
+          No incidents recorded.
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+</div>
+
+<!-- ================= MODALS ================= -->
+
+<div class="modal-ov" id="exeatModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Grant Exeat / Leave</div>
+      <button class="modal-close" onclick="closeModal('exeatModal')">×</button>
+    </div>
+
+    <form method="POST" action="{% url 'hostel:grant_exeat' student.id %}" style="display:flex;flex-direction:column;gap:14px;">
+      {% csrf_token %}
+
+      <div class="fg">
+        <label>Expected Return *</label>
+        <input type="datetime-local" name="expected_return" required>
+      </div>
+
+      <div class="fg">
+        <label>Reason *</label>
+        <textarea name="reason" rows="3" required placeholder="Reason for leave"></textarea>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:10px;color:#cbd5e1;font-size:.82rem;">
+        <input type="checkbox" name="parent_consent">
+        Parent consent received
+      </label>
+
+      <button type="submit" class="btn btn-primary">
+        Grant Exeat
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<div class="modal-ov" id="checkoutModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Check Out Boarder</div>
+      <button class="modal-close" onclick="closeModal('checkoutModal')">×</button>
+    </div>
+
+    <div class="notice notice-danger">
+      This will release the assigned bed and mark the student as checked out.
+    </div>
+
+    <form method="POST" action="{% url 'hostel:checkout' student.id %}" style="display:flex;flex-direction:column;gap:14px;margin-top:14px;">
+      {% csrf_token %}
+
+      <div class="fg">
+        <label>Reason</label>
+        <textarea name="reason" rows="3"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-danger"
+              onclick="return confirm('Check out {{ student.full_name }}?')">
+        Confirm Check Out
+      </button>
+    </form>
+
+  </div>
+</div>
+
+<div class="modal-ov" id="visitorModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Log Visitor</div>
+      <button class="modal-close" onclick="closeModal('visitorModal')">×</button>
+    </div>
+
+    <form method="POST" action="{% url 'hostel:log_visitor' %}" style="display:flex;flex-direction:column;gap:14px;">
+      {% csrf_token %}
+
+      <input type="hidden" name="boarder_id" value="{{ profile.id }}">
+
+      <div class="form-grid">
+
+        <div class="fg">
+          <label>Visitor Name *</label>
+          <input name="visitor_name" required>
+        </div>
+
+        <div class="fg">
+          <label>Phone *</label>
+          <input name="visitor_phone" required>
+        </div>
+
+      </div>
+
+      <div class="fg">
+        <label>Relationship</label>
+        <select name="relationship">
+          <option value="PARENT">Parent</option>
+          <option value="GUARDIAN">Guardian</option>
+          <option value="SIBLING">Sibling</option>
+          <option value="RELATIVE">Relative</option>
+          <option value="FRIEND">Friend</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>Purpose *</label>
+        <input name="purpose" required>
+      </div>
+
+      <button type="submit" class="btn btn-success">
+        Save Visitor
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+<div class="modal-ov" id="incidentModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Log Incident</div>
+      <button class="modal-close" onclick="closeModal('incidentModal')">×</button>
+    </div>
+
+    <form method="POST" action="{% url 'hostel:log_incident' %}" style="display:flex;flex-direction:column;gap:14px;">
+      {% csrf_token %}
+
+      <input type="hidden" name="boarder_id" value="{{ profile.id }}">
+
+      <div class="form-grid">
+
+        <div class="fg">
+          <label>Type</label>
+          <select name="incident_type">
+            <option value="DISCIPLINARY">Disciplinary</option>
+            <option value="MEDICAL">Medical</option>
+            <option value="PROPERTY">Property Damage</option>
+            <option value="THEFT">Theft</option>
+            <option value="BULLYING">Bullying</option>
+            <option value="SAFETY">Safety Concern</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Severity</label>
+          <select name="severity">
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
+        </div>
+
+      </div>
+
+      <div class="fg">
+        <label>Title *</label>
+        <input name="title" required>
+      </div>
+
+      <div class="fg">
+        <label>Description *</label>
+        <textarea name="description" rows="4" required></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-danger">
+        Save Incident
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+{% if current_billing and current_billing.balance_due > 0 %}
+<div class="modal-ov" id="payBillModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Pay Hostel Bill</div>
+      <button class="modal-close" onclick="closeModal('payBillModal')">×</button>
+    </div>
+
+    <div class="notice notice-success">
+      Outstanding Balance:
+      <strong>₦{{ current_billing.balance_due|floatformat:2 }}</strong>
+    </div>
+
+    <form method="POST"
+          action="{% url 'hostel:pay_bill' current_billing.id %}"
+          style="display:flex;flex-direction:column;gap:14px;margin-top:14px;">
+
+      {% csrf_token %}
+
+      <div class="fg">
+        <label>Amount *</label>
+        <input type="number"
+               name="amount"
+               min="1"
+               step="0.01"
+               max="{{ current_billing.balance_due }}"
+               value="{{ current_billing.balance_due }}"
+               required>
+      </div>
+
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-cash-coin"></i>
+        Pay from Wallet
+      </button>
+
+    </form>
+
+  </div>
+</div>
+{% endif %}
+
+<div class="modal-ov" id="editProfileModal">
+  <div class="modal-box">
+
+    <div class="modal-head">
+      <div class="modal-title">Edit Boarder Profile</div>
+      <button class="modal-close" onclick="closeModal('editProfileModal')">×</button>
+    </div>
+
+    <form method="POST"
+          action="{% url 'hostel:boarder_update' student.id %}"
+          style="display:flex;flex-direction:column;gap:14px;">
+
+      {% csrf_token %}
+
+      <div class="fg">
+        <label>Student Type</label>
+
+        <select name="student_type">
+          <option value="DAY" {% if profile.student_type == 'DAY' %}selected{% endif %}>Day Student</option>
+          <option value="BOARDER" {% if profile.student_type == 'BOARDER' %}selected{% endif %}>Full Boarder</option>
+          <option value="WEEKLY" {% if profile.student_type == 'WEEKLY' %}selected{% endif %}>Weekly Boarder</option>
+        </select>
+      </div>
+
+      <div class="form-grid">
+
+        <div class="fg">
+          <label>Blood Group</label>
+          <input name="blood_group" value="{{ profile.blood_group }}">
+        </div>
+
+        <div class="fg">
+          <label>Emergency Phone</label>
+          <input name="emergency_phone" value="{{ profile.emergency_phone }}">
+        </div>
+
+      </div>
+
+      <div class="fg">
+        <label>Emergency Contact Name</label>
+        <input name="emergency_name" value="{{ profile.emergency_name }}">
+      </div>
+
+      <div class="fg">
+        <label>Relationship</label>
+        <input name="emergency_rel" value="{{ profile.emergency_rel }}">
+      </div>
+
+      <div class="fg">
+        <label>Medical Conditions</label>
+        <textarea name="medical_conditions" rows="3">{{ profile.medical_conditions }}</textarea>
+      </div>
+
+      <div class="form-grid">
+
+        <div class="fg">
+          <label>Doctor Name</label>
+          <input name="doctor_name" value="{{ profile.doctor_name }}">
+        </div>
+
+        <div class="fg">
+          <label>Doctor Phone</label>
+          <input name="doctor_phone" value="{{ profile.doctor_phone }}">
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-save"></i>
+        Save Changes
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}

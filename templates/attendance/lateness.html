@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lateness{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Late <em>arrivals</em></h1>
+  <p class="fin-sub">{{ start|date:"F Y" }} — school starts {{ cfg.school_starts_at|time:"g:i A" }}{% if cfg.late_grace_minutes %}, late after {{ cfg.late_grace_minutes }} minutes' grace{% endif %}.</p>
+</div>
+<form method="get" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+  <input type="month" name="month" value="{{ start|date:'Y-m' }}" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <select name="class" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">All classes</option>{% for c in classes %}<option value="{{ c.id }}"{% if cls and cls.id == c.id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <button class="fin-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</form></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Students late</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Late arrivals</small><b style="color:var(--amber)">{{ total_days }}</b></div>
+  <div class="fin-stat"><small>Teaching time missed</small><b>{{ total_minutes }} min</b></div>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th><th>Class</th><th style="text-align:right">Days late</th><th style="text-align:right">Minutes</th><th style="text-align:right">Average</th><th>Dates</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td><a href="{% url 'users:student_profile' r.student.id %}#attendance" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a></td>
+      <td>{{ r.student.class_assigned.name|default:"—" }}</td>
+      <td class="money" style="text-align:right;color:{% if r.days >= 5 %}var(--red){% else %}var(--amber){% endif %}">{{ r.days }}</td>
+      <td class="money" style="text-align:right">{{ r.minutes }}</td><td style="text-align:right" class="hint">{{ r.average }} min</td>
+      <td class="hint">{% for d in r.dates %}{{ d|date:"j" }}{% if not forloop.last %}, {% endif %}{% endfor %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-alarm"></i><p>Nobody was late this month. Lateness is recorded when students scan in at the gate.</p></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

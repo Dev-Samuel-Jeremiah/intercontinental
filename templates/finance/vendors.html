@@ -1,0 +1,84 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Suppliers{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Suppliers &amp; <em>vendors</em></h1>
+    <p class="fin-sub">Who the school buys from, their bank details, and how much they have been paid.</p>
+  </div>
+  <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-arrow-left"></i> Expenses</a>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-shop-window"></i> Add a supplier</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div><label>Name</label><input type="text" name="name" required placeholder="Jos Diesel Supplies"></div>
+        <div><label>What they supply</label><input type="text" name="service" placeholder="Diesel"></div>
+        <div class="row2">
+          <div><label>Phone</label><input type="text" name="phone" placeholder="0803…"></div>
+          <div><label>Email</label><input type="email" name="email"></div>
+        </div>
+        <div class="row2">
+          <div><label>Bank</label><input type="text" name="bank_name" placeholder="GTBank"></div>
+          <div><label>Account number</label><input type="text" name="account_number"></div>
+        </div>
+        <div><label>Account name</label><input type="text" name="account_name"></div>
+        <div class="row2">
+          <div><label>Supplier is</label>
+            <select name="payee_type"><option value="COMPANY">A company or business name</option><option value="INDIVIDUAL">An individual</option></select></div>
+          <div><label>TIN</label><input type="text" name="tin" maxlength="30" placeholder="For the WHT schedule"></div>
+        </div>
+        <label style="display:flex;gap:.5rem;align-items:center;font-weight:500;font-size:.84rem">
+          <input type="checkbox" name="wht_exempt" value="1" style="width:auto"> Exempt from withholding tax
+        </label>
+        <div><label>Note</label><input type="text" name="note" placeholder="Delivers on Fridays"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Add supplier</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-list-ul"></i> Suppliers</h3></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Supplier</th><th>Contact</th><th>Bank details</th><th>Paid so far</th><th></th></tr></thead>
+        <tbody>
+          {% for v in vendors %}
+          <tr>
+            <td class="name">{{ v.name }}{% if not v.is_active %} <span class="chip">inactive</span>{% endif %}<br><span class="hint">{{ v.service|default:"—" }}</span>
+              <br><span class="hint">{{ v.get_payee_type_display }}{% if v.tin %} · TIN {{ v.tin }}{% endif %}</span>{% if v.wht_exempt %} <span class="chip green">WHT exempt</span>{% endif %}</td>
+            <td>{% if v.phone %}<a href="tel:{{ v.phone }}" style="color:var(--champagne-lt)">{{ v.phone }}</a>{% endif %}{% if v.email %}<br><span class="hint">{{ v.email }}</span>{% endif %}</td>
+            <td>{% if v.account_number %}{{ v.bank_name }}<br><span class="hint">{{ v.account_number }}{% if v.account_name %} · {{ v.account_name }}{% endif %}</span>{% else %}—{% endif %}</td>
+            <td class="money">₦{{ v.total_paid|floatformat:0|intcomma }}</td>
+            <td style="white-space:nowrap">
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="toggle"><input type="hidden" name="vendor_id" value="{{ v.id }}">
+                <button class="fin-btn fin-btn-sm" type="submit">{% if v.is_active %}Deactivate{% else %}Activate{% endif %}</button>
+              </form>
+              <details style="margin-top:.4rem">
+                <summary class="hint" style="cursor:pointer;color:var(--champagne-lt)">Tax details</summary>
+                <form method="post" class="fin-form" style="margin-top:.5rem;gap:.5rem;min-width:200px">{% csrf_token %}
+                  <input type="hidden" name="action" value="tax"><input type="hidden" name="vendor_id" value="{{ v.id }}">
+                  <select name="payee_type"><option value="COMPANY"{% if v.payee_type == 'COMPANY' %} selected{% endif %}>Company</option><option value="INDIVIDUAL"{% if v.payee_type == 'INDIVIDUAL' %} selected{% endif %}>Individual</option></select>
+                  <input type="text" name="tin" value="{{ v.tin }}" maxlength="30" placeholder="TIN">
+                  <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="checkbox" name="wht_exempt" value="1" style="width:auto"{% if v.wht_exempt %} checked{% endif %}> WHT exempt</label>
+                  <button class="fin-btn fin-btn-sm" type="submit">Save</button>
+                </form>
+              </details>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty"><i class="bi bi-shop"></i>No suppliers saved yet.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

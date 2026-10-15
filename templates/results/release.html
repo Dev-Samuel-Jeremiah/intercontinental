@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Result release{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.fin-form .tg,.tg{display:flex;gap:.6rem;align-items:flex-start;padding:.7rem 0;border-bottom:1px solid var(--rim)}.tg input[type=checkbox]{width:auto;margin-top:.25rem}.tg b{display:block}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Releasing <em>results</em></h1>
+  <p class="fin-sub">Who must approve results, whether fees or a PIN are needed to view them, and telling families when they're published.</p>
+</div><div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-sm" href="{% url 'results:approvals' %}"><i class="bi bi-check2-square"></i> Approvals</a><a class="fin-btn fin-btn-sm" href="{% url 'results:publish_results_page' %}"><i class="bi bi-send"></i> Publish</a></div></div>
+{% include "results/_msgs.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-sliders"></i> Rules</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="rules">
+      <label class="tg"><input type="checkbox" name="require_approval" {% if cfg.require_approval %}checked{% endif %}><span><b>Approve before publishing</b><span class="hint">Subject teachers submit, heads of department review, the principal approves each class. Unapproved classes can't be published.</span></span></label>
+      <label class="tg"><input type="checkbox" name="fee_gate" {% if cfg.fee_gate %}checked{% endif %}><span><b>Fees cleared to view</b><span class="hint">Parents and students see the result once this share of the term's bill is paid. Children without a bill are never held back.</span>
+        <span style="display:flex;gap:.4rem;align-items:center;margin-top:.4rem"><input type="number" name="fee_gate_percent" value="{{ cfg.fee_gate_percent }}" min="1" max="100" style="width:90px"> % paid</span></span></label>
+      <label class="tg"><input type="checkbox" name="require_pin" {% if cfg.require_pin %}checked{% endif %}><span><b>Result PIN needed</b><span class="hint">Families enter a scratch-card PIN. Its first use ties it to one child and term; each new visit uses one of its views.</span></span></label>
+      <label class="tg"><input type="checkbox" name="notify_on_publish" {% if cfg.notify_on_publish %}checked{% endif %}><span><b>Tell families when results are published</b><span class="hint">An SMS and email with a link to the parent portal, the moment you publish.</span></span></label>
+      <button class="fin-btn fin-btn-gold" type="submit">Save rules</button>
+    </form>
+  </div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-key"></i> Create result PINs</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="generate">
+        <div><label>Batch name</label><input name="name" maxlength="80" placeholder="First term 2026/2027"></div>
+        <div class="row2"><div><label>How many</label><input type="number" name="count" min="1" max="2000" value="100" required></div><div><label>Views per PIN</label><input type="number" name="max_uses" min="1" max="50" value="{{ cfg.pin_uses }}"></div></div>
+        <div><label>Price (₦, for your records)</label><input type="number" name="price" min="0" step="50" value="0"></div>
+        <button class="fin-btn fin-btn-gold" type="submit">Create PINs</button></form>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-search"></i> Find a PIN</h3></div><div class="panel-b">
+      <form method="get" style="display:flex;gap:.4rem"><input name="q" value="{{ q }}" placeholder="Serial, PIN or student" class="fin-btn" style="flex:1;text-align:left"><button class="fin-btn fin-btn-sm">Search</button></form>
+      {% for p in found %}<div style="display:flex;justify-content:space-between;gap:.5rem;align-items:center;padding:.5rem 0;border-bottom:1px solid var(--rim)">
+        <span><b>{{ p.serial }}</b> <span class="hint">{% if p.student %}{{ p.student.full_name }} · {{ p.term.name }} · {{ p.uses }}/{{ p.max_uses }} views{% else %}unused{% endif %}</span></span>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="disable"><input type="hidden" name="pin_id" value="{{ p.id }}"><button class="fin-btn fin-btn-sm{% if not p.disabled %} fin-btn-danger{% endif %}">{% if p.disabled %}Enable{% else %}Disable{% endif %}</button></form></div>
+      {% empty %}{% if q %}<p class="hint">No PIN matches.</p>{% endif %}{% endfor %}
+    </div></div>
+  </div>
+</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-collection"></i> PIN batches</h3></div>
+  {% if batches %}<table class="tbl"><thead><tr><th>Batch</th><th>Created</th><th>PINs</th><th>Used</th><th>Price</th><th></th></tr></thead><tbody>
+  {% for b in batches %}<tr><td class="name">{{ b.name }}</td><td>{{ b.created_at|date:"j M Y" }}</td><td>{{ b.total }}</td><td>{{ b.used }}</td><td class="money">₦{{ b.price|floatformat:0 }}</td>
+    <td style="white-space:nowrap"><a class="fin-btn fin-btn-sm" href="{% url 'results:pin_batch' b.id %}?unused=1"><i class="bi bi-printer"></i> Print cards</a> <a class="fin-btn fin-btn-sm" href="{% url 'results:pin_batch' b.id %}?format=csv"><i class="bi bi-download"></i> CSV</a></td></tr>{% endfor %}
+  </tbody></table>{% else %}<div class="empty"><i class="bi bi-key"></i><p>No PINs yet.</p></div>{% endif %}
+</div>
+{% endblock %}

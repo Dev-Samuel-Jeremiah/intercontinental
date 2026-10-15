@@ -1,0 +1,12 @@
+<form method="post" class="fin-form" style="margin-top:.6rem">{% csrf_token %}{% if s %}<input type="hidden" name="id" value="{{ s.id }}">{% endif %}
+  <div class="row2"><div><label>Name</label><input name="name" value="{{ s.name|default:'' }}" required maxlength="60" placeholder="Science"></div>
+  <div><label>For class levels</label><input name="levels" value="{{ s.levels|default:'' }}" maxlength="120" placeholder="SS 1, SS 2, SS 3"></div></div>
+  <div class="row2"><div><label>Compulsory subjects</label><select name="compulsory" multiple size="7">{% for x in subjects %}<option value="{{ x.id }}" {% if s and x in s.compulsory.all %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select></div>
+  <div><label>Electives</label><select name="electives" multiple size="7">{% for x in subjects %}<option value="{{ x.id }}" {% if s and x in s.electives.all %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select></div></div>
+  <div class="row2"><div><label>Electives to choose</label><div style="display:flex;gap:.4rem"><input type="number" name="min_electives" value="{{ s.min_electives|default:1 }}" min="0" max="20" aria-label="minimum"><input type="number" name="max_electives" value="{{ s.max_electives|default:3 }}" min="0" max="20" aria-label="maximum"></div></div>
+  <div><label>Subjects in all</label><div style="display:flex;gap:.4rem"><input type="number" name="min_subjects" value="{{ s.min_subjects|default:8 }}" min="1" max="20" aria-label="minimum"><input type="number" name="max_subjects" value="{{ s.max_subjects|default:9 }}" min="1" max="20" aria-label="maximum"></div></div></div>
+  <div><label>Note <span class="hint">(optional)</span></label><input name="description" value="{{ s.description|default:'' }}" maxlength="255"></div>
+  <span class="hint">Hold Ctrl (or ⌘) to pick several subjects.</span>
+  <div style="display:flex;gap:.5rem"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">{% if s %}Save{% else %}Create stream{% endif %}</button>
+  {% if s %}<button class="fin-btn fin-btn-danger fin-btn-sm" name="action" value="delete" formnovalidate onclick="return confirm('Remove the {{ s.name|escapejs }} stream? Students keep their subjects.')">Remove</button>{% endif %}</div>
+</form>

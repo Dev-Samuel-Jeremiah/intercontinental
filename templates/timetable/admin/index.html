@@ -1,0 +1,458 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Timetable Admin{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+}
+
+.ta-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+}
+
+@keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.ta-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rim2);
+    position: relative;
+}
+
+.ta-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 80px; height: 2px;
+    background: var(--champagne);
+}
+
+.ta-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.ta-eyebrow-rule { width: 28px; height: 1px; background: var(--champagne); flex-shrink: 0; }
+.ta-eyebrow-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.ta-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.ta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+}
+
+.ta-title em { font-style: italic; color: var(--champagne); }
+
+.ta-subtitle {
+    margin-top: 7px;
+    font-size: 0.85rem;
+    color: var(--slate);
+    line-height: 1.5;
+}
+
+.ta-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-self: center;
+}
+
+/* ── BUTTONS ── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.83rem;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+
+.btn-champagne {
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(244,210,31,.32);
+    color: #0a1f44;
+}
+
+.btn-ghost {
+    background: var(--surface2);
+    color: var(--slate2);
+    border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface3); color: var(--white); border-color: var(--rim3); }
+
+.btn-blue {
+    background: var(--blue-dim);
+    color: var(--blue);
+    border: 1px solid var(--blue-border);
+}
+.btn-blue:hover { background: rgba(96,165,250,.15); color: var(--blue); transform: translateY(-1px); }
+
+.btn-outline {
+    background: transparent;
+    color: var(--slate2);
+    border: 1px solid var(--rim2);
+}
+.btn-outline:hover { background: var(--rim); color: var(--white); border-color: var(--rim3); }
+
+.btn-purple {
+    background: var(--purple-dim);
+    color: var(--purple);
+    border: 1px solid var(--purple-border);
+}
+.btn-purple:hover { background: rgba(167,139,250,.15); color: var(--purple); transform: translateY(-1px); }
+
+.btn-sm {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    border-radius: 9px;
+}
+
+/* ── CONFIG CARD ── */
+.config-card {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 14px;
+    transition: border-color .2s, box-shadow .2s;
+    animation: riseUp .45s ease both;
+}
+
+.config-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+}
+
+.config-card:hover {
+    border-color: var(--rim3);
+    box-shadow: 0 6px 28px rgba(0,0,0,.25);
+}
+
+.config-card.is-active {
+    border-color: rgba(74,222,128,.2);
+}
+
+.config-card.is-active::before {
+    background: linear-gradient(90deg, transparent, var(--green-border), transparent);
+}
+
+.config-card-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 26px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* left: icon + info */
+.config-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+    min-width: 0;
+}
+
+.config-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--champagne);
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+
+.config-icon.active {
+    background: var(--green-dim);
+    border-color: var(--green-border);
+    color: var(--green);
+}
+
+.config-info { min-width: 0; }
+
+.config-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 7px;
+}
+
+.config-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    flex-shrink: 0;
+}
+
+.config-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.config-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    color: var(--slate);
+}
+
+.config-meta-item i { color: var(--champagne); font-size: 0.75rem; }
+.config-meta-item strong { color: var(--slate2); font-weight: 600; }
+
+.config-divider {
+    width: 1px; height: 14px;
+    background: var(--rim2);
+}
+
+/* right: actions */
+.config-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px;
+    text-align: center;
+    gap: 16px;
+}
+
+.empty-icon-box {
+    width: 72px; height: 72px;
+    border-radius: 18px;
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    color: var(--slate);
+}
+
+.empty-state h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.empty-state p {
+    font-size: 0.85rem;
+    color: var(--slate);
+    max-width: 360px;
+    line-height: 1.65;
+}
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    animation: riseUp .45s ease both;
+}
+
+.panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .ta-wrap { padding: 1.25rem 1rem 3rem; }
+    .ta-title { font-size: 2rem; }
+    .config-card-inner { padding: 18px; }
+    .config-actions { width: 100%; }
+    .config-actions .btn { flex: 1; justify-content: center; }
+}
+</style>
+
+<div class="ta-wrap">
+
+    <!-- ── PAGE HEADER ── -->
+    <header class="ta-header">
+        <div class="ta-eyebrow">
+            <span class="ta-eyebrow-rule"></span>
+            <span class="ta-eyebrow-label">Administration</span>
+        </div>
+
+        <div class="ta-header-row">
+            <div>
+                <h1 class="ta-title">Timetable <em>Management</em></h1>
+                <p class="ta-subtitle">Create configurations, assign teachers, and generate timetables</p>
+            </div>
+
+            <div class="ta-header-actions">
+                <a href="{% url 'timetable:rooms' %}" class="btn btn-ghost"><i class="bi bi-door-open"></i> Rooms</a>
+                <a href="{% url 'timetable:room_bookings' %}" class="btn btn-ghost"><i class="bi bi-calendar2-check"></i> Room booking</a>
+                <a href="{% url 'timetable:free_finder' %}" class="btn btn-ghost"><i class="bi bi-search"></i> Free periods</a>
+                <a href="{% url 'timetable:meetings' %}" class="btn btn-ghost"><i class="bi bi-people"></i> Parent meetings</a>
+                <a href="{% url 'timetable:slot_list' %}" class="btn btn-ghost">
+                    <i class="bi bi-clock"></i> Time Slots
+                </a>
+                <a href="{% url 'timetable:config_create' %}" class="btn btn-champagne">
+                    <i class="bi bi-plus-lg"></i> New Configuration
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── CONFIGURATIONS ── -->
+    {% if configs %}
+        {% for config in configs %}
+        <div class="config-card {% if config.is_active %}is-active{% endif %}" style="animation-delay:{{ forloop.counter0 }}0ms">
+            <div class="config-card-inner">
+
+                <div class="config-left">
+                    <div class="config-icon {% if config.is_active %}active{% endif %}">
+                        <i class="bi bi-{% if config.is_active %}calendar2-check{% else %}calendar2{% endif %}"></i>
+                    </div>
+                    <div class="config-info">
+                        <div class="config-name-row">
+                            <span class="config-name">{{ config.name }}</span>
+                            {% if config.is_active %}
+                                <span class="active-badge">
+                                    <i class="bi bi-check-circle-fill"></i> Active
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="config-meta">
+                            <div class="config-meta-item">
+                                <i class="bi bi-calendar3-week"></i>
+                                <span>Days: <strong>{{ config.active_days|join:", " }}</strong></span>
+                            </div>
+                            <div class="config-divider"></div>
+                            <div class="config-meta-item">
+                                <i class="bi bi-clock"></i>
+                                <span>Slots: <strong>{{ config.time_slots.count }}</strong></span>
+                            </div>
+                            <div class="config-divider"></div>
+                            <div class="config-meta-item">
+                                <i class="bi bi-person-workspace"></i>
+                                <span>Assignments: <strong>{{ config.teacher_subject_classes.count }}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="config-actions">
+                    <a href="{% url 'timetable:config_detail' config.pk %}" class="btn btn-blue btn-sm">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <a href="{% url 'timetable:config_edit' config.pk %}" class="btn btn-outline btn-sm">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a href="{% url 'timetable:generate' config.pk %}" class="btn btn-champagne btn-sm">
+                        <i class="bi bi-lightning-charge-fill"></i> Generate
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+
+    <!-- ── EMPTY STATE ── -->
+    <div class="panel">
+        <div class="empty-state">
+            <div class="empty-icon-box"><i class="bi bi-calendar2-plus"></i></div>
+            <h4>No Configurations Yet</h4>
+            <p>Start by creating a timetable configuration for the current term. You can define time slots, assign teachers, and generate the full timetable.</p>
+            <a href="{% url 'timetable:config_create' %}" class="btn btn-champagne">
+                <i class="bi bi-plus-lg"></i> Create First Configuration
+            </a>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

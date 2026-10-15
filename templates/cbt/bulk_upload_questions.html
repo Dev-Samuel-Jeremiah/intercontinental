@@ -1,0 +1,1227 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Bulk Upload Questions{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ================= DESIGN TOKENS ================= */
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  min-height: 100vh;
+}
+
+.your-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ================= PAGE HEADER ================= */
+.page-header { margin-bottom: 2.5rem; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.eyebrow-rule {
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.eyebrow-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.01em;
+}
+
+.page-title em { font-style: italic; color: var(--champagne); }
+
+.context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.22);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+}
+
+.header-divider {
+  position: relative;
+  height: 1px;
+  background: var(--rim);
+  margin-top: 1.5rem;
+}
+
+.header-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+
+/* ================= FORMAT STRIP ================= */
+.format-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--rim);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  animation: riseUp .45s ease both;
+  animation-delay: .05s;
+}
+
+.format-cell {
+  background: var(--surface2);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: background .2s;
+}
+
+.format-cell:hover { background: var(--surface3); }
+
+.format-cell-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.fc-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border);   }
+.fc-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+.fc-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border);  }
+.fc-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+
+.format-cell-text h5 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+
+.format-cell-text p {
+  font-size: 0.75rem;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
+/* ================= PANELS ================= */
+.panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  animation: riseUp .45s ease both;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+
+.panel:nth-child(2) { animation-delay: .08s; }
+.panel:nth-child(3) { animation-delay: .13s; }
+.panel:nth-child(4) { animation-delay: .18s; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--rim);
+}
+
+.panel-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.pi-champagne { background: var(--champagne-dim); color: var(--champagne); border: 1px solid rgba(244,210,31,.22); }
+.pi-blue      { background: var(--blue-dim);      color: var(--blue);      border: 1px solid var(--blue-border);   }
+.pi-green     { background: var(--green-dim);     color: var(--green);     border: 1px solid var(--green-border);  }
+.pi-purple    { background: var(--purple-dim);    color: var(--purple);    border: 1px solid var(--purple-border); }
+
+.panel-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.panel-body { padding: 28px 24px; }
+
+/* ================= INPUT MODE TABS ================= */
+.mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+
+.mode-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--slate2);
+  cursor: pointer;
+  transition: background .2s, color .2s, box-shadow .2s;
+}
+
+.mode-tab.active {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 2px 12px rgba(244,210,31,.28);
+}
+
+.mode-tab:not(.active):hover {
+  background: var(--rim2);
+  color: var(--white);
+}
+
+/* ================= FORM ELEMENTS ================= */
+.form-group { margin-bottom: 22px; }
+
+.form-label {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: 8px;
+}
+
+.form-control,
+.form-select {
+  width: 100%;
+  padding: 11px 15px;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  color: var(--white);
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-control::placeholder { color: var(--slate); }
+
+.form-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath fill='rgba(255,255,255,.4)' d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+.form-select option { background: var(--surface2); color: var(--white); }
+
+.form-control:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+
+.form-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 0.78rem;
+  color: var(--slate);
+}
+
+.form-hint i { color: var(--champagne); font-size: 0.75rem; }
+
+/* ================= TEXTAREA ================= */
+textarea.form-control {
+  resize: vertical;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  min-height: 280px;
+  color: var(--champagne-lt);
+}
+
+textarea.form-control::placeholder {
+  color: var(--slate);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+}
+
+/* ================= TEXT FORMAT EXAMPLES ================= */
+.text-format-hint {
+  background: var(--ink);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-top: 14px;
+}
+
+.text-format-hint-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.format-examples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.format-example {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.format-example-label {
+  padding: 7px 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border-bottom: 1px solid var(--rim);
+}
+
+.fe-multiline .format-example-label { color: var(--green);  background: var(--green-dim);  }
+.fe-inline    .format-example-label { color: var(--blue);   background: var(--blue-dim);   }
+
+.format-example pre {
+  padding: 12px 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.76rem;
+  color: var(--slate2);
+  line-height: 1.65;
+  white-space: pre;
+  overflow-x: auto;
+}
+
+/* ================= UPLOAD ZONES ================= */
+.upload-zone {
+  border: 1.5px dashed var(--rim3);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .25s, background .25s;
+  background: var(--surface2);
+  position: relative;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--champagne);
+  background: var(--surface3);
+}
+
+.upload-zone.has-file {
+  border-color: var(--green);
+  border-style: solid;
+}
+
+.upload-zone-icon {
+  width: 52px; height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.uzi-champagne { background: var(--champagne-dim); color: var(--champagne); border: 1px solid rgba(244,210,31,.22); }
+.uzi-teal      { background: var(--teal-dim);      color: var(--teal);      border: 1px solid var(--teal-border);  }
+
+.upload-zone h5 { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 5px; }
+.upload-zone p  { font-size: 0.8rem; color: var(--slate); }
+
+input[type="file"] { display: none; }
+
+/* ================= FILE PILL ================= */
+.file-pill {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.file-pill.show { display: flex; }
+
+.file-pill i { color: var(--champagne); }
+
+.file-pill-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--white);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-pill-clear {
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background .2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-pill-clear:hover { background: rgba(248,113,113,.22); }
+
+/* ================= FILE TYPE HELPER ================= */
+.file-helper {
+  display: none;
+  border-radius: 10px;
+  padding: 13px 16px;
+  margin-top: 12px;
+  font-size: 0.82rem;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.file-helper.show { display: flex; }
+
+.file-helper i { margin-top: 1px; font-size: 0.9rem; flex-shrink: 0; }
+
+.fh-green { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.fh-blue  { background: var(--blue-dim);  border: 1px solid var(--blue-border);  color: var(--blue);  }
+
+.file-helper-body strong { display: block; font-weight: 600; margin-bottom: 2px; }
+.file-helper-body span   { color: rgba(255,255,255,.55); }
+
+/* ================= BUTTONS ================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s, background .2s;
+  line-height: 1;
+}
+
+.btn:hover { transform: translateY(-2px); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-gold:hover { box-shadow: 0 6px 24px rgba(244,210,31,.35); color: #fff; }
+
+.btn-ghost {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  color: var(--slate2);
+}
+
+.btn-ghost:hover { border-color: var(--rim3); color: var(--white); }
+
+.btn-outline-green {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  color: var(--green);
+}
+
+.btn-outline-green:hover { background: rgba(74,222,128,.2); }
+
+.btn-outline-champagne {
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.3);
+  color: var(--champagne-lt);
+}
+
+.btn-outline-champagne:hover { background: rgba(244,210,31,.2); }
+
+.btn-lg { padding: 13px 28px; font-size: 0.95rem; }
+
+/* ================= FORM FOOTER ================= */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--rim);
+}
+
+/* ================= TEMPLATE GRID ================= */
+.template-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.template-card {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 22px;
+  transition: border-color .25s, transform .25s;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-card:hover { border-color: var(--rim3); transform: translateY(-4px); }
+
+.template-card-top { display: flex; align-items: center; gap: 12px; }
+
+.tc-icon {
+  width: 42px; height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.template-card h4 { font-size: 0.9rem; font-weight: 600; color: var(--white); margin-bottom: 2px; }
+.template-card p  { font-size: 0.8rem; color: var(--slate); line-height: 1.5; }
+
+/* ================= ACCORDION ================= */
+.guide-accordion { display: flex; flex-direction: column; gap: 10px; }
+
+.acc-item {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.acc-trigger {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  transition: background .2s;
+  text-align: left;
+}
+
+.acc-trigger:hover { background: var(--rim); }
+
+.acc-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.acc-trigger-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.acc-chevron { color: var(--slate); font-size: 0.8rem; transition: transform .25s; }
+.acc-trigger.open .acc-chevron { transform: rotate(180deg); }
+
+.acc-body { display: none; padding: 0 20px 20px; border-top: 1px solid var(--rim); }
+.acc-body.open { display: block; }
+
+.acc-body p, .acc-body li { font-size: 0.83rem; color: var(--slate2); line-height: 1.7; }
+.acc-body ul, .acc-body ol { padding-left: 20px; margin: 10px 0; }
+.acc-body li { margin: 5px 0; }
+
+.acc-body code {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: var(--champagne-lt);
+  font-family: 'Courier New', monospace;
+}
+
+.acc-body pre {
+  background: var(--ink);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  margin: 12px 0;
+  font-size: 0.78rem;
+  color: var(--slate2);
+  font-family: 'Courier New', monospace;
+  line-height: 1.7;
+}
+
+.acc-section-label {
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--champagne);
+  margin: 14px 0 6px;
+}
+
+/* ================= DIVIDER ================= */
+.section-divider { height: 1px; background: var(--rim); margin: 2rem 0; }
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .your-wrap { padding: 1.5rem 1.25rem 3rem; }
+  .page-title { font-size: 2rem; }
+  .format-strip { grid-template-columns: 1fr 1fr; }
+  .template-grid { grid-template-columns: 1fr; }
+  .format-examples { grid-template-columns: 1fr; }
+  .form-footer { flex-direction: column; }
+  .form-footer .btn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .format-strip { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ===== PAGE HEADER ===== -->
+  <div class="page-header">
+    <div class="eyebrow">
+      <div class="eyebrow-rule"></div>
+      <span class="eyebrow-label">Question Bank · Management</span>
+    </div>
+    <div class="header-row">
+      <h1 class="page-title">Bulk Upload <em>Questions</em></h1>
+      <div class="context-badge">
+        <i class="bi bi-cloud-arrow-up"></i>
+        Word · Excel · CSV · Text
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- ===== FORMAT STRIP (now 4 cells) ===== -->
+  <div class="format-strip">
+    <div class="format-cell">
+      <div class="format-cell-icon fc-blue"><i class="bi bi-file-earmark-word"></i></div>
+      <div class="format-cell-text">
+        <h5>Word (.docx)</h5>
+        <p>Best for formulas &amp; subscripts</p>
+      </div>
+    </div>
+    <div class="format-cell">
+      <div class="format-cell-icon fc-green"><i class="bi bi-file-earmark-spreadsheet"></i></div>
+      <div class="format-cell-text">
+        <h5>Excel (.xlsx)</h5>
+        <p>Good for text-based questions</p>
+      </div>
+    </div>
+    <div class="format-cell">
+      <div class="format-cell-icon fc-amber"><i class="bi bi-filetype-csv"></i></div>
+      <div class="format-cell-text">
+        <h5>CSV (.csv)</h5>
+        <p>Editable in any text editor</p>
+      </div>
+    </div>
+    <div class="format-cell">
+      <div class="format-cell-icon fc-purple"><i class="bi bi-keyboard"></i></div>
+      <div class="format-cell-text">
+        <h5>Paste Text</h5>
+        <p>Type or paste directly</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== UPLOAD PANEL ===== -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon pi-champagne"><i class="bi bi-upload"></i></div>
+      <h3>Upload Your Questions</h3>
+    </div>
+    <div class="panel-body">
+      <form method="POST" enctype="multipart/form-data" id="uploadForm">
+        {% csrf_token %}
+
+        <!-- hidden: tells the server which mode was submitted -->
+        <input type="hidden" name="input_mode" id="inputMode" value="file">
+
+        <!-- ── Exam Part ──────────────────────────────────── -->
+        <div class="form-group">
+          <label class="form-label" for="exam_part">Select Exam Part / Section</label>
+          <select name="exam_part" id="exam_part" class="form-select" required>
+            <option value="">— Choose Exam Part —</option>
+            {% for part in exam_parts %}
+              <option value="{{ part.id }}">
+                {{ part.exam.title }} — {{ part.get_part_type_display }} ({{ part.exam.subject.name }})
+              </option>
+            {% endfor %}
+          </select>
+          <div class="form-hint">
+            <i class="bi bi-lightbulb"></i>
+            Select which exam section these questions belong to
+          </div>
+        </div>
+
+        <!-- ── Input Mode Tabs ────────────────────────────── -->
+        <div class="mode-tabs" role="tablist">
+          <button type="button" id="tabFile" class="mode-tab active"
+                  role="tab" aria-selected="true" onclick="switchTab('file')">
+            <i class="bi bi-cloud-arrow-up"></i> Upload File
+          </button>
+          <button type="button" id="tabText" class="mode-tab"
+                  role="tab" aria-selected="false" onclick="switchTab('text')">
+            <i class="bi bi-keyboard"></i> Paste Text
+          </button>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             FILE UPLOAD PANEL
+        ══════════════════════════════════════════════════ -->
+        <div id="panelFile">
+
+          <!-- Questions file -->
+          <div class="form-group">
+            <label class="form-label">Questions File</label>
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('file').click()">
+              <div class="upload-zone-icon uzi-champagne">
+                <i class="bi bi-cloud-arrow-up"></i>
+              </div>
+              <h5>Click to browse or drag &amp; drop</h5>
+              <p>Accepted: .docx, .xlsx, .xls, .csv &nbsp;·&nbsp; Max 10 MB</p>
+            </div>
+            <input type="file" name="file" id="file"
+                   accept=".csv,.xlsx,.xls,.docx,.doc,.odt,.rtf,.tsv,.ods">
+
+            <div class="file-pill" id="filePill">
+              <i class="bi bi-file-earmark-check"></i>
+              <span class="file-pill-name" id="filePillName"></span>
+              <button type="button" class="file-pill-clear" onclick="clearFile()">
+                <i class="bi bi-x"></i> Remove
+              </button>
+            </div>
+
+            <div class="file-helper fh-green" id="helperWord">
+              <i class="bi bi-check-circle-fill"></i>
+              <div class="file-helper-body">
+                <strong>Word Document — Optimal Format</strong>
+                <span>Preserves formulas, subscripts, and superscripts. Follow the Word template structure.</span>
+              </div>
+            </div>
+
+            <div class="file-helper fh-blue" id="helperSheet">
+              <i class="bi bi-info-circle-fill"></i>
+              <div class="file-helper-body">
+                <strong>Spreadsheet Selected</strong>
+                <span>Suitable for plain text questions. For maths/science with formulas, Word format is recommended.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Images ZIP -->
+          <div class="form-group">
+            <label class="form-label">
+              Images Archive
+              <span style="color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0">(Optional)</span>
+            </label>
+            <div class="upload-zone" id="zipZone" onclick="document.getElementById('imagesZip').click()">
+              <div class="upload-zone-icon uzi-teal">
+                <i class="bi bi-file-zip"></i>
+              </div>
+              <h5>Upload Images ZIP File</h5>
+              <p>Package all question images in a single .zip archive</p>
+            </div>
+            <input type="file" name="images_zip" id="imagesZip" accept=".zip">
+
+            <div class="file-pill" id="zipPill">
+              <i class="bi bi-file-zip" style="color:var(--teal)"></i>
+              <span class="file-pill-name" id="zipPillName"></span>
+              <button type="button" class="file-pill-clear" onclick="clearZipFile()">
+                <i class="bi bi-x"></i> Remove
+              </button>
+            </div>
+
+            <div class="form-hint">
+              <i class="bi bi-image"></i>
+              ZIP should contain all images referenced in your Word document (e.g. diagram1.jpg, map.png)
+            </div>
+          </div>
+
+        </div><!-- /#panelFile -->
+
+        <!-- ══════════════════════════════════════════════════
+             TEXT PASTE PANEL
+        ══════════════════════════════════════════════════ -->
+        <div id="panelText" style="display:none;">
+
+          <div class="form-group">
+            <label class="form-label">Paste Questions</label>
+            <textarea
+              name="plain_text"
+              id="plainText"
+              class="form-control"
+              rows="14"
+              placeholder="Paste your questions here…"></textarea>
+
+            <!-- Format hint cards -->
+            <div class="text-format-hint">
+              <div class="text-format-hint-header">
+                <i class="bi bi-info-circle"></i>
+                Accepted Formats
+              </div>
+              <div class="format-examples">
+                <div class="format-example fe-multiline">
+                  <div class="format-example-label">Multi-line</div>
+                  <pre>1. The process by which a solid
+changes directly into gas is called
+A. Condensation
+B. Sublimation
+C. Evaporation
+D. Freezing
+ANSWER: B
+MARK: 0.5</pre>
+                </div>
+                <div class="format-example fe-inline">
+                  <div class="format-example-label">Inline (one line)</div>
+                  <pre>1. The process by which a solid
+changes into gas is called
+A. Condensation B. Sublimation
+C. Evaporation D. Freezing
+ANSWER: B MARK: 0.5</pre>
+                </div>
+              </div>
+              <div class="form-hint" style="margin-top:12px;">
+                <i class="bi bi-lightbulb"></i>
+                Both styles can be mixed in the same paste. Separate questions with a blank line or simply start the next number.
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /#panelText -->
+
+        <!-- ── Form Footer ────────────────────────────────── -->
+        <div class="form-footer">
+          <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-ghost">
+            <i class="bi bi-arrow-left"></i> Back to Exams
+          </a>
+          <button type="submit" class="btn btn-gold btn-lg" id="submitBtn">
+            <i class="bi bi-cloud-arrow-up"></i> Upload Questions
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== TEMPLATES PANEL ===== -->
+  <div class="panel" style="animation-delay:.1s">
+    <div class="panel-header">
+      <div class="panel-icon pi-green"><i class="bi bi-download"></i></div>
+      <h3>Download Templates</h3>
+    </div>
+    <div class="panel-body">
+      <div class="template-grid">
+
+        <!-- Word Template -->
+        <div class="template-card">
+          <div class="template-card-top">
+            <div class="tc-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue);">
+              <i class="bi bi-file-earmark-word"></i>
+            </div>
+            <div><h4>Word Document Template</h4></div>
+          </div>
+          <p>Ideal for maths, chemistry &amp; physics. Supports formulas, subscripts, superscripts, passages, and embedded images.</p>
+          <a href="{% url 'cbt:download_word_template' %}" class="btn btn-outline-champagne">
+            <i class="bi bi-download"></i> Download Word Template
+          </a>
+        </div>
+
+        <!-- CSV Template -->
+        <div class="template-card">
+          <div class="template-card-top">
+            <div class="tc-icon" style="background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);">
+              <i class="bi bi-file-earmark-spreadsheet"></i>
+            </div>
+            <div><h4>Excel / CSV Template</h4></div>
+          </div>
+          <p>For straightforward text-based questions. Edit in Excel, Google Sheets, or any spreadsheet application.</p>
+          <a href="{% url 'cbt:download_question_csv_template' %}" class="btn btn-outline-green">
+            <i class="bi bi-download"></i> Download CSV Template
+          </a>
+        </div>
+
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- Format Guides Accordion -->
+      <div class="guide-accordion">
+
+        <!-- Word Guide -->
+        <div class="acc-item">
+          <button class="acc-trigger" type="button" onclick="toggleAcc(this, 'accWord')">
+            <div class="acc-trigger-left">
+              <div class="acc-trigger-icon" style="background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border);">
+                <i class="bi bi-file-earmark-word"></i>
+              </div>
+              Word Document Format Guide
+            </div>
+            <i class="bi bi-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body" id="accWord">
+            <p class="acc-section-label" style="margin-top:16px">Question Structure</p>
+            <ol>
+              <li>Start each question with <code>Q1.</code>, <code>Q2.</code>, etc.</li>
+              <li>Use <code>A.</code> <code>B.</code> <code>C.</code> <code>D.</code> for options</li>
+              <li>Mark the answer: <code>ANSWER: A</code></li>
+              <li>Optional marks: <code>MARKS: 2</code></li>
+              <li>For passages: <code>PASSAGE TITLE:</code>, <code>START PASSAGE</code>, <code>END PASSAGE</code></li>
+              <li>For passage groups: <code>PASSAGE GROUP: group_id</code></li>
+              <li>For images: <code>IMAGE: filename.jpg</code> and <code>CAPTION: description</code></li>
+              <li>Word subscript (X₂), superscript (X²), bold, italic work natively</li>
+            </ol>
+            <p class="acc-section-label">Example with Passage</p>
+            <pre>PASSAGE TITLE: The Water Cycle
+PASSAGE GROUP: passage_1
+START PASSAGE
+Water evaporates from oceans, lakes, and rivers.
+It rises into the atmosphere as water vapor.
+When it cools, it condenses into clouds.
+END PASSAGE
+
+Q1. What happens to water when it evaporates?
+A. It becomes ice
+B. It rises as water vapor
+C. It falls as rain
+D. It becomes a cloud
+ANSWER: B
+MARKS: 2
+
+Q2. What process forms clouds?
+IMAGE: cloud_formation.jpg
+CAPTION: Cloud Formation Process
+A. Evaporation
+B. Condensation
+C. Precipitation
+D. Collection
+ANSWER: B</pre>
+          </div>
+        </div>
+
+        <!-- Excel/CSV Guide -->
+        <div class="acc-item">
+          <button class="acc-trigger" type="button" onclick="toggleAcc(this, 'accExcel')">
+            <div class="acc-trigger-left">
+              <div class="acc-trigger-icon" style="background:var(--green-dim);color:var(--green);border:1px solid var(--green-border);">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+              </div>
+              Excel / CSV Format Guide
+            </div>
+            <i class="bi bi-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body" id="accExcel">
+            <p class="acc-section-label" style="margin-top:16px">Required Columns</p>
+            <ul>
+              <li><code>question_text</code> — The question text</li>
+              <li><code>question_type</code> — MCQ, TF, or SA</li>
+              <li><code>marks</code> — Point value</li>
+              <li><code>option_a</code>, <code>option_b</code>, <code>option_c</code>, <code>option_d</code>, <code>option_e</code> — Answer options (e is optional)</li>
+              <li><code>correct_option</code> — Correct answer letter (A, B, C, or D)</li>
+              <li><code>correct_answer</code> — For Short Answer questions only</li>
+            </ul>
+            <p style="margin-top:10px;color:var(--slate);font-size:0.8rem;">
+              <i class="bi bi-info-circle"></i>&nbsp; Download the template to see working examples
+            </p>
+          </div>
+        </div>
+
+        <!-- Paste Text Guide -->
+        <div class="acc-item">
+          <button class="acc-trigger" type="button" onclick="toggleAcc(this, 'accText')">
+            <div class="acc-trigger-left">
+              <div class="acc-trigger-icon" style="background:var(--purple-dim);color:var(--purple);border:1px solid var(--purple-border);">
+                <i class="bi bi-keyboard"></i>
+              </div>
+              Paste Text Format Guide
+            </div>
+            <i class="bi bi-chevron-down acc-chevron"></i>
+          </button>
+          <div class="acc-body" id="accText">
+            <p class="acc-section-label" style="margin-top:16px">How It Works</p>
+            <ul>
+              <li>Each question must start with a number: <code>1.</code> <code>1)</code> <code>Q1.</code> <code>(1)</code></li>
+              <li>Options use any of: <code>A.</code> <code>A)</code> <code>A:</code> <code>(A)</code></li>
+              <li>Answer line: <code>ANSWER: B</code> or <code>ANS: B</code> or <code>The answer is B</code></li>
+              <li>Marks line (optional): <code>MARK: 0.5</code> or <code>MARKS: 1</code> or <code>POINTS: 2</code></li>
+              <li>Separate questions with a blank line, or just start the next number</li>
+            </ul>
+            <p class="acc-section-label">Multi-line Example</p>
+            <pre>1. The process by which a solid changes directly into gas is called
+A. Condensation
+B. Sublimation
+C. Evaporation
+D. Freezing
+ANSWER: B
+MARK: 0.5
+
+2. The capital of Nigeria is
+A. Lagos
+B. Abuja
+C. Kano
+D. Ibadan
+ANSWER: B
+MARK: 1</pre>
+            <p class="acc-section-label">Inline Example (entire question on one line)</p>
+            <pre>1. The process by which a solid changes into gas is called A. Condensation B. Sublimation C. Evaporation D. Freezing ANSWER: B MARK: 0.5</pre>
+          </div>
+        </div>
+
+      </div><!-- /.guide-accordion -->
+    </div>
+  </div>
+
+</div><!-- /.your-wrap -->
+
+<script>
+/* ══════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════ */
+function switchTab(mode) {
+  const isFile = (mode === 'file');
+
+  // panels
+  document.getElementById('panelFile').style.display = isFile ? '' : 'none';
+  document.getElementById('panelText').style.display = isFile ? 'none' : '';
+
+  // hidden field
+  document.getElementById('inputMode').value = mode;
+
+  // tab styles
+  document.getElementById('tabFile').classList.toggle('active', isFile);
+  document.getElementById('tabText').classList.toggle('active', !isFile);
+
+  // ARIA
+  document.getElementById('tabFile').setAttribute('aria-selected', isFile);
+  document.getElementById('tabText').setAttribute('aria-selected', !isFile);
+
+  // file required only in file mode; textarea required only in text mode
+  const fileInput = document.getElementById('file');
+  const textArea  = document.getElementById('plainText');
+
+  if (isFile) {
+    fileInput.setAttribute('required', '');
+    textArea.removeAttribute('required');
+  } else {
+    fileInput.removeAttribute('required');
+    textArea.setAttribute('required', '');
+  }
+
+  // update submit button label
+  const btn = document.getElementById('submitBtn');
+  btn.innerHTML = isFile
+    ? '<i class="bi bi-cloud-arrow-up"></i> Upload Questions'
+    : '<i class="bi bi-check2-circle"></i> Import Questions';
+}
+
+// initialise
+switchTab('file');
+
+
+/* ══════════════════════════════════════════════
+   FILE UPLOAD
+══════════════════════════════════════════════ */
+document.getElementById('file').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  document.getElementById('filePillName').textContent = file.name;
+  document.getElementById('filePill').classList.add('show');
+  document.getElementById('uploadZone').classList.add('has-file');
+
+  document.getElementById('helperWord').classList.remove('show');
+  document.getElementById('helperSheet').classList.remove('show');
+
+  if (['docx', 'doc'].includes(ext)) {
+    document.getElementById('helperWord').classList.add('show');
+  } else if (['xlsx', 'xls', 'csv', 'tsv', 'ods'].includes(ext)) {
+    document.getElementById('helperSheet').classList.add('show');
+  }
+});
+
+function clearFile() {
+  document.getElementById('file').value = '';
+  document.getElementById('filePill').classList.remove('show');
+  document.getElementById('uploadZone').classList.remove('has-file');
+  document.getElementById('helperWord').classList.remove('show');
+  document.getElementById('helperSheet').classList.remove('show');
+}
+
+
+/* ══════════════════════════════════════════════
+   ZIP UPLOAD
+══════════════════════════════════════════════ */
+document.getElementById('imagesZip').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  document.getElementById('zipPillName').textContent = file.name;
+  document.getElementById('zipPill').classList.add('show');
+  document.getElementById('zipZone').classList.add('has-file');
+});
+
+function clearZipFile() {
+  document.getElementById('imagesZip').value = '';
+  document.getElementById('zipPill').classList.remove('show');
+  document.getElementById('zipZone').classList.remove('has-file');
+}
+
+
+/* ══════════════════════════════════════════════
+   DRAG AND DROP
+══════════════════════════════════════════════ */
+const uploadZone = document.getElementById('uploadZone');
+
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('drag-over');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('drag-over');
+});
+
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) {
+    const fileInput = document.getElementById('file');
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+});
+
+
+/* ══════════════════════════════════════════════
+   ACCORDION
+══════════════════════════════════════════════ */
+function toggleAcc(btn, bodyId) {
+  const body   = document.getElementById(bodyId);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open',  !isOpen);
+}
+</script>
+
+{% endblock %}

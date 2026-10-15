@@ -1,0 +1,452 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Create Staff{% endblock %}
+
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 760px;
+  padding: 2rem 2.5rem 4rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── FLASH MESSAGES ─── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: .84rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  animation: riseUp .35s ease both;
+}
+.flash.success { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+.flash.error   { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+.flash.warning { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+.flash.info    { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 32px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em {
+  color: var(--champagne);
+  font-style: italic;
+  font-weight: 400;
+}
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 99px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+  animation-delay: .08s;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--rim);
+}
+.icon-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+.panel-hdr h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--white);
+}
+.panel-hdr .panel-sub {
+  font-size: .78rem;
+  color: var(--slate);
+  margin-top: 1px;
+}
+
+/* ─── SECTION DIVIDER ─── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px 0;
+}
+.section-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--rim2);
+}
+.section-divider-label {
+  font-size: .69rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--slate);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-divider-label i { color: var(--champagne); }
+
+/* ─── FORM GRID ─── */
+.form-body { padding: 20px 24px 24px; }
+
+/* Django renders form as <p> tags — style them */
+.form-body p {
+  margin: 0;
+}
+
+/* Two-column grid for p elements */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 20px;
+}
+.form-grid-full {
+  grid-column: span 2;
+}
+
+/* ─── FIELD WRAPPER (wraps each Django <p>) ─── */
+.field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field-wrap label,
+.form-body label {
+  font-size: .73rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .4px !important;
+  color: var(--slate2) !important;
+  display: block !important;
+  margin-bottom: 0 !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+
+/* ─── INPUTS & SELECTS ─── */
+.form-body input[type=text],
+.form-body input[type=email],
+.form-body input[type=password],
+.form-body input[type=number],
+.form-body input[type=tel],
+.form-body input[type=date],
+.form-body input[type=url],
+.form-body select,
+.form-body textarea {
+  width: 100% !important;
+  background: var(--surface2) !important;
+  border: 1px solid var(--rim2) !important;
+  border-radius: 10px !important;
+  color: var(--white) !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: .87rem !important;
+  padding: 10px 13px !important;
+  outline: none !important;
+  transition: border-color .2s, box-shadow .2s !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  display: block !important;
+  margin-top: 6px !important;
+}
+.form-body input::placeholder,
+.form-body textarea::placeholder { color: var(--slate) !important; }
+
+.form-body input:focus,
+.form-body select:focus,
+.form-body textarea:focus {
+  border-color: var(--champagne) !important;
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1) !important;
+}
+.form-body select option { background: var(--surface2); }
+.form-body textarea { resize: vertical; min-height: 90px; }
+
+/* Help text & errors from Django */
+.form-body .helptext,
+.form-body span.helptext {
+  font-size: .72rem !important;
+  color: var(--slate) !important;
+  margin-top: 4px !important;
+  display: block !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+.form-body ul.errorlist {
+  list-style: none !important;
+  padding: 0 !important;
+  margin-top: 5px !important;
+}
+.form-body ul.errorlist li {
+  font-size: .74rem !important;
+  color: var(--red) !important;
+  font-weight: 600 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-family: 'Outfit', sans-serif !important;
+}
+.form-body ul.errorlist li::before {
+  content: '⚠';
+  font-size: .7rem;
+}
+
+/* Checkbox styling (Django boolean fields) */
+.form-body input[type=checkbox] {
+  width: 16px !important;
+  height: 16px !important;
+  accent-color: var(--champagne) !important;
+  cursor: pointer !important;
+  margin-top: 8px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* ─── SUBMIT BUTTON ─── */
+.btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 24px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  font-family: 'Outfit', sans-serif;
+  font-size: .92rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s;
+  letter-spacing: .2px;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(244,210,31,.34);
+}
+.btn-submit:active { transform: translateY(0); }
+
+.form-footer {
+  padding: 0 24px 24px;
+  display: flex;
+  gap: 12px;
+}
+.btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 20px;
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn-cancel:hover { background: var(--surface2); color: var(--white); border-color: var(--rim3); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 600px) {
+  .your-wrap { padding: 1.2rem 1.2rem 3rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid-full { grid-column: span 1; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── FLASH MESSAGES ─── -->
+  {% if messages %}
+  {% for m in messages %}
+  <div class="flash {% if m.tags == 'success' %}success{% elif m.tags == 'error' %}error{% elif m.tags == 'warning' %}warning{% else %}info{% endif %}">
+    <i class="bi bi-{% if m.tags == 'success' %}check-circle-fill{% elif m.tags == 'error' %}x-circle-fill{% elif m.tags == 'warning' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+    {{ m }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>Staff Management &nbsp;·&nbsp; New Record</span>
+      </div>
+      <h1 class="header-title">Create <em>Staff</em> Account</h1>
+    </div>
+    <div class="header-badge">
+      <i class="bi bi-person-plus-fill"></i>
+      New Staff
+    </div>
+  </div>
+
+  <!-- ─── FORM PANEL ─── -->
+  <div class="panel">
+
+    <div class="panel-hdr">
+      <div class="icon-badge" style="background: var(--champagne-dim); color: var(--champagne);">
+        <i class="bi bi-person-vcard-fill"></i>
+      </div>
+      <div>
+        <h3>Staff Details</h3>
+        <div class="panel-sub">Fill in the account information and role assignment below</div>
+      </div>
+    </div>
+
+    <form method="POST" autocomplete="off">
+      {% csrf_token %}
+
+      <!-- Account credentials section -->
+      <div class="section-divider">
+        <div class="section-divider-label">
+          <i class="bi bi-key-fill"></i> Account Credentials
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+          {{ user_form.as_p }}
+        </div>
+      </div>
+
+      <!-- Staff profile section -->
+      <div class="section-divider" style="padding-top:4px;">
+        <div class="section-divider-label">
+          <i class="bi bi-person-badge-fill"></i> Staff Profile
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+          {{ staff_form.as_p }}
+        </div>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="form-footer">
+        <button type="submit" class="btn-submit" style="flex:1;">
+          <i class="bi bi-person-check-fill"></i>
+          Create Staff Account
+        </button>
+        <a href="javascript:history.back()" class="btn-cancel">
+          <i class="bi bi-arrow-left"></i> Cancel
+        </a>
+      </div>
+
+    </form>
+  </div><!-- /panel -->
+
+</div><!-- /your-wrap -->
+{% endblock %}

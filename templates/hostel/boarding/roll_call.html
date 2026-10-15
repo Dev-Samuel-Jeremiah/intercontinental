@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Roll call — {{ h.name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">{{ rc.get_kind_display }} — <em>{{ h.name }}</em></h1>
+  <p class="fin-sub">{{ day|date:"l j F Y" }} · present {{ summary.PRESENT }}, absent {{ summary.ABSENT }}, late {{ summary.LATE }}, exeat {{ summary.EXEAT }}, sick bay {{ summary.SICK }}. Absences at night roll call or lights-out alert the warden and administrators.</p>
+</div>{% include "hostel/boarding/_hostel_pick.html" %}</div>
+{% include "hostel/boarding/_nav.html" %}
+<form method="get" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem"><input type="hidden" name="hostel" value="{{ h.pk }}">
+  <select name="kind" style="max-width:220px">{% for k, l in kinds %}<option value="{{ k }}" {% if k == kind %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" style="max-width:180px"><button class="fin-btn" type="submit">Open</button></form>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="hostel" value="{{ h.pk }}"><input type="hidden" name="kind" value="{{ kind }}"><input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+    <table class="tbl" data-no-export><tbody>
+    {% for m in marks %}<tr><td class="name">{{ m.boarder.student.full_name }}<br><small class="hint">Room {{ m.boarder.bed.room.room_number }} · {{ m.boarder.student.class_assigned.name|default:"" }}</small></td>
+      <td>{% for k, l in statuses %}<label class="pill"><input type="radio" name="s_{{ m.boarder_id }}" value="{{ k }}" {% if m.status == k %}checked{% endif %}> {{ l }}</label>{% endfor %}</td></tr>
+    {% empty %}<tr><td class="empty">No boarders in this hostel.</td></tr>{% endfor %}
+    </tbody></table>
+    <div><label>Note</label><input name="note" value="{{ rc.note }}" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save roll call</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b">{% for r in recent %}<p style="margin:.25rem 0"><a href="?hostel={{ h.pk }}&kind={{ r.kind }}&date={{ r.date|date:'Y-m-d' }}">{{ r.date|date:"D j M" }} — {{ r.get_kind_display }}</a></p>{% empty %}<p class="empty">None yet.</p>{% endfor %}</div></div>
+    <div class="panel"><div class="panel-h"><h3>Late back from exeat (30 days)</h3></div><div class="panel-b">{% for r in late %}<p style="margin:.25rem 0">{{ r.student.full_name }} — {{ r.hours }} h late{% if r.still_out %} <span class="chip red">still out</span>{% endif %}</p>{% empty %}<p class="empty">Everyone returned on time.</p>{% endfor %}</div></div>
+  </div>
+</div>
+{% endblock %}

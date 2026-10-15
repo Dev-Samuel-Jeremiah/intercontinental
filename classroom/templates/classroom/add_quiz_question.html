@@ -1,0 +1,121 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add Question | {{ quiz.title }}{% endblock %}
+{% block extra_css %}
+<style>
+        #content{font-family: 'Inter', sans-serif;}
+
+        /* ---------- Container ---------- */
+        .question-container {
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 30px 25px;
+            background:rgba(255,255,255,.03);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .question-container:hover {
+            transform: translateY(-3px) scale(1.01);
+        }
+
+        /* ---------- Heading ---------- */
+        .question-container h1 {
+            color:var(--blue);
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ---------- Form Labels ---------- */
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            color:var(--blue);
+            font-weight: 600;
+        }
+
+        /* ---------- Inputs ---------- */
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border:1px solid var(--rim2);
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline:none;
+            border-color:#2563eb;
+            box-shadow: 0 0 10px rgba(37,99,235,0.3);
+        }
+
+        /* ---------- Buttons ---------- */
+        .add-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background:linear-gradient(135deg, #2563eb, #1e40af);
+            color:#fff;
+            font-weight: 600;
+            border:none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background:linear-gradient(135deg, #1e40af, #1e3a8a);
+        }
+
+        /* ---------- Messages ---------- */
+        .messages p {
+            padding: 12px 15px;
+            background:var(--green-dim);
+            color:var(--green);
+            border-left:5px solid #10b981;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* ---------- Responsive ---------- */
+        @media(max-width:768px){
+            .question-container {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+{% endblock %}
+{% block content %}
+
+<div class="question-container">
+    <h1>Add Question to Quiz: {{ quiz.title }}</h1>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+
+        <button type="submit" class="add-btn">Add Question</button>
+    </form>
+</div>
+{% endblock %}

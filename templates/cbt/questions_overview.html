@@ -1,0 +1,966 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Questions Bank{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════════ */
+.qov-wrap {
+  max-width: 1600px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+}
+.eyebrow span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 6px;
+  letter-spacing: -.02em;
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+.page-subtitle  { font-size: 0.85rem; color: var(--slate2); margin: 0; }
+
+.ph-actions { display: flex; gap: 10px; flex-wrap: wrap; align-self: flex-start; margin-top: 14px; }
+
+.page-divider {
+  height: 1px;
+  background: var(--rim2);
+  margin-bottom: 2rem;
+  position: relative;
+}
+.page-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BULK BAR
+═══════════════════════════════════════════════════════════════ */
+.bulk-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 14px;
+  margin-bottom: 20px;
+  animation: slideIn .3s ease;
+}
+.bulk-bar.show { display: flex; }
+.bulk-bar-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--amber);
+}
+.bulk-bar-info i { font-size: 1.2rem; }
+.bulk-bar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media(max-width:1100px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:600px)  { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 18px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+  animation: riseUp .45s ease both;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.stat-card:hover {
+  border-color: var(--rim3);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0,0,0,.3);
+}
+.stat-card:nth-child(1){animation-delay:.04s;}
+.stat-card:nth-child(2){animation-delay:.08s;}
+.stat-card:nth-child(3){animation-delay:.12s;}
+.stat-card:nth-child(4){animation-delay:.16s;}
+.stat-card:nth-child(5){animation-delay:.20s;}
+.stat-card:nth-child(6){animation-delay:.24s;}
+
+.sc-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+.stat-card h3 {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 0 0 4px;
+}
+.stat-card p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  margin: 0;
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL BASE
+═══════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+  margin-bottom: 20px;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.panel-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panel-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.panel-head h2 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.panel-body { padding: 20px 22px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTER
+═══════════════════════════════════════════════════════════════ */
+.filter-panel { animation-delay: .28s; }
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+.fg label {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: 7px;
+}
+.fg select,
+.fg input[type="text"] {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.86rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.fg select:focus, .fg input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.fg select.active {
+  border-color: var(--champagne-bdr);
+  background: rgba(244,210,31,.05);
+}
+.fg select option { background: var(--surface2); }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-primary:hover { box-shadow: 0 6px 26px rgba(244,210,31,.38); transform: translateY(-1px); filter: brightness(1.08); }
+
+.btn-success  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.btn-success:hover  { background: rgba(74,222,128,.18); transform: translateY(-1px); }
+.btn-danger   { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border); }
+.btn-danger:hover   { background: rgba(248,113,113,.18); transform: translateY(-1px); }
+.btn-warning  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.btn-warning:hover  { background: rgba(251,191,36,.18); transform: translateY(-1px); }
+.btn-secondary{ background: var(--rim);        color: var(--slate2); border: 1px solid var(--rim2); }
+.btn-secondary:hover{ background: var(--rim2); color: var(--white); }
+.btn-ghost    { background: transparent;       color: var(--slate2); border: 1px solid var(--rim2); }
+.btn-ghost:hover    { background: var(--rim);  color: var(--white);  border-color: var(--rim3); }
+.btn-sm { padding: 6px 12px; font-size: 0.76rem; border-radius: 8px; }
+.btn-lg { padding: 12px 26px; font-size: 0.93rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════════════ */
+.table-panel { animation-delay: .33s; }
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table { width: 100%; border-collapse: collapse; }
+table thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 11px 13px;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate);
+  white-space: nowrap;
+  border: none;
+}
+table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+}
+table tbody tr:last-child { border-bottom: none; }
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table tbody tr.selected {
+  background: var(--amber-dim);
+  border-left: 3px solid var(--amber);
+}
+table td {
+  padding: 12px 13px;
+  font-size: 0.84rem;
+  color: var(--slate2);
+  text-align: center;
+  vertical-align: middle;
+  border: none;
+}
+table td strong { color: var(--white); font-weight: 600; }
+
+input[type="checkbox"] {
+  width: 15px; height: 15px;
+  cursor: pointer;
+  accent-color: var(--champagne);
+}
+#selectAll { accent-color: var(--champagne); }
+
+/* ═══════════════════════════════════════════════════════════════
+   QUESTION TEXT CELL
+═══════════════════════════════════════════════════════════════ */
+.question-text {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  cursor: help;
+  color: var(--white);
+  font-weight: 500;
+}
+.question-text:hover { white-space: normal; }
+
+.indicator-badges {
+  margin-top: 5px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.ind-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+.ind-badge.passage {
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  color: var(--amber);
+}
+.ind-badge.image {
+  background: var(--purple-dim);
+  border: 1px solid var(--purple-border);
+  color: var(--purple);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+}
+.badge-mcq  { background: var(--green-dim);    border: 1px solid var(--green-border);  color: var(--green); }
+.badge-tf   { background: var(--amber-dim);    border: 1px solid var(--amber-border);  color: var(--amber); }
+.badge-sa   { background: var(--teal-dim);     border: 1px solid var(--teal-border);   color: var(--teal); }
+.badge-sub  { background: var(--blue-dim);     border: 1px solid var(--blue-border);   color: var(--blue); }
+.badge-gray { background: var(--rim);          border: 1px solid var(--rim2);          color: var(--slate2); }
+.badge-champ{ background: var(--champagne-dim);border: 1px solid var(--champagne-bdr); color: var(--champagne-lt); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTION BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.action-buttons { display: flex; gap: 5px; justify-content: center; flex-wrap: nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  text-align: center;
+}
+.empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: var(--slate);
+  margin-bottom: 16px;
+}
+.empty-state h3 { font-size: 0.95rem; font-weight: 600; color: var(--slate2); margin: 0 0 6px; }
+.empty-state p  { font-size: 0.82rem; color: var(--slate);  margin: 0 0 18px; }
+.empty-actions  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   DATATABLES OVERRIDES
+═══════════════════════════════════════════════════════════════ */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  padding: 12px 18px;
+  color: var(--slate2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  background: var(--surface2);
+  border-top: 1px solid var(--rim);
+}
+.dataTables_wrapper .dataTables_filter input {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 6px 10px;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  margin-left: 6px;
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 2px rgba(244,210,31,.1);
+}
+.dataTables_wrapper .dataTables_length select {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 4px 8px;
+  font-family: 'Outfit', sans-serif;
+  margin: 0 6px;
+  outline: none;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 6px 12px !important;
+  margin: 0 2px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--rim2) !important;
+  background: var(--surface3) !important;
+  color: var(--slate2) !important;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00) !important;
+  color: #0a1f44 !important;
+  border-color: var(--champagne-bdr) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00) !important;
+  color: #0a1f44 !important;
+  border-color: var(--champagne-bdr) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled { opacity: 0.3 !important; cursor: not-allowed !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════ */
+@media(max-width:768px) {
+  .qov-wrap { padding: 1rem 1rem 3rem; }
+  .ph-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .bulk-bar { flex-direction: column; align-items: stretch; }
+  .bulk-bar-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  table thead { display: none !important; }
+  table, table tbody, table tr, table td { display: block !important; width: 100% !important; box-sizing: border-box; }
+  table tbody tr {
+    margin: 0 0 12px !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    background: var(--surface2) !important;
+    border: 1px solid var(--rim2) !important;
+    position: relative;
+  }
+  table tbody tr.selected { border-color: var(--amber-border) !important; background: var(--amber-dim) !important; }
+  table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--rim) !important;
+    font-size: 0.82rem;
+    gap: 8px;
+    min-height: 32px;
+    text-align: right;
+  }
+  table tbody td:last-child { border-bottom: none !important; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex: 0 0 36%;
+    text-align: left;
+    padding-top: 2px;
+    white-space: nowrap;
+    letter-spacing: .04em;
+  }
+  table tbody td[data-label="Select"] {
+    position: absolute !important;
+    top: 12px; right: 14px;
+    width: auto !important;
+    min-height: auto !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+  }
+  table tbody td[data-label="Select"]::before,
+  table tbody td[data-label="#"]::before { display: none !important; }
+  table tbody td[data-label="#"] { display: none !important; }
+  .question-text { max-width: 60%; white-space: normal !important; overflow: visible !important; text-overflow: unset !important; text-align: right; word-break: break-word; flex: 1; }
+  .action-buttons { flex-direction: row; width: 100%; gap: 6px; justify-content: flex-end; }
+  .action-buttons .btn { flex: 1; justify-content: center; }
+}
+@media(max-width:480px) {
+  .stats-grid { grid-template-columns: repeat(2,1fr); gap: 8px; }
+  .ph-actions { grid-template-columns: 1fr; }
+  .bulk-bar-btns { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="qov-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow"><span>CBT Module · Question Management</span></div>
+      <h1 class="page-title">Questions <em>Bank</em></h1>
+      <p class="page-subtitle">Manage and review all examination questions</p>
+    </div>
+    <div class="ph-actions">
+      <a href="{% url 'cbt:cbt_add_question' %}" class="btn btn-success btn-lg">
+        <i class="bi bi-plus-circle"></i> Add Question
+      </a>
+      <a href="{% url 'cbt:bulk_question_upload' %}" class="btn btn-primary btn-lg">
+        <i class="bi bi-cloud-upload"></i> Bulk Upload
+      </a>
+    </div>
+  </div>
+  <div class="page-divider"></div>
+
+  <!-- ══ BULK BAR ═══════════════════════════════════════════════ -->
+  <div class="bulk-bar" id="bulkBar">
+    <div class="bulk-bar-info">
+      <i class="bi bi-check2-square"></i>
+      <span><span id="selectedCount">0</span> question(s) selected</span>
+    </div>
+    <div class="bulk-bar-btns">
+      <button class="btn btn-danger" id="deleteBtn" onclick="bulkDelete(this)">
+        <i class="bi bi-trash3"></i> Delete Selected
+      </button>
+      <button class="btn btn-secondary" onclick="clearSelection()">
+        <i class="bi bi-x-lg"></i> Clear Selection
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ STAT CARDS ════════════════════════════════════════════ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+        <i class="bi bi-list-ul" style="color:var(--champagne);"></i>
+      </div>
+      <h3>Total Questions</h3>
+      <p>{{ stats.total }}</p>
+    </div>
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+        <i class="bi bi-check-circle" style="color:var(--green);"></i>
+      </div>
+      <h3>Multiple Choice</h3>
+      <p>{{ stats.mcq }}</p>
+    </div>
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+        <i class="bi bi-toggles" style="color:var(--amber);"></i>
+      </div>
+      <h3>True / False</h3>
+      <p>{{ stats.tf }}</p>
+    </div>
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--teal-dim);border:1px solid var(--teal-border);">
+        <i class="bi bi-pencil" style="color:var(--teal);"></i>
+      </div>
+      <h3>Short Answer</h3>
+      <p>{{ stats.sa }}</p>
+    </div>
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+        <i class="bi bi-book" style="color:var(--blue);"></i>
+      </div>
+      <h3>With Passages</h3>
+      <p>{{ stats.with_passage }}</p>
+    </div>
+    <div class="stat-card">
+      <div class="sc-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+        <i class="bi bi-image" style="color:var(--purple);"></i>
+      </div>
+      <h3>With Images</h3>
+      <p>{{ stats.with_image }}</p>
+    </div>
+  </div>
+
+  <!-- ══ FILTER PANEL ══════════════════════════════════════════ -->
+  <div class="panel filter-panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+          <i class="bi bi-funnel" style="color:var(--blue);font-size:.8rem;"></i>
+        </div>
+        <h2>Filter Questions</h2>
+      </div>
+      {% if selected_exam or selected_subject or selected_class %}
+      <a href="{% url 'cbt:questions_overview' %}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-x-lg"></i> Clear Filters
+      </a>
+      {% endif %}
+    </div>
+    <div class="panel-body">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+          <div class="fg">
+            <label>Exam</label>
+            <select name="exam" class="{% if selected_exam %}active{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Exams —</option>
+              {% for exam in all_exams %}
+              <option value="{{ exam.id }}" {% if exam.id|stringformat:"s" == selected_exam %}selected{% endif %}>
+                {{ exam.title }} | {{ exam.subject.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label>Subject</label>
+            <select name="subject" class="{% if selected_subject %}active{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Subjects —</option>
+              {% for subject in all_subjects %}
+              <option value="{{ subject.id }}" {% if subject.id|stringformat:"s" == selected_subject %}selected{% endif %}>
+                {{ subject.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label>Class</label>
+            <select name="class_id" class="{% if selected_class %}active{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Classes —</option>
+              {% for cls in all_classes %}
+              <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class %}selected{% endif %}>
+                {{ cls.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fg" style="display:flex;align-items:flex-end;">
+            <a href="{% url 'cbt:questions_overview' %}" class="btn btn-ghost" style="width:100%;">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset Filters
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ TABLE PANEL ═══════════════════════════════════════════ -->
+  <div class="panel table-panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+          <i class="bi bi-table" style="color:var(--champagne);font-size:.8rem;"></i>
+        </div>
+        <h2>Questions List</h2>
+      </div>
+      <span class="badge badge-gray">{{ stats.total }} Question{{ stats.total|pluralize }}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table id="questionsTable">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>#</th>
+            <th>Exam</th>
+            <th>Subject</th>
+            <th>Question</th>
+            <th>Type</th>
+            <th>Marks</th>
+            <th>Options</th>
+            <th>Correct Answer</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in questions %}
+          <tr>
+            <td data-label="Select">
+              <input type="checkbox" class="select-checkbox" value="{{ q.id }}">
+            </td>
+            <td data-label="#">{{ forloop.counter }}</td>
+            <td data-label="Exam" style="color:var(--slate2);font-size:.82rem;">{{ q.exam }}</td>
+            <td data-label="Subject">
+              <span class="badge badge-sub">{{ q.subject }}</span>
+            </td>
+            <td data-label="Question">
+              <div class="question-text" title="{{ q.question_text|striptags }}">
+                {{ q.question_text|safe|truncatewords:15 }}
+                {% if q.has_passage or q.has_image %}
+                <div class="indicator-badges">
+                  {% if q.has_passage %}
+                  <span class="ind-badge passage">
+                    <i class="bi bi-book"></i> Passage{% if q.passage_group %} ({{ q.passage_group }}){% endif %}
+                  </span>
+                  {% endif %}
+                  {% if q.has_image %}
+                  <span class="ind-badge image">
+                    <i class="bi bi-image"></i> Image
+                  </span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </td>
+            <td data-label="Type">
+              {% if q.question_type == 'MCQ' %}
+                <span class="badge badge-mcq">MCQ</span>
+              {% elif q.question_type == 'TF' %}
+                <span class="badge badge-tf">True / False</span>
+              {% elif q.question_type == 'SA' %}
+                <span class="badge badge-sa">Short Answer</span>
+              {% else %}
+                <span class="badge badge-gray">{{ q.question_type }}</span>
+              {% endif %}
+            </td>
+            <td data-label="Marks">
+              <strong style="color:var(--champagne-lt);font-family:'Cormorant Garamond',serif;font-size:1.1rem;">{{ q.marks }}</strong>
+            </td>
+            <td data-label="Options">
+              <span style="color:var(--slate2);">{{ q.num_options }}</span>
+            </td>
+            <td data-label="Correct Answer">
+              {% if q.correct_option %}
+                <span class="badge badge-mcq" title="{{ q.correct_option }}">{{ q.correct_option|truncatewords:5 }}</span>
+              {% else %}
+                <span style="color:var(--slate);font-size:.76rem;">N/A</span>
+              {% endif %}
+            </td>
+            <td data-label="Actions">
+              <div class="action-buttons">
+                <a href="{% url 'cbt:cbt_edit_question' q.id %}" class="btn btn-warning btn-sm" title="Edit">
+                  <i class="bi bi-pencil"></i> Edit
+                </a>
+                <a href="{% url 'cbt:cbt_delete_question' q.id %}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Delete this question?');" title="Delete">
+                  <i class="bi bi-trash3"></i> Delete
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" style="padding:0;">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <h3>No Questions Found</h3>
+                <p>
+                  {% if selected_exam or selected_subject or selected_class %}
+                    Try adjusting your filters to see more results.
+                  {% else %}
+                    Start by adding your first question or uploading in bulk.
+                  {% endif %}
+                </p>
+                <div class="empty-actions">
+                  <a href="{% url 'cbt:cbt_add_question' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Add Question
+                  </a>
+                  <a href="{% url 'cbt:bulk_question_upload' %}" class="btn btn-success btn-sm">
+                    <i class="bi bi-cloud-upload"></i> Bulk Upload
+                  </a>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /.qov-wrap -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+const CSRF_TOKEN = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+$(document).ready(function () {
+  const isMobile = window.innerWidth <= 768;
+
+  $('#questionsTable').DataTable({
+    paging: true,
+    searching: true,
+    ordering: !isMobile,
+    order: isMobile ? [] : [[2, 'asc']],
+    lengthMenu: [10, 25, 50, 100],
+    pageLength: isMobile ? 10 : 25,
+    scrollX: false,
+    autoWidth: false,
+    dom: isMobile ? '<"dt-top"fl>rt<"dt-bot"ip>' : 'lfrtip',
+    columnDefs: [{ orderable: false, targets: [0, 9] }],
+    language: {
+      search: 'Search:',
+      searchPlaceholder: 'Filter questions…',
+      lengthMenu: 'Show _MENU_ per page',
+      info: '_START_–_END_ of _TOTAL_',
+      infoEmpty: 'No questions',
+      infoFiltered: '(from _MAX_)',
+      paginate: { previous: '‹', next: '›' }
+    }
+  });
+
+  // Select All
+  $('#selectAll').on('change', function () {
+    $('.select-checkbox').prop('checked', this.checked);
+    updateBar();
+    $('tbody tr').toggleClass('selected', this.checked);
+  });
+
+  // Individual checkbox
+  $(document).on('change', '.select-checkbox', function () {
+    const total   = $('.select-checkbox').length;
+    const checked = $('.select-checkbox:checked').length;
+    $('#selectAll').prop({
+      checked: checked === total && total > 0,
+      indeterminate: checked > 0 && checked < total
+    });
+    updateBar();
+    $(this).closest('tr').toggleClass('selected', this.checked);
+  });
+});
+
+function updateBar() {
+  const n = $('.select-checkbox:checked').length;
+  $('#selectedCount').text(n);
+  n > 0 ? $('#bulkBar').addClass('show') : $('#bulkBar').removeClass('show');
+}
+
+function clearSelection() {
+  $('.select-checkbox, #selectAll').prop('checked', false);
+  $('tbody tr').removeClass('selected');
+  updateBar();
+}
+
+function bulkDelete(btn) {
+  const ids = [];
+  $('.select-checkbox:checked').each(function () { ids.push(this.value); });
+  if (!ids.length) { alert('Please select at least one question to delete.'); return; }
+  if (!confirm(`Permanently delete ${ids.length} question(s)? This cannot be undone.`)) return;
+
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting…';
+
+  fetch('{% url "cbt:bulk_delete_questions" %}', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+    body: JSON.stringify({ question_ids: ids })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert(data.message);
+        window.location.reload();
+      } else {
+        alert('Error: ' + data.message);
+        btn.disabled = false;
+        btn.innerHTML = orig;
+      }
+    })
+    .catch(() => {
+      alert('Network error — please try again.');
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    });
+}
+</script>
+{% endblock %}

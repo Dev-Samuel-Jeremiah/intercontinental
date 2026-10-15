@@ -1,0 +1,49 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Applicant ranking{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">Applicant <em>ranking</em></h1>
+    <p class="adm-sub">Highest total score first. Use it to decide who gets an offer.
+      {% if school_class and seats_left is not None %}<span class="chip {% if seats_left %}green{% else %}red{% endif %}">{{ seats_left }} seat{{ seats_left|pluralize }} left in {{ school_class.name }}</span>{% endif %}
+    </p>
+  </div>
+  <div class="adm-actions">
+    <a class="adm-btn" href="{% url 'admissions:waitlist' %}"><i class="bi bi-hourglass-split"></i> Waitlist</a>
+    <a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-kanban"></i> Pipeline</a>
+  </div>
+</div>
+
+<form method="get" class="adm-filters">
+  <div><label style="font-size:.7rem;color:var(--slate);display:block;margin-bottom:.3rem">Class</label>
+    <select name="class_id" onchange="this.form.submit()">
+      <option value="">All classes</option>
+      {% for c in classes %}<option value="{{ c.id }}" {% if class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select></div>
+</form>
+
+<div class="panel">
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead><tr><th>#</th><th>Applicant</th><th>Class</th><th>Exam</th><th>Interview</th><th>Total</th><th>Stage</th></tr></thead>
+      <tbody>
+        {% for a in ranked %}
+        <tr>
+          <td style="color:var(--champagne-lt);font-weight:700">{{ a.rank }}</td>
+          <td><a href="{% url 'admissions:detail' a.pk %}">{{ a.full_name }}</a><br><small style="color:var(--slate)">{{ a.reference }}</small></td>
+          <td>{{ a.applying_for.name|default:"—" }}</td>
+          <td>{{ a.exam_score|default:"—" }}</td>
+          <td>{{ a.interview_score|default:"—" }}</td>
+          <td style="color:var(--white);font-weight:600">{{ a.total_score|default:"—" }}</td>
+          <td><span class="chip gold">{{ a.get_status_display }}</span></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty"><i class="bi bi-list-ol"></i>No applicants to rank yet. Scores appear here once you record them.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

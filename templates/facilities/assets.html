@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Asset register{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Assets</div>
+  <h1 class="fin-title"><em>Asset register</em></h1>
+  <p class="fin-sub">Every tagged item — furniture, computers, lab equipment, generators — with where it is, who has it and what it is worth today. Print QR tags; anyone on the staff can scan one to see its history or report a fault.</p>
+</div><div class="no-print"><a class="fin-btn fin-btn-sm" href="{% url 'facilities:tag_labels' %}{% if request.GET.space %}?space={{ request.GET.space }}{% endif %}" target="_blank"><i class="bi bi-qr-code"></i> Print tags{% if not request.GET.space %} (added today){% endif %}</a></div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Items</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Cost</small><b>₦{{ totals.cost|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Book value now</small><b>₦{{ totals.value|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Depreciation</small><b>₦{{ totals.depreciation|floatformat:0 }}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    <form method="get" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem">
+      <input name="q" value="{{ q }}" placeholder="Name, tag or serial" style="flex:2;min-width:140px">
+      <select name="space" style="flex:1"><option value="">All rooms</option>{% for s in spaces %}<option value="{{ s.pk }}" {% if s.pk|stringformat:"s" == request.GET.space %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+      <select name="show" style="flex:1"><option value="">All in use</option><option value="ict" {% if show == 'ict' %}selected{% endif %}>ICT equipment</option><option value="disposed" {% if show == 'disposed' %}selected{% endif %}>Disposed</option></select>
+      <button class="fin-btn" type="submit">Filter</button></form>
+    <table class="tbl"><thead><tr><th>Tag</th><th>Item</th><th>Where</th><th class="num">Cost</th><th class="num">Value</th></tr></thead><tbody>
+    {% for t in rows %}<tr><td><a href="{% url 'facilities:asset' t.pk %}">{{ t.code }}</a></td><td class="name">{{ t.name }}<br><small class="hint">{{ t.category }}{% if t.serial_number %} · S/N {{ t.serial_number }}{% endif %}{% if t.is_ict %} · {{ t.cpu }} {{ t.ram }} {{ t.storage }}{% endif %}</small></td><td>{{ t.space|default:"—" }}{% if t.custodian %}<br><small class="hint">{{ t.custodian.get_full_name|default:t.custodian.username }}</small>{% endif %}{% if t.status != 'USE' %} <span class="chip">{{ t.get_status_display }}</span>{% endif %}</td><td class="num">{{ t.cost|floatformat:0 }}</td><td class="num">{{ t.value|floatformat:0 }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No tagged assets.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Tag assets</h3>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="160" placeholder="e.g. HP ProDesk 400"></div><div><label>Category</label><input name="category" maxlength="60" placeholder="ICT, Furniture…"></div></div>
+    <div class="row2"><div><label>How many identical items</label><input name="count" value="1" inputmode="numeric"></div><div><label>Tag code (one item)</label><input name="code" maxlength="30" placeholder="{{ next_code }}"></div></div>
+    <div class="row2"><div><label>Room</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div><div><label>Stock item</label><select name="item"><option value="">—</option>{% for it in items %}<option value="{{ it.pk }}">{{ it.name }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Serial number</label><input name="serial_number" maxlength="80"></div><div><label>Vendor</label><select name="vendor"><option value="">—</option>{% for v in vendors %}<option value="{{ v.pk }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Bought on</label><input type="date" name="purchase_date"></div><div><label>Cost each ₦</label><input name="cost" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Useful life (years)</label><input name="life_years" value="5" inputmode="numeric"></div><div><label>Scrap value ₦</label><input name="salvage_value" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Depreciation</label><select name="method"><option value="STRAIGHT">Straight line</option><option value="REDUCING">Reducing balance</option></select></div><div><label>Rate % (reducing)</label><input name="reducing_rate" value="25" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Warranty until</label><input type="date" name="warranty_until"></div><div><label>Condition</label><select name="condition">{% for k, v in conditions %}<option value="{{ k }}" {% if k == 'GOOD' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+    <label class="pill"><input type="checkbox" name="is_ict" onchange="document.getElementById('ict').style.display=this.checked?'block':'none'"> Computer / ICT equipment</label>
+    <div id="ict" style="display:none"><div class="row2"><div><label>Processor</label><input name="cpu" maxlength="80"></div><div><label>RAM</label><input name="ram" maxlength="30"></div></div>
+      <div class="row2"><div><label>Storage</label><input name="storage" maxlength="30"></div><div><label>Operating system</label><input name="os" maxlength="60"></div></div>
+      <div><label>MAC address</label><input name="mac_address" maxlength="17"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Tag</button>
+  </form>
+</div>
+{% endblock %}

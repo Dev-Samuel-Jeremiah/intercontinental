@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Ask about school records{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">Ask about your <em>school</em></h1>
+  <p class="fin-sub">Type a question in plain English. The AI picks the right report and its settings; the numbers come straight from your records, not from the AI.</p>
+</div></div>
+<form method="post" class="panel" style="padding:1.1rem;display:flex;gap:.6rem;flex-wrap:wrap">{% csrf_token %}
+  <input name="question" value="{{ question }}" maxlength="500" required placeholder="How many JSS2 students owe more than ₦50,000?" style="flex:1 1 320px;padding:.75rem .9rem;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-stars"></i> Ask</button>
+</form>
+{% if error %}<div class="note"><i class="bi bi-info-circle"></i><span>{{ error }}</span></div>{% endif %}
+{% if report %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-table"></i> {{ report.title }}</h3>{% if report.summary %}<span class="chip gold">{{ report.summary }}</span>{% endif %}</div>
+  {% if report.rows %}<div style="overflow-x:auto"><table class="tbl"><thead><tr>{% for c in report.columns %}<th>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in report.rows %}<tr>{% for v in r %}<td{% if forloop.first %} class="name"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}
+  </tbody></table></div>{% if report.total_rows > report.rows|length %}<p class="hint" style="padding:0 1.2rem">Showing the first {{ report.rows|length }} of {{ report.total_rows }}.</p>{% endif %}
+  {% else %}<div class="empty"><i class="bi bi-check2-circle"></i><p>Nobody matches.</p></div>{% endif %}
+</div>
+{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-lightbulb"></i> Try asking</h3></div><div class="panel-b">
+    {% for e in examples %}<a href="?q={{ e|urlencode }}" class="chip" style="margin:0 .3rem .4rem 0;text-decoration:none">{{ e }}</a>{% endfor %}
+    <p class="hint">Reports available: fees owed (bursary and admins), number of students, absences on a day, low attendance, best and weakest students, staff list, birthdays.</p>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Your recent questions</h3></div><div class="panel-b">
+    {% for q in recent %}<div style="padding:.3rem 0"><a href="?q={{ q.question|urlencode }}" style="color:inherit">{{ q.question }}</a> <span class="hint">{{ q.rows }} row{{ q.rows|pluralize }}</span></div>{% empty %}<p class="hint" style="margin:0">None yet.</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

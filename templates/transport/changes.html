@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Pickup changes{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Pickup changes</em></h1>
+  <p class="fin-sub">Parents ask on their portal. Approving moves the child to the chosen stop and emails the parent.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Waiting ({{ pending|length }})</h3></div><div class="panel-b">
+    {% for pc in pending %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{{ pc.student.full_name }}</b> — from {{ pc.from_date|date:"D j M" }}
+      <div class="hint">Now: {{ pc.rider.route.name|default:"no route" }}, {{ pc.rider.stop.name|default:"no stop" }} · Wants: {% if pc.new_stop %}{{ pc.new_stop.name }}{% else %}{{ pc.new_address }}{% endif %} · {{ pc.reason }}</div>
+      <form method="post" class="fin-form" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ pc.pk }}">
+        <select name="stop" style="width:auto">{% for s in pc.options %}<option value="{{ s.pk }}" {% if s.pk == pc.new_stop_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+        <input name="note" placeholder="Note to parent" style="flex:1;min-width:140px">
+        <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button>
+        <button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form></div>
+    {% empty %}<p class="empty">Nothing waiting.</p>{% endfor %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3>Decided</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for pc in done %}<tr><td class="name">{{ pc.student.full_name }}<br><small class="hint">{{ pc.from_date|date:"j M" }}{% if pc.note %} · {{ pc.note }}{% endif %}</small></td><td><span class="chip{% if pc.status == 'APPROVED' %} ok{% else %} red{% endif %}">{{ pc.get_status_display }}</span></td></tr>
+    {% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

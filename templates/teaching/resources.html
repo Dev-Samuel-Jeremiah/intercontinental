@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Resource library{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Resource <em>library</em></h1>
+  <p class="fin-sub">Worksheets, slides, notes, past questions and good websites, shared between teachers.</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+<form method="get" class="fin-form" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
+  <input name="q" value="{{ q }}" placeholder="Search" style="flex:2;min-width:160px">
+  <select name="subject" style="flex:1;min-width:130px"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.pk }}" {% if subject and s.pk == subject.pk %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+  <select name="level" style="flex:1;min-width:110px"><option value="">All levels</option>{% for lv in levels %}<option {% if lv == level %}selected{% endif %}>{{ lv }}</option>{% endfor %}</select>
+  <select name="kind" style="flex:1;min-width:120px"><option value="">All kinds</option>{% for k, l in kinds %}<option value="{{ k }}" {% if k == kind %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <label class="pill"><input type="checkbox" name="saved" value="1" {% if request.GET.saved %}checked{% endif %}> Saved</label>
+  <button class="fin-btn" type="submit">Find</button>
+</form>
+<div class="fin-grid">
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a resource</h3>
+    <div><label>Title</label><input name="title" required maxlength="160"></div>
+    <div class="row2"><div><label>Subject</label><select name="subject"><option value="">—</option>{% for s in subjects %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}</select></div><div><label>Level</label><input name="level" maxlength="40" placeholder="JSS 1"></div></div>
+    <div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+    <div><label>File <span class="hint">PDF or image, up to 10 MB</span></label><input type="file" name="file"></div>
+    <div><label>Or a link</label><input name="link" placeholder="https://"></div>
+    <div><label>Description</label><textarea name="description" rows="2"></textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="shared" value="1" checked style="width:auto"> Share with other teachers</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+  <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for r in items %}<tr><td class="name">{{ r.title }}<br><small class="hint">{{ r.get_kind_display }}{% if r.subject %} · {{ r.subject.name }}{% endif %}{% if r.level %} · {{ r.level }}{% endif %} · {{ r.uploaded_by.full_name|default:"" }} · {{ r.downloads }} download{{ r.downloads|pluralize }}</small>{% if r.description %}<br><small>{{ r.description|truncatewords:20 }}</small>{% endif %}</td>
+      <td style="white-space:nowrap">{% if r.file %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:resource_file' r.pk %}" target="_blank">Open</a>{% endif %}{% if r.link %}<a class="fin-btn fin-btn-sm" href="{{ r.link }}" target="_blank" rel="noopener">Link</a>{% endif %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="save"><input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if r.pk in saved %}★{% else %}☆{% endif %}</button></form></td></tr>
+    {% empty %}<tr><td class="empty">Nothing found.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

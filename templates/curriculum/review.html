@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Review lesson notes{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Head of department</div>
+  <h1 class="fin-title">Lesson notes to <em>review</em></h1>
+  <p class="fin-sub">Approve each note, or send it back with what needs changing.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-inbox"></i> Waiting ({{ waiting|length }})</h3></div>
+{% if waiting %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Teacher</th><th>Lesson</th><th>Class</th><th>Sent</th><th></th></tr></thead><tbody>
+  {% for n in waiting %}<tr><td class="name">{{ n.teacher.full_name }}</td><td>{{ n.title }}<div class="hint">{{ n.subject.name }} · week {{ n.week }}</div></td><td>{{ n.school_class.name }}</td>
+    <td>{{ n.submitted_at|timesince }} ago</td><td><a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'curriculum:note' n.id %}">Review</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty"><i class="bi bi-check2-all"></i><p>Nothing waiting.</p></div>{% endif %}</div>
+{% if recent %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recently reviewed by you</h3></div><table class="tbl"><tbody>
+  {% for n in recent %}<tr><td class="name">{{ n.teacher.full_name }}</td><td>{{ n.title }}</td><td>{{ n.school_class.name }}</td><td>{% include "curriculum/_status.html" %}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:note' n.id %}">Open</a></td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Attendance — {{ live.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Live class attendance</div>
+  <h1 class="fin-title">{{ live.title }}</h1>
+  <p class="fin-sub">{{ live.course.name }} · {{ live.starts_at|date:"D j M, H:i" }} · {{ present }} of {{ rows|length }} joined.</p>
+</div><div style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button><a class="fin-btn fin-btn-sm" href="{% url 'classroom:course_hub' live.course_id %}"><i class="bi bi-arrow-left"></i> Back</a></div></div>
+<div class="panel"><table class="tbl"><thead><tr><th>Student</th><th>Status</th><th>First joined</th><th>Times joined</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.student.full_name }}<div class="hint">{{ r.student.admission_number }}</div></td>
+    <td>{% if r.att %}<span class="chip green">joined</span>{% else %}<span class="chip red">absent</span>{% endif %}</td>
+    <td>{{ r.att.first_joined|date:"H:i"|default:"—" }}</td><td>{{ r.att.joins|default:"" }}</td></tr>
+  {% empty %}<tr><td colspan="4"><div class="empty"><p>No students in this course.</p></div></td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

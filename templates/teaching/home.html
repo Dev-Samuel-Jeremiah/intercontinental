@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Marking queue{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">My <em>queue</em></h1>
+  <p class="fin-sub">Everything waiting for you in one place — {{ q.total }} item{{ q.total|pluralize }}.</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+{% if handovers %}<div class="panel" style="margin-bottom:1rem"><div class="panel-b"><i class="bi bi-arrow-left-right"></i> {% for h in handovers %}<a href="{% url 'teaching:handover' h.pk %}">Handover from {{ h.from_staff.full_name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %} waiting for you to read.</div></div>{% endif %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-file-earmark-check"></i> Assignments to mark</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for a in q.assignments %}<tr><td class="name">{{ a.assignment.title }}</td><td>{{ a.subs|length }} submission{{ a.subs|length|pluralize }}</td><td><small class="hint">oldest {{ a.oldest|timesince }} ago</small></td><td><a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'classroom:grade_assignment' a.assignment.pk %}">Mark</a></td></tr>{% empty %}<tr><td class="empty">Nothing to mark.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-check"></i> Lesson notes to review</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for n in q.notes %}<tr><td class="name">{{ n.title }}</td><td>{{ n.teacher.full_name }}</td><td>{{ n.school_class.name }} {{ n.subject.name }}</td></tr>{% empty %}<tr><td class="empty">None waiting.</td></tr>{% endfor %}</tbody></table>
+      {% if q.notes %}<a class="fin-btn fin-btn-sm" href="{% url 'curriculum:review' %}">Review notes</a>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-bookmark"></i> Gradebook marks missing</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for b in q.blanks %}<tr><td class="name">{{ b.item.title }}</td><td>{{ b.gradebook.school_class.name }} {{ b.gradebook.subject.name }}</td><td>{{ b.missing }} missing</td><td><a class="fin-btn fin-btn-sm" href="{% url 'teaching:grade_item' b.item.pk %}">Enter</a></td></tr>{% empty %}<tr><td class="empty">All marks are in.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-check2-square"></i> Tasks due this week</h3></div><div class="panel-b">
+      {% for t in q.tasks %}<p style="margin:.3rem 0">{% if t.priority == 'HIGH' %}<span class="chip red">High</span> {% endif %}{{ t.title }}{% if t.due_date %} <small class="hint">· {{ t.due_date|date:"D j M" }}</small>{% endif %}</p>{% empty %}<p class="empty">Nothing due.</p>{% endfor %}
+      <a class="fin-btn fin-btn-sm" href="{% url 'teaching:tasks' %}">All tasks</a>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-week"></i> My next duties</h3></div><div class="panel-b">
+      {% for d in duties %}<p style="margin:.3rem 0">{{ d.date|date:"D j M" }} — {{ d.post.name }} <small class="hint">{{ d.post.start_time|time:"H:i" }}–{{ d.post.end_time|time:"H:i" }}</small></p>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

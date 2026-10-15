@@ -1,0 +1,217 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ application.full_name }}{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Application {{ application.reference }}</div>
+    <h1 class="adm-title">{{ application.full_name }}</h1>
+    <p class="adm-sub">
+      <span class="chip {% if application.status == 'ENROLLED' %}green{% elif application.status == 'REJECTED' or application.status == 'WITHDRAWN' %}red{% else %}gold{% endif %}">{{ application.get_status_display }}</span>
+      {% if application.applying_for %}<span class="chip">{{ application.applying_for.name }}</span>{% endif %}
+      {% if application.sibling_of %}<span class="chip gold"><i class="bi bi-people-fill"></i> Sibling of {{ application.sibling_of.full_name }}</span>{% endif %}
+      {% if seats_left is not None %}<span class="chip {% if seats_left %}blue{% else %}red{% endif %}">{{ seats_left }} seat{{ seats_left|pluralize }} left</span>{% endif %}
+    </p>
+  </div>
+  <div class="adm-actions">
+    <a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-arrow-left"></i> Pipeline</a>
+    {% if application.student %}
+      <a class="adm-btn adm-btn-gold" href="/students/all/?q={{ application.student.admission_number }}"><i class="bi bi-person-check-fill"></i> View student</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="adm-grid">
+  <div style="display:grid;gap:1.2rem">
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-person-vcard"></i> Applicant</h3>
+        {% if application.passport %}<img src="{{ application.passport.url }}" alt="" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid var(--rim2)">{% endif %}
+      </div>
+      <div class="panel-b">
+        <dl class="kv">
+          <dt>Full name</dt><dd>{{ application.full_name }}</dd>
+          <dt>Gender</dt><dd>{{ application.gender|default:"—" }}</dd>
+          <dt>Date of birth</dt><dd>{{ application.date_of_birth|date:"j F Y"|default:"—" }}{% if application.age %} · {{ application.age }} years{% endif %}</dd>
+          <dt>Class applied for</dt><dd>{{ application.applying_for.name|default:"—" }}</dd>
+          <dt>Previous school</dt><dd>{{ application.previous_school|default:"—" }}</dd>
+          <dt>Applied on</dt><dd>{{ application.created_at|date:"j F Y, g:i a" }}</dd>
+          {% if application.source %}<dt>Heard about us</dt><dd>{{ application.get_source_display }}{% if application.source_detail %} — {{ application.source_detail }}{% endif %}</dd>{% endif %}
+        </dl>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-people-fill"></i> Parent / guardian</h3></div>
+      <div class="panel-b">
+        <dl class="kv">
+          <dt>Name</dt><dd>{{ application.parent_name }}{% if application.relationship %} ({{ application.relationship }}){% endif %}</dd>
+          <dt>Phone</dt><dd><a href="tel:{{ application.parent_phone }}" style="color:var(--champagne-lt)">{{ application.parent_phone }}</a></dd>
+          <dt>Email</dt><dd>{% if application.parent_email %}<a href="mailto:{{ application.parent_email }}" style="color:var(--champagne-lt)">{{ application.parent_email }}</a>{% else %}—{% endif %}</dd>
+          <dt>Address</dt><dd>{{ application.address|default:"—"|linebreaksbr }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {% if application.documents.all %}
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-paperclip"></i> Documents ({{ application.documents.count }})</h3></div>
+      <div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap">
+        {% for d in application.documents.all %}
+        <a class="adm-btn adm-btn-sm" href="{{ d.file.url }}" target="_blank" rel="noopener"><i class="bi bi-file-earmark"></i> {{ d.get_kind_display }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-clipboard-check"></i> Screening</h3></div>
+      <div class="panel-b">
+        <form method="post" class="adm-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="save_decision">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem">
+            <div><label>Entrance exam score</label>{{ form.exam_score }}</div>
+            <div><label>Interview score</label>{{ form.interview_score }}</div>
+            <div><label>Offer expires on</label>{{ form.offer_expires_on }}</div>
+            <div><label>Class</label>{{ form.applying_for }}</div>
+          </div>
+          <div><label>Notes (internal)</label>{{ form.decision_note }}</div>
+          <div><button class="adm-btn adm-btn-gold" type="submit"><i class="bi bi-save"></i> Save</button></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-clock-history"></i> History</h3></div>
+      <div class="panel-b">
+        <div class="timeline">
+          {% for e in events %}
+          <div class="tl">
+            <i class="bi {% if e.to_status %}bi-arrow-right-short{% else %}bi-chat-left-text{% endif %}"></i>
+            <div>
+              <b>{% if e.to_status %}Moved to {{ e.get_to_status_display|default:e.to_status }}{% else %}Note{% endif %}</b>
+              {% if e.note %}<div style="color:var(--slate2)">{{ e.note }}</div>{% endif %}
+              <small>{{ e.created_at|date:"j M Y, g:i a" }}{% if e.actor %} · {{ e.actor.get_full_name|default:e.actor.username }}{% endif %}</small>
+            </div>
+          </div>
+          {% empty %}<p style="color:var(--slate);font-size:.86rem">Nothing recorded yet.</p>{% endfor %}
+        </div>
+        <form method="post" class="adm-form" style="margin-top:1.2rem">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_note">
+          <div><label>Add a note</label><textarea name="note" rows="2" placeholder="Called the parent, they will visit on Friday…"></textarea></div>
+          <div><button class="adm-btn" type="submit"><i class="bi bi-plus-lg"></i> Add note</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-signpost-split"></i> Move to stage</h3></div>
+      <div class="panel-b">
+        <form method="post" class="adm-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="change_status">
+          <div><label>Stage</label>
+            <select name="status">
+              {% for value, label in statuses %}<option value="{{ value }}" {% if application.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+          </div>
+          <div><label>Note (optional)</label><input type="text" name="note" placeholder="Why?"></div>
+          <button class="adm-btn adm-btn-gold" type="submit"><i class="bi bi-arrow-right"></i> Update stage</button>
+        </form>
+      </div>
+    </div>
+
+    {% if application.fee_amount %}
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-cash-coin"></i> Application fee</h3></div>
+      <div class="panel-b">
+        <p style="font-size:.88rem;color:var(--slate2);margin-bottom:.8rem">
+          ₦{{ application.fee_amount|floatformat:0 }} —
+          {% if application.fee_paid %}<span class="chip green">Paid</span>{% else %}<span class="chip red">Not paid</span>{% endif %}
+        </p>
+        {% if not application.fee_paid %}
+        <form method="post" class="adm-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="mark_fee_paid">
+          <div><label>Teller / transfer reference</label><input type="text" name="fee_reference" placeholder="Optional"></div>
+          <button class="adm-btn" type="submit"><i class="bi bi-check2"></i> Mark as paid</button>
+        </form>
+        {% elif application.fee_reference %}
+        <p class="adm-sub">Reference: {{ application.fee_reference }}{% if application.fee_paid_at %} · {{ application.fee_paid_at|date:"j M Y" }}{% endif %}</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-calendar-event"></i> Entrance assessment</h3></div>
+      <div class="panel-b">
+        {% if application.exam_date %}
+        <p style="font-size:.88rem;color:var(--slate2);margin-bottom:.8rem">
+          <strong style="color:var(--white)">{{ application.exam_date|date:"l, j M Y" }}</strong> at {{ application.exam_date|time:"g:i a" }}
+          {% if application.exam_venue %}<br>{{ application.exam_venue }}{% endif %}
+          {% if application.exam_notified_at %}<br><span class="chip green"><i class="bi bi-envelope-check"></i> Parent notified</span>{% endif %}
+        </p>
+        {% endif %}
+        <form method="post" class="adm-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="schedule_exam">
+          <div><label>Date &amp; time</label><input type="datetime-local" name="exam_date" required></div>
+          <div><label>Venue</label><input type="text" name="exam_venue" placeholder="Main hall" value="{{ application.exam_venue }}"></div>
+          <label style="display:flex;gap:.5rem;align-items:center;font-weight:500">
+            <input type="checkbox" name="notify" value="1" style="width:auto" checked> Tell the parent by email and SMS
+          </label>
+          <button class="adm-btn" type="submit"><i class="bi bi-calendar-check"></i> {% if application.exam_date %}Reschedule{% else %}Schedule assessment{% endif %}</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-envelope-paper"></i> Offer letter</h3></div>
+      <div class="panel-b">
+        {% if application.offer_sent_at %}
+        <p style="font-size:.88rem;color:var(--slate2);margin-bottom:.8rem"><span class="chip green">Sent {{ application.offer_sent_at|date:"j M Y" }}</span></p>
+        {% else %}
+        <p style="font-size:.88rem;color:var(--slate2);margin-bottom:.8rem">A PDF on the school's letterhead with the class offered and the acceptance date.</p>
+        {% endif %}
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+          <a class="adm-btn" href="{% url 'admissions:offer_letter' application.pk %}"><i class="bi bi-download"></i> Download PDF</a>
+          {% if application.parent_email %}
+          <a class="adm-btn adm-btn-gold" href="{% url 'admissions:email_offer_letter' application.pk %}"
+             onclick="return confirm('Email the offer letter to {{ application.parent_email|escapejs }}?')"><i class="bi bi-send"></i> Email to parent</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-mortarboard-fill"></i> Enrolment</h3></div>
+      <div class="panel-b">
+        {% if application.student %}
+          <p style="font-size:.88rem;color:var(--slate2)">Enrolled as <strong style="color:var(--white)">{{ application.student.admission_number }}</strong>.</p>
+        {% else %}
+          <p style="font-size:.88rem;color:var(--slate2);margin-bottom:.9rem">Creates the student record, admission number and login details for the child and parent.</p>
+          <form method="post" class="adm-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="enrol">
+            {% if application.parent_email %}
+            <label style="display:flex;gap:.5rem;align-items:center;font-weight:500">
+              <input type="checkbox" name="send_credentials" value="1" style="width:auto" checked> Email login details to the parent
+            </label>
+            {% endif %}
+            <button class="adm-btn adm-btn-gold" type="submit"
+                    onclick="return confirm('Create a student record for {{ application.full_name|escapejs }}?')">
+              <i class="bi bi-person-plus-fill"></i> Enrol as student
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

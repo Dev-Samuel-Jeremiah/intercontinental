@@ -1,0 +1,1 @@
+{% if hostels|length > 1 %}<div class="no-print" style="display:flex;gap:.3rem;flex-wrap:wrap">{% for x in hostels %}<a class="fin-btn fin-btn-sm{% if h and x.pk == h.pk %} fin-btn-gold{% endif %}" href="?hostel={{ x.pk }}{{ extra|default:'' }}">{{ x.name }}</a>{% endfor %}</div>{% endif %}

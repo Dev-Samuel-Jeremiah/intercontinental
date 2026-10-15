@@ -1,0 +1,568 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ action }} Special Slot{% endblock %}
+
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+  /* design tokens come from dashboard/base.html */
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Wrap ── */
+  .ss-wrap {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── Back Link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.775rem;
+    font-weight: 500;
+    color: var(--slate2);
+    text-decoration: none;
+    letter-spacing: .2px;
+    margin-bottom: 1.4rem;
+    transition: color .2s;
+  }
+  .back-link:hover { color: var(--champagne); }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 2rem; }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--champagne);
+    margin-bottom: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px; height: 1px;
+    background: var(--champagne);
+    opacity: .7;
+  }
+
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--white);
+    margin: 0;
+  }
+  .page-title em {
+    font-style: italic;
+    color: var(--champagne);
+  }
+  .context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.22);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: var(--champagne-lt);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .header-divider {
+    position: relative;
+    height: 1px;
+    background: var(--rim);
+    margin-top: 16px;
+  }
+  .header-divider::after {
+    content: '';
+    position: absolute;
+    left: 0; top: -0.5px;
+    width: 80px; height: 2px;
+    background: var(--champagne);
+    border-radius: 2px;
+  }
+
+  /* ── Context strip ── */
+  .context-strip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: var(--slate2);
+    margin-bottom: 1.25rem;
+    animation: riseUp .45s ease both;
+    animation-delay: .05s;
+  }
+  .context-strip i { color: var(--purple); font-size: .9rem; flex-shrink: 0; }
+  .context-strip strong { color: var(--white); font-weight: 600; }
+
+  /* ── Flash messages ── */
+  .flash-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 10px;
+    animation: riseUp .35s ease both;
+  }
+
+  /* ── Panel ── */
+  .panel {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: riseUp .45s ease both;
+    animation-delay: .1s;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--rim);
+  }
+  .panel-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--purple);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .panel-header h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    margin: 0;
+  }
+  .panel-body { padding: 24px; }
+
+  /* ── Form grid ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  .col-full { grid-column: 1 / -1; }
+
+  .field-group { display: flex; flex-direction: column; gap: 0; }
+
+  .field-group label,
+  .field-label {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate2);
+    margin-bottom: 7px;
+  }
+  .required-star { color: var(--champagne); margin-left: 2px; }
+
+  /* Inputs */
+  .ss-form input[type="text"],
+  .ss-form input[type="time"],
+  .ss-form input[type="number"],
+  .ss-form select,
+  .ss-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    color: var(--white);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .ss-form input::placeholder,
+  .ss-form textarea::placeholder { color: var(--slate); }
+
+  .ss-form input[type="text"]:focus,
+  .ss-form input[type="time"]:focus,
+  .ss-form select:focus,
+  .ss-form textarea:focus {
+    border-color: var(--champagne);
+    box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+  }
+
+  .ss-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f4d21f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  .ss-form select option { background: var(--surface2); color: var(--white); }
+
+  .ss-form textarea { resize: vertical; }
+
+  /* ── Classes section ── */
+  .classes-panel {
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 18px;
+  }
+  .applies-all-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .applies-all-row input[type="checkbox"] {
+    width: 17px; height: 17px;
+    accent-color: var(--champagne);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .applies-all-row label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    cursor: pointer;
+  }
+
+  .class-picker-label {
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate2);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .class-picker-label i { color: var(--teal); font-size: .8rem; }
+
+  .class-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+  }
+  .class-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--rim2);
+    background: var(--surface3);
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: var(--slate2);
+    transition: border-color .18s, background .18s, color .18s;
+  }
+  .class-item:hover { border-color: var(--rim3); color: var(--white); }
+  .class-item input[type="checkbox"] {
+    width: 14px; height: 14px;
+    accent-color: var(--champagne);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── Section divider ── */
+  .form-divider {
+    height: 1px;
+    background: var(--rim);
+    margin: 4px 0 22px;
+  }
+
+  /* ── Actions ── */
+  .form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    padding: 11px 26px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+    transition: transform .18s, box-shadow .18s, filter .18s;
+    letter-spacing: .2px;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(244,210,31,.32);
+    filter: brightness(1.07);
+  }
+  .btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--slate2);
+    padding: 11px 20px;
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .18s, color .18s, background .18s;
+  }
+  .btn-cancel:hover {
+    border-color: var(--rim3);
+    color: var(--white);
+    background: var(--surface3);
+  }
+  .btn-delete {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--red-dim);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    margin-left: auto;
+    transition: background .18s, border-color .18s, transform .15s;
+  }
+  .btn-delete:hover {
+    background: rgba(248,113,113,.18);
+    border-color: rgba(248,113,113,.4);
+    transform: translateY(-1px);
+    color: var(--red);
+  }
+</style>
+
+<div class="ss-wrap">
+
+  <!-- Back Link -->
+  <a href="{% url 'timetable:day_override_detail' config_pk=config_pk pk=override.pk %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to {{ override.label }}
+  </a>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">Day Override · Special Slots</div>
+    <div class="header-row">
+      <h1 class="page-title">{{ action }} <em>Special Slot</em></h1>
+      <span class="context-badge">
+        <i class="bi bi-calendar-event"></i>
+        {{ action }}
+      </span>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Context strip -->
+  <div class="context-strip">
+    <i class="bi bi-layers"></i>
+    Adding to override: <strong>{{ override.label }}</strong>
+  </div>
+
+  <!-- Flash messages -->
+  {% if messages %}
+    {% for message in messages %}
+      <div class="flash-msg">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Form Panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon"><i class="bi bi-star"></i></div>
+      <h3>Slot Details</h3>
+    </div>
+    <div class="panel-body">
+      <form method="post" class="ss-form">
+        {% csrf_token %}
+
+        <div class="form-grid">
+
+          <!-- Name -->
+          <div class="field-group col-full">
+            <label>Slot Name <span class="required-star">*</span></label>
+            <input type="text" name="name" required maxlength="100"
+                   value="{{ special_slot.name|default:'' }}"
+                   placeholder='e.g. "Computer Club"'>
+          </div>
+
+          <!-- Type -->
+          <div class="field-group">
+            <label>Type <span class="required-star">*</span></label>
+            <select name="slot_type">
+              {% for code, label_ in slot_types %}
+                <option value="{{ code }}" {% if special_slot.slot_type == code %}selected{% endif %}>{{ label_ }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Venue -->
+          <div class="field-group">
+            <label>Venue</label>
+            <input type="text" name="venue" maxlength="100"
+                   value="{{ special_slot.venue|default:'' }}"
+                   placeholder='e.g. "ICT Lab"'>
+          </div>
+
+          <!-- Start Time -->
+          <div class="field-group">
+            <label>Start Time <span class="required-star">*</span></label>
+            <input type="time" name="start_time" required
+                   value="{{ special_slot.start_time|time:'H:i'|default:'' }}">
+          </div>
+
+          <!-- End Time -->
+          <div class="field-group">
+            <label>End Time <span class="required-star">*</span></label>
+            <input type="time" name="end_time" required
+                   value="{{ special_slot.end_time|time:'H:i'|default:'' }}">
+          </div>
+
+          <!-- Supervisor -->
+          <div class="field-group col-full">
+            <label>Supervisor <span style="color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem">(optional)</span></label>
+            <select name="supervisor">
+              <option value="">— None —</option>
+              {% for staff in all_staff %}
+                <option value="{{ staff.pk }}"
+                  {% if special_slot.supervisor_id == staff.pk %}selected{% endif %}>
+                  {{ staff.full_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Notes -->
+          <div class="field-group col-full">
+            <label>Notes <span style="color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;font-size:.72rem">(optional)</span></label>
+            <textarea name="notes" rows="2"
+                      placeholder="Any extra information for students or supervisors...">{{ special_slot.notes|default:'' }}</textarea>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <!-- Class assignment -->
+        <div class="classes-panel">
+          <div class="applies-all-row">
+            <input type="checkbox" name="applies_to_all_classes" id="applies_to_all"
+                   {% if not special_slot or special_slot.applies_to_all_classes %}checked{% endif %}
+                   onchange="document.getElementById('class-picker').style.display=this.checked?'none':'block'">
+            <label for="applies_to_all">Applies to all classes</label>
+          </div>
+
+          <div id="class-picker"
+               style="display:{% if special_slot and not special_slot.applies_to_all_classes %}block{% else %}none{% endif %}">
+            <p class="class-picker-label">
+              <i class="bi bi-people"></i>
+              Select specific classes
+            </p>
+            <div class="class-grid">
+              {% for cls in all_classes %}
+              <label class="class-item">
+                <input type="checkbox" name="classes" value="{{ cls.pk }}"
+                       {% if special_slot and cls in special_slot.classes.all %}checked{% endif %}>
+                {{ cls.name }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">
+            <i class="bi bi-check2-circle"></i>
+            {{ action }} Slot
+          </button>
+          <a href="{% url 'timetable:day_override_detail' config_pk=config_pk pk=override.pk %}" class="btn-cancel">
+            <i class="bi bi-x"></i>
+            Cancel
+          </a>
+          {% if action == 'Edit' %}
+          <a href="{% url 'timetable:special_slot_delete' pk=special_slot.pk %}" class="btn-delete">
+            <i class="bi bi-trash3"></i>
+            Delete Slot
+          </a>
+          {% endif %}
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

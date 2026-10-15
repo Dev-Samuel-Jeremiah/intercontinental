@@ -1,0 +1,724 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Manage Fees{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+  background:var(--ink);
+  font-family:'Outfit',sans-serif;
+  color:var(--white);
+}
+
+.your-wrap{
+  max-width:1400px;
+  margin:0 auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+/* Header */
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:28px;
+  flex-wrap:wrap;
+}
+
+.head-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2.8px;
+  font-size:.7rem;
+  font-weight:700;
+  margin-bottom:10px;
+}
+
+.head-eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+  opacity:.7;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:.95;
+  color:var(--white);
+  font-weight:700;
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.head-sub{
+  color:var(--slate2);
+  margin-top:12px;
+  font-size:.92rem;
+}
+
+.head-divider{
+  width:100%;
+  height:1px;
+  background:var(--rim);
+  margin-top:18px;
+  position:relative;
+}
+
+.head-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.head-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.78rem;
+  font-weight:700;
+}
+
+/* Panels */
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:22px;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(2){animation-delay:.05s;}
+.panel:nth-child(3){animation-delay:.1s;}
+.panel:nth-child(4){animation-delay:.15s;}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-body{
+  padding:22px;
+}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.9rem;
+  flex-shrink:0;
+}
+
+.icon-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.panel-head h3{
+  margin:0;
+  font-size:.95rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:.82rem;
+  font-weight:700;
+  text-decoration:none;
+  border:none;
+  cursor:pointer;
+  transition:.2s ease;
+  font-family:'Outfit',sans-serif;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(244,210,31,.28);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--slate2);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--white);
+}
+
+.btn-danger{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#ffb4b4;
+}
+
+.btn-danger:hover{
+  background:rgba(239,68,68,.18);
+  transform:translateY(-1px);
+}
+
+/* Forms */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  color:var(--white);
+  padding:12px 14px;
+  font-size:.9rem;
+  outline:none;
+  transition:.18s ease;
+  font-family:'Outfit',sans-serif;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.fg input::placeholder,
+.fg textarea::placeholder{
+  color:var(--slate);
+}
+
+.check-wrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+
+.check-wrap label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  color:var(--slate2);
+  font-size:.88rem;
+  cursor:pointer;
+}
+
+/* Table */
+.tbl-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:900px;
+}
+
+.tbl th{
+  text-align:left;
+  padding:14px 12px;
+  color:var(--slate2);
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  font-weight:700;
+  border-bottom:1px solid var(--rim);
+}
+
+.tbl td{
+  padding:14px 12px;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+  color:var(--white);
+  font-size:.88rem;
+}
+
+.tbl tbody tr{
+  transition:.18s ease;
+}
+
+.tbl tbody tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+/* Avatar */
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  color:#0a1f44;
+  font-size:.8rem;
+  font-weight:800;
+  flex-shrink:0;
+}
+
+.user-flex{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 10px;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:#86efac;
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#fca5a5;
+}
+
+/* Empty state */
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:46px 20px;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  border-radius:20px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.7rem;
+  color:var(--champagne);
+  margin-bottom:16px;
+}
+
+.empty-state h4{
+  margin:0 0 8px;
+  font-size:1rem;
+  color:var(--white);
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.88rem;
+  max-width:420px;
+}
+
+/* Messages */
+.alert{
+  padding:14px 16px;
+  border-radius:14px;
+  margin-bottom:18px;
+  font-size:.86rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media(max-width:768px){
+
+  .your-wrap{
+    padding:1.2rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.2rem;
+  }
+
+  .panel-body{
+    padding:18px;
+  }
+
+  .check-wrap{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- Header -->
+  <div class="page-head">
+
+    <div style="flex:1;">
+      <div class="head-eyebrow">
+        Finance Management
+      </div>
+
+      <h1 class="page-title">
+        Manage <em>Fees</em>
+      </h1>
+
+      <div class="head-sub">
+        Configure fee structures, compulsory billing and due dates for classes and academic terms.
+      </div>
+
+      <div class="head-divider"></div>
+    </div>
+
+    <div class="head-actions">
+      <div class="context-badge">
+        <i class="bi bi-cash-stack"></i>
+        {{ fees|length }} Active Fee{{ fees|length|pluralize }}
+      </div>
+
+      <a href="{% url 'finance:admin_dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Add Fee -->
+  <div class="panel">
+
+    <div class="panel-body">
+
+      <div class="panel-head">
+        <div class="icon-badge icon-green">
+          <i class="bi bi-plus-circle-fill"></i>
+        </div>
+        <h3>Add New Fee Structure</h3>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+
+        <div class="form-grid">
+
+          <div class="fg">
+            <label>Fee Name *</label>
+            <input name="name" placeholder="e.g. School Fees 1st Term" required>
+          </div>
+
+          <div class="fg">
+            <label>Amount (₦) *</label>
+            <input name="amount" type="number" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+
+          <div class="fg">
+            <label>Category</label>
+            <select name="category">
+              {% for val, label in category_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Term</label>
+            <select name="term">
+              <option value="ALL">All Terms</option>
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Class (optional)</label>
+            <select name="school_class">
+              <option value="">— All Classes —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.id }}">{{ cls.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="fg">
+            <label>Due Date (optional)</label>
+            <input name="due_date" type="date">
+          </div>
+
+        </div>
+
+        <div class="check-wrap">
+
+          <label>
+            <input type="checkbox" name="is_compulsory">
+            Compulsory Fee
+          </label>
+
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>
+            Add Fee
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <!-- Fees Table -->
+  <div class="panel">
+
+    <div class="panel-body">
+
+      <div class="panel-head">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-list-ul"></i>
+        </div>
+        <h3>Active Fee Structures</h3>
+      </div>
+
+      {% if fees %}
+
+      <div class="tbl-wrap">
+
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Amount</th>
+              <th>Category</th>
+              <th>Term</th>
+              <th>Class</th>
+              <th>Compulsory</th>
+              <th>Due Date</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for fee in fees %}
+            <tr>
+
+              <td>
+                <div class="user-flex">
+                  <div class="avatar">
+                    {{ fee.name|slice:":2"|upper }}
+                  </div>
+
+                  <div>
+                    <div style="font-weight:700;">
+                      {{ fee.name }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <td style="font-weight:800;color:#86efac;">
+                ₦{{ fee.amount|floatformat:2 }}
+              </td>
+
+              <td>
+                {{ fee.get_category_display }}
+              </td>
+
+              <td>
+                {{ fee.term }}
+              </td>
+
+              <td>
+                {{ fee.school_class.name|default:"All" }}
+              </td>
+
+              <td>
+                {% if fee.is_compulsory %}
+                <span class="badge badge-red">
+                  <i class="bi bi-exclamation-circle"></i>
+                  Yes
+                </span>
+                {% else %}
+                <span class="badge badge-green">
+                  <i class="bi bi-check-circle"></i>
+                  No
+                </span>
+                {% endif %}
+              </td>
+
+              <td style="color:var(--slate2);">
+                {{ fee.due_date|default:"—" }}
+              </td>
+
+              <td>
+
+                <form method="POST" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="fee_id" value="{{ fee.id }}">
+
+                  <button
+                    type="submit"
+                    class="btn btn-danger"
+                    onclick="return confirm('Deactivate this fee?')">
+
+                    <i class="bi bi-trash3"></i>
+
+                  </button>
+                </form>
+
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+
+        <h4>No Fee Structures Yet</h4>
+
+        <p>
+          Create your first fee structure to begin managing school billing, payments and student finance records.
+        </p>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

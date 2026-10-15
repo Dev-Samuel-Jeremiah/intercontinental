@@ -1,0 +1,76 @@
+{% extends "dashboard/base.html" %}
+{% block title %}School calendar{% endblock %}
+{% block content %}
+<style>
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--rim);border-left:1px solid var(--rim)}
+  .cal .h{padding:.5rem;font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--slate);border-right:1px solid var(--rim);border-bottom:1px solid var(--rim)}
+  .cal .d{min-height:92px;padding:.4rem;border-right:1px solid var(--rim);border-bottom:1px solid var(--rim);font-size:.75rem;overflow:hidden}
+  .cal .d.out{opacity:.35}
+  .cal .d.we{background:rgba(255,255,255,.015)}
+  .cal .d .num{font-weight:700;color:var(--slate2)}
+  .cal .d.today .num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--champagne);color:#0a1f44}
+  .ev{display:block;margin-top:.2rem;padding:.12rem .35rem;border-radius:6px;font-size:.68rem;font-weight:600;color:#0a1d40;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hol{display:block;margin-top:.2rem;font-size:.68rem;color:var(--green)}
+  .legend{display:flex;gap:.7rem;flex-wrap:wrap;font-size:.72rem;color:var(--slate2);padding:.8rem 1.2rem}
+  .legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:.3rem;background:var(--c)}
+  @media(max-width:700px){.cal .d{min-height:58px;padding:.25rem}.ev{font-size:0;height:6px;padding:0}.hol{font-size:0;height:6px;background:var(--green);border-radius:3px}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">School <em>calendar</em></h1>
+  <p class="fin-sub">Exams, breaks, PTA meetings, sports and public holidays. Parents see everything not marked staff-only.</p>
+</div><div style="display:flex;gap:.4rem;align-items:center">
+  <a class="fin-btn fin-btn-sm" href="?y={{ prev.year }}&m={{ prev.month }}"><i class="bi bi-chevron-left"></i></a>
+  <b style="min-width:9rem;text-align:center">{{ first|date:"F Y" }}</b>
+  <a class="fin-btn fin-btn-sm" href="?y={{ next.year }}&m={{ next.month }}"><i class="bi bi-chevron-right"></i></a>
+  {% if first.month != today.month or first.year != today.year %}<a class="fin-btn fin-btn-sm" href="?">Today</a>{% endif %}
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+  <div class="panel">
+    <div class="cal">
+      <div class="h">Mon</div><div class="h">Tue</div><div class="h">Wed</div><div class="h">Thu</div><div class="h">Fri</div><div class="h">Sat</div><div class="h">Sun</div>
+      {% for week in weeks %}{% for d in week %}<div class="d{% if not d.in_month %} out{% endif %}{% if d.today %} today{% endif %}{% if forloop.counter > 5 %} we{% endif %}">
+        <span class="num">{{ d.date.day }}</span>
+        {% if d.holiday %}<span class="hol" title="{{ d.holiday }}"><i class="bi bi-flag-fill"></i> {{ d.holiday }}</span>{% endif %}
+        {% for e in d.events %}<span class="ev" style="background:{{ e.colour }}" title="{{ e.title }}{% if e.audience == 'STAFF' %} (staff only){% endif %}">{{ e.title }}</span>{% endfor %}
+      </div>{% endfor %}{% endfor %}
+    </div>
+    <div class="legend">{% for k, label in kinds %}<span style="--c:{% for ck, cv in colours.items %}{% if ck == k %}{{ cv }}{% endif %}{% endfor %}">{{ label }}</span>{% endfor %}<span style="--c:var(--green)">Public holiday</span></div>
+  </div>
+  <div>
+    {% if can_manage %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add an event</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}
+        <div><label>Title</label><input name="title" required maxlength="160" placeholder="First term examinations"></div>
+        <div class="row2"><div><label>Starts</label><input type="date" name="start_date" required value="{{ today|date:'Y-m-d' }}"></div><div><label>Ends <span class="hint">(optional)</span></label><input type="date" name="end_date"></div></div>
+        <div class="row2"><div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+          <div><label>Who sees it</label><select name="audience">{% for k, l in audiences %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div></div>
+        <div class="row2"><div><label>From <span class="hint">(optional)</span></label><input type="time" name="start_time"></div><div><label>To</label><input type="time" name="end_time"></div></div>
+        <div><label>Where <span class="hint">(optional)</span></label><input name="venue" maxlength="120" placeholder="School hall"></div>
+        <div><label>Details <span class="hint">(optional)</span></label><textarea name="description" rows="2" maxlength="255"></textarea></div>
+        <details><summary class="hint" style="cursor:pointer">Replies and reminders</summary>
+          <div class="fin-form" style="margin-top:.7rem">
+            <label style="display:flex;gap:.5rem;align-items:center;margin:0"><input type="checkbox" name="rsvp" value="1" style="width:auto"> Ask people if they are coming</label>
+            <div class="row2"><div><label>Reply by</label><input type="date" name="rsvp_deadline"></div><div><label>Places <span class="hint">(blank = no limit)</span></label><input type="number" name="capacity" min="1"></div></div>
+            <div><label>Email a reminder <span class="hint">(days before; 0 = no reminder)</span></label><input type="number" name="reminder_days" min="0" max="30" value="0"></div>
+          </div></details>
+        <button class="fin-btn fin-btn-gold" type="submit">Add to calendar</button>
+      </form></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-event"></i> Next 90 days</h3></div><div class="panel-b">
+      {% for e in upcoming %}<div style="display:flex;gap:.6rem;align-items:center;padding:.35rem 0">
+        <span style="width:10px;height:10px;border-radius:3px;background:{{ e.colour }};flex-shrink:0"></span>
+        <span style="flex:1"><a href="{% url 'curriculum:event' e.id %}" style="color:inherit">{{ e.title }}</a>{% if e.audience == 'STAFF' %} <span class="chip">staff</span>{% endif %}{% if e.rsvp %} <span class="chip gold">RSVP</span>{% endif %}</span><span class="hint">{{ e.start_date|date:"j M" }}{% if e.end_date %}–{{ e.end_date|date:"j M" }}{% endif %}</span>
+        {% if can_manage %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ e.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete" title="Remove" onclick="return confirm('Remove {{ e.title|escapejs }}?')"><i class="bi bi-x"></i></button></form>{% endif %}</div>
+      {% empty %}<p class="hint" style="margin:0">Nothing coming up.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-flag"></i> Public holidays {{ first.year }}</h3></div><div class="panel-b">
+      {% for h in holidays %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ h.name }}</span><span class="hint">{{ h.date|date:"D j M" }}</span></div>
+      {% empty %}<p class="hint" style="margin-top:0">No holidays recorded for {{ first.year }}.</p>{% endfor %}
+      {% if can_manage %}<form method="post" style="margin-top:.8rem">{% csrf_token %}<input type="hidden" name="year" value="{{ first.year }}"><button class="fin-btn fin-btn-sm" name="action" value="holidays"><i class="bi bi-magic"></i> Fill in Nigerian holidays for {{ first.year }}</button></form>
+      <p class="hint">Adds New Year, Good Friday, Easter Monday, Workers' Day, Children's Day, Democracy Day, Independence, Christmas and Boxing Day. Add Eid and Mawlid below once the government announces them.</p>
+      <form method="post" class="fin-form" style="margin-top:.6rem">{% csrf_token %}<div class="row2"><input type="date" name="date" required><input name="name" required maxlength="100" placeholder="Eid-el-Fitr"></div>
+        <button class="fin-btn fin-btn-sm" name="action" value="holiday">Add holiday</button></form>{% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

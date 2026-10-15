@@ -1,0 +1,60 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Payslip — {{ sp.staff_payroll.staff.full_name }}{% endblock %}
+{% block content %}
+<style>
+.ps-wrap{max-width:620px;margin:0 auto;}
+.ps-card{background:#fff;border-radius:18px;box-shadow:0 30px 70px -25px rgba(0,0,0,.8),0 0 0 1px rgba(244,210,31,.25);overflow:hidden;color:#1c1917;}
+.ps-hdr{background:radial-gradient(400px 160px at 100% 0%,rgba(244,210,31,.35),transparent 70%),linear-gradient(135deg,#0f244b,#172f5c);padding:24px 28px;color:#f2f5fb;text-align:center;border-bottom:3px solid #f4d21f;}
+.ps-body{padding:24px 28px;}
+.rr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:.9rem;}
+.rl{color:#64748b;font-weight:500;}.rv{font-weight:700;color:#1e293b;}
+.earnings-tbl{width:100%;border-collapse:collapse;font-size:.9rem;margin:16px 0;}
+.earnings-tbl th{background:#f8fafc;padding:9px 14px;text-align:left;font-weight:700;color:#475569;}
+.earnings-tbl td{padding:9px 14px;border-bottom:1px solid #f1f5f9;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:9px;font-size:.83rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-ghost{background:rgba(255,255,255,.04);color:var(--slate2);border:1px solid var(--rim2);}
+.btn-ghost:hover{color:var(--champagne-lt);border-color:var(--champagne-border);}
+</style>
+<div class="ps-wrap">
+  <div style="display:flex;gap:8px;margin-bottom:14px;">
+    <a href="{% url 'payroll:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Back</a>
+    <button onclick="window.print()" class="btn btn-ghost"><i class="bi bi-printer"></i> Print</button>
+  </div>
+  <div class="ps-card">
+    <div class="ps-hdr">
+      <div style="font-size:1.1rem;font-weight:900;">{{ tenant.name|upper }}</div>
+      <div style="font-size:.8rem;opacity:.8;">{{ tenant.address }}</div>
+      <div style="font-size:1.2rem;font-weight:900;margin-top:12px;">SALARY PAYSLIP</div>
+      <div style="font-size:.9rem;opacity:.85;">{{ sp.month_name }} {{ sp.year }}</div>
+    </div>
+    <div class="ps-body">
+      <div class="rr"><span class="rl">Staff Name</span><span class="rv">{{ sp.staff_payroll.staff.full_name }}</span></div>
+      <div class="rr"><span class="rl">Role</span><span class="rv">{{ sp.staff_payroll.staff.get_role_display }}</span></div>
+      <div class="rr"><span class="rl">Grade</span><span class="rv">{{ sp.staff_payroll.grade.name|default:"—" }}</span></div>
+      <div class="rr"><span class="rl">Bank</span><span class="rv">{{ sp.staff_payroll.bank_name|default:"—" }}</span></div>
+      <div class="rr"><span class="rl">Account No.</span><span class="rv" style="font-family:monospace;">{{ sp.staff_payroll.account_no|default:"—" }}</span></div>
+      <div class="rr"><span class="rl">Pay Period</span><span class="rv">{{ sp.month_name }} {{ sp.year }}</span></div>
+      <div class="rr"><span class="rl">Reference</span><span class="rv" style="font-family:monospace;color:#2563eb;">{{ sp.reference }}</span></div>
+
+      <table class="earnings-tbl">
+        <thead><tr><th>Description</th><th style="text-align:right;">Amount (₦)</th></tr></thead>
+        <tbody>
+          <tr><td>Basic Salary</td><td style="text-align:right;">{{ sp.gross_salary|floatformat:2 }}</td></tr>
+          <tr><td style="color:#dc2626;">Deductions</td><td style="text-align:right;color:#dc2626;">- {{ sp.deductions|floatformat:2 }}</td></tr>
+          <tr style="background:#f0fdf4;font-weight:800;">
+            <td>NET SALARY</td>
+            <td style="text-align:right;color:#16a34a;font-size:1.1rem;">₦{{ sp.net_salary|floatformat:2 }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="background:#f8fafc;border-radius:8px;padding:12px 16px;font-size:.82rem;color:#94a3b8;margin-top:10px;">
+        Payment Method: {{ sp.get_method_display }}<br>
+        Paid by: {{ sp.paid_by.get_full_name|default:sp.paid_by.username }}<br>
+        Date: {{ sp.paid_at|date:"d F Y H:i" }}<br>
+        {{ sp.note }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

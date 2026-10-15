@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Student experience settings{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student experience</div>
+  <h1 class="fin-title"><em>Settings</em></h1>
+</div></div>
+{% include "studentlife/_staffnav.html" %}
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:720px">{% csrf_token %}
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="leaderboards" value="1" style="width:auto" {% if cfg.leaderboards %}checked{% endif %}> Opt-in leaderboards</label>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="tutoring" value="1" style="width:auto" {% if cfg.tutoring %}checked{% endif %}> Peer tutoring</label>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="notes_need_approval" value="1" style="width:auto" {% if cfg.notes_need_approval %}checked{% endif %}> A teacher checks shared notes before students see them</label>
+  <div><label>Safeguarding leads <span class="hint">receive anonymous reports and wellbeing alerts; if none, administrators do</span></label>
+    <div style="max-height:240px;overflow:auto">{% for s in staff %}<label class="pill" style="display:flex"><input type="checkbox" name="leads" value="{{ s.pk }}" {% if s.pk in leads %}checked{% endif %}> {{ s.full_name }}</label>{% endfor %}</div></div>
+  <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+</form>
+{% endblock %}

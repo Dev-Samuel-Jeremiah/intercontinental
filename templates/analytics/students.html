@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'analytics:home' %}" style="color:inherit">Analytics</a></div>
+  <h1 class="fin-title">{{ title }}</h1>
+  <p class="fin-sub">{{ rows|length }} student{{ rows|length|pluralize }}.</p>
+</div>{% include "analytics/_export.html" %}</div>
+<div class="panel">{% if rows %}<div style="overflow-x:auto"><table class="tbl"><thead><tr>{% for c in columns %}<th>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+  {% for r in rows %}<tr>{% for v in r %}<td{% if forloop.first %} class="name"{% endif %}>{{ v }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty"><i class="bi bi-people"></i><p>Nobody matches.</p></div>{% endif %}</div>
+{% endblock %}

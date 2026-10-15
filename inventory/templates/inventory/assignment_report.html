@@ -1,0 +1,629 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Assignment Report{% endblock %}
+
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.your-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+  font-family:'Outfit',sans-serif;
+  color:var(--white);
+}
+
+/* HEADER */
+
+.page-header{
+  margin-bottom:2rem;
+}
+
+.page-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  margin-bottom:.9rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:.22em;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.page-eyebrow::before{
+  content:"";
+  width:38px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.page-title h1{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title h1 em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.page-title p{
+  margin:.8rem 0 0;
+  color:var(--slate2);
+  font-size:.95rem;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.78rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.2);
+  color:var(--champagne-lt);
+  font-size:.84rem;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+.header-divider{
+  position:relative;
+  margin-top:1.5rem;
+  border-bottom:1px solid var(--rim);
+  padding-bottom:1rem;
+}
+
+.header-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+/* FILTER ACTIONS */
+
+.top-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.75rem;
+  margin-bottom:1.4rem;
+  animation:riseUp .45s ease both;
+  animation-delay:.06s;
+}
+
+/* PANEL */
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+  animation-delay:.12s;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.2rem 1.4rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-header-left{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:.92rem;
+}
+
+.icon-purple{
+  background:var(--purple-dim);
+  border:1px solid var(--purple-border);
+  color:var(--purple);
+}
+
+.panel-header h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* BUTTONS */
+
+.btn-lux{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  padding:.82rem 1rem;
+  border-radius:12px;
+  font-size:.85rem;
+  font-weight:600;
+  text-decoration:none;
+  transition:.25s ease;
+  border:none;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.btn-lux:hover{
+  transform:translateY(-2px);
+}
+
+.btn-gold{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-outline{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--white);
+}
+
+.btn-warning{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.btn-success{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+/* TABLE */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+.lux-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.lux-table thead th{
+  padding:1rem 1.4rem;
+  text-align:left;
+  font-size:.74rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--slate2);
+  border-bottom:1px solid var(--rim);
+  white-space:nowrap;
+}
+
+.lux-table tbody td{
+  padding:1rem 1.4rem;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+}
+
+.lux-table tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.lux-table tbody tr:last-child td{
+  border-bottom:none;
+}
+
+/* ASSIGNMENT */
+
+.asset-flex{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#2d2347,#8b5cf6);
+  display:grid;
+  place-items:center;
+  color:#fff;
+  font-size:.82rem;
+  font-weight:700;
+  flex-shrink:0;
+}
+
+.asset-link{
+  color:var(--white);
+  text-decoration:none;
+  font-weight:600;
+  transition:.2s ease;
+}
+
+.asset-link:hover{
+  color:var(--champagne);
+}
+
+.asset-sub{
+  margin-top:.2rem;
+  color:var(--slate2);
+  font-size:.78rem;
+}
+
+/* BADGES */
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.42rem .75rem;
+  border-radius:999px;
+  font-size:.76rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+
+.badge-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-warning{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-muted{
+  background:var(--surface3);
+  border-color:var(--rim);
+  color:var(--slate2);
+}
+
+.badge-info{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+/* EMPTY STATE */
+
+.empty-state{
+  padding:4rem 1rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:76px;
+  height:76px;
+  margin:0 auto 1rem;
+  border-radius:20px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:grid;
+  place-items:center;
+  color:var(--champagne);
+  font-size:1.7rem;
+}
+
+.empty-state h3{
+  margin:0 0 .5rem;
+  color:var(--white);
+  font-size:1.1rem;
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.92rem;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:768px){
+
+  .your-wrap{
+    padding:1.2rem 1rem 3rem;
+  }
+
+  .page-title h1{
+    font-size:2.3rem;
+  }
+
+  .lux-table{
+    min-width:1050px;
+  }
+
+  .panel-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+
+    <div class="page-eyebrow">
+      Assignment Tracking
+    </div>
+
+    <div class="page-title-row">
+
+      <div class="page-title">
+
+        <h1>Asset <em>Assignments</em></h1>
+
+        <p>
+          Track assigned institutional assets, issued equipment,
+          return schedules, and active possession records.
+        </p>
+
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-link-45deg"></i>
+        {{ assignments|length }} Assignment{{ assignments|length|pluralize }}
+      </div>
+
+    </div>
+
+    <div class="header-divider"></div>
+
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="top-actions">
+
+    <a
+      href="?"
+      class="btn-lux {% if not show_all %}btn-gold{% else %}btn-outline{% endif %}"
+    >
+      <i class="bi bi-lightning-charge"></i>
+      Active Only
+    </a>
+
+    <a
+      href="?all=1"
+      class="btn-lux {% if show_all %}btn-gold{% else %}btn-outline{% endif %}"
+    >
+      <i class="bi bi-collection"></i>
+      Show All
+    </a>
+
+    <a
+      href="{% url 'inventory:issue_asset' %}"
+      class="btn-lux btn-warning"
+      style="margin-left:auto;"
+    >
+      <i class="bi bi-box-arrow-up-right"></i>
+      Issue Asset
+    </a>
+
+    <a
+      href="{% url 'inventory:return_asset' %}"
+      class="btn-lux btn-success"
+    >
+      <i class="bi bi-arrow-counterclockwise"></i>
+      Return Asset
+    </a>
+
+  </div>
+
+  <!-- PANEL -->
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-header-left">
+
+        <div class="icon-badge icon-purple">
+          <i class="bi bi-clipboard2-check"></i>
+        </div>
+
+        <h3>
+          Assignments ({{ assignments|length }})
+        </h3>
+
+      </div>
+
+    </div>
+
+    {% if assignments %}
+
+    <div class="table-wrap">
+
+      <table class="lux-table">
+
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Assigned To</th>
+            <th>Location</th>
+            <th>Qty</th>
+            <th>Condition</th>
+            <th>Issued</th>
+            <th>Return Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for a in assignments %}
+          <tr>
+
+            <td>
+
+              <div class="asset-flex">
+
+                <div class="avatar">
+                  {{ a.asset.name|slice:":2"|upper }}
+                </div>
+
+                <div>
+
+                  <a href="{% url 'inventory:asset_detail' a.asset.id %}" class="asset-link">
+                    {{ a.asset.name }}
+                  </a>
+
+                  <div class="asset-sub">
+                    Institutional Asset
+                  </div>
+
+                </div>
+
+              </div>
+
+            </td>
+
+            <td>
+
+              <span class="badge badge-info">
+                <i class="bi bi-person"></i>
+                {{ a.assigned_to_user.get_full_name|default:a.assigned_to_user|default:"—" }}
+              </span>
+
+            </td>
+
+            <td style="color:var(--slate2);">
+              {{ a.location|default:"—" }}
+            </td>
+
+            <td>
+              <strong style="font-size:1rem;">
+                {{ a.quantity }}
+              </strong>
+            </td>
+
+            <td>
+
+              <span class="badge badge-muted">
+                <i class="bi bi-shield-check"></i>
+                {{ a.condition_at_issue }}
+              </span>
+
+            </td>
+
+            <td style="color:var(--slate2);">
+              {{ a.issued_at|date:"M j, Y" }}
+            </td>
+
+            <td style="color:var(--slate2);">
+              {{ a.expected_return_date|date:"M j, Y"|default:"—" }}
+            </td>
+
+            <td>
+
+              {% if a.returned %}
+
+                <span class="badge badge-success">
+                  <i class="bi bi-check-circle"></i>
+                  Returned
+                </span>
+
+              {% else %}
+
+                <span class="badge badge-warning">
+                  <i class="bi bi-link-45deg"></i>
+                  Active
+                </span>
+
+              {% endif %}
+
+            </td>
+
+          </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+
+      <div class="empty-icon">
+        <i class="bi bi-link-45deg"></i>
+      </div>
+
+      <h3>No Assignments Found</h3>
+
+      <p>
+        There are currently no asset assignments available in this report.
+      </p>
+
+    </div>
+
+    {% endif %}
+
+  </div>
+
+</div>
+
+{% endblock %}

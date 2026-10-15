@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Question bank{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "cbt/_math.html" %}
+<style>
+  .flt{display:flex;gap:.4rem;flex-wrap:wrap}
+  .flt select,.flt input{padding:.5rem .65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem}
+  .bq{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:.7rem;padding:.85rem 1.2rem;border-bottom:1px solid var(--rim);align-items:start}
+  .bq .opts{display:flex;gap:.3rem .9rem;flex-wrap:wrap;margin-top:.35rem;font-size:.8rem;color:var(--slate2)}
+  .bq .opts .c{color:var(--green);font-weight:600}
+  .tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
+  .addbar{position:sticky;bottom:1rem;display:none;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.8rem 1rem;border-radius:14px;border:1px solid var(--champagne-border);background:var(--surface2,#172f5c);margin-top:1rem}
+  .addbar select{padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem;max-width:340px}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">CBT &amp; Exams</div>
+  <h1 class="fin-title">Question <em>bank</em></h1>
+  <p class="fin-sub">Questions by subject, class level, topic and learning outcome — reused across exams and student practice. {{ total }} question{{ total|pluralize }} found.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><a class="fin-btn" href="{% url 'assistant:questions' %}"><i class="bi bi-stars"></i> Write questions with AI</a><a class="fin-btn fin-btn-gold" href="{% url 'cbt:bank_new' %}{% if f.subject %}?subject={{ f.subject }}{% endif %}"><i class="bi bi-plus-lg"></i> Add a question</a></div></div>
+{% include "cbt/_bank_msgs.html" %}
+<form method="get" class="panel"><div class="panel-b flt">
+  <select name="subject"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.id }}" {% if f.subject == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+  <select name="level"><option value="">All levels</option>{% for l in levels %}<option {% if f.level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <input name="topic" value="{{ f.topic }}" placeholder="Topic">
+  <select name="difficulty"><option value="">Any difficulty</option>{% for k, l in difficulties %}<option value="{{ k }}" {% if f.difficulty == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <input name="q" value="{{ f.q }}" placeholder="Search text or outcome" style="flex:1 1 180px">
+  <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+</div></form>
+<form method="post" action="{% url 'cbt:bank_add_to_exam' %}" id="addform">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+<div class="panel">
+  {% for q in page %}<div class="bq">
+    <input type="checkbox" name="ids" value="{{ q.id }}" class="pick" style="margin-top:.3rem" aria-label="Select question">
+    <div><div>{{ q.text|safe }}</div>
+      <div class="opts">{% for o in q.options.all %}<span class="{% if o.is_correct %}c{% endif %}">{% if o.is_correct %}✓ {% endif %}{{ o.text }}</span>{% endfor %}</div>
+      <div class="tags"><span class="chip gold">{{ q.subject.name }}</span>{% if q.level %}<span class="chip">{{ q.level }}</span>{% endif %}{% if q.topic %}<span class="chip">{{ q.topic }}</span>{% endif %}
+        <span class="chip {% if q.difficulty == 'HARD' %}red{% elif q.difficulty == 'EASY' %}green{% else %}amber{% endif %}">{{ q.get_difficulty_display }}</span>
+        {% if q.for_practice %}<span class="chip" title="Students may meet it in practice"><i class="bi bi-controller"></i> practice</span>{% endif %}
+        {% if q.n_uses %}<span class="chip">used in {{ q.n_uses }} exam{{ q.n_uses|pluralize }}</span>{% endif %}</div>
+      {% if q.outcome %}<div class="hint" style="margin-top:.3rem"><i class="bi bi-bullseye"></i> {{ q.outcome }}</div>{% endif %}</div>
+    <div>{% if q.editable %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:bank_edit' q.id %}"><i class="bi bi-pencil"></i></a>{% endif %}</div>
+  </div>{% empty %}<div class="empty"><i class="bi bi-collection"></i><p>No questions match. Add some, or save an existing exam's questions into the bank from the exam's analysis page.</p></div>{% endfor %}
+</div>
+{% if page.has_other_pages %}<div style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span class="hint" style="align-self:center">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
+<div class="addbar" id="addbar"><b id="npick">0</b> selected — add to
+  <select name="part" required>{% for p in parts %}<option value="{{ p.id }}">{{ p.exam.title }} · {{ p.exam.subject.name }}</option>{% empty %}<option value="">No CBT exam to add to</option>{% endfor %}</select>
+  <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"{% if not parts %} disabled{% endif %}><i class="bi bi-plus-circle"></i> Add to exam</button></div>
+</form>
+<script>
+(function(){var bar=document.getElementById('addbar'),n=document.getElementById('npick');
+  function sync(){var c=document.querySelectorAll('.pick:checked').length;n.textContent=c;bar.style.display=c?'flex':'none';}
+  document.querySelectorAll('.pick').forEach(function(x){x.addEventListener('change',sync);});})();
+</script>
+{% endblock %}

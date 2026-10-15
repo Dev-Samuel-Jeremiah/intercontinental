@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Counselling{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Care · confidential</div>
+  <h1 class="fin-title"><em>Counselling</em></h1>
+  <p class="fin-sub">Only counsellors can see this page — not other staff, and not administrators. If a student is at risk of harm, raise a safeguarding concern as well.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if show == 'closed' %}Closed cases{% else %}Open cases{% endif %}</h3><a href="?show={% if show == 'closed' %}open{% else %}closed{% endif %}">{% if show == 'closed' %}Open cases{% else %}Closed cases{% endif %}</a></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for c in items %}<tr><td class="name"><a href="{% url 'welfare:case' c.pk %}">{{ c.student.full_name }}</a><br><small class="hint">{{ c.student.class_assigned|default:"" }} · {{ c.get_reason_display }} · since {{ c.opened_at|date:"j M" }}</small></td><td>{% if c.status == 'REQUESTED' %}<span class="chip gold">Asked for help</span>{% endif %}{% if c.risk == 'HIGH' %} <span class="chip red">High risk</span>{% elif c.risk == 'MEDIUM' %} <span class="chip gold">Medium risk</span>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No cases.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Open a case</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>About</label><select name="reason">{% for k, v in reasons %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Risk</label><select name="risk"><option value="LOW">Low</option><option value="MEDIUM">Medium</option><option value="HIGH">High</option></select></div></div>
+    <div><label>Summary</label><input name="summary" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Open</button>
+  </form>
+</div>
+{% endblock %}

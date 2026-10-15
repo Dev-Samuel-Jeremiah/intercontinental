@@ -1,0 +1,53 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Message Templates{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.71rem;font-weight:700;}
+.bg{background:var(--green-dim);color:var(--green);} .bb{background:var(--blue-dim);color:var(--blue);} .ba{background:var(--amber-dim);color:var(--amber);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.81rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Message Templates</h2>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'communications:template_create' %}" class="btn btn-g"><i class="bi bi-plus-lg"></i> New Template</a>
+    <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+  </div>
+</div>
+<div class="card">
+  <table class="tbl">
+    <thead><tr><th>Name</th><th>Category</th><th>Subject</th><th>SMS Preview</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% for t in templates %}
+      <tr>
+        <td><strong>{{ t.name }}</strong></td>
+        <td><span class="badge bb">{{ t.get_category_display }}</span></td>
+        <td>{{ t.subject|truncatechars:40 }}</td>
+        <td style="font-size:.75rem;color:var(--slate2);">{{ t.body_sms|truncatechars:50 }}</td>
+        <td>{% if t.is_active %}<span class="badge bg">Active</span>{% else %}<span class="badge" style="background:rgba(255,255,255,.045);color:var(--slate);">Inactive</span>{% endif %}</td>
+        <td>
+          <a href="{% url 'communications:template_edit' t.id %}" class="btn btn-ghost" style="padding:5px 10px;font-size:.75rem;"><i class="bi bi-pencil"></i></a>
+          <a href="{% url 'communications:template_translations' t.id %}" class="btn btn-ghost" style="padding:5px 10px;font-size:.75rem;" title="Other languages"><i class="bi bi-translate"></i></a>
+          <form method="POST" action="{% url 'communications:template_delete' t.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn" style="background:var(--red-dim);color:var(--red);padding:5px 10px;font-size:.75rem;"
+              onclick="return confirm('Deactivate this template?')"><i class="bi bi-trash3"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--slate);">No templates yet. Create one above.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

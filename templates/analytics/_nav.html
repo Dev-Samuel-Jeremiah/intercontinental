@@ -1,0 +1,11 @@
+<nav class="an-nav">
+  <a href="{% url 'analytics:home' %}" class="{% if request.resolver_match.url_name == 'home' %}on{% endif %}"><i class="bi bi-speedometer2"></i> Today</a>
+  <a href="{% url 'analytics:fees' %}" class="{% if request.resolver_match.url_name == 'fees' %}on{% endif %}"><i class="bi bi-cash-stack"></i> Fees</a>
+  <a href="{% url 'analytics:enrolment' %}" class="{% if request.resolver_match.url_name == 'enrolment' %}on{% endif %}"><i class="bi bi-graph-up"></i> Enrolment &amp; leavers</a>
+  <a href="{% url 'analytics:demographics' %}" class="{% if request.resolver_match.url_name == 'demographics' %}on{% endif %}"><i class="bi bi-people"></i> Gender &amp; age</a>
+  <a href="{% url 'analytics:cohort' %}" class="{% if request.resolver_match.url_name == 'cohort' %}on{% endif %}"><i class="bi bi-layers"></i> Cohorts</a>
+  <a href="{% url 'analytics:kpis' %}" class="{% if request.resolver_match.url_name == 'kpis' %}on{% endif %}"><i class="bi bi-bullseye"></i> Targets</a>
+  <a href="{% url 'analytics:activity' %}" class="{% if request.resolver_match.url_name == 'activity' %}on{% endif %}"><i class="bi bi-activity"></i> Activity</a>
+  <a href="{% url 'analytics:board_pack' %}"><i class="bi bi-file-earmark-richtext"></i> Board pack</a>
+  <a href="{% url 'analytics:email_reports' %}" class="{% if request.resolver_match.url_name == 'email_reports' %}on{% endif %}"><i class="bi bi-envelope"></i> Emails</a>
+</nav>

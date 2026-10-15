@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Attendance heatmap{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "attendance/_heat_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Attendance <em>heatmap</em></h1>
+  <p class="fin-sub">Each square is a school day. {{ start|date:"j M" }} – {{ end|date:"j M Y" }}.</p>
+</div>
+<form method="get"><select name="class" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">— choose a class —</option>{% for c in classes %}<option value="{{ c.id }}"{% if cls and cls.id == c.id %} selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></form></div>
+{% if cls %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>{{ cls.name }} average</small><b>{% if average is not None %}{{ average }}%{% else %}—{% endif %}</b></div>
+  <div class="fin-stat"><small>Students</small><b>{{ students|length }}</b></div>
+</div>
+<div class="panel"><div class="panel-b">
+  <div style="display:flex">
+    <div class="heat-days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
+    <div class="heat">{% for week in weeks %}<div class="heat-week">{% for d in week %}<div class="heat-day {{ d.level }}" title="{{ d.title }}"></div>{% endfor %}</div>{% endfor %}</div>
+  </div>
+  <div class="heat-legend"><span><i style="background:#22c55e"></i>95%+</span><span><i style="background:#86efac"></i>85–94%</span><span><i style="background:#fbbf24"></i>70–84%</span><span><i style="background:#ef4444"></i>below 70%</span><span><i style="background:rgba(255,255,255,.08)"></i>not marked</span></div>
+</div></div>
+<div class="panel" style="margin-top:1rem"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Student</th><th style="text-align:right">Present</th><th style="text-align:right">Late</th><th style="width:40%">Attendance this term</th></tr></thead>
+  <tbody>{% for r in students %}
+    <tr><td><a href="{% url 'users:student_profile' r.student.id %}#attendance" style="color:var(--white)">{{ r.student.full_name }}</a></td>
+      <td style="text-align:right">{{ r.present }} <span class="hint">of {{ r.days }}</span></td><td style="text-align:right">{{ r.late }}</td>
+      <td>{% if r.rate is not None %}<div style="display:flex;gap:.5rem;align-items:center"><div style="flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden"><span style="display:block;height:100%;width:{{ r.rate }}%;background:{% if r.rate >= 95 %}#22c55e{% elif r.rate >= 85 %}#86efac{% elif r.rate >= 70 %}#fbbf24{% else %}#ef4444{% endif %}"></span></div><b class="money" style="width:42px;text-align:right">{{ r.rate }}%</b></div>{% else %}<span class="hint">not marked</span>{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table></div></div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if note.pk %}Edit lesson note{% else %}New lesson note{% endif %}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Lesson note</div>
+  <h1 class="fin-title">{% if note.pk %}Edit <em>{{ note.title }}</em>{% else %}New lesson <em>note</em>{% endif %}</h1>
+  <p class="fin-sub">{% if term %}{{ term.name }}{% endif %}{% if note.status == 'RETURNED' %} · <span style="color:var(--red)">sent back: {{ note.review_comment }}</span>{% endif %}</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+{% if not pairs %}<div class="panel"><div class="empty"><i class="bi bi-person-x"></i><p>You aren't assigned to teach any subject yet. Ask an administrator to assign your subjects and classes.</p></div></div>
+{% else %}
+<form method="post" enctype="multipart/form-data" class="fin-form panel" style="padding:1.2rem">{% csrf_token %}
+  <div class="row2"><div><label>Subject and class</label><select id="pair" required>
+      {% for s, c in pairs %}<option value="{{ s.id }}:{{ c.id }}" {% if note and note.subject_id == s.id and note.school_class_id == c.id %}selected{% endif %}>{{ c.name }} · {{ s.name }}</option>{% endfor %}</select>
+      <input type="hidden" name="subject" id="sub"><input type="hidden" name="school_class" id="cls"></div>
+    <div><label>Week</label><input type="number" name="week" id="week" value="{{ week }}" min="1" max="16" required></div></div>
+  <div><label>Topic from the scheme of work <span class="hint">(approving the note marks it taught)</span></label><select name="topic" id="topic"><option value="">— not linked —</option>
+    {% for t in topics %}<option value="{{ t.id }}" data-pair="{{ t.scheme.subject_id }}:{{ t.scheme.school_class_id }}" data-week="{{ t.week }}" {% if note.topic_id == t.id %}selected{% endif %}>Week {{ t.week }}: {{ t.topic }}</option>{% endfor %}</select></div>
+  <div style="display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap;padding:.8rem 1rem;border:1px dashed var(--champagne-border);border-radius:14px;background:var(--champagne-dim)">
+    <div style="flex:1 1 260px"><b style="color:var(--champagne-lt)"><i class="bi bi-stars"></i> Draft with AI</b><div class="hint">Pick the class and topic (or type a title). Anything you've written below is used as notes. You check the draft before saving.</div></div>
+    <div style="width:140px"><label>Lesson length (min)</label><input type="number" name="minutes" min="20" max="120" value="{{ minutes|default:40 }}"></div>
+    <button class="fin-btn fin-btn-gold" type="submit" name="ai" value="1" formnovalidate><i class="bi bi-magic"></i> {% if ai_draft %}Draft again{% else %}Draft with AI{% endif %}</button>
+  </div>
+  <div><label>Lesson title</label><input name="title" id="title" maxlength="200" value="{{ note.title|default:'' }}" placeholder="Leave empty to use the topic"></div>
+  <div><label>Behavioural objectives</label><textarea name="objectives" rows="3" placeholder="By the end of the lesson, students should be able to…">{{ note.objectives|default:'' }}</textarea></div>
+  <div><label>Lesson note</label><textarea name="content" rows="14" required placeholder="Previous knowledge&#10;Introduction&#10;Presentation — step 1, step 2, step 3&#10;Evaluation&#10;Summary&#10;Assignment">{{ note.content|default:'' }}</textarea></div>
+  <div><label>Attachment <span class="hint">(PDF or photo, up to 10 MB{% if note.attachment %} — replaces the current one{% endif %})</span></label><input type="file" name="attachment" accept=".pdf,.jpg,.jpeg,.png,.webp"></div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="fin-btn" type="submit">Save draft</button>
+    <button class="fin-btn fin-btn-gold" type="submit" name="submit" value="1"><i class="bi bi-send"></i> Send for review</button></div>
+</form>
+<script>
+(function(){
+  var pair=document.getElementById('pair'),topic=document.getElementById('topic');
+  function sync(){var v=pair.value.split(':');document.getElementById('sub').value=v[0];document.getElementById('cls').value=v[1];
+    [].forEach.call(topic.options,function(o){if(o.value)o.hidden=o.dataset.pair!==pair.value});
+    if(topic.selectedOptions[0]&&topic.selectedOptions[0].hidden)topic.value='';}
+  pair.addEventListener('change',sync);sync();
+  topic.addEventListener('change',function(){var o=topic.selectedOptions[0];if(o&&o.value)document.getElementById('week').value=o.dataset.week;});
+})();
+</script>{% endif %}
+{% endblock %}

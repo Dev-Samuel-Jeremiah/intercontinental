@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My homework{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">My school</div>
+  <h1 class="fin-title">Homework &amp; <em>calendar</em></h1>
+  <p class="fin-sub">What's due, and what's coming up at school.</p>
+</div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div>{% for d in diaries %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-check"></i> Due</h3><span class="hint">{{ d.child.class_assigned.name }}</span></div>
+      {% for h in d.due %}<div class="panel-b" style="border-bottom:1px solid var(--rim)">
+        <div style="display:flex;justify-content:space-between;gap:.6rem"><b>{{ h.title }}</b>{% if h.due_on == today %}<span class="chip amber">due today</span>{% else %}<span class="chip gold">{{ h.due_on|date:"D j M" }}</span>{% endif %}</div>
+        <div class="hint">{{ h.subject.name }}{% if h.set_by %} · {{ h.set_by.full_name }}{% endif %}</div>
+        {% if h.details %}<p style="margin:.4rem 0 0;color:var(--slate2)">{{ h.details|linebreaksbr }}</p>{% endif %}
+        {% if h.attachment %}<a class="fin-btn fin-btn-sm" style="margin-top:.5rem" href="{% url 'curriculum:homework_file' h.id %}" target="_blank"><i class="bi bi-paperclip"></i> Worksheet</a>{% endif %}
+      </div>{% empty %}<div class="empty"><i class="bi bi-emoji-smile"></i><p>No homework due.</p></div>{% endfor %}
+    </div>
+    {% if d.exams %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar3-week"></i> Exam timetable</h3></div><div class="panel-b">
+      {% for e in d.exams %}<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--rim)"><span>{{ e.subject.name }}</span><span class="hint">{{ e.date|date:"D j M" }} · {{ e.start_time|time:"H:i" }} · {{ e.minutes }} min</span></div>{% endfor %}</div></div>{% endif %}
+    {% if d.clubs %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> My clubs</h3></div><div class="panel-b">
+      {% for m in d.clubs %}<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.3rem 0"><span>{{ m.club.name }}{% if m.role != 'MEMBER' %} <span class="chip gold">{{ m.get_role_display }}</span>{% endif %}</span><span class="hint">{% if m.club.meeting_day %}{{ m.club.get_meeting_day_display }}{% if m.club.meeting_time %} {{ m.club.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if m.club.venue %} · {{ m.club.venue }}{% endif %}</span></div>{% endfor %}</div></div>{% endif %}
+    {% if d.past %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recently due</h3></div><div class="panel-b">
+      {% for h in d.past %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ h.subject.name }} · {{ h.title }}</span><span class="hint">{{ h.due_on|date:"D j M" }}</span></div>{% endfor %}</div></div>{% endif %}
+  {% empty %}<div class="panel"><div class="empty"><i class="bi bi-journal"></i><p>You aren't in a class yet.</p></div></div>{% endfor %}</div>
+  <div>{% include "curriculum/_family_calendar.html" %}</div>
+</div>
+{% endblock %}

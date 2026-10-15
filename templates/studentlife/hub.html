@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My school life{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student</div>
+  <h1 class="fin-title">My school <em>life</em></h1>
+  <p class="fin-sub">Hi {{ me.full_name|truncatewords:1 }} — your goals, portfolio, wellbeing and more.</p>
+</div></div>
+{% if handbook_due %}<div class="panel" style="margin-bottom:1rem"><div class="panel-b"><i class="bi bi-book"></i> Please read the student handbook and tick that you have read it. <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'studentlife:handbook' %}">Open handbook</a></div></div>{% endif %}
+<div class="tiles">
+  <a class="tile" href="{% url 'studentlife:checkin' %}"><i class="bi bi-emoji-smile"></i><b>How are you today?</b><span>{% if checked_in %}Checked in: {{ checked_in.get_mood_display }}{% else %}A 10-second check-in{% endif %}</span></a>
+  <a class="tile" href="{% url 'studentlife:goals' %}"><i class="bi bi-bullseye"></i><b>My goals</b><span>{{ goals|length }} active</span></a>
+  <a class="tile" href="{% url 'studentlife:portfolio' %}"><i class="bi bi-collection"></i><b>My portfolio</b><span>Projects, certificates, art and writing</span></a>
+  <a class="tile" href="{% url 'studentlife:careers' %}"><i class="bi bi-compass"></i><b>Careers</b><span>Interest quiz and JAMB subject check</span></a>
+  <a class="tile" href="{% url 'studentlife:tutoring' %}"><i class="bi bi-people"></i><b>Peer tutoring{% if requests %} <span class="chip gold">{{ requests }}</span>{% endif %}</b><span>Get help, or help others</span></a>
+  <a class="tile" href="{% url 'studentlife:notes' %}"><i class="bi bi-journal-text"></i><b>Shared notes</b><span>Notes from classmates in your year</span></a>
+  <a class="tile" href="{% url 'studentlife:leaderboards' %}"><i class="bi bi-trophy"></i><b>Leaderboards</b><span>{% if on_board %}You are on the boards{% else %}Only if you choose to join{% endif %}</span></a>
+  <a class="tile" href="{% url 'welfare:mine' %}"><i class="bi bi-heart-pulse"></i><b>My wellbeing</b><span>Talk to a counsellor, merits, sport and tips</span></a>
+  <a class="tile" href="{% url 'library:mine' %}"><i class="bi bi-book-half"></i><b>Library</b><span>My books, reading log, challenges and past questions</span></a>
+  <a class="tile" href="{% url 'communications:surveys' %}"><i class="bi bi-ui-checks"></i><b>Student voice</b><span>Surveys from the school</span></a>
+  <a class="tile" href="{% url 'studentlife:handbook' %}"><i class="bi bi-book"></i><b>Handbook</b><span>Rules, routines and where to get help</span></a>
+  <a class="tile" href="{% url 'studentlife:report' %}" style="border-color:var(--red-border)"><i class="bi bi-shield-exclamation" style="color:var(--red)"></i><b>Report bullying</b><span>Anonymously if you want</span></a>
+</div>
+{% if goals %}<div class="panel"><div class="panel-h"><h3>Goals in progress</h3></div><div class="panel-b">{% for g in goals %}<p style="margin:.3rem 0">{{ g.title }}</p><div class="bar"><i style="width:{{ g.progress }}%"></i></div>{% endfor %}</div></div>{% endif %}
+{% endblock %}

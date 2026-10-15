@@ -1,0 +1,19 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Targets{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">School <em>targets</em></h1>
+  <p class="fin-sub">Set the numbers the school is aiming for. Progress shows on the dashboard, in the summary email and in the board pack.</p>
+</div></div>
+{% include "analytics/_nav.html" %}
+<form method="post" class="panel">{% csrf_token %}
+  <table class="tbl"><thead><tr><th>Measure</th><th>Now</th><th>Target</th><th>Progress</th></tr></thead><tbody>
+  {% for k in kpis %}<tr><td class="name">{{ k.label }}</td><td><b>{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %}</b></td>
+    <td>{% if is_admin %}<input name="{{ k.metric }}" value="{{ k.target|default_if_none:'' }}" inputmode="decimal" style="width:110px;padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">{% else %}{{ k.target|default:"—" }}{% endif %}</td>
+    <td style="min-width:180px">{% if k.progress is not None %}<div class="track"><i class="{% if k.met %}green{% elif k.progress < 80 %}amber{% endif %}" style="width:{{ k.progress }}%"></i></div><span class="hint">{% if k.met %}Target met{% else %}{{ k.progress }}% of the way{% endif %}</span>{% else %}<span class="hint">—</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+  {% if is_admin %}<div class="panel-b"><button class="fin-btn fin-btn-gold" type="submit">Save targets</button> <span class="hint">Leave a box empty to remove that target.</span></div>{% endif %}
+</form>
+{% endblock %}

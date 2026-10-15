@@ -1,0 +1,498 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Visitor Log{% endblock %}
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root{
+  /* green */
+  --green:#4ade80;
+  /* red */
+  --red:#f87171;
+  /* blue */
+  --blue:#60a5fa;
+  /* purple */
+  --purple:#c084fc;
+  /* teal */
+  --teal:#2dd4bf;
+  /* amber */
+  --amber:#fbbf24;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+.vl-wrap{
+  font-family:'Outfit',sans-serif;
+  color:var(--white);
+  max-width:1280px;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+/* ── Flash messages ── */
+.flash{
+  padding:11px 16px;
+  border-radius:10px;
+  margin-bottom:12px;
+  font-weight:600;
+  font-size:.85rem;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  border:1px solid;
+}
+.flash-success{background:var(--green-dim);border-color:var(--green-border);color:var(--green);}
+.flash-error  {background:var(--red-dim);border-color:var(--red-border);color:var(--red);}
+.flash-info   {background:var(--blue-dim);border-color:var(--blue-border);color:var(--blue);}
+
+/* ── Page header ── */
+.page-header{margin-bottom:2.2rem;}
+.page-header .eyebrow{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:.65rem;
+}
+.page-header .eyebrow-rule{
+  width:36px;height:1px;background:var(--champagne);opacity:.55;
+}
+.page-header .eyebrow-label{
+  font-family:'Outfit',sans-serif;
+  font-size:.68rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--champagne);
+}
+.page-header h1{
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.05rem;font-weight:700;
+  color:var(--white);line-height:1.15;
+}
+.page-header h1 em{color:var(--champagne);font-style:italic;}
+.page-header .header-row{
+  display:flex;align-items:flex-start;
+  justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.ctx-badge{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  border-radius:99px;
+  padding:5px 14px;
+  font-size:.76rem;font-weight:600;
+  color:var(--champagne-lt);
+  white-space:nowrap;
+  flex-shrink:0;margin-top:.3rem;
+}
+.header-divider{
+  height:1px;
+  background:linear-gradient(90deg,var(--champagne) 0px,var(--champagne) 80px,var(--rim) 80px);
+  margin-top:1.1rem;
+}
+
+/* ── Panel ── */
+.panel{
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:1.25rem;
+  position:relative;
+  animation:riseUp .45s ease both;
+}
+.panel::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 0%,var(--rim3) 50%,transparent 100%);
+}
+.panel-header{
+  display:flex;align-items:center;gap:11px;
+  padding:1.1rem 1.4rem .9rem;
+  border-bottom:1px solid var(--rim);
+}
+.panel-icon{
+  width:30px;height:30px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;flex-shrink:0;
+}
+.panel-icon.blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border);}
+.panel-icon.teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);}
+.panel-header h3{
+  font-family:'Outfit',sans-serif;
+  font-weight:600;font-size:.95rem;
+  color:var(--white);
+}
+.panel-body{padding:1.25rem 1.4rem;}
+.panel-body.no-pad{padding:0;}
+
+/* ── Form elements ── */
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px;}
+.fg label{
+  font-family:'Outfit',sans-serif;
+  font-size:.73rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.04em;
+  color:var(--slate2);
+}
+.fg select{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:9px 36px 9px 12px;
+  font-size:.86rem;font-family:'Outfit',sans-serif;
+  color:var(--white);
+  outline:none;
+  appearance:none;
+  -webkit-appearance:none;
+  transition:border-color .2s,box-shadow .2s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f4d21f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 12px center;
+  cursor:pointer;
+}
+.fg select:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.10);
+}
+.fg select option{background:var(--surface2);color:var(--white);}
+
+/* ── Buttons ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:9px;
+  font-size:.82rem;font-weight:600;
+  border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;
+  text-decoration:none;
+  transition:all .18s ease;
+  white-space:nowrap;
+}
+.btn-champagne{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(244,210,31,.32);}
+.btn-ghost{
+  background:var(--surface3);color:var(--slate2);
+  border:1px solid var(--rim2);
+}
+.btn-ghost:hover{background:var(--surface2);color:var(--white);border-color:var(--rim3);}
+.btn-approve{
+  background:var(--green-dim);color:var(--green);
+  border:1px solid var(--green-border);
+  padding:5px 10px;font-size:.75rem;
+}
+.btn-approve:hover{background:rgba(74,222,128,.18);}
+.btn-deny{
+  background:var(--red-dim);color:var(--red);
+  border:1px solid var(--red-border);
+  padding:5px 10px;font-size:.75rem;
+}
+.btn-deny:hover{background:rgba(248,113,113,.18);}
+.btn-done{
+  background:var(--surface3);color:var(--slate2);
+  border:1px solid var(--rim2);
+  padding:5px 10px;font-size:.75rem;
+}
+.btn-done:hover{background:var(--surface2);color:var(--white);}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl thead tr{border-bottom:1px solid var(--rim2);}
+.tbl th{
+  background:var(--surface2);
+  padding:10px 14px;text-align:left;
+  font-family:'Outfit',sans-serif;
+  font-size:.68rem;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--slate);
+}
+.tbl th:first-child{border-radius:0;}
+.tbl td{
+  padding:11px 14px;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+.tbl tbody tr:last-child td{border-bottom:none;}
+.tbl tbody tr{transition:background .15s;}
+.tbl tbody tr:hover td{background:rgba(255,255,255,.025);}
+
+/* ── Visitor avatar ── */
+.v-avatar{
+  width:34px;height:34px;border-radius:9px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-family:'Outfit',sans-serif;
+  font-size:.72rem;font-weight:700;
+  background:linear-gradient(135deg,rgba(244,210,31,.28),rgba(160,120,48,.22));
+  color:var(--champagne-lt);
+  border:1px solid rgba(244,210,31,.2);
+  flex-shrink:0;letter-spacing:.03em;
+}
+.v-name-cell{display:flex;align-items:center;gap:9px;}
+.v-info strong{font-weight:600;font-size:.84rem;color:var(--white);}
+.v-info .sub{font-size:.72rem;color:var(--slate);margin-top:1px;font-family:monospace;}
+
+/* ── Badges ── */
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:99px;
+  font-size:.70rem;font-weight:700;
+  font-family:'Outfit',sans-serif;
+  letter-spacing:.02em;border:1px solid;
+}
+.badge-approved{background:var(--green-dim);border-color:var(--green-border);color:var(--green);}
+.badge-pending {background:var(--amber-dim);border-color:var(--amber-border);color:var(--amber);}
+.badge-denied  {background:var(--red-dim);border-color:var(--red-border);color:var(--red);}
+.badge-completed{background:var(--blue-dim);border-color:var(--blue-border);color:var(--blue);}
+
+/* ── Boarder link ── */
+.boarder-link{
+  color:var(--blue);text-decoration:none;
+  font-weight:600;font-size:.83rem;
+  transition:color .15s;
+}
+.boarder-link:hover{color:var(--champagne-lt);}
+
+/* ── Empty state ── */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:3.5rem 1rem;gap:.8rem;
+}
+.empty-icon-box{
+  width:58px;height:58px;border-radius:14px;
+  background:var(--surface3);
+  border:1px solid var(--rim2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;color:var(--slate);
+  margin-bottom:.4rem;
+}
+.empty-state h4{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.2rem;font-weight:600;
+  color:var(--slate2);
+}
+.empty-state p{font-size:.82rem;color:var(--slate);text-align:center;max-width:260px;}
+
+/* ── Modal overlay ── */
+.modal-ov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(4px);
+  z-index:9999;align-items:center;justify-content:center;
+}
+.modal-ov.active{display:flex;}
+.modal-box{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:16px;
+  padding:26px;
+  max-width:500px;width:100%;
+  max-height:90vh;overflow-y:auto;
+  position:relative;
+}
+.modal-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+/* ── Stagger ── */
+.panel:nth-child(1){animation-delay:.05s;}
+.panel:nth-child(2){animation-delay:.12s;}
+.panel:nth-child(3){animation-delay:.19s;}
+
+/* ── Keyframe ── */
+@keyframes riseUp{
+  from{opacity:0;transform:translateY(18px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+
+@media(max-width:768px){
+  .vl-wrap{padding:1.2rem 1rem 3rem;}
+  .page-header h1{font-size:1.6rem;}
+  .tbl th,.tbl td{padding:8px 9px;}
+}
+</style>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');});
+  });
+});
+</script>
+
+<div class="vl-wrap">
+
+  <!-- Flash messages -->
+  {% if messages %}{% for m in messages %}
+  <div class="flash {% if m.tags == 'success' %}flash-success{% elif m.tags == 'error' %}flash-error{% else %}flash-info{% endif %}">
+    <i class="bi {% if m.tags == 'success' %}bi-check-circle-fill{% elif m.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+    {{ m }}
+  </div>
+  {% endfor %}{% endif %}
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-row">
+      <div>
+        <div class="eyebrow">
+          <span class="eyebrow-rule"></span>
+          <span class="eyebrow-label">Hostel Management &middot; Access Control</span>
+        </div>
+        <h1>Visitor <em>Log</em></h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="ctx-badge">
+          <i class="bi bi-people"></i>
+          {{ visitors|length }} record{{ visitors|length|pluralize }}
+        </span>
+        <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+          <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="panel" style="animation-delay:.05s;">
+    <div class="panel-header">
+      <div class="panel-icon blue"><i class="bi bi-funnel-fill"></i></div>
+      <h3>Filter Records</h3>
+    </div>
+    <div class="panel-body">
+      <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="fg" style="max-width:200px;">
+          <label>Visit Status</label>
+          <select name="status">
+            <option value=""        {% if not status_f            %}selected{% endif %}>All Statuses</option>
+            <option value="PENDING"   {% if status_f == 'PENDING'   %}selected{% endif %}>Pending</option>
+            <option value="APPROVED"  {% if status_f == 'APPROVED'  %}selected{% endif %}>Approved</option>
+            <option value="COMPLETED" {% if status_f == 'COMPLETED' %}selected{% endif %}>Completed</option>
+            <option value="DENIED"    {% if status_f == 'DENIED'    %}selected{% endif %}>Denied</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-champagne" style="height:40px;">
+          <i class="bi bi-search"></i> Apply Filter
+        </button>
+        {% if status_f %}
+        <a href="?" class="btn btn-ghost" style="height:40px;">
+          <i class="bi bi-x"></i> Clear
+        </a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Visitor Table Panel -->
+  <div class="panel" style="animation-delay:.12s;">
+    <div class="panel-header">
+      <div class="panel-icon teal"><i class="bi bi-person-badge"></i></div>
+      <h3>Visitor Records</h3>
+    </div>
+    <div class="panel-body no-pad">
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Visitor</th>
+              <th>Boarder</th>
+              <th>Relationship</th>
+              <th>Purpose</th>
+              <th>Visit Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in visitors %}
+            <tr>
+              <!-- Visitor -->
+              <td>
+                <div class="v-name-cell">
+                  <div class="v-avatar">
+                    {{ v.visitor_name|slice:":2"|upper }}
+                  </div>
+                  <div class="v-info">
+                    <strong>{{ v.visitor_name }}</strong>
+                    <div class="sub">{{ v.visitor_phone }}</div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Boarder -->
+              <td>
+                <a href="{% url 'hostel:boarder_profile' v.boarder.student.id %}" class="boarder-link">
+                  {{ v.boarder.student.full_name }}
+                </a>
+              </td>
+
+              <!-- Relationship -->
+              <td style="color:var(--slate2);">{{ v.get_relationship_display }}</td>
+
+              <!-- Purpose -->
+              <td style="color:var(--slate2);">{{ v.purpose|truncatechars:40 }}</td>
+
+              <!-- Date -->
+              <td style="color:var(--slate2);white-space:nowrap;">{{ v.visit_date|date:"d M Y" }}</td>
+
+              <!-- Status badge -->
+              <td>
+                {% if v.status == 'APPROVED' %}
+                  <span class="badge badge-approved"><i class="bi bi-check-circle" style="font-size:.65rem;"></i> Approved</span>
+                {% elif v.status == 'DENIED' %}
+                  <span class="badge badge-denied"><i class="bi bi-x-circle" style="font-size:.65rem;"></i> Denied</span>
+                {% elif v.status == 'COMPLETED' %}
+                  <span class="badge badge-completed"><i class="bi bi-flag-fill" style="font-size:.65rem;"></i> Completed</span>
+                {% else %}
+                  <span class="badge badge-pending"><i class="bi bi-clock" style="font-size:.65rem;"></i> Pending</span>
+                {% endif %}
+              </td>
+
+              <!-- Actions -->
+              <td>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+                  {% if v.status == 'PENDING' %}
+                  <form method="POST" action="{% url 'hostel:approve_visitor' v.id %}" style="display:inline;">
+                    {% csrf_token %}<input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-approve">
+                      <i class="bi bi-check-lg"></i> Approve
+                    </button>
+                  </form>
+                  <form method="POST" action="{% url 'hostel:approve_visitor' v.id %}" style="display:inline;">
+                    {% csrf_token %}<input type="hidden" name="action" value="deny">
+                    <button type="submit" class="btn btn-deny">
+                      <i class="bi bi-x-lg"></i> Deny
+                    </button>
+                  </form>
+                  {% elif v.status == 'APPROVED' %}
+                  <form method="POST" action="{% url 'hostel:approve_visitor' v.id %}" style="display:inline;">
+                    {% csrf_token %}<input type="hidden" name="action" value="complete">
+                    <button type="submit" class="btn btn-done">
+                      <i class="bi bi-flag"></i> Mark Done
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <div class="empty-icon-box"><i class="bi bi-person-x"></i></div>
+                  <h4>No Visitor Records</h4>
+                  <p>No visitor records match the current filter. Try clearing the filter or check back later.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

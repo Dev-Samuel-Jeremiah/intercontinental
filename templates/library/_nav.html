@@ -1,0 +1,17 @@
+{% include "finance/_fin_styles.html" %}
+<style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}.pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .5rem .3rem 0;font-size:.85rem}.pill input{width:auto}</style>
+<div class="no-print" style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:home' %}"><i class="bi bi-house"></i> Overview</a>
+  <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'library:desk' %}"><i class="bi bi-upc-scan"></i> Desk</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:catalogue' %}"><i class="bi bi-book"></i> Catalogue</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:loans' %}"><i class="bi bi-arrow-left-right"></i> Loans</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:charges' %}"><i class="bi bi-cash-coin"></i> Charges</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:reservations' %}"><i class="bi bi-bookmark"></i> Reservations</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:eresources' %}"><i class="bi bi-file-earmark-pdf"></i> E-library</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:reading' %}"><i class="bi bi-journal-check"></i> Reading</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:stocktakes' %}"><i class="bi bi-clipboard-check"></i> Stock-take</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:requests' %}"><i class="bi bi-cart-plus"></i> Requests</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:donations' %}"><i class="bi bi-gift"></i> Donations</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:visits' %}"><i class="bi bi-door-open"></i> Visits</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'library:reports' %}"><i class="bi bi-graph-up"></i> Reports &amp; settings</a>
+</div>

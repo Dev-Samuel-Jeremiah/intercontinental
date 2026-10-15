@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Certificate — {{ course.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cc{max-width:277mm;aspect-ratio:297/210;margin:1rem auto;background:#fffdf8;color:#1c1917;padding:16mm 20mm;border-radius:6px;position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;font-family:Outfit,system-ui,sans-serif}
+  .cc *{color:#1c1917}.cc:before{content:'';position:absolute;inset:6mm;border:3px double #f4d21f;border-radius:4px}
+  .cc h1{font-family:'Cormorant Garamond',serif;font-size:40px;font-style:italic;color:#0a1f44!important;margin:8mm 0 2mm}
+  .cc .nm{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;border-bottom:1px solid #f4d21f;padding:0 10mm 1mm;margin:3mm 0}
+  .cc .ft{margin-top:auto;width:100%;display:flex;justify-content:space-between;align-items:flex-end;font-size:11px}
+  .cc .sig{border-top:1px solid #57534e;width:60mm;padding-top:2px}
+  .bar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.bar i{display:block;height:100%;background:var(--champagne)}
+  @media print{body *{visibility:hidden!important}.cc,.cc *{visibility:visible!important}.cc{position:absolute;left:0;top:0;margin:0;width:100%;height:190mm;max-width:none}@page{size:A4 landscape;margin:10mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ course.name }}</div>
+  <h1 class="fin-title">Certificate of <em>completion</em></h1>
+  <p class="fin-sub">{% if cert %}Well done — you completed every part of this course.{% else %}Finish every lesson, assignment and quiz to earn your certificate.{% endif %}</p>
+</div>{% if cert %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print / save as PDF</button>{% endif %}</div>
+{% if not cert %}<div class="panel"><div class="panel-b">
+  <div style="display:flex;justify-content:space-between;margin-bottom:.4rem"><b>{{ prog.percent }}% complete</b><span class="hint">{{ prog.done }} of {{ prog.total }}</span></div>
+  <div class="bar"><i style="width:{{ prog.percent }}%"></i></div>
+  <div class="fin-stats" style="margin-top:1rem">
+    <div class="fin-stat"><small>Lessons watched</small><b>{{ prog.lessons.0 }}/{{ prog.lessons.1 }}</b></div>
+    <div class="fin-stat"><small>Assignments submitted</small><b>{{ prog.assignments.0 }}/{{ prog.assignments.1 }}</b></div>
+    <div class="fin-stat"><small>Quizzes passed</small><b>{{ prog.quizzes.0 }}/{{ prog.quizzes.1 }}</b></div>
+  </div></div></div>
+{% else %}
+<div class="cc">
+  <div style="font-weight:800;letter-spacing:.12em;font-size:16px">{{ school.name|upper }}</div>
+  <h1>Certificate of Completion</h1>
+  <div style="font-size:14px;color:#57534e!important">This certifies that</div>
+  <div class="nm">{{ name }}</div>
+  <div style="font-size:14px;max-width:190mm;line-height:1.7">has successfully completed the course <b>{{ course.name }}</b>, finishing every lesson, assignment and quiz, on <b>{{ cert.issued_at|date:"j F Y" }}</b>.</div>
+  <div class="ft"><div class="sig">Course teacher</div><div style="text-align:right"><img src="{% url 'classroom:certificate_qr' ref %}" alt="" style="width:22mm;height:22mm;display:block;margin-left:auto">Scan to verify</div></div>
+</div>{% endif %}
+{% endblock %}

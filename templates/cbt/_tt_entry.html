@@ -1,0 +1,9 @@
+<div class="pp"><b>{{ e.subject.name }}</b><span class="hint">{% for c in e.classes.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %} · {{ e.minutes }} min</span>
+  {% if e.exam %}<div class="noprint" style="font-size:.72rem;margin-top:.2rem"><a href="{% url 'cbt:edit_exam' e.exam.id %}" style="color:var(--champagne-lt)"><i class="bi bi-pc-display"></i> CBT exam</a> · <a href="{% url 'cbt:seating' e.exam.id %}" style="color:var(--champagne-lt)">seating</a></div>{% endif %}
+  <details class="noprint"><summary>move{% if not e.exam %} · create exam{% endif %}</summary>
+    <form method="post">{% csrf_token %}<input type="hidden" name="entry" value="{{ e.id }}"><input type="hidden" name="action" value="move">
+      <input type="date" name="date" value="{{ e.date|date:'Y-m-d' }}" min="{{ tt.start_date|date:'Y-m-d' }}" max="{{ tt.end_date|date:'Y-m-d' }}">
+      <select name="sitting"><option value="AM" {% if e.sitting == 'AM' %}selected{% endif %}>Morning</option>{% if tt.afternoon %}<option value="PM" {% if e.sitting == 'PM' %}selected{% endif %}>Afternoon</option>{% endif %}</select>
+      <button class="fin-btn fin-btn-sm">Move</button></form>
+    {% if not e.exam %}<form method="post">{% csrf_token %}<input type="hidden" name="entry" value="{{ e.id }}"><button class="fin-btn fin-btn-sm" name="action" value="make_exam"><i class="bi bi-pc-display"></i> Create CBT exam</button></form>{% endif %}
+  </details></div>

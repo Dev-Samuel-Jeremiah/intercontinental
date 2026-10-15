@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Data protection requests{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Data protection <em>requests</em></h1>
+  <p class="fin-sub">People can ask to see, correct, delete or move the data the school holds about them or their child. The law gives one month to reply.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-inbox"></i> Requests</h3>
+    <div>{% for v, l in statuses %}{% if forloop.first %}<a class="fin-btn fin-btn-sm{% if status == 'open' %} fin-btn-gold{% endif %}" href="?status=open">Open</a> {% endif %}<a class="fin-btn fin-btn-sm{% if status == v %} fin-btn-gold{% endif %}" href="?status={{ v }}">{{ l }}</a> {% endfor %}</div></div>
+    <table class="tbl"><thead><tr><th>Reference</th><th>Request</th><th>From</th><th>Due</th><th>Status</th></tr></thead><tbody>
+    {% for r in rows %}<tr><td class="name"><a href="{% url 'security:request' r.pk %}">{{ r.reference }}</a></td><td>{{ r.get_kind_display }}{% if r.student %}<br><span class="hint">{{ r.student.full_name }}</span>{% endif %}</td><td>{{ r.requester_name }}<br><span class="hint">{{ r.relationship }}</span></td>
+      <td>{{ r.due_on|date:"j M Y" }}{% if r.open %}<br><span class="chip {% if r.overdue %}red{% elif r.days_left <= 7 %}amber{% endif %}">{% if r.overdue %}overdue{% else %}{{ r.days_left }} days{% endif %}</span>{% endif %}</td><td><span class="chip">{{ r.get_status_display }}</span></td></tr>
+    {% empty %}<tr><td colspan="5" class="empty"><i class="bi bi-check2-circle"></i>No requests here.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0">Record a request</h3>
+    <p class="hint">For requests made by letter, email, phone or in person. Parents can also send one from the portal, and anyone from the school's privacy page.</p>
+    <div><label>What they ask for</label><select name="kind">{% for v, l in kinds %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Name</label><input name="requester_name" required></div><div><label>Relationship</label><input name="relationship" placeholder="Parent, former pupil, staff…"></div></div>
+    <div class="row2"><div><label>Email</label><input name="requester_email" type="email"></div><div><label>Phone</label><input name="requester_phone"></div></div>
+    <div><label>Pupil (if about a pupil)</label><select name="student"><option value="">—</option>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+    <div><label>Details</label><textarea name="details" rows="4" required></textarea></div>
+    <label class="pill"><input type="checkbox" name="identity_checked"> I have confirmed who they are</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Record request</button>
+  </form>
+</div>
+{% endblock %}

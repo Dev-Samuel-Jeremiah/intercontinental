@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Cohort comparison{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">Cohort <em>comparison</em></h1>
+  <p class="fin-sub">The same year group at the same point in each session — is this year's group ahead of or behind last year's?</p>
+</div>{% if data %}{% include "analytics/_export.html" %}{% endif %}</div>
+{% include "analytics/_nav.html" %}
+<form method="get" class="panel" style="padding:1rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+  <select name="level" class="fin-btn">{% for l in levels %}<option value="{{ l }}" {% if l == level %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="term" class="fin-btn">{% for t in terms %}<option value="{{ t }}" {% if t == term %}selected{% endif %}>{{ t }}</option>{% endfor %}</select>
+  <button class="fin-btn fin-btn-gold" type="submit">Compare</button>
+</form>
+{% if data and data.sessions %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-layers"></i> {{ level }}, {{ term }}</h3></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Session</th><th>Students</th><th>Average</th><th>Averaging 50+</th>{% for s in data.subjects %}<th>{{ s }}</th>{% endfor %}</tr></thead><tbody>
+  {% for s in data.sessions %}<tr><td class="name">{{ s.session }}</td><td>{{ s.students }}</td><td><b>{{ s.average|default:"—" }}</b></td><td>{{ s.pass_rate|default:"—" }}%</td>{% for v in s.subjects %}<td>{{ v|default:"—" }}</td>{% endfor %}</tr>{% endfor %}
+</tbody></table></div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Average by session</h3></div><div class="panel-b">
+  {% for s in data.sessions %}<div class="hbar"><span>{{ s.session }}</span><span class="track"><i style="width:{{ s.average|default:0 }}%"></i></span><span class="hint">{{ s.average|default:"—" }}%</span></div>{% endfor %}
+</div></div>
+{% else %}<div class="panel"><div class="empty"><i class="bi bi-layers"></i><p>No results for {{ level|default:"this year group" }} in the {{ term }} yet.</p></div></div>{% endif %}
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Quick Message{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.sec{font-size:.93rem;font-weight:800;color:var(--white);margin-bottom:12px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:9px 12px;border-bottom:1px solid var(--rim2);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.71rem;font-weight:700;}
+.bg{background:var(--green-dim);color:var(--green);} .ba{background:var(--amber-dim);color:var(--amber);} .br{background:var(--red-dim);color:var(--red);} .bb{background:var(--blue-dim);color:var(--blue);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:9px;font-size:.82rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;}
+.fg label{font-size:.77rem;font-weight:700;color:var(--slate2);}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;font-family:inherit;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:768px){.g2{grid-template-columns:1fr;}}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Quick Message — Direct to Parent</h2>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+
+<div class="g2">
+<div class="card">
+  <div class="sec">Compose Message</div>
+  <form method="POST">
+    {% csrf_token %}
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+      <div class="fg">
+        <label>Student *</label>
+        <select name="student_id" id="studentSelect" required>
+          <option value="">— Select student —</option>
+          {% for s in students %}
+          <option value="{{ s.id }}"
+            data-email="{{ s.parent_email|default:'' }}"
+            data-phone="{{ s.parent_phone|default:'' }}"
+            data-parent="{{ s.parent_name|default:'' }}">
+            {{ s.full_name }} ({{ s.admission_number }}) — {{ s.class_assigned.name|default:"No class" }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="contactInfo" style="display:none;background:var(--green-dim);border:1px solid var(--green-border);border-radius:8px;padding:10px;font-size:.82rem;color:var(--green);"></div>
+
+      <div class="fg">
+        <label>Channel *</label>
+        <select name="channel" id="channelSelect" required>
+          <option value="EMAIL">Email only</option>
+          <option value="SMS">SMS only</option>
+          <option value="BOTH" selected>Email + SMS</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>Load from Template (optional)</label>
+        <select id="tplSelect">
+          <option value="">— Write custom message —</option>
+          {% for t in templates %}<option value="{{ t.id }}" data-sub="{{ t.subject }}" data-email="{{ t.body_email|escapejs }}" data-sms="{{ t.body_sms|escapejs }}">{{ t.name }}</option>{% endfor %}
+        </select>
+      </div>
+
+      <div class="fg" id="subjectRow">
+        <label>Subject (for Email)</label>
+        <input type="text" name="subject" id="subjectField" placeholder="Important notice from {{ tenant.name }}">
+      </div>
+
+      <div class="fg">
+        <label>Message Body *</label>
+        <textarea name="body" id="bodyField" rows="8" required
+          placeholder="Dear {{parent_name}},
+
+Your child {{student_name}} ({{class_name}}) ...
+
+Placeholders available: {{student_name}}, {{parent_name}}, {{class_name}}, {{outstanding_fee}}, {{wallet_balance}}, {{school_name}}"></textarea>
+      </div>
+
+      <div style="background:var(--blue-dim);border-radius:8px;padding:10px;font-size:.75rem;color:var(--slate2);line-height:1.6;">
+        <strong>Available placeholders:</strong><br>
+        <code>{{student_name}}</code> · <code>{{parent_name}}</code> · <code>{{class_name}}</code> ·
+        <code>{{outstanding_fee}}</code> · <code>{{wallet_balance}}</code> · <code>{{school_name}}</code>
+      </div>
+
+      <button type="submit" class="btn btn-g" style="justify-content:center;"
+        onclick="return confirm('Send this message to the parent?')">
+        <i class="bi bi-send-fill"></i> Send Now
+      </button>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="sec">Recent Messages</div>
+  <table class="tbl">
+    <thead><tr><th>Student</th><th>Ch.</th><th>Preview</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>
+      {% for q in recent %}
+      <tr>
+        <td><strong>{{ q.student.full_name }}</strong></td>
+        <td><span class="badge {% if q.channel == 'EMAIL' %}bb{% elif q.channel == 'SMS' %}ba{% else %}bg{% endif %}">{{ q.channel }}</span></td>
+        <td style="font-size:.78rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ q.subject|default:q.body|truncatechars:40 }}</td>
+        <td>{% if q.status == 'SENT' %}<span class="badge bg">✓</span>{% else %}<span class="badge br">✗</span>{% endif %}</td>
+        <td style="font-size:.73rem;color:var(--slate2);">{{ q.sent_at|date:"d M H:i" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--slate);">No messages yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+
+<script>
+document.getElementById('studentSelect').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  const email = opt.dataset.email;
+  const phone = opt.dataset.phone;
+  const parent = opt.dataset.parent;
+  const el = document.getElementById('contactInfo');
+  if (!this.value) { el.style.display='none'; return; }
+  let html = '<strong>Parent:</strong> ' + (parent||'—') + '&nbsp;&nbsp;';
+  html += '<strong>Email:</strong> ' + (email ? '<span style="color:var(--green);">'+email+'</span>' : '<span style="color:var(--red);">Not set</span>') + '&nbsp;&nbsp;';
+  html += '<strong>Phone:</strong> ' + (phone ? '<span style="color:var(--green);">'+phone+'</span>' : '<span style="color:var(--red);">Not set</span>');
+  el.innerHTML = html;
+  el.style.display = 'block';
+});
+
+document.getElementById('channelSelect').addEventListener('change', function() {
+  document.getElementById('subjectRow').style.display = (this.value === 'SMS') ? 'none' : 'flex';
+  // If template loaded, switch body
+  const tpl = document.getElementById('tplSelect').options[document.getElementById('tplSelect').selectedIndex];
+  if (tpl.value) {
+    document.getElementById('bodyField').value = (this.value === 'SMS') ? (tpl.dataset.sms||'') : (tpl.dataset.email||'');
+  }
+});
+
+document.getElementById('tplSelect').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (!opt.value) return;
+  const ch = document.getElementById('channelSelect').value;
+  document.getElementById('subjectField').value = opt.dataset.sub || '';
+  document.getElementById('bodyField').value = (ch === 'SMS') ? (opt.dataset.sms||'') : (opt.dataset.email||'');
+});
+</script>
+{% endblock %}

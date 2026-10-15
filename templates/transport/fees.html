@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Transport fees{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Transport fees</em></h1>
+  <p class="fin-sub">Bill riders per term or per month from each route's fee. Parents can pay from their family wallet on the bus page.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Bills</h3>
+    <form method="get" style="display:flex;gap:.3rem"><select name="period" onchange="this.form.submit()"><option value="">All periods</option>{% for p in periods %}<option value="{{ p }}" {% if p == period %}selected{% endif %}>{{ p }}</option>{% endfor %}</select></form></div>
+    <div class="panel-b"><table class="tbl">
+    <thead><tr><th>Student</th><th>Route</th><th>Period</th><th class="num">Amount</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for b in bills %}<tr><td class="name">{{ b.student.full_name }}</td><td>{{ b.route.name|default:"—" }}</td><td>{{ b.period }}</td><td class="num">{{ b.amount|floatformat:2 }}</td>
+      <td><span class="chip{% if b.status == 'PAID' %} ok{% elif b.status == 'UNPAID' %} gold{% endif %}">{{ b.get_status_display }}</span>{% if b.note %}<br><small class="hint">{{ b.note }}</small>{% endif %}</td>
+      <td>{% if b.status == 'UNPAID' %}<form method="post" style="display:flex;gap:.25rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ b.pk }}">
+        <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="wallet">From wallet</button>
+        <button class="fin-btn fin-btn-sm" type="submit" name="action" value="PAID">Paid cash</button>
+        <button class="fin-btn fin-btn-sm" type="submit" name="action" value="WAIVED">Waive</button></form>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">No bills yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="generate">
+    <h3 style="margin:0 0 .6rem">Create bills</h3>
+    <div><label>For riders who pay</label><select name="plan"><option value="TERM">Per term</option><option value="MONTH">Per month (transport-only plan)</option></select></div>
+    <div><label>Period name</label><input name="period" required maxlength="40" placeholder="e.g. 1st Term 2026/2027 or Oct 2026"></div>
+    <p class="hint" style="margin:0">Running it twice for the same period never double-bills.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Create bills</button>
+  </form>
+</div>
+{% endblock %}

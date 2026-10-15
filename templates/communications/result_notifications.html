@@ -1,0 +1,56 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Result Notifications{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;border-radius:9px;font-size:.83rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;}
+.fg label{font-size:.77rem;font-weight:700;color:var(--slate2);}
+.fg select{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Result Notifications</h2>
+  </div>
+    <p style="color:var(--slate2);font-size:.82rem;margin-top:3px;">Notify parents that their child's result is available on the portal</p>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<div class="card" style="max-width:560px;">
+  <div style="font-weight:800;font-size:.95rem;margin-bottom:16px;"><i class="bi bi-trophy-fill" style="color:var(--amber);"></i> Send Result Available Notification</div>
+  <div style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:.83rem;color:var(--green);">
+    <i class="bi bi-info-circle"></i>
+    This sends an email and/or SMS to parents saying their child's result for the current term
+    is available. It does <strong>not</strong> reveal scores — parents log in to view them.
+  </div>
+  <form method="POST" style="display:flex;flex-direction:column;gap:14px;">
+    {% csrf_token %}
+    <div class="fg">
+      <label>Class (optional — leave blank for all students)</label>
+      <select name="class_id">
+        <option value="">All Classes</option>
+        {% for cls in classes %}<option value="{{ cls.id }}">{{ cls.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="fg">
+      <label>Channel</label>
+      <select name="channel">
+        <option value="BOTH">Email + SMS</option>
+        <option value="EMAIL">Email Only</option>
+        <option value="SMS">SMS Only</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-g" style="justify-content:center;"
+      onclick="return confirm('Send result notifications to all selected parents?')">
+      <i class="bi bi-send-fill"></i> Send Result Notifications
+    </button>
+  </form>
+</div>
+{% endblock %}

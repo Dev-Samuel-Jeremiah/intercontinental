@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta http-equiv="refresh" content="600">
+<title>{{ school.name }} — notice board</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#0a1d40;color:#f2f5fb;font-family:'Outfit',system-ui,sans-serif;overflow:hidden}
+  header{display:flex;justify-content:space-between;align-items:center;padding:2vh 4vw;border-bottom:1px solid rgba(255,255,255,.08)}
+  header b{font-family:'Cormorant Garamond',serif;font-size:4.5vh;color:#ffe066}
+  #clock{font-size:4vh;font-variant-numeric:tabular-nums;color:rgba(255,255,255,.7)}
+  .slide{position:absolute;inset:12vh 5vw 8vh;display:none;flex-direction:column;justify-content:center}
+  .slide.on{display:flex;animation:fade .8s}
+  @keyframes fade{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .kind{text-transform:uppercase;letter-spacing:.4vh;font-size:2.4vh;color:#f4d21f;margin-bottom:2vh}
+  h1{font-family:'Cormorant Garamond',serif;font-size:9vh;line-height:1.05;margin:0 0 3vh}
+  .body{font-size:3.6vh;line-height:1.5;color:rgba(255,255,255,.82);white-space:pre-line;max-height:52vh;overflow:hidden}
+  ul{list-style:none;padding:0;margin:0;columns:2;column-gap:5vw;font-size:3.6vh;line-height:1.7}
+  footer{position:absolute;bottom:2.5vh;left:5vw;right:5vw;display:flex;gap:1vw}
+  footer i{flex:1;height:.6vh;border-radius:9px;background:rgba(255,255,255,.12)}
+  footer i.on{background:#f4d21f}
+</style>
+</head>
+<body>
+<header><b>{{ school.name }}</b><span id="clock"></span></header>
+{% for s in slides %}
+<section class="slide{% if forloop.first %} on{% endif %}">
+  <div class="kind">{{ s.kind }}</div>
+  <h1>{{ s.title }}</h1>
+  {% if s.body %}<div class="body">{{ s.body }}</div>{% endif %}
+  {% if s.items %}<ul>{% for i in s.items %}<li>{{ i }}</li>{% endfor %}</ul>{% endif %}
+</section>
+{% endfor %}
+<footer>{% for s in slides %}<i{% if forloop.first %} class="on"{% endif %}></i>{% endfor %}</footer>
+<script>
+(function(){
+  var slides=document.querySelectorAll('.slide'),dots=document.querySelectorAll('footer i'),n=0;
+  function tick(){var d=new Date();document.getElementById('clock').textContent=d.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'})+'  '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});}
+  tick();setInterval(tick,15000);
+  if(slides.length>1){setInterval(function(){slides[n].classList.remove('on');dots[n].classList.remove('on');n=(n+1)%slides.length;slides[n].classList.add('on');dots[n].classList.add('on');},{{ seconds }}*1000);}
+})();
+</script>
+</body>
+</html>

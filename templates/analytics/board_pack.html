@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+{% load humanize %}
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board report — {{ school.name }}</title>
+<style>
+  body{margin:0;background:#e7e5e4;font-family:Arial,Helvetica,sans-serif;color:#1c1917}
+  .bar{position:sticky;top:0;background:#1c1917;color:#fff;padding:.6rem 1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+  .bar button,.bar a{background:{{ colour }};color:#fff;border:0;border-radius:8px;padding:.5rem .9rem;font-weight:700;cursor:pointer;text-decoration:none;font-size:.9rem}
+  .page{background:#fff;width:210mm;min-height:297mm;margin:1rem auto;padding:14mm;box-sizing:border-box}
+  .hd{display:flex;gap:4mm;align-items:center;border-bottom:3px solid {{ colour }};padding-bottom:3mm;margin-bottom:5mm}
+  .hd img{height:16mm}
+  h1{margin:0;font-size:20px} h2{font-size:15px;margin:6mm 0 2mm;border-left:4px solid {{ colour }};padding-left:2mm}
+  .muted{color:#78716c;font-size:11px}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+  .tile{border:1px solid #e7e5e4;border-radius:3mm;padding:3mm}
+  .tile small{display:block;color:#78716c;font-size:9px;text-transform:uppercase;letter-spacing:.06em}
+  .tile b{font-size:18px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{text-align:left;background:#f5f5f4;padding:1.6mm;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em}
+  td{padding:1.6mm;border-bottom:1px solid #f0efed}
+  .meter{height:3mm;background:#f0efed;border-radius:2mm;overflow:hidden}
+  .meter i{display:block;height:100%;background:{{ colour }}}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+  @media print{body{background:#fff}.bar{display:none}.page{margin:0;width:auto;min-height:auto;padding:0;page-break-after:always}@page{size:A4;margin:12mm}}
+  @media(max-width:820px){.page{width:auto;margin:.5rem;padding:5mm}.tiles{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}}
+</style></head><body>
+<div class="bar"><span>Board report — choose "Save as PDF" in the print window to keep a copy.</span><span><a href="{% url 'analytics:home' %}">Back</a> <button onclick="window.print()">Print / PDF</button></span></div>
+
+<div class="page">
+  <div class="hd">{% if school.logo %}<img src="{{ school.logo.url }}" alt="">{% endif %}<div><div class="muted" style="font-weight:700;letter-spacing:.1em">{{ school.name|upper }}</div><h1>Report to the board</h1><div class="muted">{% if term %}{{ term.name }}{% endif %}{% if session %}, {{ session.name }}{% endif %} · prepared {{ today|date:"j F Y" }}</div></div></div>
+  <div class="tiles">
+    <div class="tile"><small>On roll</small><b>{{ roll }}</b></div>
+    <div class="tile"><small>Attendance (30 days)</small><b>{% if attendance is not None %}{{ attendance }}%{% else %}—{% endif %}</b></div>
+    <div class="tile"><small>Fees collected</small><b>{% if fee.rate is not None %}{{ fee.rate }}%{% else %}—{% endif %}</b></div>
+    <div class="tile"><small>Average score</small><b>{% if results %}{{ results.average }}%{% else %}—{% endif %}</b></div>
+  </div>
+  <h2>Targets</h2>
+  <table><tr><th>Measure</th><th>Now</th><th>Target</th><th style="width:30%">Progress</th></tr>
+  {% for k in kpis %}<tr><td>{{ k.label }}</td><td>{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %}</td><td>{{ k.target|default:"not set" }}</td><td>{% if k.progress is not None %}<div class="meter"><i style="width:{{ k.progress }}%"></i></div>{% endif %}</td></tr>{% endfor %}</table>
+  <h2>Fees this term</h2>
+  <p style="font-size:12px;margin:0 0 2mm">₦{{ fee.paid|floatformat:0|intcomma }} collected of ₦{{ fee.expected|floatformat:0|intcomma }} expected; ₦{{ fee.outstanding|floatformat:0|intcomma }} owed by {{ fee.debtors }} famil{{ fee.debtors|pluralize:"y,ies" }}.</p>
+  <div class="cols">
+    <table><tr><th>Class</th><th>Collected</th><th>Owed</th></tr>{% for r in by_class %}<tr><td>{{ r.name }}</td><td>{{ r.rate|default:"—" }}%</td><td>₦{{ r.outstanding|floatformat:0|intcomma }}</td></tr>{% empty %}<tr><td colspan="3" class="muted">No bills this term.</td></tr>{% endfor %}</table>
+    <table><tr><th>Debt age</th><th>Amount</th><th>Families</th></tr>{% for b in ageing %}<tr><td>{{ b.label }}</td><td>₦{{ b.amount|floatformat:0|intcomma }}</td><td>{{ b.families }}</td></tr>{% endfor %}</table>
+  </div>
+</div>
+
+<div class="page">
+  <h2 style="margin-top:0">Results{% if results %} — {{ results.term }}{% endif %}</h2>
+  {% if results %}<p style="font-size:12px;margin:0 0 2mm">Average {{ results.average }}% across {{ results.students }} students; {{ results.pass_rate }}% averaged 50% or more.</p>
+  <table><tr><th>Class</th><th>Average</th><th style="width:45%"></th></tr>{% for c in results.by_class %}<tr><td>{{ c.name }}</td><td>{{ c.average }}%</td><td><div class="meter"><i style="width:{{ c.average }}%"></i></div></td></tr>{% endfor %}</table>
+  {% else %}<p class="muted">No term results entered yet.</p>{% endif %}
+  <h2>Enrolment</h2>
+  <div class="cols">
+    <table><tr><th>Month</th><th>On roll</th></tr>{% for p in series %}<tr><td>{{ p.month|date:"M Y" }}</td><td>{{ p.count }}</td></tr>{% endfor %}{% for p in ahead %}<tr class="muted"><td>{{ p.month|date:"M Y" }} (trend)</td><td>{{ p.count }}</td></tr>{% endfor %}</table>
+    <div>
+      <table><tr><th>Year group</th><th>Students</th></tr>{% for name, n in levels %}<tr><td>{{ name }}</td><td>{{ n }}</td></tr>{% endfor %}</table>
+      <table style="margin-top:4mm"><tr><th>Gender</th><th>Students</th></tr><tr><td>Boys</td><td>{{ demo.totals.male }}</td></tr><tr><td>Girls</td><td>{{ demo.totals.female }}</td></tr>{% if demo.totals.unspecified %}<tr><td>Not recorded</td><td>{{ demo.totals.unspecified }}</td></tr>{% endif %}</table>
+    </div>
+  </div>
+  <h2>Leavers, last 6 months</h2>
+  <p style="font-size:12px;margin:0 0 2mm">{{ retention.leavers }} left ({% for s, n in retention.by_status %}{{ n }} {{ s|lower }}{% if not forloop.last %}, {% endif %}{% endfor %}){% if retention.withdrawal_rate %}; withdrawals were {{ retention.withdrawal_rate }}% of the roll{% endif %}.</p>
+  {% if retention.reasons %}<table><tr><th>Reason for withdrawing</th><th>Students</th></tr>{% for r, n in retention.reasons %}<tr><td>{{ r }}</td><td>{{ n }}</td></tr>{% endfor %}</table>{% endif %}
+</div>
+</body></html>

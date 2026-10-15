@@ -1,0 +1,259 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Staff attendance{% endblock %}
+{% block content %}
+<style>
+  .sa-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem 2rem;flex-wrap:wrap;margin-bottom:1.4rem}
+  .sa-eyebrow{font-size:.68rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--champagne);display:flex;align-items:center;gap:.55rem}
+  .sa-eyebrow::before{content:"";width:18px;height:1px;background:var(--champagne)}
+  .sa-title{font-family:var(--serif);font-size:clamp(1.9rem,3.4vw,2.6rem);font-weight:500;color:var(--white);margin:.35rem 0 .2rem;line-height:1.1}
+  .sa-title em{color:var(--champagne)}
+  .sa-sub{color:var(--slate2);font-size:.88rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+  .sa-live{display:inline-flex;align-items:center;gap:.45rem;padding:.22rem .7rem;border-radius:99px;font-size:.72rem;font-weight:600;
+    color:var(--green);background:var(--green-dim);border:1px solid var(--green-border)}
+  .sa-live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green);animation:sa-pulse 1.6s infinite}
+  @keyframes sa-pulse{0%{box-shadow:0 0 0 0 rgba(94,203,142,.6)}100%{box-shadow:0 0 0 9px rgba(94,203,142,0)}}
+
+  .sa-actions{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+  .sa-daynav{display:flex;align-items:center;gap:.35rem;padding:.3rem;border-radius:12px;background:var(--surface);border:1px solid var(--rim2)}
+  .sa-daynav a,.sa-daynav span.off{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;color:var(--slate2)}
+  .sa-daynav a:hover{background:var(--surface3);color:var(--white)}
+  .sa-daynav span.off{opacity:.3}
+  .sa-daynav input{background:transparent;border:0;color:var(--white);font:inherit;font-size:.86rem;padding:.3rem .4rem;color-scheme:dark}
+  .sa-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1rem;border-radius:11px;font-size:.82rem;font-weight:600;
+    border:1px solid var(--rim2);background:var(--surface);color:var(--slate2);cursor:pointer;font-family:inherit;transition:all .18s}
+  .sa-btn:hover{color:var(--white);border-color:var(--rim3);background:var(--surface2)}
+  .sa-btn.gold{background:linear-gradient(135deg,var(--champagne),var(--champagne-dk));color:#0a1f44;border-color:transparent}
+  .sa-btn.gold:hover{filter:brightness(1.06)}
+
+  .sa-banner{display:flex;align-items:center;gap:.7rem;padding:.85rem 1.1rem;border-radius:14px;margin-bottom:1.2rem;font-size:.86rem;
+    background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber)}
+
+  .sa-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:.8rem;margin-bottom:1.4rem}
+  @media(max-width:1200px){.sa-stats{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.sa-stats{grid-template-columns:repeat(2,1fr)}}
+  .sa-stat{position:relative;overflow:hidden;padding:1rem 1.1rem;border-radius:var(--radius);background:var(--surface);border:1px solid var(--rim)}
+  .sa-stat::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)}
+  .sa-stat small{display:flex;align-items:center;gap:.4rem;font-size:.66rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+  .sa-stat small i{color:var(--c);font-size:.9rem}
+  .sa-stat b{display:block;font-family:var(--serif);font-size:2.2rem;font-weight:600;line-height:1.1;margin-top:.35rem;color:var(--white);font-variant-numeric:lining-nums tabular-nums}
+  .sa-stat span{font-size:.72rem;color:var(--slate)}
+
+  .sa-panel{background:var(--surface);border:1px solid var(--rim);border-radius:var(--radius);overflow:hidden;margin-bottom:1.4rem}
+  .sa-panel-h{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .sa-panel-h h3{margin:0;font-size:.95rem;font-weight:600;color:var(--white);display:flex;align-items:center;gap:.55rem}
+  .sa-panel-h h3 i{color:var(--champagne)}
+  .sa-tools{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+  .sa-search{display:flex;align-items:center;gap:.5rem;padding:.45rem .8rem;border-radius:10px;background:var(--surface2);border:1px solid var(--rim2);color:var(--slate)}
+  .sa-search input{background:transparent;border:0;outline:0;color:var(--white);font:inherit;font-size:.84rem;width:170px}
+  .sa-filters{display:flex;gap:.3rem;flex-wrap:wrap}
+  .sa-filters button{padding:.4rem .75rem;border-radius:99px;font-size:.74rem;font-weight:600;border:1px solid var(--rim2);background:transparent;
+    color:var(--slate2);cursor:pointer;font-family:inherit}
+  .sa-filters button.on{background:var(--champagne);border-color:var(--champagne);color:#0a1f44}
+
+  .sa-table{width:100%;border-collapse:collapse;font-size:.86rem}
+  .sa-table th{text-align:left;padding:.75rem 1.2rem;font-size:.64rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--slate);
+    border-bottom:1px solid var(--rim2);white-space:nowrap}
+  .sa-table td{padding:.8rem 1.2rem;border-bottom:1px solid var(--rim);color:var(--white);vertical-align:middle}
+  .sa-table tbody tr:hover{background:rgba(255,255,255,.02)}
+  .sa-table tbody tr:last-child td{border-bottom:0}
+  .sa-person{display:flex;align-items:center;gap:.75rem}
+  .sa-av{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:.85rem;flex-shrink:0;
+    background:var(--surface3);color:var(--champagne-lt);border:1px solid var(--rim2)}
+  .sa-person b{display:block;font-weight:600}
+  .sa-person small{color:var(--slate);font-size:.74rem}
+  .sa-time{font-variant-numeric:tabular-nums;font-weight:600;font-size:.95rem}
+  .sa-meta{display:block;color:var(--slate);font-size:.7rem;margin-top:.1rem}
+  .sa-muted{color:var(--slate)}
+  .sa-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .65rem;border-radius:99px;font-size:.72rem;font-weight:600;white-space:nowrap;border:1px solid}
+  .sa-chip.green{color:var(--green);background:var(--green-dim);border-color:var(--green-border)}
+  .sa-chip.amber{color:var(--amber);background:var(--amber-dim);border-color:var(--amber-border)}
+  .sa-chip.red{color:var(--red);background:var(--red-dim);border-color:var(--red-border)}
+  .sa-chip.blue{color:var(--blue);background:var(--blue-dim);border-color:var(--blue-border)}
+  .sa-chip.gold{color:var(--champagne);background:var(--champagne-dim);border-color:var(--champagne-border)}
+  .sa-chip.grey{color:var(--slate2);background:rgba(255,255,255,.04);border-color:var(--rim2)}
+  .sa-onsite::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--champagne);animation:sa-pulse-y 1.6s infinite}
+  @keyframes sa-pulse-y{0%{box-shadow:0 0 0 0 rgba(244,210,31,.6)}100%{box-shadow:0 0 0 7px rgba(244,210,31,0)}}
+  .sa-empty{padding:2.2rem;text-align:center;color:var(--slate)}
+
+  .sa-rate{display:flex;align-items:center;gap:.6rem;justify-content:flex-end}
+  .sa-bar{width:80px;height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .sa-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--champagne-dk),var(--champagne))}
+  .sa-foot{padding:.7rem 1.2rem 1rem;color:var(--slate);font-size:.76rem}
+
+  @media(max-width:760px){
+    .sa-table thead{display:none}
+    .sa-table,.sa-table tbody,.sa-table tr,.sa-table td{display:block;width:100%}
+    .sa-table tr{border-bottom:1px solid var(--rim);padding:.5rem 0}
+    .sa-table td{border:0;padding:.35rem 1.1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+    .sa-table td[data-label]::before{content:attr(data-label);font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+    .sa-search input{width:120px}
+  }
+  @media print{
+    .sidebar,.topbar,.sa-actions,.sa-tools,.sa-live{display:none!important}
+    .main{margin-left:0!important}
+  }
+</style>
+
+<div class="sa-head">
+  <div>
+    <div class="sa-eyebrow">Staff &middot; Attendance register</div>
+    <h1 class="sa-title">Staff <em>attendance</em></h1>
+    <div class="sa-sub">
+      <span>{{ day|date:"l j F Y" }} &middot; late after {{ late_after|time:"H:i" }}</span>
+      {% if is_today %}<span class="sa-live">Live &middot; updates every minute</span>{% endif %}
+    </div>
+  </div>
+  <div class="sa-actions">
+    <form method="get" class="sa-daynav">
+      <a href="?date={{ prev_day|date:'Y-m-d' }}" title="Previous day"><i class="bi bi-chevron-left"></i></a>
+      <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Pick a day">
+      {% if next_day %}<a href="?date={{ next_day|date:'Y-m-d' }}" title="Next day"><i class="bi bi-chevron-right"></i></a>{% else %}<span class="off"><i class="bi bi-chevron-right"></i></span>{% endif %}
+    </form>
+    {% if not is_today %}<a class="sa-btn" href="{% url 'safety:staff_attendance' %}"><i class="bi bi-calendar-check"></i> Today</a>{% endif %}
+    <a class="sa-btn gold" href="{% url 'idcards:reception_qr_page' %}"><i class="bi bi-qr-code"></i> Clock-in QR</a>
+    <a class="sa-btn" href="{% url 'idcards:staff_attendance_log' %}?date={{ day|date:'Y-m-d' }}"><i class="bi bi-list-ul"></i> Scan log</a>
+    <a class="sa-btn" href="{% url 'safety:staff_leave' %}"><i class="bi bi-calendar-plus"></i> Leave</a>
+    <button class="sa-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  </div>
+</div>
+
+{% if closed %}<div class="sa-banner"><i class="bi bi-moon-stars"></i> School closed — weekend or public holiday. Anyone who clocked in still shows below.</div>{% endif %}
+
+<div class="sa-stats">
+  <div class="sa-stat" style="--c:var(--green)"><small><i class="bi bi-box-arrow-in-right"></i> Clocked in</small><b>{{ clocked_in }}</b><span>{% if counts.late %}{{ counts.late }} late{% else %}none late{% endif %}</span></div>
+  {% if is_today %}
+  <div class="sa-stat" style="--c:var(--champagne)"><small><i class="bi bi-building-check"></i> On site now</small><b>{{ counts.on_site }}</b><span>clocked in, not out yet</span></div>
+  {% else %}
+  <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-exclamation-triangle"></i> Didn't clock out</small><b>{{ counts.no_clock_out }}</b><span>no closing scan</span></div>
+  {% endif %}
+  <div class="sa-stat" style="--c:var(--blue)"><small><i class="bi bi-box-arrow-right"></i> Clocked out</small><b>{{ counts.clocked_out }}</b><span>closing scan recorded</span></div>
+  <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-alarm"></i> Late</small><b>{{ counts.late|default:0 }}</b><span>after {{ late_after|time:"H:i" }}</span></div>
+  <div class="sa-stat" style="--c:#60a5fa"><small><i class="bi bi-calendar2-x"></i> On leave</small><b>{{ counts.leave|default:0 }}</b><span>approved leave</span></div>
+  <div class="sa-stat" style="--c:var(--red)"><small><i class="bi bi-person-x"></i> Absent</small><b>{{ counts.absent|default:0 }}</b><span>no scan, no leave</span></div>
+</div>
+
+<div class="sa-panel">
+  <div class="sa-panel-h">
+    <h3><i class="bi bi-clock-history"></i> Clock in &amp; out &middot; {{ day|date:"j M Y" }}</h3>
+    <div class="sa-tools">
+      <label class="sa-search"><i class="bi bi-search"></i><input type="search" id="sa-q" placeholder="Find staff…" autocomplete="off"></label>
+      <div class="sa-filters" id="sa-filters">
+        <button type="button" class="on" data-f="all">All</button>
+        <button type="button" data-f="in">In</button>
+        <button type="button" data-f="late">Late</button>
+        {% if is_today %}<button type="button" data-f="onsite">On site</button>{% else %}<button type="button" data-f="noout">No clock-out</button>{% endif %}
+        <button type="button" data-f="out">Out</button>
+        <button type="button" data-f="absent">Absent</button>
+        <button type="button" data-f="leave">Leave</button>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="sa-table">
+      <thead><tr><th>Staff</th><th>Status</th><th>Clock in</th><th>Clock out</th><th>Time on site</th><th style="text-align:right">Scans</th></tr></thead>
+      <tbody id="sa-rows">
+        {% for r in rows %}
+        <tr data-name="{{ r.staff.full_name|lower }}" data-state="{{ r.state }}"{% if r.on_site %} data-onsite="1"{% endif %}{% if r.no_clock_out %} data-noout="1"{% endif %}{% if r.left %} data-out="1"{% endif %}>
+          <td>
+            <div class="sa-person">
+              <div class="sa-av">{{ r.staff.full_name|slice:":1"|upper }}</div>
+              <div><b>{{ r.staff.full_name }}</b><small>{{ r.staff.get_role_display }}</small></div>
+            </div>
+          </td>
+          <td data-label="Status">
+            {% if r.state == 'present' %}<span class="sa-chip green"><i class="bi bi-check2"></i> Present</span>
+            {% elif r.state == 'late' %}<span class="sa-chip amber"><i class="bi bi-alarm"></i> Late</span>
+            {% elif r.state == 'leave' %}<span class="sa-chip blue"><i class="bi bi-calendar2-x"></i> {{ r.leave.get_leave_type_display }}</span>
+            {% elif r.state == 'absent' %}<span class="sa-chip red"><i class="bi bi-x-lg"></i> Absent</span>
+            {% elif r.state == 'closed' %}<span class="sa-chip grey">School closed</span>
+            {% else %}<span class="sa-muted">—</span>{% endif %}
+          </td>
+          <td data-label="Clock in">
+            {% if r.arrived %}<span class="sa-time">{{ r.arrived|time:"H:i" }}</span><span class="sa-meta">{{ r.method }}</span>{% else %}<span class="sa-muted">—</span>{% endif %}
+          </td>
+          <td data-label="Clock out">
+            {% if r.left %}<span class="sa-time">{{ r.left|time:"H:i" }}</span>
+            {% elif r.on_site %}<span class="sa-chip gold sa-onsite">On site</span>
+            {% elif r.no_clock_out %}<span class="sa-chip amber"><i class="bi bi-exclamation-triangle"></i> Not clocked out</span>
+            {% else %}<span class="sa-muted">—</span>{% endif %}
+          </td>
+          <td data-label="Time on site">{% if r.hours %}<span class="sa-time">{{ r.hours }}</span>{% if r.on_site %}<span class="sa-meta">so far</span>{% endif %}{% else %}<span class="sa-muted">—</span>{% endif %}</td>
+          <td data-label="Scans" style="text-align:right">{% if r.scans %}{{ r.scans }}{% else %}<span class="sa-muted">0</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="sa-empty">No staff yet. Add staff accounts and they will appear here.</td></tr>
+        {% endfor %}
+        <tr id="sa-none" hidden><td colspan="6" class="sa-empty">No staff match this filter.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sa-foot">Staff clock in by scanning the reception QR code (or with their phone on school grounds); their next scan clocks them out. A repeat QR scan within 2 minutes is ignored.</div>
+</div>
+
+<div class="sa-panel">
+  <div class="sa-panel-h"><h3><i class="bi bi-calendar-month"></i> {{ first|date:"F Y" }} so far</h3><span class="sa-muted" style="font-size:.8rem">{{ school_days }} school day{{ school_days|pluralize }}</span></div>
+  <div style="overflow-x:auto">
+    <table class="sa-table">
+      <thead><tr><th>Staff</th><th style="text-align:right">Present</th><th style="text-align:right">Leave</th><th style="text-align:right">Absent</th><th style="text-align:right">Rate</th></tr></thead>
+      <tbody>
+        {% for r in month %}
+        <tr>
+          <td><div class="sa-person"><div class="sa-av">{{ r.staff.full_name|slice:":1"|upper }}</div><div><b>{{ r.staff.full_name }}</b><small>{{ r.staff.get_role_display }}</small></div></div></td>
+          <td data-label="Present" style="text-align:right">{{ r.present }}</td>
+          <td data-label="Leave" style="text-align:right">{{ r.leave }}</td>
+          <td data-label="Absent" style="text-align:right;{% if r.absent %}color:var(--red){% endif %}">{{ r.absent }}</td>
+          <td data-label="Rate">{% if r.rate is not None %}<div class="sa-rate"><div class="sa-bar"><i style="width:{{ r.rate }}%"></i></div><b>{{ r.rate }}%</b></div>{% else %}<span class="sa-muted" style="display:block;text-align:right">—</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="sa-empty">No staff yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="sa-foot">Rate leaves out days on approved leave. Weekends and public holidays are not school days.</div>
+</div>
+
+<script>
+(function () {
+  const rows = [...document.querySelectorAll('#sa-rows tr[data-name]')];
+  const none = document.getElementById('sa-none');
+  const q = document.getElementById('sa-q');
+  let filter = 'all';
+  const tests = {
+    all: () => true,
+    in: r => r.dataset.state === 'present' || r.dataset.state === 'late',
+    late: r => r.dataset.state === 'late',
+    onsite: r => r.dataset.onsite === '1',
+    noout: r => r.dataset.noout === '1',
+    out: r => r.dataset.out === '1',
+    absent: r => r.dataset.state === 'absent',
+    leave: r => r.dataset.state === 'leave',
+  };
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let shown = 0;
+    rows.forEach(r => {
+      const ok = tests[filter](r) && (!term || r.dataset.name.includes(term));
+      r.hidden = !ok;
+      if (ok) shown++;
+    });
+    if (none) none.hidden = shown > 0 || !rows.length;
+  }
+  document.getElementById('sa-filters').addEventListener('click', e => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    document.querySelectorAll('#sa-filters button').forEach(x => x.classList.toggle('on', x === b));
+    filter = b.dataset.f;
+    apply();
+  });
+  q.addEventListener('input', apply);
+
+  {% if is_today %}
+  // Today's register refreshes itself so new scans appear — but never while someone is searching or filtering
+  setInterval(() => {
+    if (document.visibilityState === 'visible' && filter === 'all' && !q.value) location.reload();
+  }, 60000);
+  {% endif %}
+})();
+</script>
+{% endblock %}

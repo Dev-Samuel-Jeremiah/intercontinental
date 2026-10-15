@@ -1,0 +1,12 @@
+<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:wellbeing' %}"><i class="bi bi-heart-pulse"></i> Wellbeing</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:class_goals' %}"><i class="bi bi-bullseye"></i> Class goals</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:notes_review' %}"><i class="bi bi-journal-check"></i> Shared notes</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:tutoring_manage' %}"><i class="bi bi-people"></i> Peer tutors</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:leaderboards' %}"><i class="bi bi-trophy"></i> Leaderboards</a>
+  {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:reports' %}"><i class="bi bi-shield-exclamation"></i> Reports</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:handbook_edit' %}"><i class="bi bi-book"></i> Handbook</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:settings' %}"><i class="bi bi-sliders"></i> Settings</a>
+  {% endif %}
+</div>

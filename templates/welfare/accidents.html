@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Accident reports{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health</div>
+  <h1 class="fin-title"><em>Accident reports</em></h1>
+  <p class="fin-sub">Playground, sports and classroom injuries. The family is emailed straight away (and texted if it is more than first aid); the nurse follows up and closes each report.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if nurse %}All reports{% else %}Your reports{% endif %}</h3></div><div class="panel-b">
+    {% for a in items %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b>{{ a.who }}</b> <span class="hint">{{ a.happened_at|date:"D j M H:i" }} · {{ a.get_place_display }}</span> <span class="chip{% if a.severity == 'SERIOUS' %} red{% elif a.severity == 'MODERATE' %} gold{% endif %}">{{ a.get_severity_display }}</span>{% if a.closed %} <span class="chip ok">Closed</span>{% endif %}
+      <div class="hint">{{ a.injury }}{% if a.body_part %} ({{ a.body_part }}){% endif %}{% if a.first_aid %} · First aid: {{ a.first_aid }}{% endif %}{% if a.parent_told %} · family told{% endif %}</div>
+      {% if nurse %}<form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="op" value="follow"><input type="hidden" name="id" value="{{ a.pk }}"><input name="follow_up" value="{{ a.follow_up }}" placeholder="Follow-up" style="flex:1;min-width:160px"><label class="pill"><input type="checkbox" name="closed" {% if a.closed %}checked{% endif %}> Closed</label><button class="fin-btn fin-btn-sm" type="submit">Save</button></form>{% elif a.follow_up %}<div class="hint">Follow-up: {{ a.follow_up }}</div>{% endif %}</div>
+    {% empty %}<p class="empty">No accidents reported.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Report an accident</h3>
+    <div><label>Student</label><select name="student"><option value="">— not a student —</option>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div><label>…or the person hurt</label><input name="other_person" maxlength="160" placeholder="Staff member or visitor"></div>
+    <div class="row2"><div><label>When</label><input type="datetime-local" name="happened_at" value="{{ now }}"></div><div><label>Where</label><select name="place">{% for k, v in places %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Doing what</label><input name="activity" maxlength="160"></div>
+    <div class="row2"><div><label>Injury</label><input name="injury" required maxlength="255"></div><div><label>Body part</label><input name="body_part" maxlength="80"></div></div>
+    <div><label>First aid given</label><textarea name="first_aid" rows="2"></textarea></div>
+    <div class="row2"><div><label>How serious</label><select name="severity">{% for k, v in severities %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="hospital"> Went to hospital</label></div></div>
+    <div><label>Witnesses</label><input name="witnesses" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send report</button>
+  </form>
+</div>
+{% endblock %}

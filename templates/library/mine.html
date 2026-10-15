@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My library{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title">My <em>library</em></h1>
+  <p class="fin-sub">Your books, reservations{% if student %}, reading log and challenges{% endif %}.</p>
+</div></div>
+{% include "library/_usernav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Books I have</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for l in loans %}<tr><td class="name">{{ l.copy.book.title }}{% if l.rental_term %} <span class="chip">Rented</span>{% endif %}</td><td>{% if l.due_on < today %}<span class="chip red">Overdue — {{ l.due_on|date:"j M" }}</span>{% else %}due {{ l.due_on|date:"D j M" }}{% endif %}</td>
+        <td>{% if not l.rental_term and l.due_on >= today %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="renew"><input type="hidden" name="id" value="{{ l.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Renew</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No books out. <a href="{% url 'library:search' %}">Find one</a>.</td></tr>{% endfor %}
+    </tbody></table>
+    {% for c in charges %}<p class="hint" style="margin:.4rem 0 0"><span class="chip red">₦{{ c.amount|floatformat:2 }}</span> {{ c.get_kind_display }} — {{ c.note }}</p>{% endfor %}
+    </div></div>
+    {% if reservations %}<div class="panel"><div class="panel-h"><h3>Reserved</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in reservations %}<tr><td class="name">{{ r.book.title }}</td><td>{% if r.status == 'READY' %}<span class="chip ok">Collect by {{ r.hold_until|date:"D j M" }}</span>{% else %}Waiting{% endif %}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form></td></tr>{% endfor %}
+    </tbody></table></div></div>{% endif %}
+    {% for c in challenges %}<div class="panel"><div class="panel-b"><b>{{ c.ch.title }}</b>{% if c.won %} <span class="chip gold"><i class="bi bi-award"></i> {{ c.ch.badge }}</span>{% endif %}<p class="hint" style="margin:.2rem 0">{{ c.n }} of {{ c.ch.target }} books · ends {{ c.ch.ends|date:"j M" }} · <a href="{% url 'library:challenge' c.ch.pk %}">leaderboard</a></p><div class="bar"><i style="width:{{ c.pct }}%"></i></div></div></div>{% endfor %}
+    {% if recs %}<div class="panel"><div class="panel-h"><h3>You might like</h3></div><div class="panel-b"><div class="books">{% for b in recs %}<a class="bk" href="{% url 'library:search_book' b.pk %}">{% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" loading="lazy">{% endif %}<b>{{ b.title }}</b><small>{{ b.why }}</small></a>{% endfor %}</div></div></div>{% endif %}
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    {% if student %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="log">
+      <h3 style="margin:0 0 .6rem">I finished a book</h3>
+      <div><label>Title</label><input name="title" required maxlength="255"></div>
+      <div class="row2"><div><label>Author</label><input name="author" maxlength="160"></div><div><label>Pages</label><input name="pages" inputmode="numeric"></div></div>
+      <div class="row2"><div><label>Finished on</label><input type="date" name="finished_on" value="{{ today|date:'Y-m-d' }}"></div><div><label>My rating</label><select name="rating"><option value="">—</option><option value="5">★★★★★</option><option value="4">★★★★</option><option value="3">★★★</option><option value="2">★★</option><option value="1">★</option></select></div></div>
+      <div><label>What did you think?</label><textarea name="review" rows="3"></textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add to my log</button>
+    </form>
+    <div class="panel"><div class="panel-h"><h3>My reading log</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for e in logs %}<tr><td class="name">{{ e.title }}<br><small class="hint">{{ e.finished_on|date:"j M Y" }}{% if e.rating %} · {{ e.rating }}/5{% endif %}</small></td><td>{% if e.approved %}<span class="chip ok">Checked</span>{% else %}<span class="chip">Waiting</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing logged yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% endif %}
+    {% if history %}<div class="panel"><div class="panel-h"><h3>Borrowed before</h3></div><div class="panel-b">{% for l in history %}<p style="margin:.15rem 0;font-size:.88rem">{{ l.copy.book.title }} <span class="hint">· {{ l.returned_at|date:"j M Y" }}</span></p>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

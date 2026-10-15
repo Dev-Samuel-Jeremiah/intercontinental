@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if q %}Edit bank question{% else %}Add to question bank{% endif %}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.ob{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.5rem;align-items:center;margin-bottom:.4rem}.ob input[type=radio]{width:auto}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Question bank</div>
+  <h1 class="fin-title">{% if q %}Edit <em>question</em>{% else %}Add a <em>question</em>{% endif %}</h1>
+  <p class="fin-sub">Formulas: type $x^2$ or $\ce{H2O}$. Tag it well so teachers can find it and students' mastery can be measured by topic.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'cbt:bank' %}"><i class="bi bi-arrow-left"></i> Bank</a></div>
+{% include "cbt/_bank_msgs.html" %}
+<form method="post" class="fin-form panel" style="padding:1.2rem">{% csrf_token %}
+  <div class="row2"><div><label>Subject</label><select name="subject" required>{% for s in subjects %}<option value="{{ s.id }}" {% if v.subject == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+    <div><label>Class level</label><input name="level" maxlength="40" value="{{ v.level|default:'' }}" placeholder="SS 1"></div></div>
+  <div class="row2"><div><label>Topic</label><input name="topic" maxlength="120" value="{{ v.topic|default:'' }}" placeholder="Motion"></div>
+    <div><label>Difficulty</label><select name="difficulty">{% for k, l in difficulties %}<option value="{{ k }}" {% if v.difficulty == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+  <div><label>Learning outcome <span class="hint">(optional)</span></label><input name="outcome" maxlength="200" value="{{ v.outcome|default:'' }}" placeholder="Students can calculate velocity from acceleration and time"></div>
+  <div><label>Passage <span class="hint">(optional)</span></label><textarea name="passage" rows="2">{{ v.passage|default:'' }}</textarea></div>
+  <div><label>Question</label><textarea name="text" rows="3" required>{{ v.text|default:'' }}</textarea></div>
+  <div class="row2"><div><label>Type</label><select name="question_type" id="qt"><option value="MCQ" {% if v.question_type != 'TF' %}selected{% endif %}>Multiple choice</option><option value="TF" {% if v.question_type == 'TF' %}selected{% endif %}>True / False</option></select></div>
+    <div><label>Marks</label><input type="number" name="marks" step="0.5" min="0.5" max="100" value="{{ v.marks|default:1 }}"></div></div>
+  <div id="mcq"><label>Options — tick the correct one</label>
+    {% for r in rows %}<div class="ob"><input type="radio" name="correct" value="{{ r.i }}" {% if r.correct %}checked{% endif %} aria-label="Correct"><input name="option_{{ r.i }}" maxlength="255" value="{{ r.text }}" placeholder="Option {{ r.i|add:1 }}"></div>{% endfor %}</div>
+  <div id="tf" style="display:none"><label>Correct answer</label><div style="display:flex;gap:1rem"><label style="display:flex;gap:.4rem;align-items:center"><input type="radio" name="correct_tf" value="0" style="width:auto" {% if v.question_type == 'TF' and rows.0.correct %}checked{% endif %}> True</label><label style="display:flex;gap:.4rem;align-items:center"><input type="radio" name="correct_tf" value="1" style="width:auto" {% if v.question_type == 'TF' and rows.1.correct %}checked{% endif %}> False</label></div></div>
+  <div><label>Explanation <span class="hint">(shown in review and practice)</span></label><textarea name="explanation" rows="2">{{ v.explanation|default:'' }}</textarea></div>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="for_practice" style="width:auto" {% if v.for_practice %}checked{% endif %}> Students may meet this in practice tests</label>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="fin-btn fin-btn-gold" type="submit">Save</button>{% if not q %}<button class="fin-btn" type="submit" name="another" value="1">Save and add another</button>{% endif %}
+    {% if q %}<button class="fin-btn fin-btn-danger" name="action" value="delete" formnovalidate onclick="return confirm('Remove this question from the bank? Exams keep their copies.')">Delete</button>{% endif %}</div>
+</form>
+<script>
+(function(){var qt=document.getElementById('qt'),form=qt.form;
+  function sync(){var tf=qt.value==='TF';document.getElementById('mcq').style.display=tf?'none':'';document.getElementById('tf').style.display=tf?'':'none';}
+  qt.addEventListener('change',sync);sync();
+  form.addEventListener('submit',function(){if(qt.value==='TF'){var c=form.querySelector('input[name=correct_tf]:checked');
+    form.querySelectorAll('input[name=correct]').forEach(function(r){r.checked=false;});
+    if(c){var h=document.createElement('input');h.type='hidden';h.name='correct';h.value=c.value;form.appendChild(h);}}});
+})();
+</script>
+{% endblock %}

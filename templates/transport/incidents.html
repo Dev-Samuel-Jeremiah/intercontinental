@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bus incidents{% endblock %}
+{% block content %}
+{% if manager %}{% include "transport/_nav.html" %}{% else %}{% include "finance/_fin_styles.html" %}{% endif %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Incidents</em></h1>
+  <p class="fin-sub">Accidents, breakdowns, injuries and behaviour on the bus. The transport office is emailed at once.</p>
+</div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>{% if manager %}All reports{% else %}Your reports{% endif %}</h3></div><div class="panel-b">
+    {% for i in items %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{{ i.get_kind_display }}</b> — {{ i.date|date:"D j M" }}{% if i.route %} · {{ i.route.name }}{% endif %}{% if i.closed %} <span class="chip ok">Closed</span>{% else %} <span class="chip gold">Open</span>{% endif %}{% if i.parents_told %} <span class="chip">Parents told</span>{% endif %}
+      <div class="hint">{{ i.description|linebreaksbr }}{% if i.action %}<br>Action: {{ i.action }}{% endif %}</div>
+      {% if manager %}{% with kids=i.students.all %}{% if kids %}<div class="hint">Children: {% for s in kids %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}{% endwith %}
+      {% if not i.closed %}<form method="post" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="op" value="close"><input type="hidden" name="id" value="{{ i.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Close</button></form>{% endif %}{% endif %}</div>
+    {% empty %}<p class="empty">No incidents.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Report an incident</h3>
+    <div class="row2"><div><label>What happened</label><select name="kind">{% for k, v in kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+    <div class="row2"><div><label>Route</label><select name="route"><option value="">—</option>{% for r in routes %}<option value="{{ r.pk }}">{{ r.name }}</option>{% endfor %}</select></div><div><label>Vehicle</label><select name="vehicle"><option value="">—</option>{% for v in vehicles %}<option value="{{ v.pk }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Describe it</label><textarea name="description" rows="3" required></textarea></div>
+    <div><label>What was done</label><textarea name="action" rows="2"></textarea></div>
+    <div><label>Children involved</label><select name="students" multiple size="6">{% for r in riders %}<option value="{{ r.student.pk }}">{{ r.student.full_name }}</option>{% endfor %}</select></div>
+    <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="tell_parents" style="width:auto"> Tell these children's parents now</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Send report</button>
+  </form>
+</div>
+{% endblock %}

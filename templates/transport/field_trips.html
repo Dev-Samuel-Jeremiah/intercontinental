@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Field trips{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Field-trip buses</em></h1>
+  <p class="fin-sub">Book a bus for an outing. The system refuses clashes with other bookings and school runs; children with a "yes" on the linked consent form make up the trip list.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Coming up</h3></div><div class="panel-b"><table class="tbl">
+    <thead><tr><th>Date</th><th>Trip</th><th>Bus</th><th>Seats</th><th></th></tr></thead><tbody>
+    {% for f in items %}<tr><td>{{ f.date|date:"D j M" }}<br><small class="hint">{{ f.depart|time:"H:i" }}–{{ f.back|time:"H:i" }}</small></td><td class="name">{{ f.title }}<br><small class="hint">{{ f.destination }}{% if f.consent_form %} · consent: {{ f.consent_form.title }}{% endif %}</small></td><td>{{ f.vehicle|default:"—" }}<br><small class="hint">{{ f.driver.name|default:"" }}</small></td><td>{{ f.seats_needed }}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'transport:run_field_trip' f.pk %}">Trip page</a></td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">Nothing booked.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Book a bus</h3>
+    <div class="row2"><div><label>Trip</label><input name="title" required maxlength="160"></div><div><label>Destination</label><input name="destination" required maxlength="200"></div></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" required></div><div><label>Seats needed</label><input name="seats_needed" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>Leaves</label><input type="time" name="depart" required></div><div><label>Back</label><input type="time" name="back" required></div></div>
+    <div class="row2"><div><label>Bus</label><select name="vehicle" required>{% for v in vehicles %}<option value="{{ v.pk }}">{{ v }} ({{ v.capacity }})</option>{% endfor %}</select></div><div><label>Driver</label><select name="driver"><option value="">—</option>{% for d in drivers %}<option value="{{ d.pk }}">{{ d.name }}</option>{% endfor %}</select></div></div>
+    <div><label>Consent form</label><select name="consent_form"><option value="">—</option>{% for c in forms %}<option value="{{ c.pk }}">{{ c.title }}</option>{% endfor %}</select></div>
+    <div><label>Notes</label><textarea name="notes" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Book</button>
+  </form>
+</div>
+{% endblock %}

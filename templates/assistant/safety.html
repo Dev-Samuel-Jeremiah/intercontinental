@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Held posts{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:home' %}" style="color:inherit">AI assistants</a></div>
+  <h1 class="fin-title">Held <em>posts</em></h1>
+  <p class="fin-sub">Discussion posts the safety check held back. Only the writer and teachers can see them until you release or delete them. Red ones may mean a student needs help — follow your safeguarding steps.</p>
+</div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-shield-exclamation"></i> Discussions and replies</h3></div>
+  {% for t in threads %}<div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--rim)"><div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap">
+      <span><b>{{ t.author.get_full_name|default:t.author.username }}</b> · <a href="{% url 'classroom:thread' t.id %}" style="color:inherit">{{ t.course.name }}: {{ t.title }}</a></span>
+      <span class="chip {% if 'hurting' in t.held_reason %}red{% else %}amber{% endif %}">{{ t.held_reason }}</span></div>
+    <p style="white-space:pre-wrap;margin:.5rem 0">{{ t.body|truncatechars:400 }}</p>
+    <form method="post" style="display:flex;gap:.4rem">{% csrf_token %}<input type="hidden" name="kind" value="thread"><input type="hidden" name="id" value="{{ t.id }}"><button class="fin-btn fin-btn-sm" name="action" value="release">Release</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="delete" onclick="return confirm('Delete this post?')">Delete</button></form></div>{% endfor %}
+  {% for p in posts %}<div style="padding:.9rem 1.2rem;border-bottom:1px solid var(--rim)"><div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap">
+      <span><b>{{ p.author.get_full_name|default:p.author.username }}</b> · reply in <a href="{% url 'classroom:thread' p.thread_id %}" style="color:inherit">{{ p.thread.course.name }}: {{ p.thread.title }}</a></span>
+      <span class="chip {% if 'hurting' in p.held_reason %}red{% else %}amber{% endif %}">{{ p.held_reason }}</span></div>
+    <p style="white-space:pre-wrap;margin:.5rem 0">{{ p.body|truncatechars:400 }}</p>
+    <form method="post" style="display:flex;gap:.4rem">{% csrf_token %}<input type="hidden" name="kind" value="post"><input type="hidden" name="id" value="{{ p.id }}"><button class="fin-btn fin-btn-sm" name="action" value="release">Release</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="delete" onclick="return confirm('Delete this reply?')">Delete</button></form></div>{% endfor %}
+  {% if not threads and not posts %}<div class="empty"><i class="bi bi-shield-check"></i><p>Nothing held.</p></div>{% endif %}
+</div>
+{% if tutor_held %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-robot"></i> Messages to the AI tutor that were stopped</h3></div>
+  <table class="tbl"><thead><tr><th>Student</th><th>Course</th><th>Message</th><th>When</th></tr></thead><tbody>
+  {% for m in tutor_held %}<tr><td class="name">{{ m.student.get_full_name|default:m.student.username }}</td><td><a href="{% url 'assistant:tutor_admin' m.course_id %}?student={{ m.student_id }}" style="color:inherit">{{ m.course.name }}</a></td><td>{{ m.text|truncatechars:140 }}</td><td>{{ m.created_at|date:"j M H:i" }}</td></tr>{% endfor %}
+  </tbody></table></div>{% endif %}
+{% endblock %}

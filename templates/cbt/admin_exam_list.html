@@ -1,0 +1,1113 @@
+{% extends "dashboard/base.html" %}
+{% block title %}CBT Exams Management{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: .35; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════════════════ */
+.cbt-wrap {
+  max-width: 1400px;
+  padding: 2rem 2.5rem 4rem;
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+}
+.eyebrow span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.1;
+  margin: 0 0 6px;
+  letter-spacing: -.02em;
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+.page-subtitle  { font-size: 0.85rem; color: var(--slate2); margin: 0; }
+
+.page-divider {
+  height: 1px;
+  background: var(--rim2);
+  margin-bottom: 2rem;
+  position: relative;
+}
+.page-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+@media(max-width:1100px) { .stats-grid { grid-template-columns: repeat(3,1fr); } }
+@media(max-width:600px)  { .stats-grid { grid-template-columns: repeat(2,1fr); } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 18px 16px;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+  animation: riseUp .45s ease both;
+}
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.stat-card:hover {
+  border-color: var(--rim3);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0,0,0,.3);
+}
+.stat-card.active-filter {
+  border-color: var(--champagne-bdr) !important;
+  box-shadow: 0 0 0 2px var(--champagne-dim), 0 8px 28px rgba(0,0,0,.25) !important;
+}
+
+.stat-card-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+.stat-card h3 {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin: 0 0 4px;
+}
+.stat-card p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  margin: 0;
+  line-height: 1;
+}
+
+/* nth-child animation delays */
+.stat-card:nth-child(1){animation-delay:.04s;}
+.stat-card:nth-child(2){animation-delay:.08s;}
+.stat-card:nth-child(3){animation-delay:.12s;}
+.stat-card:nth-child(4){animation-delay:.16s;}
+.stat-card:nth-child(5){animation-delay:.20s;}
+.stat-card:nth-child(6){animation-delay:.24s;}
+
+/* ═══════════════════════════════════════════════════════════════
+   PANEL BASE
+═══════════════════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+  margin-bottom: 20px;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--rim);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.panel-head-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.panel-icon {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.panel-head h2 {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.panel-head .sub {
+  font-size: 0.76rem;
+  color: var(--slate);
+  margin: 2px 0 0;
+}
+.panel-body { padding: 20px 22px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTER PANEL
+═══════════════════════════════════════════════════════════════ */
+.filter-panel { animation-delay: .28s; }
+
+.search-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+.search-wrap i {
+  position: absolute;
+  left: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--slate);
+  font-size: 0.88rem;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+}
+.search-input::placeholder { color: var(--slate); }
+.search-input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.search-input.hv {
+  border-color: var(--champagne-bdr);
+  background: rgba(244,210,31,.05);
+}
+
+/* Status pills */
+.status-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.status-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border: 1px solid;
+  cursor: pointer;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all .18s;
+  font-family: 'Outfit', sans-serif;
+  color: var(--slate2);
+  border-color: var(--rim2);
+}
+.status-pill:hover { border-color: var(--rim3); color: var(--white); background: var(--rim); }
+
+.status-pill.sel.s-all      { background: var(--rim2);          border-color: var(--rim3);          color: var(--white); }
+.status-pill.sel.s-pub      { background: var(--green-dim);     border-color: var(--green-border);  color: var(--green); }
+.status-pill.sel.s-draft    { background: var(--amber-dim);     border-color: var(--amber-border);  color: var(--amber); }
+.status-pill.sel.s-active   { background: var(--teal-dim);      border-color: var(--teal-border);   color: var(--teal); }
+.status-pill.sel.s-upcoming { background: var(--purple-dim);    border-color: var(--purple-border); color: var(--purple); }
+.status-pill.sel.s-past     { background: var(--rim);           border-color: var(--rim3);          color: var(--slate2); }
+
+/* Filter dropdowns */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.filter-group label {
+  display: block;
+  font-size: 0.73rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: 7px;
+}
+.filter-select {
+  width: 100%;
+  padding: 9px 13px;
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  background: var(--surface2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.86rem;
+  color: var(--white);
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.filter-select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.filter-select.hv {
+  border-color: var(--champagne-bdr);
+  background: rgba(244,210,31,.05);
+}
+.filter-select option { background: var(--surface2); }
+
+.filter-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Active filter badges */
+.active-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-top: 14px;
+  margin-top: 14px;
+  border-top: 1px solid var(--rim);
+  align-items: center;
+}
+.afb {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-bdr);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+.afb button {
+  background: none;
+  border: none;
+  color: var(--champagne);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.78rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  opacity: .7;
+  transition: opacity .15s, color .15s;
+}
+.afb button:hover { color: var(--red); opacity: 1; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTION BAR
+═══════════════════════════════════════════════════════════════ */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  margin-bottom: 18px;
+  animation: riseUp .45s ease both;
+  animation-delay: .33s;
+}
+.action-bar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.result-count { font-size: 0.84rem; color: var(--slate2); font-weight: 500; }
+.result-count strong { color: var(--champagne-lt); font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-primary:hover { box-shadow: 0 6px 26px rgba(244,210,31,.38); transform: translateY(-1px); filter: brightness(1.08); }
+
+.btn-success  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+.btn-success:hover  { background: rgba(74,222,128,.18); }
+.btn-danger   { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border); }
+.btn-danger:hover   { background: rgba(248,113,113,.18); }
+.btn-warning  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.btn-warning:hover  { background: rgba(251,191,36,.18); }
+.btn-info     { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border); }
+.btn-info:hover     { background: rgba(45,212,191,.18); }
+.btn-secondary{ background: var(--rim);        color: var(--slate2); border: 1px solid var(--rim2); }
+.btn-secondary:hover{ background: var(--rim2); color: var(--white); }
+.btn-ghost    { background: transparent;       color: var(--slate2); border: 1px solid var(--rim2); }
+.btn-ghost:hover    { background: var(--rim);  color: var(--white);  border-color: var(--rim3); }
+
+.btn-sm { padding: 6px 12px; font-size: 0.76rem; border-radius: 8px; }
+.btn-lg { padding: 12px 26px; font-size: 0.93rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════════════════════ */
+.table-panel { animation-delay: .38s; }
+
+.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 12px 14px;
+  text-align: left;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.69rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate);
+  white-space: nowrap;
+  border: none;
+}
+table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+}
+table tbody tr:last-child { border-bottom: none; }
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table td {
+  padding: 13px 14px;
+  font-size: 0.84rem;
+  color: var(--slate2);
+  vertical-align: middle;
+  border: none;
+}
+table td strong { color: var(--white); font-weight: 600; }
+
+input[type="checkbox"] {
+  width: 15px; height: 15px;
+  cursor: pointer;
+  accent-color: var(--champagne);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.71rem;
+  font-weight: 600;
+  margin: 1px;
+  font-family: 'Outfit', sans-serif;
+}
+.badge-green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+.badge-red    { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+.badge-blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+.badge-amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+.badge-purple { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+.badge-teal   { background: var(--teal-dim);   border: 1px solid var(--teal-border);   color: var(--teal); }
+.badge-gray   { background: var(--rim);        border: 1px solid var(--rim2);          color: var(--slate2); }
+
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 2s infinite;
+}
+.status-dot.online  { background: var(--green); }
+.status-dot.offline { background: var(--red); }
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTION BUTTONS (table)
+═══════════════════════════════════════════════════════════════ */
+.action-buttons { display: flex; gap: 5px; flex-wrap: nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  text-align: center;
+}
+.empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  color: var(--slate);
+  margin-bottom: 16px;
+}
+.empty-state h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin: 0 0 6px;
+}
+.empty-state p {
+  font-size: 0.82rem;
+  color: var(--slate);
+  margin: 0 0 18px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATATABLE OVERRIDES
+═══════════════════════════════════════════════════════════════ */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_filter,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  padding: 12px 18px;
+  color: var(--slate2);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.8rem;
+  background: var(--surface2);
+  border-top: 1px solid var(--rim);
+}
+.dataTables_wrapper .dataTables_filter input {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 6px 10px;
+  font-family: 'Outfit', sans-serif;
+  outline: none;
+  margin-left: 6px;
+}
+.dataTables_wrapper .dataTables_filter input:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 2px rgba(244,210,31,.1);
+}
+.dataTables_wrapper .dataTables_length select {
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  color: var(--white);
+  padding: 4px 8px;
+  font-family: 'Outfit', sans-serif;
+  margin: 0 6px;
+  outline: none;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  padding: 6px 12px !important;
+  margin: 0 2px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--rim2) !important;
+  background: var(--surface3) !important;
+  color: var(--slate2) !important;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00) !important;
+  color: #0a1f44 !important;
+  border-color: var(--champagne-bdr) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00) !important;
+  color: #0a1f44 !important;
+  border-color: var(--champagne-bdr) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed !important;
+}
+table.dataTable thead th.sorting::after,
+table.dataTable thead th.sorting_asc::after,
+table.dataTable thead th.sorting_desc::after { color: var(--champagne); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .cbt-wrap { padding: 1rem 1rem 3rem; }
+  table thead { display: none !important; }
+  table, table tbody, table tr, table td { display: block !important; width: 100% !important; box-sizing: border-box; }
+  table tbody tr {
+    margin: 0 0 12px !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    background: var(--surface2) !important;
+    border: 1px solid var(--rim2) !important;
+    box-shadow: none !important;
+  }
+  table tbody td {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--rim) !important;
+    font-size: 0.82rem;
+    gap: 8px;
+    text-align: right;
+  }
+  table tbody td:last-child { border-bottom: none !important; }
+  table td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex: 0 0 38%;
+    text-align: left;
+    padding-top: 2px;
+    letter-spacing: .04em;
+  }
+  .action-buttons { justify-content: flex-end; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-actions { flex-direction: column; }
+  .filter-actions .btn { width: 100%; justify-content: center; }
+  .action-bar { flex-direction: column; align-items: stretch; }
+  .action-bar-left { flex-direction: column; }
+  .action-bar .btn { width: 100%; justify-content: center; }
+}
+</style>
+
+<div class="cbt-wrap">
+
+  <!-- ══ PAGE HEADER ════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow"><span>CBT Module · Examination Suite</span></div>
+      <h1 class="page-title">Exams <em>Management</em></h1>
+      <p class="page-subtitle">Create, manage, and monitor all computer-based test examinations</p>
+    </div>
+    <a href="{% url 'cbt:cbt_create_exam' %}" class="btn btn-primary btn-lg" style="align-self:flex-start;margin-top:14px;">
+      <i class="bi bi-plus-circle-fill"></i> Create New Exam
+    </a>
+  </div>
+  <div class="page-divider"></div>
+
+  <!-- ══ STAT CARDS ════════════════════════════════════════════ -->
+  <div class="stats-grid">
+    <a href="?" class="stat-card">
+      <div class="stat-card-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+        <i class="bi bi-journal-text" style="color:var(--champagne);"></i>
+      </div>
+      <h3>Total</h3>
+      <p>{{ total_exams }}</p>
+    </a>
+    <a href="?status=published" class="stat-card {% if f_status == 'published' %}active-filter{% endif %}">
+      <div class="stat-card-icon" style="background:var(--green-dim);border:1px solid var(--green-border);">
+        <i class="bi bi-check-circle" style="color:var(--green);"></i>
+      </div>
+      <h3>Published</h3>
+      <p>{{ published_exams }}</p>
+    </a>
+    <a href="?status=draft" class="stat-card {% if f_status == 'draft' %}active-filter{% endif %}">
+      <div class="stat-card-icon" style="background:var(--amber-dim);border:1px solid var(--amber-border);">
+        <i class="bi bi-pencil-square" style="color:var(--amber);"></i>
+      </div>
+      <h3>Drafts</h3>
+      <p>{{ draft_exams }}</p>
+    </a>
+    <a href="?status=active" class="stat-card {% if f_status == 'active' %}active-filter{% endif %}">
+      <div class="stat-card-icon" style="background:var(--teal-dim);border:1px solid var(--teal-border);">
+        <i class="bi bi-lightning-charge" style="color:var(--teal);"></i>
+      </div>
+      <h3>Active Now</h3>
+      <p>{{ active_exams }}</p>
+    </a>
+    <a href="?status=upcoming" class="stat-card {% if f_status == 'upcoming' %}active-filter{% endif %}">
+      <div class="stat-card-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+        <i class="bi bi-calendar-event" style="color:var(--purple);"></i>
+      </div>
+      <h3>Upcoming</h3>
+      <p>{{ upcoming_exams }}</p>
+    </a>
+    <a href="?status=past" class="stat-card {% if f_status == 'past' %}active-filter{% endif %}">
+      <div class="stat-card-icon" style="background:var(--rim);border:1px solid var(--rim2);">
+        <i class="bi bi-clock-history" style="color:var(--slate2);"></i>
+      </div>
+      <h3>Past</h3>
+      <p>{{ past_exams }}</p>
+    </a>
+  </div>
+
+  <!-- ══ FILTER PANEL ══════════════════════════════════════════ -->
+  <div class="panel filter-panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border);">
+          <i class="bi bi-funnel" style="color:var(--blue);font-size:.8rem;"></i>
+        </div>
+        <div>
+          <h2>Filter Exams</h2>
+          {% if filtered_count != total_exams %}
+          <p class="sub">Showing <strong style="color:var(--champagne-lt);">{{ filtered_count }}</strong> of {{ total_exams }} exams</p>
+          {% endif %}
+        </div>
+      </div>
+      {% if f_subject or f_class or f_term or f_session or f_status or f_search %}
+      <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-x-lg"></i> Clear All
+      </a>
+      {% endif %}
+    </div>
+
+    <div class="panel-body">
+      <form method="GET" id="filterForm">
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <i class="bi bi-search"></i>
+          <input type="text" name="q" class="search-input {% if f_search %}hv{% endif %}"
+                 placeholder="Search exam title…" value="{{ f_search }}">
+        </div>
+
+        <!-- Status pills -->
+        <div class="status-pills">
+          <button type="button" data-status="" class="status-pill s-all {% if not f_status %}sel{% endif %}">
+            <i class="bi bi-list-ul"></i> All
+          </button>
+          <button type="button" data-status="published" class="status-pill s-pub {% if f_status == 'published' %}sel{% endif %}">
+            <i class="bi bi-check-circle"></i> Published
+          </button>
+          <button type="button" data-status="draft" class="status-pill s-draft {% if f_status == 'draft' %}sel{% endif %}">
+            <i class="bi bi-pencil-square"></i> Draft
+          </button>
+          <button type="button" data-status="active" class="status-pill s-active {% if f_status == 'active' %}sel{% endif %}">
+            <i class="bi bi-lightning-charge"></i> Active Now
+          </button>
+          <button type="button" data-status="upcoming" class="status-pill s-upcoming {% if f_status == 'upcoming' %}sel{% endif %}">
+            <i class="bi bi-calendar-event"></i> Upcoming
+          </button>
+          <button type="button" data-status="past" class="status-pill s-past {% if f_status == 'past' %}sel{% endif %}">
+            <i class="bi bi-clock-history"></i> Past
+          </button>
+        </div>
+        <input type="hidden" name="status" id="statusInput" value="{{ f_status }}">
+
+        <!-- Dropdowns -->
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Subject</label>
+            <select name="subject" class="filter-select {% if f_subject %}hv{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Subjects —</option>
+              {% for subj in all_subjects %}
+              <option value="{{ subj.id }}" {% if subj.id|stringformat:"s" == f_subject %}selected{% endif %}>{{ subj.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Class</label>
+            <select name="class_id" class="filter-select {% if f_class %}hv{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Classes —</option>
+              {% for cls in all_classes %}
+              <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == f_class %}selected{% endif %}>{{ cls.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Term</label>
+            <select name="term" class="filter-select {% if f_term %}hv{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Terms —</option>
+              {% for t in all_terms %}
+              <option value="{{ t.id }}" {% if t.id|stringformat:"s" == f_term %}selected{% endif %}>{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Session</label>
+            <select name="session" class="filter-select {% if f_session %}hv{% endif %}" onchange="this.form.submit()">
+              <option value="">— All Sessions —</option>
+              {% for s in all_sessions %}
+              <option value="{{ s.id }}" {% if s.id|stringformat:"s" == f_session %}selected{% endif %}>{{ s.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-search"></i> Apply Filters
+          </button>
+          <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
+        </div>
+      </form>
+
+      <!-- Active filter badges -->
+      {% if f_subject or f_class or f_term or f_session or f_status or f_search %}
+      <div class="active-filters-row">
+        <span style="font-size:0.7rem;font-weight:700;color:var(--slate);letter-spacing:.05em;text-transform:uppercase;">Active:</span>
+        {% if f_search %}
+        <span class="afb"><i class="bi bi-search"></i> "{{ f_search }}" <button onclick="removeFilter('q')"><i class="bi bi-x"></i></button></span>
+        {% endif %}
+        {% if f_status %}
+        <span class="afb"><i class="bi bi-circle-half"></i> {{ f_status|capfirst }} <button onclick="removeFilter('status')"><i class="bi bi-x"></i></button></span>
+        {% endif %}
+        {% if f_subject %}
+        <span class="afb"><i class="bi bi-book"></i>
+          {% for subj in all_subjects %}{% if subj.id|stringformat:"s" == f_subject %}{{ subj.name }}{% endif %}{% endfor %}
+          <button onclick="removeFilter('subject')"><i class="bi bi-x"></i></button>
+        </span>
+        {% endif %}
+        {% if f_class %}
+        <span class="afb"><i class="bi bi-building"></i>
+          {% for cls in all_classes %}{% if cls.id|stringformat:"s" == f_class %}{{ cls.name }}{% endif %}{% endfor %}
+          <button onclick="removeFilter('class_id')"><i class="bi bi-x"></i></button>
+        </span>
+        {% endif %}
+        {% if f_term %}
+        <span class="afb"><i class="bi bi-calendar3"></i>
+          {% for t in all_terms %}{% if t.id|stringformat:"s" == f_term %}{{ t.name }}{% endif %}{% endfor %}
+          <button onclick="removeFilter('term')"><i class="bi bi-x"></i></button>
+        </span>
+        {% endif %}
+        {% if f_session %}
+        <span class="afb"><i class="bi bi-calendar-week"></i>
+          {% for s in all_sessions %}{% if s.id|stringformat:"s" == f_session %}{{ s.name }}{% endif %}{% endfor %}
+          <button onclick="removeFilter('session')"><i class="bi bi-x"></i></button>
+        </span>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ ACTION BAR ════════════════════════════════════════════ -->
+  <div class="action-bar">
+    <div class="action-bar-left">
+      <span class="result-count"><strong>{{ filtered_count }}</strong> exam{{ filtered_count|pluralize }} found</span>
+
+      <form id="bulkPublishForm" method="POST" action="{% url 'cbt:cbt_bulk_publish' %}" style="display:contents;">
+        {% csrf_token %}
+        <input type="hidden" name="action" id="publishAction" value="">
+        <button type="button" class="btn btn-success btn-sm" onclick="bulkPublish('publish')">
+          <i class="bi bi-check2-all"></i> Publish Selected
+        </button>
+        <button type="button" class="btn btn-warning btn-sm" onclick="bulkPublish('unpublish')">
+          <i class="bi bi-eye-slash"></i> Unpublish
+        </button>
+      </form>
+
+      <form id="bulkDeleteForm" method="POST" action="{% url 'cbt:bulk_delete_exams' %}" style="display:contents;">
+        {% csrf_token %}
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelected()">
+          <i class="bi bi-trash3"></i> Delete Selected
+        </button>
+      </form>
+    </div>
+    <a href="{% url 'cbt:bulk_question_upload' %}" class="btn btn-info btn-sm">
+      <i class="bi bi-cloud-upload"></i> Bulk Upload Questions
+    </a>
+  </div>
+
+  <!-- ══ TABLE ═════════════════════════════════════════════════ -->
+  <div class="panel table-panel">
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="panel-icon" style="background:var(--champagne-dim);border:1px solid var(--champagne-bdr);">
+          <i class="bi bi-table" style="color:var(--champagne);font-size:.8rem;"></i>
+        </div>
+        <h2>Exams List</h2>
+      </div>
+      <span class="badge badge-gray">{{ filtered_count }} Exam{{ filtered_count|pluralize }}</span>
+    </div>
+
+    <div class="table-responsive">
+      <table id="examTable">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll"></th>
+            <th>Title</th>
+            <th>Subject</th>
+            <th>Classes</th>
+            <th>Questions</th>
+            <th>Term / Session</th>
+            <th>Duration</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for exam in exams %}
+          <tr>
+            <td data-label=""><input type="checkbox" name="exam_ids" value="{{ exam.id }}" class="exam-cb"></td>
+            <td data-label="Title"><strong>{{ exam.title }}</strong></td>
+            <td data-label="Subject"><span class="badge badge-blue">{{ exam.subject.name }}</span></td>
+            <td data-label="Classes">
+              {% for cls in exam.classes.all %}
+                <span class="badge badge-gray">{{ cls.name }}</span>
+              {% empty %}
+                <span style="color:var(--slate);font-size:.76rem;">—</span>
+              {% endfor %}
+            </td>
+            <td data-label="Questions">
+              {% if exam.question_count > 0 %}
+                <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> {{ exam.question_count }} Q</span>
+              {% else %}
+                <span class="badge badge-red"><i class="bi bi-exclamation-circle-fill"></i> No Questions</span>
+              {% endif %}
+            </td>
+            <td data-label="Term / Session">
+              {% if exam.term %}<span class="badge badge-amber">{{ exam.term.name }}</span>{% endif %}
+              {% if exam.session %}<span class="badge badge-purple">{{ exam.session.name }}</span>{% endif %}
+              {% if not exam.term and not exam.session %}<span style="color:var(--slate);font-size:.76rem;">—</span>{% endif %}
+            </td>
+            <td data-label="Duration">
+              <span style="display:inline-flex;align-items:center;gap:5px;">
+                <i class="bi bi-hourglass-split" style="color:var(--teal);font-size:.8rem;"></i>
+                {{ exam.duration_minutes }} min
+              </span>
+            </td>
+            <td data-label="Start">
+              <span style="color:var(--white);font-weight:500;">{{ exam.start_time|date:"d M Y" }}</span><br>
+              <small style="color:var(--slate);font-size:.73rem;">{{ exam.start_time|date:"h:i A" }}</small>
+            </td>
+            <td data-label="End">
+              <span style="color:var(--white);font-weight:500;">{{ exam.end_time|date:"d M Y" }}</span><br>
+              <small style="color:var(--slate);font-size:.73rem;">{{ exam.end_time|date:"h:i A" }}</small>
+            </td>
+            <td data-label="Status">
+              {% if exam.published %}
+                <span class="badge badge-green"><span class="status-dot online"></span> Published</span>
+              {% else %}
+                <span class="badge badge-red"><span class="status-dot offline"></span> Draft</span>
+              {% endif %}
+            </td>
+            <td data-label="Actions">
+              <div class="action-buttons">
+                <a href="{% url 'cbt:cbt_add_question' %}" class="btn btn-info btn-sm" title="Add Questions">
+                  <i class="bi bi-plus-lg"></i>
+                </a>
+                <a href="{% url 'cbt:invigilate' exam.id %}" class="btn btn-success btn-sm" title="Invigilate (live)">
+                  <i class="bi bi-display"></i>
+                </a>
+                <a href="{% url 'cbt:exam_analysis' exam.id %}" class="btn btn-secondary btn-sm" title="Question analysis, random pool, save to bank">
+                  <i class="bi bi-bar-chart-line"></i>
+                </a>
+                <a href="{% url 'cbt:seating' exam.id %}" class="btn btn-secondary btn-sm" title="Seating plan">
+                  <i class="bi bi-grid-3x3-gap"></i>
+                </a>
+                <a href="{% url 'cbt:print_paper' exam.id %}" class="btn btn-info btn-sm" title="Print paper / answer key">
+                  <i class="bi bi-printer"></i>
+                </a>
+                <a href="{% url 'cbt:edit_exam' exam.id %}" class="btn btn-warning btn-sm" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'cbt:delete_exam' exam.id %}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Delete {{ exam.title }}?');" title="Delete">
+                  <i class="bi bi-trash3"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="11" style="padding:0;">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+                <h3>No Exams Found</h3>
+                <p>{% if f_subject or f_class or f_term or f_session or f_status or f_search %}No exams match your current filters.{% else %}Create your first exam to get started.{% endif %}</p>
+                {% if f_subject or f_class or f_term or f_session or f_status or f_search %}
+                <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-secondary btn-sm">
+                  <i class="bi bi-arrow-counterclockwise"></i> Clear Filters
+                </a>
+                {% else %}
+                <a href="{% url 'cbt:cbt_create_exam' %}" class="btn btn-primary btn-sm">
+                  <i class="bi bi-plus-circle"></i> Create Exam
+                </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /.cbt-wrap -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  const isMobile = window.innerWidth <= 768;
+  $('#examTable').DataTable({
+    paging: true,
+    searching: true,
+    ordering: !isMobile,
+    order: isMobile ? [] : [[6, 'desc']],
+    lengthMenu: [10, 25, 50, 100],
+    pageLength: isMobile ? 10 : 25,
+    scrollX: false,
+    autoWidth: false,
+    dom: isMobile ? '<"dt-top"fl>rt<"dt-bot"ip>' : 'lfrtip',
+    columnDefs: [{ orderable: false, targets: [0, 9] }],
+    language: {
+      search: 'Search:',
+      searchPlaceholder: 'Filter…',
+      lengthMenu: 'Show _MENU_ per page',
+      info: '_START_–_END_ of _TOTAL_',
+      infoEmpty: 'No exams',
+      infoFiltered: '(from _MAX_)',
+      paginate: { previous: '‹', next: '›' }
+    }
+  });
+
+  $('#selectAll').on('click', function () {
+    $('.exam-cb').prop('checked', this.checked);
+  });
+});
+
+// Status pills
+document.querySelectorAll('.status-pill').forEach(btn => {
+  btn.addEventListener('click', function () {
+    document.getElementById('statusInput').value = this.dataset.status;
+    document.getElementById('filterForm').submit();
+  });
+});
+
+function removeFilter(name) {
+  const url = new URL(window.location.href);
+  url.searchParams.delete(name);
+  window.location.href = url.toString();
+}
+
+function bulkPublish(action) {
+  const sel = $('.exam-cb:checked');
+  if (!sel.length) { alert('Select at least one exam first.'); return; }
+  const label = action === 'publish' ? 'Publish' : 'Unpublish';
+  if (!confirm(`${label} ${sel.length} exam(s)?`)) return;
+  const form = document.getElementById('bulkPublishForm');
+  form.querySelectorAll('input[name="exam_ids"]').forEach(el => el.remove());
+  document.getElementById('publishAction').value = action;
+  sel.each(function () {
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = 'exam_ids'; i.value = this.value;
+    form.appendChild(i);
+  });
+  form.submit();
+}
+
+function deleteSelected() {
+  const sel = $('.exam-cb:checked');
+  if (!sel.length) { alert('Select at least one exam to delete.'); return; }
+  if (!confirm(`Permanently delete ${sel.length} exam(s) and all their questions?`)) return;
+  const form = document.getElementById('bulkDeleteForm');
+  form.querySelectorAll('input[name="exam_ids"]').forEach(el => el.remove());
+  sel.each(function () {
+    const i = document.createElement('input');
+    i.type = 'hidden'; i.name = 'exam_ids'; i.value = this.value;
+    form.appendChild(i);
+  });
+  form.submit();
+}
+</script>
+{% endblock %}

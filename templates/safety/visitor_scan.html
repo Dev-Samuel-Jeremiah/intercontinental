@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Visitor pass{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div style="max-width:560px;margin:0 auto">
+  <div class="panel"><div class="panel-b" style="text-align:center">
+    <div class="fin-eyebrow">Visitor pass</div>
+    <h1 class="fin-title" style="margin:.3rem 0">{{ v.name }}</h1>
+    <p class="hint">{{ v.get_purpose_display }}{% if v.host %} · to see {{ v.host.full_name }}{% endif %}{% if v.organisation %} · {{ v.organisation }}{% endif %}</p>
+    <p style="margin:.8rem 0">{% if v.status == 'EXPECTED' %}{% if v.expected_on == today %}<span class="chip green">expected today{% if v.expected_time %} at {{ v.expected_time|time:"H:i" }}{% endif %}</span>{% else %}<span class="chip red">expected {{ v.expected_on|date:"j M" }} — not today</span>{% endif %}
+      {% elif v.status == 'ON_SITE' %}<span class="chip amber">on site since {{ v.checked_in_at|time:"H:i" }} · badge {{ v.badge_number }}</span>{% else %}<span class="chip red">{{ v.get_status_display }}</span>{% endif %}</p>
+    {% if v.status == 'EXPECTED' and v.expected_on == today %}
+    <form method="post" action="{% url 'safety:visitor_desk' %}" class="fin-form" style="text-align:left" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="visit_id" value="{{ v.id }}">
+      <div><label>ID shown</label><input name="id_type" maxlength="40"></div><div><label>ID number</label><input name="id_number" maxlength="40"></div>
+      <div><label>Photo</label><input type="file" name="photo" accept="image/*" capture="user"></div>
+      <button class="fin-btn fin-btn-gold" name="action" value="check_in" type="submit" style="justify-content:center"><i class="bi bi-box-arrow-in-right"></i> Check in &amp; print badge</button>
+    </form>
+    {% elif v.status == 'ON_SITE' %}
+    <form method="post" action="{% url 'safety:visitor_desk' %}">{% csrf_token %}<input type="hidden" name="visit_id" value="{{ v.id }}"><button class="fin-btn fin-btn-gold" name="action" value="check_out" type="submit"><i class="bi bi-box-arrow-right"></i> Check out</button></form>
+    {% endif %}
+    <p style="margin-top:1rem"><a href="{% url 'safety:visitor_desk' %}" class="hint" style="color:var(--champagne-lt)">Back to the visitor desk</a></p>
+  </div></div>
+</div>
+{% endblock %}

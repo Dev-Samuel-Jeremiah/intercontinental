@@ -1,0 +1,6 @@
+<table class="lines" style="width:100%"><thead><tr><th class="hint" style="text-align:left">Item</th><th class="hint">Stock item</th><th class="hint">Qty</th><th class="hint">Unit price ₦</th></tr></thead><tbody>
+{% for i in line_range %}<tr><td><input name="desc_{{ i }}" maxlength="200"{% if forloop.first and required %} required{% endif %}></td>
+<td><select name="item_{{ i }}"><option value="">—</option>{% for it in items %}<option value="{{ it.pk }}">{{ it.name }}</option>{% endfor %}</select></td>
+<td><input name="qty_{{ i }}" inputmode="decimal" style="width:70px"></td><td><input name="cost_{{ i }}" inputmode="decimal" style="width:100px"></td></tr>{% endfor %}
+</tbody></table>
+<p class="hint" style="margin:.2rem 0 .5rem">Link a line to a stock item and, when the goods arrive, the quantity is added to the store ledger.</p>

@@ -1,0 +1,170 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Add Examdd Part{% endblock %}
+
+{% block content %}
+
+<style>
+/* Container styling */
+.part-container {
+    max-width: 700px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #f5f7fa;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1), 0 6px 10px rgba(0,0,0,0.08);
+    text-align: center;
+    perspective: 1000px;
+}
+
+/* Header styling */
+.part-container h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+/* Info text */
+.part-container p {
+    font-size: 1rem;
+    margin: 0.3rem 0;
+    color: #555;
+}
+
+/* 3D button style */
+.btn-3d {
+    display: inline-block;
+    padding: 12px 25px;
+    margin: 0.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.3s;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.2), 0 10px 15px rgba(0,0,0,0.1);
+}
+
+.btn-primary-3d {
+    background: linear-gradient(145deg, #6a11cb, #2575fc);
+}
+
+.btn-success-3d {
+    background: linear-gradient(145deg, #28a745, #85e085);
+}
+
+.btn-secondary-3d {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+.btn-3d:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 0 rgba(0,0,0,0.2), 0 12px 20px rgba(0,0,0,0.15);
+}
+
+.btn-outline-dark-3d {
+    color: #343a40;
+    border: 2px solid #343a40;
+    background: #fff;
+    transition: all 0.3s;
+}
+
+.btn-outline-dark-3d:hover {
+    background: #343a40;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .btn-3d {
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+}
+</style>
+
+<div class="part-container">
+    <h2>Add Part to Exam</h2>
+    <p><strong>Exam:</strong> {{ exam.title }}</p>
+    <p><strong>Subject:</strong> {{ exam.subject.name }}</p>
+    <p><strong>Duration:</strong> {{ exam.duration_minutes }} minutes</p>
+
+    <div class="mt-4" id="partButtons">
+        {% if not cbt_exists %}
+            <button class="btn-3d btn-primary-3d" data-part-type="CBT">Add CBT Part</button>
+        {% else %}
+            <button class="btn-3d btn-secondary-3d" disabled>CBT Part Already Added</button>
+        {% endif %}
+
+        {% if not essay_exists %}
+            <button class="btn-3d btn-success-3d" data-part-type="ESSAY">Add Essay Part</button>
+        {% else %}
+            <button class="btn-3d btn-secondary-3d" disabled>Essay Part Already Added</button>
+        {% endif %}
+    </div>
+
+    <div class="mt-5">
+        <a href="{% url 'cbt:admin_exam_list' %}" class="btn-outline-dark-3d">Back to Exam List</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(document).ready(function(){
+
+    $('#partButtons button[data-part-type]').click(function(){
+        const partType = $(this).data('part-type');
+        const btn = $(this);
+
+        $.ajax({
+            url: "{% url 'cbt:add_exam_part_redirect' exam.id %}" + partType + "/",  // adjust URL if needed
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            headers: {'X-Requested-With':'XMLHttpRequest'},
+            beforeSend: function(){
+                btn.prop('disabled', true).text('Adding...');
+            },
+            success: function(response){
+                if(response.status === 'success'){
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Part Added',
+                        text: response.message,
+                        confirmButtonColor: '#2563eb'
+                    });
+
+                    // Update buttons
+                    if(partType === 'CBT'){
+                        btn.removeClass('btn-primary-3d').addClass('btn-secondary-3d').text('CBT Part Already Added');
+                    } else if(partType === 'ESSAY'){
+                        btn.removeClass('btn-success-3d').addClass('btn-secondary-3d').text('Essay Part Already Added');
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message,
+                        confirmButtonColor: '#2563eb'
+                    });
+                    btn.prop('disabled', false).text('Add ' + partType + ' Part');
+                }
+            },
+            error: function(){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unexpected error occurred.',
+                    confirmButtonColor: '#2563eb'
+                });
+                btn.prop('disabled', false).text('Add ' + partType + ' Part');
+            }
+        });
+    });
+
+});
+</script>
+

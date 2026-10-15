@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Message draft{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'assistant:drafts' %}" style="color:inherit">Review queue</a></div>
+  <h1 class="fin-title">To the parent of <em>{{ d.student.full_name }}</em></h1>
+  <p class="fin-sub">{{ d.student.class_assigned.name|default:"" }} · {{ d.get_purpose_display }} · {{ d.get_channel_display }} · {{ language }} · written with AI by {{ d.created_by.get_full_name|default:d.created_by.username }} on {{ d.created_at|date:"j M, H:i" }}</p>
+</div><span class="chip {% if d.status == 'PENDING' %}amber{% elif d.status == 'SENT' %}green{% else %}red{% endif %}">{{ d.get_status_display }}</span></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    {% if d.status == 'PENDING' %}<div class="note"><i class="bi bi-eye"></i><span>Read it as the parent will. Check names, amounts and dates against the facts on the right.</span></div>{% endif %}
+    {% if d.channel != 'SMS' %}<div><label>Subject</label><input name="subject" maxlength="200" value="{{ d.subject }}" {% if d.status != 'PENDING' %}readonly{% endif %}></div>{% endif %}
+    <div><label>Message{% if d.channel == 'SMS' %} <span class="hint">(SMS — keep it short)</span>{% endif %}</label><textarea name="body" rows="14" {% if d.status != 'PENDING' %}readonly{% endif %}>{{ d.body }}</textarea></div>
+    {% if d.status == 'PENDING' %}
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+      <button class="fin-btn" name="action" value="save"><i class="bi bi-save"></i> Save changes</button>
+      {% if may_send %}<button class="fin-btn fin-btn-gold" name="action" value="send" onclick="return confirm('Send this to {{ d.student.full_name|escapejs }}\'s parent now?')"><i class="bi bi-send-check"></i> Approve and send</button>
+      {% elif approver and second %}<span class="hint">A second approver must send this — you wrote it.</span>
+      {% else %}<span class="hint">An approver will send it after checking.</span>{% endif %}
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><input name="note" maxlength="255" placeholder="Why it's rejected (optional)" style="flex:1"><button class="fin-btn fin-btn-danger" name="action" value="reject">Reject</button></div>
+    {% endif %}
+    {% if d.send_error %}<p style="color:var(--amber)"><i class="bi bi-exclamation-triangle"></i> {{ d.send_error|linebreaksbr }}</p>{% endif %}
+  </form>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-card-checklist"></i> The facts given</h3></div><div class="panel-b">
+    <p style="white-space:pre-wrap;margin-top:0">{{ d.brief }}</p>
+    <p class="hint">Parent on record: {{ d.student.parent_name|default:"—" }}{% if d.student.parent_email %} · {{ d.student.parent_email }}{% endif %}{% if d.student.parent_phone %} · {{ d.student.parent_phone }}{% endif %}</p>
+    {% if d.reviewed_by %}<p class="hint">{{ d.get_status_display }} by {{ d.reviewed_by.get_full_name|default:d.reviewed_by.username }} on {{ d.reviewed_at|date:"j M, H:i" }}{% if d.review_note %} — {{ d.review_note }}{% endif %}</p>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

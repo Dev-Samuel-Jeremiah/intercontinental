@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hall hire{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Income</div>
+  <h1 class="fin-title"><em>Hall hire</em></h1>
+  <p class="fin-sub">Rent halls, fields and classrooms to churches, weddings, exam bodies and community groups. Clashes with other hires and school bookings are refused; confirming creates an invoice. ₦{{ income|floatformat:0 }} received in the last year.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+    {% for b in rows %}<tr><td class="name"><a href="{% url 'facilities:booking' b.pk %}">{{ b.event }}</a><br><small class="hint">{{ b.client }} · {{ b.space }} · {{ b.starts|date:"D j M Y H:i" }}</small></td><td class="num">₦{{ b.total|floatformat:0 }}{% if b.balance > 0 and b.status != 'CANCELLED' %}<br><small class="hint">owes ₦{{ b.balance|floatformat:0 }}</small>{% endif %}</td><td><span class="chip{% if b.status == 'CONFIRMED' %} gold{% elif b.status == 'DONE' %} ok{% endif %}">{{ b.get_status_display }}</span></td></tr>
+    {% empty %}<tr><td class="empty">No bookings yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">New booking</h3>
+    {% if not spaces %}<p class="hint">Mark a space as hireable (with its rates) on the Spaces page first.</p>{% endif %}
+    <div><label>Space</label><select name="space" required>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }} — ₦{{ s.hire_rate_hour|floatformat:0 }}/h, ₦{{ s.hire_rate_day|floatformat:0 }}/day{% if s.capacity %}, {{ s.capacity }} people{% endif %}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Client</label><input name="client" required maxlength="160"></div><div><label>Event</label><input name="event" required maxlength="160"></div></div>
+    <div class="row2"><div><label>Phone</label><input name="phone" maxlength="20"></div><div><label>Email</label><input type="email" name="email"></div></div>
+    <div class="row2"><div><label>Starts</label><input type="datetime-local" name="starts" required></div><div><label>Ends</label><input type="datetime-local" name="ends" required></div></div>
+    <div class="row2"><div><label>Guests</label><input name="guests" inputmode="numeric"></div><div><label>Hire fee ₦ (blank = from rates)</label><input name="amount" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Extras ₦</label><input name="extras" inputmode="decimal"></div><div><label>Extras for</label><input name="extras_note" maxlength="160" placeholder="Chairs, generator"></div></div>
+    <div><label>Refundable caution fee ₦</label><input name="caution_fee" inputmode="decimal"></div>
+    <div><label>Notes</label><textarea name="notes" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save enquiry</button>
+  </form>
+</div>
+{% endblock %}

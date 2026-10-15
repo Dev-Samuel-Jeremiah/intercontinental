@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Detentions{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Conduct</div>
+  <h1 class="fin-title"><em>Detentions</em></h1>
+  <p class="fin-sub">The discipline team sets up sessions; any teacher can put students in one. Families get an email and text with the time and room; a missed detention tells them too.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% for s in upcoming %}<div class="panel"><div class="panel-h"><h3>{{ s }}</h3><span class="hint">{{ s.detentions.all|length }} / {{ s.capacity }}{% if s.supervisor %} · {{ s.supervisor.full_name }}{% endif %}</span></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="session" value="{{ s.pk }}">
+      <table class="tbl" data-no-export><tbody>{% for d in s.detentions.all %}<tr><td class="name">{{ d.student.full_name }}<br><small class="hint">{{ d.reason }}</small></td><td>{% if disc %}<select name="d_{{ d.pk }}" style="width:auto">{% for k, v in statuses %}<option value="{{ k }}" {% if k == d.status %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>{% else %}{{ d.get_status_display }}{% endif %}</td></tr>{% empty %}<tr><td class="empty">Nobody yet.</td></tr>{% endfor %}</tbody></table>
+      {% if disc and s.detentions.all %}<button class="fin-btn fin-btn-sm" type="submit">Save register</button>{% endif %}</form>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No detention sessions coming up.</p></div></div>{% endfor %}
+    {% if past %}<div class="panel"><div class="panel-h"><h3>Earlier</h3></div><div class="panel-b">{% for s in past %}<form method="post" class="fin-form" style="padding:.4rem 0;border-bottom:1px solid var(--rim)">{% csrf_token %}<input type="hidden" name="action" value="mark"><input type="hidden" name="session" value="{{ s.pk }}"><b>{{ s }}</b>
+      {% for d in s.detentions.all %}<div style="display:flex;justify-content:space-between;gap:.4rem;margin:.2rem 0"><span>{{ d.student.full_name }}</span>{% if disc %}<select name="d_{{ d.pk }}" style="width:auto">{% for k, v in statuses %}<option value="{{ k }}" {% if k == d.status %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>{% else %}<span>{{ d.get_status_display }}</span>{% endif %}</div>{% endfor %}
+      {% if disc and s.detentions.all %}<button class="fin-btn fin-btn-sm" type="submit">Save</button>{% endif %}</form>{% endfor %}</div></div>{% endif %}
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    {% if upcoming %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="assign">
+      <h3 style="margin:0 0 .6rem">Put students in detention</h3>
+      <div><label>Session</label><select name="session">{% for s in upcoming %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div>
+      <div><label>Student(s)</label><select name="students" multiple size="6" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label>Reason</label><input name="reason" required maxlength="255"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Set detention</button>
+    </form>{% endif %}
+    {% if disc %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="session">
+      <h3 style="margin:0 0 .6rem">New session</h3>
+      <div class="row2"><div><label>Date</label><input type="date" name="date" required></div><div><label>Room</label><input name="room" required maxlength="60"></div></div>
+      <div class="row2"><div><label>From</label><input type="time" name="starts" value="14:30" required></div><div><label>To</label><input type="time" name="ends" value="15:30" required></div></div>
+      <div class="row2"><div><label>Supervisor</label><select name="supervisor"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div><div><label>Places</label><input name="capacity" value="30" inputmode="numeric"></div></div>
+      <button class="fin-btn" type="submit">Add session</button>
+    </form>{% endif %}
+  </div>
+</div>
+{% endblock %}

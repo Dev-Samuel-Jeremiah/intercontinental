@@ -1,0 +1,13 @@
+{% include "finance/_fin_styles.html" %}
+<style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}</style>
+<div class="no-print" style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:home' %}"><i class="bi bi-bus-front"></i> Routes</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:my_trips' %}"><i class="bi bi-geo-alt"></i> Today's trips</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:fleet' %}"><i class="bi bi-truck-front"></i> Vehicles</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:crew' %}"><i class="bi bi-person-badge"></i> Drivers</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:fees' %}"><i class="bi bi-cash-coin"></i> Fees</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:field_trips' %}"><i class="bi bi-signpost-2"></i> Field trips</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:changes' %}"><i class="bi bi-arrow-repeat"></i> Pickup changes</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:incidents' %}"><i class="bi bi-exclamation-triangle"></i> Incidents</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:reports' %}"><i class="bi bi-graph-up"></i> Reports &amp; settings</a>
+</div>

@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Fee collection{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">Fee <em>collection</em></h1>
+  <p class="fin-sub">{% if fee.term %}{{ fee.term }} — {% endif %}how much of this term's fees are in, class by class, how payments arrive and how old the unpaid balances are.</p>
+</div>{% include "analytics/_export.html" %}</div>
+{% include "analytics/_nav.html" %}
+<div class="fin-stats">
+  <div class="kpi"><small>Expected</small><b>₦{{ fee.expected|floatformat:0|intcomma }}</b></div>
+  <div class="kpi"><small>Collected</small><b style="color:var(--green)">₦{{ fee.paid|floatformat:0|intcomma }}</b><span class="hint">{{ fee.rate|default:"—" }}%</span></div>
+  <div class="kpi"><a href="{% url 'analytics:students' %}?owing=1"><small>Outstanding</small><b style="color:var(--amber)">₦{{ fee.outstanding|floatformat:0|intcomma }}</b><span class="hint"><u>{{ fee.debtors }} owing</u></span></a></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-building"></i> By class</h3></div>
+    {% if by_class %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>Collected</th><th>Paid</th><th>Outstanding</th><th>Owing</th></tr></thead><tbody>
+    {% for r in by_class %}<tr><td class="name">{{ r.name }}</td><td style="min-width:140px"><div class="track"><i class="{% if r.rate >= 80 %}green{% elif r.rate < 50 %}red{% endif %}" style="width:{{ r.rate|default:0 }}%"></i></div><span class="hint">{{ r.rate|default:"—" }}%</span></td>
+      <td class="money">₦{{ r.paid|floatformat:0|intcomma }}</td><td class="money">₦{{ r.outstanding|floatformat:0|intcomma }}</td>
+      <td>{% if r.debtors %}<a href="{% url 'analytics:students' %}?owing=1{% if r.class_id %}&amp;class={{ r.class_id }}{% endif %}" style="color:var(--champagne-lt)">{{ r.debtors }}</a>{% else %}0{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-receipt"></i><p>No bills for the current term yet.</p></div>{% endif %}
+  </div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> How old the debt is</h3><span class="hint">since the family last paid</span></div><div class="panel-b">
+      {% for b in ageing %}<div class="hbar"><span>{{ b.label }}</span><span class="track"><i class="{% if forloop.last %}red{% elif forloop.counter == 3 %}amber{% endif %}" style="width:{% if fee.outstanding %}{% widthratio b.amount fee.outstanding 100 %}{% else %}0{% endif %}%"></i></span><span class="hint">₦{{ b.amount|floatformat:0|intcomma }} · {{ b.families }}{% if b.never %} ({{ b.never }} never paid){% endif %}</span></div>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-credit-card"></i> How families pay</h3><span class="hint">last 10 weeks</span></div><div class="panel-b">
+      {% for name, amount in cash.methods %}<div style="display:flex;justify-content:space-between;padding:.3rem 0"><span>{{ name }}</span><b>₦{{ amount|floatformat:0|intcomma }}</b></div>{% empty %}<p class="hint" style="margin:0">No approved payments yet.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bar-chart"></i> Week by week</h3></div><div class="panel-b">
+      <div class="vbars">{% for w in cash.weeks %}<div class="col" title="₦{{ w.amount|floatformat:0|intcomma }}"><i style="height:{{ w.width }}%"></i><small>{{ w.week|date:"j/n" }}</small></div>{% endfor %}</div>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

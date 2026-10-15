@@ -1,0 +1,14 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{# Student-portal pages share the main portal shell (sidebar + top bar). #}
+{# Kept as its own template so existing child pages keep working: they  #}
+{# may fill title, extra_head, content and extra_js.                     #}
+
+{% block extra_css %}
+<style>
+  .container { width: 100%; max-width: 1200px; margin: 0 auto; }
+  .d-none { display: none !important; }
+</style>
+<script defer src="{% static 'js/student.js' %}"></script>
+{% block extra_head %}{% endblock %}
+{% endblock %}

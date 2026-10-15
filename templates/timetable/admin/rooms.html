@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Rooms{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Timetable</div>
+  <h1 class="fin-title">Special <em>rooms</em></h1>
+  <p class="fin-sub">Labs, computer rooms and halls. Lessons that need one (set on the subject assignment) get a free room of that kind when the timetable is generated.</p>
+</div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add a room</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <div><label>Name</label><input name="name" required maxlength="80" placeholder="Chemistry lab"></div>
+      <div class="row2"><div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div><div><label>Seats <span class="hint">(optional)</span></label><input type="number" name="capacity" min="1"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add room</button></form></div></div>
+  <div class="panel">{% if rooms %}<table class="tbl"><thead><tr><th>Room</th><th>Kind</th><th>Seats</th><th></th></tr></thead><tbody>
+    {% for r in rooms %}<tr><td class="name">{{ r.name }}</td><td>{{ r.get_kind_display }}</td><td>{{ r.capacity|default:"—" }}</td>
+      <td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ r.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="delete" onclick="return confirm('Remove {{ r.name|escapejs }}?')"><i class="bi bi-trash"></i></button></form></td></tr>{% endfor %}
+  </tbody></table>{% else %}<div class="empty"><i class="bi bi-door-open"></i><p>No special rooms yet.</p></div>{% endif %}</div>
+</div>
+{% endblock %}

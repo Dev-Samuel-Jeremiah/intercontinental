@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ tag.code }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Asset tag</div>
+  <h1 class="fin-title"><em>{{ tag.code }}</em> {{ tag.name }}</h1>
+  <p class="fin-sub">{{ tag.space|default:"No room recorded" }}{% if tag.custodian %} · with {{ tag.custodian.get_full_name|default:tag.custodian.username }}{% endif %} · {{ tag.get_status_display }} · {{ tag.get_condition_display }}</p>
+</div>{% if store %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:asset' tag.pk %}">Full record</a>{% endif %}</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Recent history</h3></div><div class="panel-b">{% for e in events %}<p style="margin:.2rem 0;font-size:.9rem"><b>{{ e.at|date:"j M Y" }}</b> {{ e.text }}</p>{% empty %}<p class="empty">Nothing recorded.</p>{% endfor %}</div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Something wrong with it?</h3>
+    <div><label>What is wrong</label><input name="title" required maxlength="160"></div>
+    <div class="row2"><div><label>Kind</label><select name="category">{% for k, v in categories %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>How urgent</label><select name="priority">{% for k, v in priorities %}<option value="{{ k }}" {% if k == 'NORMAL' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>Details</label><textarea name="description" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Report fault</button>
+  </form>
+</div>
+{% endblock %}

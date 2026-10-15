@@ -1,0 +1,61 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ route.name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport · route</div>
+  <h1 class="fin-title"><em>{{ route.name }}</em></h1>
+  <p class="fin-sub">{{ route.vehicle|default:"No bus yet" }} · driver {{ route.driver.name|default:"—" }} · attendant {{ route.attendant.name|default:"—" }}{% if left is not None %} · <b>{{ left }}</b> seat{{ left|pluralize }} left{% endif %}</p>
+</div><div class="no-print" style="display:flex;gap:.4rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:manifest' route.pk %}?leg=AM"><i class="bi bi-printer"></i> Morning manifest</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'transport:manifest' route.pk %}?leg=PM"><i class="bi bi-printer"></i> Afternoon manifest</a>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Stops (morning order)</h3></div><div class="panel-b"><table class="tbl" data-no-export>
+      <thead><tr><th>#</th><th>Stop</th><th>AM</th><th>PM</th><th></th></tr></thead><tbody>
+      {% for s in stops %}<tr><td>{{ s.order }}</td><td class="name">{{ s.name }}{% if s.landmark %}<br><small class="hint">{{ s.landmark }}</small>{% endif %}</td><td>{{ s.morning_time|time:"H:i"|default:"—" }}</td><td>{{ s.afternoon_time|time:"H:i"|default:"—" }}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="stop_remove"><input type="hidden" name="id" value="{{ s.pk }}"><button class="fin-btn fin-btn-sm" type="submit" onclick="return confirm('Remove this stop?')">Remove</button></form></td></tr>
+      {% empty %}<tr><td colspan="5" class="empty">No stops yet.</td></tr>{% endfor %}
+    </tbody></table>
+    {% if suggestion %}<form method="post" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="optimise">
+      <p class="hint" style="margin:0 0 .4rem">Suggested order cuts the run from about {{ suggestion.before_km }} km to {{ suggestion.after_km }} km (straight-line, using the stops' map points).</p>
+      <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Use the suggested order</button></form>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Riders ({{ riders|length }})</h3></div><div class="panel-b"><table class="tbl">
+      <thead><tr><th>Student</th><th>Stop</th><th>Rides</th><th>Plan</th><th></th></tr></thead><tbody>
+      {% for r in riders %}<tr><td class="name">{{ r.student.full_name }}<br><small class="hint">{{ r.student.class_assigned|default:"" }}</small></td><td>{{ r.stop.name|default:"—" }}</td><td>{{ r.get_direction_display }}</td><td>{{ r.get_plan_display }}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="rider_remove"><input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Take off</button></form></td></tr>
+      {% empty %}<tr><td colspan="5" class="empty">Nobody on this route yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="rider">
+      <h3 style="margin:0 0 .6rem">Add a rider</h3>
+      <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Stop</label><select name="stop"><option value="">—</option>{% for s in stops %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}</select></div>
+      <div><label>Rides</label><select name="direction">{% for k, v in directions %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+      <div class="row2"><div><label>Pays</label><select name="plan">{% for k, v in plans %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Note</label><input name="notes" maxlength="255"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="stop">
+      <h3 style="margin:0 0 .6rem">Add a stop</h3>
+      <div class="row2"><div><label>Name</label><input name="name" required maxlength="120"></div><div><label>Landmark</label><input name="landmark" maxlength="160"></div></div>
+      <div class="row2"><div><label>Morning pickup</label><input type="time" name="morning_time"></div><div><label>Afternoon drop-off</label><input type="time" name="afternoon_time"></div></div>
+      <div class="row2"><div><label>Latitude</label><input name="lat" id="lat" inputmode="decimal"></div><div><label>Longitude</label><input name="lng" id="lng" inputmode="decimal"></div></div>
+      <p class="hint" style="margin:0">Standing at the stop? <a href="#" onclick="navigator.geolocation&&navigator.geolocation.getCurrentPosition(function(p){document.getElementById('lat').value=p.coords.latitude.toFixed(6);document.getElementById('lng').value=p.coords.longitude.toFixed(6)});return false">Use my location</a>. Map points let the system suggest a stop order.</p>
+      <button class="fin-btn fin-btn-gold" type="submit">Add stop</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="edit">
+      <h3 style="margin:0 0 .6rem">Route details</h3>
+      <div class="row2"><div><label>Bus</label><select name="vehicle"><option value="">—</option>{% for v in vehicles %}<option value="{{ v.pk }}" {% if v.pk == route.vehicle_id %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+      <div><label>Driver</label><select name="driver"><option value="">—</option>{% for d in drivers %}{% if d.role == 'DRIVER' %}<option value="{{ d.pk }}" {% if d.pk == route.driver_id %}selected{% endif %}>{{ d.name }}</option>{% endif %}{% endfor %}</select></div></div>
+      <div><label>Attendant</label><select name="attendant"><option value="">—</option>{% for d in drivers %}{% if d.role == 'ATTENDANT' %}<option value="{{ d.pk }}" {% if d.pk == route.attendant_id %}selected{% endif %}>{{ d.name }}</option>{% endif %}{% endfor %}</select></div>
+      <div class="row2"><div><label>Morning departs</label><input type="time" name="morning_departs" value="{{ route.morning_departs|time:'H:i' }}"></div><div><label>Afternoon departs</label><input type="time" name="afternoon_departs" value="{{ route.afternoon_departs|time:'H:i' }}"></div></div>
+      <div class="row2"><div><label>Fee per term</label><input name="fee_term" value="{{ route.fee_term }}"></div><div><label>Fee per month</label><input name="fee_month" value="{{ route.fee_month }}"></div></div>
+      <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="active" style="width:auto" {% if route.active %}checked{% endif %}> Route running</label>
+      <button class="fin-btn" type="submit">Save</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

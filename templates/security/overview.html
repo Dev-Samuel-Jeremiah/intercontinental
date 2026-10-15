@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Security &amp; privacy{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Keeping the school's <em>data safe</em></h1>
+  <p class="fin-sub">Sign-in protection, who can do what, a trail of sensitive actions, and what the Nigeria Data Protection Act asks of the school.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Staff with two-step sign-in</small><b>{{ o.with_2fa }}/{{ o.staff }}</b></div>
+  <div class="fin-stat"><small>Failed sign-ins (30 days)</small><b>{{ o.failed_30 }}</b></div>
+  <div class="fin-stat"><small>Lockouts (30 days)</small><b>{{ o.locked_30 }}</b></div>
+  <div class="fin-stat"><small>New-device sign-ins</small><b>{{ o.new_devices_30 }}</b></div>
+  <div class="fin-stat"><small>Signed in now</small><b>{{ o.sessions }}</b></div>
+</div>
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Needs attention</h3></div><div class="panel-b">
+      {% for u in o.admins_no_2fa %}{% if forloop.first %}<p><b>Administrators without two-step sign-in:</b></p>{% endif %}<span class="chip red">{{ u.username }}</span> {% if forloop.last %}<p class="hint" style="margin-top:.4rem">{% if o.cfg.require_2fa == 'NONE' %}Consider requiring it in <a href="{% url 'security:settings' %}">Rules</a>.{% else %}They will be asked to set it up at their next sign-in.{% endif %}</p>{% endif %}{% endfor %}
+      {% for b in o.open_breaches %}<p style="margin:.4rem 0"><a href="{% url 'security:breach' b.pk %}"><span class="chip red">{{ b.reference }}</span> {{ b.title }}</a>{% if not b.reported_at and not b.not_reported_reason %} <span class="hint">— NDPC deadline {{ b.deadline|date:"j M H:i" }}</span>{% endif %}</p>{% endfor %}
+      {% for r in o.open_requests %}<p style="margin:.4rem 0"><a href="{% url 'security:request' r.pk %}"><span class="chip {% if r.overdue %}red{% else %}amber{% endif %}">{{ r.reference }}</span> {{ r.get_kind_display }} — {{ r.requester_name }}</a> <span class="hint">due {{ r.due_on|date:"j M" }}</span></p>{% endfor %}
+      {% if not o.notice or not o.notice.dpo_name %}<p style="margin:.4rem 0"><span class="chip amber">No DPO</span> Name the school's Data Protection Officer in <a href="{% url 'security:privacy' %}">Notice &amp; DPO</a>.</p>{% endif %}
+      {% if not o.admins_no_2fa and not o.open_breaches and not o.open_requests and o.notice.dpo_name %}<p class="hint">Nothing needs attention.</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-sliders"></i> Current rules</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:settings' %}">Change</a></div><div class="panel-b">
+      <p>Two-step sign-in: {{ o.cfg.get_require_2fa_display|lower }}</p>
+      <p>Passwords: at least {{ o.cfg.min_length }} characters{% if o.cfg.require_mix %}, letters and numbers{% endif %}{% if o.cfg.require_symbol %}, a symbol{% endif %}{% if o.cfg.expiry_days %}, new every {{ o.cfg.expiry_days }} days{% endif %}</p>
+      <p>Lock after {{ o.cfg.lockout_attempts }} failed sign-ins for {{ o.cfg.lockout_minutes }} minutes</p>
+    </div></div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-text"></i> Recent sensitive actions</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:audit' %}">Audit trail</a></div>
+    <table class="tbl">{% for e in o.recent %}<tr><td style="white-space:nowrap">{{ e.at|date:"j M H:i" }}</td><td class="name">{{ e.username|default:"System" }}</td><td>{{ e.summary }}</td></tr>{% empty %}<tr><td class="empty">Nothing recorded yet.</td></tr>{% endfor %}</table>
+  </div>
+</div>
+{% endblock %}

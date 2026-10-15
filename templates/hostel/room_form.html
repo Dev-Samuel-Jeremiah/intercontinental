@@ -1,0 +1,559 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if room %}Edit Room{% else %}New Room{% endif %}{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ── Design Tokens ─────────────────────────────────────────── */
+/* design tokens come from dashboard/base.html */
+
+/* ── Reset / Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body { background: var(--ink); font-family: 'Outfit', sans-serif; color: var(--white); }
+
+/* ── Keyframes ─────────────────────────────────────────────── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ── Page Wrapper ──────────────────────────────────────────── */
+.yr-wrap {
+  max-width: 780px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── Page Header ───────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.page-header-left { display: flex; flex-direction: column; gap: 8px; }
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  opacity: .6;
+  flex-shrink: 0;
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  letter-spacing: -.01em;
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+
+.context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.22);
+  border-radius: 99px;
+  font-size: .73rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  letter-spacing: .02em;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.header-divider {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--rim2);
+  margin-top: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+.header-divider::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  transform: translateY(-50%);
+}
+
+/* ── Back Button ───────────────────────────────────────────── */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--slate2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color .2s, color .2s, background .2s;
+  flex-shrink: 0;
+}
+.btn-ghost:hover {
+  border-color: var(--rim3);
+  color: var(--white);
+  background: rgba(255,255,255,.05);
+}
+
+/* ── Panel ─────────────────────────────────────────────────── */
+.panel {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+}
+.panel-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+.panel-icon.champagne { background: var(--champagne-dim); color: var(--champagne); border: 1px solid rgba(244,210,31,.22); }
+.panel-icon.blue      { background: var(--blue-dim);      color: var(--blue);      border: 1px solid var(--blue-border); }
+.panel-icon.teal      { background: var(--teal-dim);      color: var(--teal);      border: 1px solid var(--teal-border); }
+
+.panel-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: .93rem;
+  font-weight: 600;
+  color: var(--white);
+}
+.panel-body { padding: 1.5rem; }
+
+/* ── Form Elements ─────────────────────────────────────────── */
+.form-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.field-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.fg {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.fg label {
+  font-size: .73rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--slate2);
+}
+
+.fg input,
+.fg select,
+.fg textarea {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 10px 13px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  font-weight: 400;
+  color: var(--white);
+  width: 100%;
+  transition: border-color .2s, box-shadow .2s;
+  outline: none;
+  -webkit-appearance: none;
+}
+.fg select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+.fg input::placeholder,
+.fg textarea::placeholder { color: var(--slate); }
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.fg select option {
+  background: var(--surface2);
+  color: var(--white);
+}
+.fg textarea { resize: vertical; min-height: 78px; line-height: 1.55; }
+
+/* ── Section Label ─────────────────────────────────────────── */
+.section-label {
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--slate);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rim);
+  margin-bottom: .25rem;
+}
+
+/* ── Checkbox Toggles ──────────────────────────────────────── */
+.toggle-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.toggle-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 190px;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+  user-select: none;
+}
+.toggle-card:hover {
+  border-color: var(--rim3);
+  background: var(--surface3);
+}
+.toggle-card input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-card input[type="checkbox"]:checked ~ .toggle-body .toggle-label { color: var(--champagne-lt); }
+.toggle-card:has(input:checked) {
+  border-color: rgba(244,210,31,.3);
+  background: var(--champagne-dim);
+}
+.toggle-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--rim3);
+  background: var(--surface3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s, border-color .2s;
+  font-size: .65rem;
+  color: transparent;
+}
+.toggle-card:has(input:checked) .toggle-indicator {
+  background: var(--champagne);
+  border-color: var(--champagne);
+  color: var(--ink);
+}
+.toggle-body { display: flex; flex-direction: column; gap: 2px; }
+.toggle-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--slate2);
+  transition: color .2s;
+}
+.toggle-sublabel {
+  font-size: .7rem;
+  color: var(--slate);
+}
+
+/* ── Info Notice ───────────────────────────────────────────── */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--teal-dim);
+  border: 1px solid var(--teal-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: .8rem;
+  color: var(--teal);
+  line-height: 1.5;
+}
+.notice i { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
+.notice strong { font-weight: 700; display: block; margin-bottom: 2px; color: var(--teal); }
+
+/* ── Form Divider ──────────────────────────────────────────── */
+.form-divider {
+  height: 1px;
+  background: var(--rim);
+  margin: .25rem 0;
+}
+
+/* ── Submit Button ─────────────────────────────────────────── */
+.btn-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  font-weight: 700;
+  color: #0a1f44;
+  cursor: pointer;
+  letter-spacing: .02em;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s, filter .18s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-submit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 7px 26px rgba(244,210,31,.32);
+  filter: brightness(1.06);
+}
+.btn-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 12px rgba(244,210,31,.18);
+}
+
+/* ── Flash Messages ────────────────────────────────────────── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border-radius: 10px;
+  font-size: .83rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  animation: riseUp .3s ease both;
+}
+.flash-success { background: var(--green-dim);  border: 1px solid var(--green-border); color: var(--green); }
+.flash-error   { background: var(--red-dim);    border: 1px solid var(--red-border);   color: var(--red);   }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .yr-wrap { padding: 1.25rem 1rem 3rem; }
+  .panel-body { padding: 1.1rem; }
+  .field-row { flex-direction: column; }
+  .toggle-group { flex-direction: column; }
+}
+</style>
+
+<div class="yr-wrap">
+
+  <!-- Flash Messages -->
+  {% if messages %}
+    {% for m in messages %}
+    <div class="flash {% if m.tags == 'success' %}flash-success{% else %}flash-error{% endif %}">
+      <i class="bi {% if m.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-triangle{% endif %}"></i>
+      {{ m }}
+    </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="eyebrow">Hostel Management</div>
+      <h1 class="page-title">
+        {% if room %}
+          Edit <em>Room {{ room.room_number }}</em>
+        {% else %}
+          New <em>Room</em>
+        {% endif %}
+      </h1>
+      <div class="context-badge">
+        <i class="bi bi-building"></i>
+        {% if room %}
+          Modifying existing room configuration
+        {% else %}
+          Adding to {{ hostel.name }}
+        {% endif %}
+      </div>
+    </div>
+    <a href="{% url 'hostel:hostel_detail' hostel.id %}" class="btn-ghost">
+      <i class="bi bi-arrow-left"></i> Back to Hostel
+    </a>
+  </div>
+
+  <div class="header-divider"></div>
+
+  <!-- Form Panel -->
+  <div class="panel" style="animation-delay:.1s;">
+    <div class="panel-header">
+      <div class="panel-icon champagne">
+        <i class="bi {% if room %}bi-pencil-square{% else %}bi-plus-square{% endif %}"></i>
+      </div>
+      <h3>{% if room %}Room Details — {{ room.room_number }}{% else %}Room Configuration{% endif %}</h3>
+    </div>
+    <div class="panel-body">
+      <form method="POST" class="form-stack">
+        {% csrf_token %}
+
+        <!-- Row 1: Number + Type -->
+        <div>
+          <div class="section-label">Basic Information</div>
+          <div class="field-row">
+            <div class="fg">
+              <label>Room Number *</label>
+              <input name="room_number" value="{{ room.room_number|default:'' }}" required placeholder="e.g. A101">
+            </div>
+            <div class="fg">
+              <label>Room Type</label>
+              <select name="room_type">
+                <option value="DORMITORY" {% if room.room_type == 'DORMITORY' %}selected{% endif %}>Dormitory (Shared)</option>
+                <option value="DOUBLE"    {% if room.room_type == 'DOUBLE'    %}selected{% endif %}>Double Room</option>
+                <option value="SINGLE"    {% if room.room_type == 'SINGLE'    %}selected{% endif %}>Single Room</option>
+                <option value="SUITE"     {% if room.room_type == 'SUITE'     %}selected{% endif %}>Suite</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: Capacity + Floor -->
+        <div>
+          <div class="section-label">Capacity &amp; Location</div>
+          <div class="field-row">
+            <div class="fg">
+              <label>Bed Capacity *</label>
+              <input type="number" name="capacity" value="{{ room.capacity|default:4 }}" min="1" max="30" required>
+            </div>
+            <div class="fg">
+              <label>Floor (optional)</label>
+              <select name="floor">
+                <option value="">-- No floor --</option>
+                {% for fl in floors %}
+                <option value="{{ fl.id }}" {% if room.floor_id == fl.id %}selected{% endif %}>{{ fl.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Amenities Toggles -->
+        <div>
+          <div class="section-label">Amenities</div>
+          <div class="toggle-group">
+
+            <label class="toggle-card">
+              <input type="checkbox" name="has_ac" {% if room.has_ac %}checked{% endif %}>
+              <div class="toggle-indicator"><i class="bi bi-check"></i></div>
+              <div class="toggle-body">
+                <span class="toggle-label">Air Conditioning</span>
+                <span class="toggle-sublabel">Room has A/C unit</span>
+              </div>
+            </label>
+
+            <label class="toggle-card">
+              <input type="checkbox" name="has_bathroom" {% if room.has_bathroom %}checked{% endif %}>
+              <div class="toggle-indicator"><i class="bi bi-check"></i></div>
+              <div class="toggle-body">
+                <span class="toggle-label">Attached Bathroom</span>
+                <span class="toggle-sublabel">En-suite bathroom</span>
+              </div>
+            </label>
+
+          </div>
+        </div>
+
+        <div class="form-divider"></div>
+
+        <!-- Description -->
+        <div class="fg">
+          <label>Description</label>
+          <textarea name="description" rows="3" placeholder="Notes or additional details about this room...">{{ room.description|default:'' }}</textarea>
+        </div>
+
+        <!-- New Room Notice -->
+        {% if not room %}
+        <div class="notice">
+          <i class="bi bi-info-circle-fill"></i>
+          <div>
+            <strong>Automatic Bed Generation</strong>
+            Beds will be auto-created based on the capacity you set above (B01, B02, ...). You can manage individual beds after saving.
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-save2"></i>
+          {% if room %}Save Changes{% else %}Create Room{% endif %}
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

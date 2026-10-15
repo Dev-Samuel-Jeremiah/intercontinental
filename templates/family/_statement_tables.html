@@ -1,0 +1,10 @@
+{% if st.bills %}<div class="card"><h2>Term bills</h2><table><thead><tr><th>Term</th><th class="num">Fee</th><th class="num">Discount</th><th class="num">Late fee</th><th class="num">Paid</th><th class="num">Balance</th></tr></thead><tbody>
+{% for b in st.bills %}<tr><td>{{ b.parent_billing.term }} {{ b.parent_billing.session }}</td><td class="num">{{ b.gross_fee|floatformat:"2g" }}</td><td class="num">{{ b.discount|floatformat:"2g" }}</td><td class="num">{{ b.late_fee|floatformat:"2g" }}</td><td class="num">{{ b.paid|floatformat:"2g" }}</td><td class="num">{{ b.balance|floatformat:"2g" }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if st.allocations %}<div class="card"><h2>Payments</h2><table><thead><tr><th>Date</th><th>Reference</th><th>Term</th><th class="num">Amount</th></tr></thead><tbody>
+{% for a in st.allocations %}<tr><td>{{ a.created_at|date:"j M Y" }}</td><td>{{ a.payment.reference }}</td><td>{{ a.child_billing.parent_billing.term }}</td><td class="num">{{ a.amount_allocated|floatformat:"2g" }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if st.items %}<div class="card"><h2>Fee items</h2><table><thead><tr><th>Item</th><th>Status</th><th class="num">Amount</th><th class="num">Paid</th></tr></thead><tbody>
+{% for f in st.items %}<tr><td>{{ f.fee_structure.name }}</td><td>{{ f.get_status_display }}</td><td class="num">{{ f.fee_structure.amount|floatformat:"2g" }}</td><td class="num">{{ f.amount_paid|floatformat:"2g" }}</td></tr>{% endfor %}
+</tbody></table></div>{% endif %}
+{% if not st.bills and not st.allocations and not st.items %}<div class="card"><p class="sub" style="margin:0">No fees have been billed yet.</p></div>{% endif %}

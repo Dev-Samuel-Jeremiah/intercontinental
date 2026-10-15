@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Payroll settings{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'payroll:runs' %}" style="color:inherit">Payroll</a></div>
+  <h1 class="fin-title">Payroll <em>settings</em></h1>
+  <p class="fin-sub">Statutory rates and how payroll is approved. Check with your tax adviser if the law changes.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div class="row2"><div><label>Pension — staff (%)</label><input name="pension_employee_rate" value="{{ s.pension_employee_rate }}" inputmode="decimal"></div><div><label>Pension — school (%)</label><input name="pension_employer_rate" value="{{ s.pension_employer_rate }}" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>NHF (% of basic)</label><input name="nhf_rate" value="{{ s.nhf_rate }}" inputmode="decimal"></div><div><label>Minimum wage a month (₦)</label><input name="minimum_wage" value="{{ s.minimum_wage }}" inputmode="decimal"></div></div>
+    <div><label>Pay for each lesson covered for an absent colleague (₦) <span class="hint">0 = not paid</span></label><input name="cover_rate" value="{{ s.cover_rate }}" inputmode="decimal"></div>
+    <div><label>Bank narration</label><input name="bank_narration" value="{{ s.bank_narration }}" maxlength="60"></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="deduct_unpaid_leave" value="1" style="width:auto" {% if s.deduct_unpaid_leave %}checked{% endif %}> Take approved unpaid leave off pay</label>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="separate_approver" value="1" style="width:auto" {% if s.separate_approver %}checked{% endif %}> The person who prepares a run cannot approve or release it</label>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-percent"></i> PAYE bands (Nigeria Tax Act 2025)</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>{% for width, rate in bands %}<tr><td>{% if width %}{% if forloop.first %}First{% else %}Next{% endif %} ₦{{ width|floatformat:0 }}{% else %}Above ₦50,000,000{% endif %}</td><td><b>{{ rate|floatformat:0 }}%</b></td></tr>{% endfor %}</tbody></table>
+    <p class="hint">On yearly income after pension, NHF, rent relief (20% of rent, up to ₦500,000) and other documented reliefs. Pay at or below the minimum wage is not taxed. In force from 1 January 2026.</p>
+  </div></div>
+</div>
+{% endblock %}

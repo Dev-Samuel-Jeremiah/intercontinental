@@ -1,0 +1,682 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Add Tasks to {{ assignment.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+#content{color:var(--white);font-family:'Outfit', sans-serif;}
+
+.your-wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:2rem 2.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+/* ================= HEADER ================= */
+
+.page-header{
+    margin-bottom:2rem;
+}
+
+.page-header-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1.2rem;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    color:var(--champagne);
+    text-transform:uppercase;
+    letter-spacing:3px;
+    font-size:.72rem;
+    font-weight:600;
+}
+
+.eyebrow::before{
+    content:"";
+    width:42px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.7;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.55rem;
+    padding:.65rem 1rem;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.22);
+    color:var(--champagne-lt);
+    font-size:.85rem;
+    font-weight:500;
+    white-space:nowrap;
+}
+
+.page-title{
+    margin:0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:3rem;
+    font-weight:700;
+    color:var(--white);
+    line-height:1.05;
+    letter-spacing:-.5px;
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+    font-weight:600;
+}
+
+.page-subtitle{
+    margin-top:.8rem;
+    color:var(--slate2);
+    font-size:1rem;
+    line-height:1.7;
+}
+
+.header-divider{
+    position:relative;
+    height:1px;
+    background:var(--rim);
+    margin-top:1.7rem;
+}
+
+.header-divider::after{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:80px;
+    height:1px;
+    background:var(--champagne);
+}
+
+/* ================= PANEL ================= */
+
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        var(--rim3),
+        transparent
+    );
+}
+
+.panel-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    padding:1.2rem 1.5rem;
+    border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+    display:flex;
+    align-items:center;
+    gap:.9rem;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--purple-dim);
+    border:1px solid var(--purple-border);
+    color:var(--purple);
+    flex-shrink:0;
+}
+
+.panel-title h3{
+    margin:0;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+.panel-body{
+    padding:1.7rem;
+}
+
+/* ================= ALERTS ================= */
+
+.message{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    padding:1rem 1rem;
+    border-radius:12px;
+    margin-bottom:1rem;
+    font-size:.94rem;
+    border:1px solid transparent;
+}
+
+.message.success{
+    background:var(--green-dim);
+    border-color:var(--green-border);
+    color:var(--green);
+}
+
+.message.error{
+    background:var(--red-dim);
+    border-color:var(--red-border);
+    color:var(--red);
+}
+
+/* ================= QUESTION CARD ================= */
+
+.question-card{
+    position:relative;
+    background:var(--surface2);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    padding:1.4rem;
+    margin-bottom:1.3rem;
+    animation:riseUp .45s ease both;
+}
+
+.question-card:nth-child(2){
+    animation-delay:.08s;
+}
+
+.question-card:nth-child(3){
+    animation-delay:.12s;
+}
+
+.question-card:nth-child(4){
+    animation-delay:.16s;
+}
+
+.question-card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        var(--rim3),
+        transparent
+    );
+}
+
+.question-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1.4rem;
+}
+
+.question-title{
+    display:flex;
+    align-items:center;
+    gap:.85rem;
+}
+
+.question-icon{
+    width:36px;
+    height:36px;
+    border-radius:11px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.22);
+    color:var(--champagne);
+}
+
+.question-title h4{
+    margin:0;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+.question-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    padding:.45rem .75rem;
+    border-radius:999px;
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:var(--blue);
+    font-size:.78rem;
+    font-weight:500;
+}
+
+/* ================= FORM ================= */
+
+.field-wrap{
+    margin-bottom:1.2rem;
+}
+
+.field-wrap label{
+    display:block;
+    margin-bottom:.55rem;
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+.question-card input,
+.question-card textarea,
+.question-card select{
+    width:100%;
+    background:var(--surface3);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    color:var(--white);
+    padding:.9rem 1rem;
+    font-size:.96rem;
+    font-family:'Outfit', sans-serif;
+    transition:.25s ease;
+}
+
+.question-card textarea{
+    min-height:120px;
+    resize:vertical;
+}
+
+.question-card input:focus,
+.question-card textarea:focus,
+.question-card select:focus{
+    outline:none;
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.question-card select option{
+    background:var(--surface3);
+    color:var(--white);
+}
+
+/* ================= ERRORS ================= */
+
+.errorlist{
+    margin:.5rem 0 0;
+    padding:0;
+    list-style:none;
+}
+
+.errorlist li{
+    color:var(--red);
+    font-size:.85rem;
+}
+
+/* ================= DELETE ================= */
+
+.delete-field{
+    margin-top:.6rem;
+    padding-top:1rem;
+    border-top:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+}
+
+.delete-field input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    accent-color:#ef6b73;
+}
+
+.delete-field label{
+    margin:0;
+    color:var(--red);
+    font-size:.9rem;
+    font-weight:500;
+}
+
+/* ================= ACTIONS ================= */
+
+.action-row{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    flex-wrap:wrap;
+    margin-top:1.6rem;
+}
+
+.btn-action{
+    border:none;
+    border-radius:12px;
+    padding:1rem 1.35rem;
+    font-weight:600;
+    font-family:'Outfit', sans-serif;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.7rem;
+    cursor:pointer;
+    transition:.3s ease;
+    text-decoration:none;
+}
+
+.btn-save{
+    background:linear-gradient(135deg, #f4d21f, #d1ad00);
+    color:#0a1f44;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-save:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 28px rgba(244,210,31,.28);
+    color:#fff;
+}
+
+.btn-back{
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    color:var(--white);
+}
+
+.btn-back:hover{
+    background:var(--surface3);
+    border-color:var(--rim3);
+    transform:translateY(-2px);
+    color:var(--white);
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty-state{
+    text-align:center;
+    padding:3rem 1rem;
+}
+
+.empty-icon{
+    width:74px;
+    height:74px;
+    margin:0 auto 1rem;
+    border-radius:18px;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--champagne);
+    font-size:1.5rem;
+}
+
+.empty-state h4{
+    margin-bottom:.45rem;
+    color:var(--white);
+}
+
+.empty-state p{
+    margin:0;
+    color:var(--slate2);
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width:768px){
+
+    .your-wrap{
+        padding:1.4rem 1rem 3rem;
+    }
+
+    .page-header-top{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .page-title{
+        font-size:2.3rem;
+    }
+
+    .panel-body{
+        padding:1.2rem;
+    }
+
+    .question-card{
+        padding:1rem;
+    }
+
+    .question-top{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .action-row{
+        flex-direction:column;
+    }
+
+    .btn-action{
+        width:100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="your-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+
+        <div class="page-header-top">
+
+            <div>
+
+                <div class="eyebrow">
+                    Assignment Builder
+                </div>
+
+                <h1 class="page-title">
+                    Add <em>Tasks</em>
+                </h1>
+
+                <div class="page-subtitle">
+                    Create and manage assignment questions for
+                    <strong>"{{ assignment.title }}"</strong>
+                </div>
+
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-journal-text"></i>
+                Question Setup
+            </div>
+
+        </div>
+
+        <div class="header-divider"></div>
+
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                <i class="bi bi-info-circle"></i>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Panel -->
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+
+                <div class="icon-badge">
+                    <i class="bi bi-ui-checks-grid"></i>
+                </div>
+
+                <h3>Assignment Questions</h3>
+
+            </div>
+
+        </div>
+
+        <div class="panel-body">
+
+            <form method="POST">
+
+                {% csrf_token %}
+
+                <!-- REQUIRED -->
+                {{ formset.management_form }}
+
+                {{ formset.non_form_errors }}
+
+                {% if formset %}
+
+                    {% for form in formset %}
+
+                    <div class="question-card">
+
+                        <div class="question-top">
+
+                            <div class="question-title">
+
+                                <div class="question-icon">
+                                    <i class="bi bi-patch-question"></i>
+                                </div>
+
+                                <h4>
+                                    Question {{ forloop.counter }}
+                                </h4>
+
+                            </div>
+
+                            <div class="question-badge">
+                                <i class="bi bi-pencil-square"></i>
+                                Editable
+                            </div>
+
+                        </div>
+
+                        {% for field in form %}
+
+                            {% if field.name != "DELETE" and field.name != "id" %}
+
+                            <div class="field-wrap">
+
+                                <label for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+
+                                {{ field }}
+
+                                {{ field.errors }}
+
+                            </div>
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                        {% if formset.can_delete %}
+
+                        <div class="delete-field">
+
+                            {{ form.DELETE }}
+
+                            <label>
+                                Delete this question?
+                            </label>
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        <i class="bi bi-journal-x"></i>
+                    </div>
+
+                    <h4>No Questions Available</h4>
+
+                    <p>
+                        There are currently no assignment questions available to edit.
+                    </p>
+
+                </div>
+
+                {% endif %}
+
+                <div class="action-row">
+
+                    <button type="submit" class="btn-action btn-save">
+                        <i class="bi bi-save2"></i>
+                        Save Questions
+                    </button>
+
+                    <a href="{% url 'classroom:teacher_course_detail' course.id %}" class="btn-action btn-back">
+                        <i class="bi bi-arrow-left"></i>
+                        Back to Home
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

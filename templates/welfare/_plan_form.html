@@ -1,0 +1,7 @@
+<div><label>Title</label><input name="title" value="{{ p.title|default:'Individual support plan' }}" maxlength="160"></div>
+<div><label>What the student finds hard</label><textarea name="needs" rows="3" required>{{ p.needs|default:'' }}</textarea></div>
+<div><label>Strengths</label><textarea name="strengths" rows="2">{{ p.strengths|default:'' }}</textarea></div>
+<div><label>Goals (one per line)</label><textarea name="goals" rows="3" required>{{ p.goals|default:'' }}</textarea></div>
+<div><label>What teachers and parents will do</label><textarea name="strategies" rows="3" required>{{ p.strategies|default:'' }}</textarea></div>
+<div class="row2"><div><label>Starts</label><input type="date" name="starts" value="{% if p %}{{ p.starts|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}"></div><div><label>Review on</label><input type="date" name="review_on" value="{% if p %}{{ p.review_on|date:'Y-m-d' }}{% endif %}" required></div></div>
+<div class="row2"><div><label>Owner</label><select name="owner"><option value="">—</option>{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk == p.owner_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="parent_agreed" {% if p.parent_agreed %}checked{% endif %}> Parents have agreed</label></div></div>

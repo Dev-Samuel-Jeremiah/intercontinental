@@ -1,0 +1,143 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Message Logs{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem;}
+.tbl th{background:rgba(255,255,255,.045);padding:8px 12px;text-align:left;font-weight:700;color:var(--slate2);font-size:.71rem;text-transform:uppercase;}
+.tbl td{padding:8px 12px;border-bottom:1px solid var(--rim2);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.045);}
+.badge{display:inline-flex;padding:3px 9px;border-radius:99px;font-size:.71rem;font-weight:700;}
+.bg{background:var(--green-dim);color:var(--green);} .ba{background:var(--amber-dim);color:var(--amber);} .br{background:var(--red-dim);color:var(--red);} .bb{background:var(--blue-dim);color:var(--blue);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:.79rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-r{background:#dc2626;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:.76rem;font-weight:700;color:var(--slate2);}
+.fg select{padding:8px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.85rem;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">
+    Message Delivery Logs
+    <span style="font-size:.82rem;font-weight:400;color:var(--slate2);">(showing up to 200)</span>
+  </h2>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+
+<!-- Filters + Bulk Clear -->
+<div style="background:rgba(255,255,255,.03);border-radius:12px;padding:14px 16px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;">
+  <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+    <div class="fg">
+      <label>Channel</label>
+      <select name="channel">
+        <option value="" {% if not channel_f %}selected{% endif %}>All</option>
+        <option value="EMAIL" {% if channel_f == 'EMAIL' %}selected{% endif %}>Email</option>
+        <option value="SMS" {% if channel_f == 'SMS' %}selected{% endif %}>SMS</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label>Status</label>
+      <select name="status">
+        <option value="" {% if not status_f %}selected{% endif %}>All</option>
+        <option value="SENT" {% if status_f == 'SENT' %}selected{% endif %}>Sent</option>
+        <option value="FAILED" {% if status_f == 'FAILED' %}selected{% endif %}>Failed</option>
+        <option value="DELIVERED" {% if status_f == 'DELIVERED' %}selected{% endif %}>Delivered</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-g"><i class="bi bi-funnel"></i> Filter</button>
+  </form>
+
+  <!-- Bulk delete buttons -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <form method="POST" action="{% url 'communications:delete_logs_bulk' %}" style="display:inline;">
+      {% csrf_token %}<input type="hidden" name="mode" value="failed">
+      <button type="submit" class="btn btn-ghost" style="color:var(--red);border-color:var(--red-border);"
+        onclick="return confirm('Delete all FAILED log entries?')">
+        <i class="bi bi-trash"></i> Clear Failed Logs
+      </button>
+    </form>
+    <form method="POST" action="{% url 'communications:delete_logs_bulk' %}" style="display:inline;">
+      {% csrf_token %}<input type="hidden" name="mode" value="all">
+      <button type="submit" class="btn btn-r"
+        onclick="return confirm('Delete ALL log entries? This cannot be undone.')">
+        <i class="bi bi-trash-fill"></i> Clear All Logs
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div style="overflow-x:auto;">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Student</th>
+        <th>Channel</th>
+        <th>Recipient</th>
+        <th>Subject / Preview</th>
+        <th>Status</th>
+        <th>Error</th>
+        <th>Del</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td style="white-space:nowrap;font-size:.75rem;color:var(--slate2);">{{ log.created_at|date:"d M Y H:i" }}</td>
+        <td>
+          <span style="font-weight:600;">{{ log.student.full_name }}</span>
+          <br><span style="font-size:.72rem;color:var(--slate);">{{ log.student.admission_number }}</span>
+        </td>
+        <td>
+          <span class="badge {% if log.channel == 'EMAIL' %}bb{% else %}ba{% endif %}">{{ log.channel }}</span>
+        </td>
+        <td style="font-size:.78rem;color:var(--slate2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ log.recipient }}
+        </td>
+        <td style="font-size:.77rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ log.subject|default:log.body|truncatechars:50 }}
+        </td>
+        <td>
+          {% if log.status == 'SENT' or log.status == 'DELIVERED' %}
+            <span class="badge bg">{{ log.status|title }}</span>
+          {% elif log.status == 'FAILED' %}
+            <span class="badge br">Failed</span>
+          {% else %}
+            <span class="badge" style="background:rgba(255,255,255,.045);color:var(--slate2);">{{ log.status }}</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.72rem;color:var(--red);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+            title="{{ log.error_message }}">
+          {{ log.error_message|truncatechars:35|default:"—" }}
+        </td>
+        <td>
+          <form method="POST" action="{% url 'communications:delete_log' log.id %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost"
+              style="padding:4px 8px;color:var(--red);border-color:var(--red-border);"
+              onclick="return confirm('Delete this log entry?')"
+              title="Delete">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center;padding:36px;color:var(--slate);">
+          <i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+          No logs found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

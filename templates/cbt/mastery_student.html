@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Mastery — {{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Topic mastery</div>
+  <h1 class="fin-title">{{ student.full_name }}</h1>
+  <p class="fin-sub">{{ student.class_assigned.name|default:"" }} · weakest topics first in each subject.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'cbt:mastery_class' %}?class={{ student.class_assigned_id }}"><i class="bi bi-arrow-left"></i> Class</a></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-b">{% include "cbt/_mastery_body.html" %}</div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Practice</h3></div><div class="panel-b">
+    {% for s in sessions %}<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.35rem 0;border-bottom:1px solid var(--rim)"><span>{{ s.started_at|date:"j M" }} · {% for x in s.subjects.all %}{{ x.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span><b>{{ s.percent }}%</b></div>
+    {% empty %}<p class="hint" style="margin:0">No practice yet.</p>{% endfor %}</div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ t.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.ps{padding:1rem 1.2rem;border-bottom:1px solid var(--rim)}.ps.ans{background:var(--green-dim);border-left:3px solid var(--green)}.ps .who{display:flex;justify-content:space-between;gap:.5rem;font-size:.82rem;color:var(--slate2)}.ps form{display:inline}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'classroom:discussion' t.course_id %}" style="color:inherit">{{ t.course.name }} · discussion</a></div>
+  <h1 class="fin-title">{{ t.title }}</h1>
+  <p class="fin-sub">{{ t.author.get_full_name|default:t.author.username }} · {{ t.created_at|date:"j M Y, H:i" }}{% if t.locked %} · closed{% endif %}</p>
+</div>{% if is_teacher or t.author_id == request.user.id %}<form method="post" style="display:flex;gap:.4rem">{% csrf_token %}
+  {% if is_teacher %}<button class="fin-btn fin-btn-sm" name="action" value="pin">{% if t.pinned %}Unpin{% else %}Pin{% endif %}</button><button class="fin-btn fin-btn-sm" name="action" value="lock">{% if t.locked %}Reopen{% else %}Close{% endif %}</button>{% endif %}
+  <button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="delete_thread" onclick="return confirm('Delete this discussion?')"><i class="bi bi-trash"></i></button></form>{% endif %}</div>
+{% if t.held %}<div class="chip {% if 'hurting' in t.held_reason %}red{% else %}amber{% endif %}" style="white-space:normal;margin-bottom:.8rem;padding:.5rem .8rem"><i class="bi bi-shield-exclamation"></i> {% if is_teacher %}{{ t.held_reason }} Only you and the writer can see it.
+  <form method="post" style="display:inline">{% csrf_token %}<button class="fin-btn fin-btn-sm" name="action" value="release">Release</button></form>{% else %}Waiting for your teacher to check this before others can see it.{% endif %}</div>{% endif %}
+<div class="panel"><div class="ps"><div style="white-space:pre-wrap">{{ t.body }}</div></div>
+  {% for p in posts %}<div class="ps{% if p.is_answer %} ans{% endif %}"><div class="who"><span><b>{{ p.author.get_full_name|default:p.author.username }}</b>{% if p.author.is_staff_user %} <span class="chip gold">teacher</span>{% endif %} · {{ p.created_at|date:"j M, H:i" }}</span>
+      <span>{% if p.is_answer %}<span class="chip green"><i class="bi bi-check2"></i> answer</span>{% elif is_teacher or t.author_id == request.user.id %}<form method="post">{% csrf_token %}<input type="hidden" name="post" value="{{ p.id }}"><button class="fin-btn fin-btn-sm" name="action" value="answer">Mark as answer</button></form>{% endif %}
+        {% if is_teacher or p.author_id == request.user.id %}<form method="post">{% csrf_token %}<input type="hidden" name="post" value="{{ p.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete_post" onclick="return confirm('Delete this reply?')"><i class="bi bi-x"></i></button></form>{% endif %}</span></div>
+    {% if p.held %}<div class="chip {% if 'hurting' in p.held_reason %}red{% else %}amber{% endif %}" style="white-space:normal;margin-top:.4rem"><i class="bi bi-shield-exclamation"></i> {% if is_teacher %}{{ p.held_reason }} <form method="post">{% csrf_token %}<input type="hidden" name="post" value="{{ p.id }}"><button class="fin-btn fin-btn-sm" name="action" value="release">Release</button></form>{% else %}Waiting for your teacher to check it.{% endif %}</div>{% endif %}
+    <div style="margin-top:.4rem;white-space:pre-wrap">{{ p.body }}</div></div>{% endfor %}
+  {% if not t.locked or is_teacher %}<div class="panel-b"><form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="reply"><textarea name="body" rows="3" required placeholder="Write a reply…"></textarea><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Reply</button></form></div>
+  {% else %}<div class="panel-b hint">This discussion is closed.</div>{% endif %}
+</div>
+{% endblock %}

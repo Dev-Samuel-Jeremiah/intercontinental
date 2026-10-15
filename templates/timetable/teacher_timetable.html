@@ -1,0 +1,466 @@
+{% extends "dashboard/base.html" %}
+{% load timetable_tags %}
+{% block title %}My Timetable{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+}
+
+.mtt-wrap {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+}
+
+@keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.mtt-action{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem .9rem;border-radius:10px;border:1px solid var(--rim2);color:var(--slate2);text-decoration:none;font-size:.82rem;font-weight:600}
+.mtt-action:hover{color:var(--champagne-lt);border-color:var(--champagne)}
+.mtt-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rim2);
+    position: relative;
+}
+
+.mtt-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 80px; height: 2px;
+    background: var(--champagne);
+}
+
+.mtt-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.mtt-eyebrow-rule { width: 28px; height: 1px; background: var(--champagne); flex-shrink: 0; }
+.mtt-eyebrow-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.mtt-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.mtt-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+}
+
+.mtt-title em { font-style: italic; color: var(--champagne); }
+
+.mtt-subtitle {
+    margin-top: 7px;
+    font-size: 0.88rem;
+    color: var(--slate2);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.mtt-teacher-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px 6px 8px;
+    border-radius: 999px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.25);
+    align-self: center;
+    flex-shrink: 0;
+}
+
+.mtt-teacher-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #0a1f44;
+    flex-shrink: 0;
+    letter-spacing: .02em;
+}
+
+.mtt-teacher-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--champagne-lt);
+}
+
+/* ── PANEL ── */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 20px;
+    animation: riseUp .45s ease both;
+}
+
+.panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+    text-align: center;
+    gap: 16px;
+}
+
+.empty-icon-box {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem;
+    color: var(--slate);
+}
+
+.empty-icon-box.red   { background: var(--red-dim);  border-color: var(--red-border);  color: var(--red); }
+.empty-icon-box.amber { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+
+.empty-state h4 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.empty-state p {
+    font-size: 0.85rem;
+    color: var(--slate);
+    max-width: 360px;
+    line-height: 1.65;
+}
+
+/* ── TABLE HEADER ── */
+.table-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 26px 16px;
+    border-bottom: 1px solid var(--rim);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.table-panel-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--white);
+}
+
+.table-panel-title em { font-style: italic; color: var(--champagne); }
+
+.table-panel-meta {
+    font-size: 0.75rem;
+    color: var(--slate);
+    background: var(--surface2);
+    border: 1px solid var(--rim);
+    padding: 4px 13px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── TIMETABLE ── */
+.tt-scroll { overflow-x: auto; }
+
+table.mtt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 700px;
+}
+
+table.mtt th,
+table.mtt td {
+    border: 1px solid var(--rim2);
+    padding: 0;
+}
+
+.mtt-head-period {
+    background: var(--surface3);
+    color: var(--slate2);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 11px 14px;
+    text-align: left;
+    min-width: 115px;
+    border-bottom: 2px solid var(--rim2);
+}
+
+.mtt-head-day {
+    background: var(--surface3);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 11px 14px;
+    min-width: 145px;
+    border-bottom: 2px solid var(--rim2);
+}
+
+.mtt-period {
+    background: var(--surface2);
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-right: 2px solid var(--rim2);
+}
+
+.mtt-period-name {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--slate2);
+    margin-bottom: 3px;
+}
+
+.mtt-period-time {
+    font-size: 0.65rem;
+    color: var(--slate);
+    font-weight: 400;
+}
+
+.mtt-cell {
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+    background: var(--surface);
+    transition: background .15s;
+}
+
+.mtt-cell:hover { background: rgba(255,255,255,.025); }
+
+.mtt-lesson {
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    border-radius: 9px;
+    padding: 8px 10px;
+    display: inline-block;
+    width: 100%;
+    text-align: left;
+    transition: background .15s;
+}
+
+.mtt-lesson:hover { background: rgba(74,222,128,.14); }
+
+.mtt-lesson-subj {
+    font-weight: 700;
+    font-size: 0.78rem;
+    color: var(--green);
+    line-height: 1.25;
+    margin-bottom: 3px;
+}
+
+.mtt-lesson-class {
+    font-size: 0.68rem;
+    color: var(--slate2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mtt-empty {
+    color: var(--rim3);
+    font-size: 1rem;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .mtt-wrap { padding: 1.25rem 1rem 3rem; }
+    .mtt-title { font-size: 2rem; }
+    .table-panel-header { padding: 16px 18px 14px; }
+}
+
+/* ── PRINT ── */
+@media print {
+    body { background: #fff; color: #000; }
+    .mtt-wrap { padding: 0; }
+    .panel { box-shadow: none; border: 1px solid #ccc; }
+    .mtt-head-period,
+    .mtt-head-day { background: #112850 !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+    .mtt-period   { background: #f8fafc !important; }
+    .mtt-lesson   { background: #f0fdf4 !important; border-color: #86efac !important; -webkit-print-color-adjust: exact; }
+    .mtt-lesson-subj { color: #166534 !important; }
+}
+</style>
+
+<div class="mtt-wrap">
+
+    <!-- ── PAGE HEADER ── -->
+    <header class="mtt-header">
+        <div class="mtt-eyebrow">
+            <span class="mtt-eyebrow-rule"></span>
+            <span class="mtt-eyebrow-label">Staff Portal</span>
+        </div>
+
+        <div class="mtt-header-row">
+            <div>
+                <h1 class="mtt-title">My <em>Teaching Timetable</em></h1>
+                <div class="mtt-subtitle">
+                    <i class="bi bi-calendar3"></i>
+                    Your personal weekly schedule
+                </div>
+            </div>
+
+            {% if teacher_staff %}
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+                {% if published %}<a href="{% url 'timetable:print_mine' %}" class="mtt-action"><i class="bi bi-printer"></i> Print / PDF</a>{% endif %}
+                <a href="{% url 'timetable:calendar_sync' %}" class="mtt-action"><i class="bi bi-calendar-plus"></i> Add to phone calendar</a>
+                <a href="{% url 'timetable:free_finder' %}?t={{ teacher_staff.id }}" class="mtt-action"><i class="bi bi-search"></i> Free periods</a>
+            </div>
+            <div class="mtt-teacher-badge">
+                <div class="mtt-teacher-avatar">
+                    {{ teacher_staff.full_name|slice:":2"|upper }}
+                </div>
+                <span class="mtt-teacher-name">{{ teacher_staff.full_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+
+    {% if not teacher_staff %}
+
+    <!-- Empty: no staff profile -->
+    <div class="panel" style="animation-delay:.05s">
+        <div class="empty-state">
+            <div class="empty-icon-box red"><i class="bi bi-person-x"></i></div>
+            <h4>No Staff Profile Found</h4>
+            <p>No staff profile is linked to your account. Please contact your administrator to resolve this.</p>
+        </div>
+    </div>
+
+    {% elif not published %}
+
+    <!-- Empty: no published timetable -->
+    <div class="panel" style="animation-delay:.05s">
+        <div class="empty-state">
+            <div class="empty-icon-box amber"><i class="bi bi-calendar2-x"></i></div>
+            <h4>No Published Timetable</h4>
+            <p>No published timetable is currently available. Please check back later or contact your administrator.</p>
+        </div>
+    </div>
+
+    {% elif timetable_data %}
+
+    <!-- ── TIMETABLE GRID ── -->
+    <div class="panel" style="animation-delay:.08s">
+        <div class="table-panel-header">
+            <div class="table-panel-title">Weekly <em>Schedule</em></div>
+            <div class="table-panel-meta">
+                <i class="bi bi-person-workspace" style="color:var(--champagne)"></i>
+                {{ teacher_staff.full_name }}
+            </div>
+        </div>
+
+        <div class="tt-scroll">
+            <table class="mtt">
+                <thead>
+                    <tr>
+                        <th class="mtt-head-period">Period / Time</th>
+                        {% for code, label in days %}
+                            <th class="mtt-head-day">{{ label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot, day_map in timetable_data %}
+                    <tr>
+                        <td class="mtt-period">
+                            <div class="mtt-period-name">{{ slot.name }}</div>
+                            <div class="mtt-period-time">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
+                        </td>
+                        {% for code, label in days %}
+                        <td class="mtt-cell">
+                            {% if code in day_map %}
+                                {% with e=day_map|get_item:code %}
+                                {% if e %}
+                                <div class="mtt-lesson">
+                                    <div class="mtt-lesson-subj">{{ e.subject.name }}</div>
+                                    <div class="mtt-lesson-class">
+                                        <i class="bi bi-people" style="font-size:.65rem;color:var(--champagne)"></i>
+                                        {{ e.school_class.name }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <span class="mtt-empty">—</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+
+    <!-- Empty: no classes assigned -->
+    <div class="panel" style="animation-delay:.08s">
+        <div class="empty-state">
+            <div class="empty-icon-box"><i class="bi bi-calendar-week"></i></div>
+            <h4>No Classes Assigned</h4>
+            <p>You have no classes assigned in the current timetable. Contact your administrator if this seems incorrect.</p>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

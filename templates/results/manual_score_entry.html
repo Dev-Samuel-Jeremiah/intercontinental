@@ -1,0 +1,1052 @@
+{% extends "dashboard/base.html" %}
+{% load static assessment %}
+{% block title %}Manual Score Entry{% endblock %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 1500px;
+  padding: 2rem 2rem 5rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 24px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em { color: var(--champagne); font-style: italic; font-weight: 400; }
+.header-sub { font-size: .82rem; color: var(--slate); margin-top: 6px; line-height: 1.6; }
+
+/* Header stat bubbles */
+.hdr-stats { display: flex; gap: 10px; flex-wrap: wrap; align-self: flex-start; }
+.hbub {
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 12px;
+  padding: 10px 16px;
+  text-align: center;
+  min-width: 72px;
+}
+.hbub .n {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  line-height: 1;
+}
+.hbub .l {
+  font-size: .64rem;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+/* ─── FLASH MESSAGES ─── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: .84rem;
+  font-weight: 600;
+  animation: riseUp .35s ease both;
+}
+.flash.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
+.flash.error   { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
+.flash.warning { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
+
+/* ─── CBT BANNER ─── */
+.cbt-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  animation: riseUp .45s ease both;
+  animation-delay: .06s;
+}
+.cbt-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .83rem;
+  font-weight: 600;
+  color: var(--amber);
+}
+.cbt-banner-left i { font-size: 1.1rem; }
+.cbt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  padding: 7px 16px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: .79rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(244,210,31,.22);
+  transition: all .18s;
+}
+.cbt-link:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244,210,31,.32); }
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 20px;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.panel-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--rim);
+}
+.panel-hdr-left { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.panel-hdr h3 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.session-pill {
+  background: var(--surface3);
+  color: var(--slate);
+  border: 1px solid var(--rim2);
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: .71rem;
+  font-weight: 700;
+}
+
+/* ─── FILTER PANEL ─── */
+.filter-panel { animation: riseUp .45s ease both; animation-delay: .08s; }
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px 18px;
+  padding: 18px 22px;
+}
+.fg { display: flex; flex-direction: column; gap: 6px; }
+.fg label {
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.fg label i { color: var(--champagne); font-size: .8rem; }
+.fg select {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+.fg select.act { border-color: rgba(244,210,31,.4); background: var(--champagne-dim); }
+.fg select:focus { border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1); }
+.fg select option { background: var(--surface2); }
+
+/* ─── STAT CHIPS ─── */
+.schips {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  animation: riseUp .45s ease both;
+  animation-delay: .12s;
+}
+.schip {
+  flex: 1;
+  min-width: 120px;
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 16px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.schip::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.schip:hover { border-color: var(--rim3); }
+.sci {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.c-tot .sci { background: var(--blue-dim);   color: var(--blue); }
+.c-off .sci { background: var(--green-dim);  color: var(--green); }
+.c-no  .sci { background: var(--amber-dim);  color: var(--amber); }
+.c-hi  .sci { background: var(--purple-dim); color: var(--purple); }
+.c-lo  .sci { background: var(--red-dim);    color: var(--red); }
+.c-av  .sci { background: var(--teal-dim);   color: var(--teal); }
+.sc-v {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.c-tot .sc-v { color: var(--blue); }
+.c-off .sc-v { color: var(--green); }
+.c-no  .sc-v { color: var(--amber); }
+.c-hi  .sc-v { color: var(--purple); }
+.c-lo  .sc-v { color: var(--red); }
+.c-av  .sc-v { color: var(--teal); }
+.sc-l {
+  font-size: .69rem;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+/* ─── TABLE CARD ─── */
+.score-panel { animation: riseUp .45s ease both; animation-delay: .18s; }
+
+/* Legend bar */
+.legend-bar {
+  padding: 9px 22px;
+  border-bottom: 1px solid var(--rim);
+  background: var(--surface2);
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.legend-bar span {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--slate);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.legend-bar span i { font-size: .82rem; }
+
+/* ─── TABLE ─── */
+.tbl-wrap { overflow-x: auto; }
+.tbl-wrap::-webkit-scrollbar { height: 4px; }
+.tbl-wrap::-webkit-scrollbar-thumb { background: var(--rim3); border-radius: 2px; }
+
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
+table thead {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--rim2);
+}
+table th {
+  padding: 12px 10px;
+  text-align: center;
+  color: var(--slate2);
+  font-weight: 700;
+  font-size: .71rem;
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  white-space: nowrap;
+  font-family: 'Outfit', sans-serif;
+}
+table th.tl { text-align: left; padding-left: 18px; }
+table th small { font-size: .65rem; opacity: .75; font-weight: 400; letter-spacing: 0; }
+
+table tbody tr { border-bottom: 1px solid var(--rim); transition: background .12s; }
+table tbody tr:hover { background: rgba(255,255,255,.025); }
+table tbody tr.not-off { background: rgba(251,191,36,.04); }
+table tbody tr.not-off:hover { background: rgba(251,191,36,.07); }
+
+table td {
+  padding: 10px 10px;
+  font-size: .85rem;
+  color: var(--slate2);
+  text-align: center;
+  vertical-align: middle;
+  font-family: 'Outfit', sans-serif;
+}
+table td.tl { text-align: left; padding-left: 18px; }
+
+/* Student cell */
+.sc-cell { display: flex; align-items: center; gap: 9px; }
+.av {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .71rem;
+  font-weight: 800;
+}
+.sname { font-size: .84rem; font-weight: 700; color: var(--white); }
+.sadm  { font-size: .7rem; color: var(--slate); }
+
+/* Score inputs */
+.si {
+  width: 62px;
+  padding: 7px 6px;
+  border: 1.5px solid var(--rim2);
+  border-radius: 8px;
+  font-size: .84rem;
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  background: var(--surface2);
+  color: var(--white);
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.si:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.si:disabled {
+  background: var(--surface3);
+  color: var(--slate);
+  border-color: var(--rim);
+  cursor: not-allowed;
+}
+
+/* Live total */
+.lt { font-weight: 800; font-size: .9rem; }
+.lt.hi  { color: var(--green); }
+.lt.mid { color: var(--blue); }
+.lt.lo  { color: var(--red); }
+
+/* Grade badge */
+.gb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  font-size: .78rem;
+  font-weight: 800;
+  border: 1px solid;
+}
+.gA   { background: var(--green-dim);  color: var(--green);  border-color: var(--green-border);  }
+.gB   { background: var(--blue-dim);   color: var(--blue);   border-color: var(--blue-border);   }
+.gC   { background: var(--teal-dim);   color: var(--teal);   border-color: var(--teal-border);   }
+.gD   { background: var(--amber-dim);  color: var(--amber);  border-color: var(--amber-border);  }
+.gF   { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border);    }
+.gABS { background: var(--amber-dim);  color: var(--amber);  border-color: var(--amber-border); font-size: .66rem; }
+
+/* Position badges */
+.pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px; height: 26px;
+  border-radius: 7px;
+  font-size: .76rem;
+  font-weight: 800;
+  padding: 0 6px;
+  border: 1px solid;
+}
+.p1 { background: var(--amber-dim);  color: var(--amber);  border-color: var(--amber-border);  }
+.p2 { background: var(--rim2);       color: var(--slate2); border-color: var(--rim3);          }
+.p3 { background: var(--red-dim);    color: var(--red);    border-color: var(--red-border);    }
+.pn { background: var(--surface3);   color: var(--slate);  border-color: var(--rim2);          }
+
+/* Not-offering overlay (inside cell) */
+.no-overlay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--amber-dim);
+  border: 1px solid var(--amber-border);
+  border-radius: 8px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: var(--amber);
+}
+
+/* Not-offering toggle button */
+.not-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9px;
+  border: 1px solid var(--rim2);
+  background: var(--surface3);
+  cursor: pointer;
+  font-size: .74rem;
+  font-weight: 700;
+  color: var(--slate2);
+  font-family: 'Outfit', sans-serif;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.not-btn:hover { border-color: var(--amber-border); color: var(--amber); background: var(--amber-dim); }
+.not-btn.active { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+
+/* CBT score chip */
+.cbt-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: .81rem;
+  font-weight: 700;
+  border: 1px solid;
+}
+.cbt-chip.has-cbt { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+.cbt-chip.no-cbt  { background: var(--surface3);  color: var(--slate); border-color: var(--rim); }
+
+/* Average row */
+.avg-row td {
+  background: var(--surface2);
+  font-weight: 700;
+  font-size: .82rem;
+  color: var(--slate);
+  border-top: 1.5px solid var(--rim2);
+}
+.avg-row td.avn { color: var(--champagne-lt); font-size: .85rem; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: .81rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 3px 12px rgba(244,210,31,.22);
+}
+.btn-gold:hover { box-shadow: 0 5px 18px rgba(244,210,31,.32); }
+.btn-save {
+  background: linear-gradient(135deg, var(--green), #16803c);
+  color: #fff;
+  box-shadow: 0 3px 12px rgba(74,222,128,.2);
+}
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface2); color: var(--white); transform: none; }
+.btn-blue {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.btn-amber-soft {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border: 1px solid var(--amber-border);
+}
+.btn-sm { padding: 6px 12px; font-size: .75rem; }
+
+/* ─── SAVE BAR ─── */
+.save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 22px;
+  background: var(--surface2);
+  border-top: 1px solid var(--rim2);
+}
+.save-bar-info {
+  font-size: .82rem;
+  color: var(--slate2);
+}
+.save-bar-info strong { color: var(--champagne-lt); font-weight: 800; }
+.save-bar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ─── EMPTY STATE ─── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 30px;
+  text-align: center;
+}
+.empty-icon {
+  width: 72px; height: 72px;
+  border-radius: 16px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  color: var(--slate);
+  margin-bottom: 18px;
+}
+.empty-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--slate2);
+  margin-bottom: 6px;
+}
+.empty-sub { font-size: .83rem; color: var(--slate); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .your-wrap { padding: 1rem 1rem 4rem; }
+  .filter-grid { grid-template-columns: 1fr 1fr; }
+  .schips { gap: 8px; }
+  .schip { min-width: calc(50% - 5px); }
+  .hdr-stats { width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 480px) {
+  .filter-grid { grid-template-columns: 1fr; }
+  .schip { min-width: 100%; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>Results &nbsp;·&nbsp; Score Entry</span>
+      </div>
+      <h1 class="header-title">Manual <em>Score Entry</em></h1>
+      <p class="header-sub">Enter CA and Exam scores. Mark students not offering a subject. Stats exclude non-offering students.</p>
+    </div>
+    {% if rows %}
+    <div class="hdr-stats">
+      <div class="hbub">
+        <div class="n">{{ stats.total }}</div>
+        <div class="l">Students</div>
+      </div>
+      <div class="hbub">
+        <div class="n">{{ stats.offering }}</div>
+        <div class="l">Offering</div>
+      </div>
+      <div class="hbub">
+        <div class="n">{{ stats.not_offering }}</div>
+        <div class="l">Not Offering</div>
+      </div>
+      {% if stats.highest is not None %}
+      <div class="hbub">
+        <div class="n">{{ stats.highest|floatformat:0 }}</div>
+        <div class="l">Highest</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ─── FLASH MESSAGES ─── -->
+  {% for message in messages %}
+  <div class="flash {% if message.tags == 'success' %}success{% elif message.tags == 'error' %}error{% else %}warning{% endif %}">
+    <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% elif message.tags == 'error' %}x-circle-fill{% else %}exclamation-triangle-fill{% endif %}"></i>
+    {{ message }}
+  </div>
+  {% endfor %}
+
+  <!-- ─── CBT BANNER ─── -->
+  {% if selected_class and selected_subject and selected_term %}
+  <div class="cbt-banner">
+    <div class="cbt-banner-left">
+      <i class="bi bi-cpu-fill"></i>
+      Need CBT scores for reference before entering manually?
+    </div>
+    <a href="{% url 'results:cbt_scores_reference' %}?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}"
+       class="cbt-link">
+      <i class="bi bi-bar-chart-fill"></i> View CBT Scores
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- ─── FILTER PANEL ─── -->
+  <div class="panel filter-panel">
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--blue-dim);color:var(--blue);">
+          <i class="bi bi-funnel-fill"></i>
+        </div>
+        <h3>Select Class · Subject · Term</h3>
+      </div>
+    </div>
+
+    <form method="GET" id="filterForm">
+      <div class="filter-grid">
+        <div class="fg">
+          <label><i class="bi bi-building"></i> Class</label>
+          <select name="class" class="{% if selected_class %}act{% endif %}" onchange="this.form.submit()">
+            <option value="">— Class —</option>
+            {% for cls in classes %}
+            <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class %}selected{% endif %}>{{ cls.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg">
+          <label><i class="bi bi-book"></i> Subject</label>
+          <select name="subject" class="{% if selected_subject %}act{% endif %}">
+            <option value="">— Subject —</option>
+            {% for sub in subjects %}
+            <option value="{{ sub.id }}" {% if sub.id|stringformat:"s" == selected_subject %}selected{% endif %}>{{ sub.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg">
+          <label><i class="bi bi-bookmark-fill"></i> Term</label>
+          <select name="term" class="{% if selected_term %}act{% endif %}">
+            <option value="">— Term —</option>
+            {% for t in terms %}
+            <option value="{{ t.id }}" {% if t.id|stringformat:"s" == selected_term %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="fg" style="justify-content:flex-end;">
+          <label style="visibility:hidden;">Load</label>
+          <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;">
+            <i class="bi bi-search"></i> Load Sheet
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {% if rows %}
+
+  {% if lock %}<div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;padding:.75rem 1rem;margin:0 0 1rem;border-radius:14px;font-size:.86rem;{% if lock.is_locked %}border:1px solid rgba(232,112,112,.35);background:rgba(232,112,112,.08);color:#e87070{% else %}border:1px solid rgba(244,210,31,.3);background:rgba(244,210,31,.07);color:#ffe066{% endif %}">
+    <i class="bi {% if lock.is_locked %}bi-lock-fill{% else %}bi-hourglass-split{% endif %}"></i>
+    {% if lock.is_locked %}Score entry for this term closed on {{ lock.locks_on|date:"j M Y" }}. You can view scores, but changes won't be saved until an administrator reopens entry.
+    {% elif lock.reopened_until and lock.reopened_until > now %}Entry reopened until {{ lock.reopened_until|date:"j M, H:i" }} — {{ lock.reopen_reason }}
+    {% else %}Score entry closes after {{ lock.locks_on|date:"l j M Y" }}.{% endif %}
+  </div>{% endif %}
+
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.75rem 1rem;margin:0 0 1rem;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);font-size:.85rem">
+    <i class="bi bi-file-earmark-spreadsheet" style="color:#4ade80"></i>
+    <span style="flex:1 1 220px;color:rgba(255,255,255,.6)">Prefer Excel? Download this class's sheet, fill it offline, then upload it. Every score is checked before anything is saved.</span>
+    <a class="btn btn-blue btn-sm" href="{% url 'results:score_sheet' %}?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}"><i class="bi bi-download"></i> Download sheet</a>
+    <form method="post" action="{% url 'results:score_upload' %}" enctype="multipart/form-data" style="display:flex;gap:.4rem;align-items:center">{% csrf_token %}
+      <input type="hidden" name="class" value="{{ selected_class }}"><input type="hidden" name="subject" value="{{ selected_subject }}"><input type="hidden" name="term" value="{{ selected_term }}">
+      <input type="file" name="sheet" accept=".xlsx" required style="font-size:.78rem;max-width:200px;color:rgba(255,255,255,.6)">
+      <button class="btn btn-sm" style="background:linear-gradient(135deg,#ffe066,#f4d21f);color:#0a1f44" type="submit"><i class="bi bi-upload"></i> Upload</button>
+    </form>
+  </div>
+
+  {% if sheet %}<form method="post" action="{% url 'results:sheet_action' %}" style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:.75rem 1rem;margin:0 0 1rem;border-radius:14px;border:1px solid rgba(244,210,31,.3);background:rgba(244,210,31,.06);font-size:.86rem">{% csrf_token %}
+    <input type="hidden" name="class" value="{{ selected_class }}"><input type="hidden" name="subject" value="{{ selected_subject }}"><input type="hidden" name="term" value="{{ selected_term }}">
+    <i class="bi bi-clipboard-check" style="color:#ffe066"></i>
+    <span style="flex:1 1 240px">{% if sheet.status == 'SUBMITTED' %}Waiting for the head of department's review.{% elif sheet.status == 'APPROVED' %}<b style="color:#4ade80">Approved</b> — scores are final unless sent back.{% elif sheet.status == 'RETURNED' %}<b style="color:#e87070">Sent back:</b> {{ sheet.obj.comment }}{% else %}When every score is in, send this subject for review.{% endif %}</span>
+    {% if sheet.status == 'ENTERED' or sheet.status == 'RETURNED' %}<button class="btn btn-sm" style="background:linear-gradient(135deg,#ffe066,#f4d21f);color:#0a1f44" name="action" value="submit" onclick="return confirm('Send for review? Save any changes first.')"><i class="bi bi-send"></i> Submit for review</button>{% endif %}
+    {% if sheet.can_review and sheet.status == 'SUBMITTED' %}<input name="comment" maxlength="255" placeholder="Comment (needed to send back)" style="padding:.4rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);color:#f2f5fb;font:inherit;font-size:.8rem">
+      <button class="btn btn-sm" style="background:#4ade80;color:#0a1d40" name="action" value="approve">Approve</button><button class="btn btn-amber-soft btn-sm" name="action" value="return">Send back</button>{% endif %}
+    {% if sheet.can_review and sheet.status == 'APPROVED' %}<input name="comment" maxlength="255" placeholder="Why reopen?" required style="padding:.4rem .6rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);color:#f2f5fb;font:inherit;font-size:.8rem"><button class="btn btn-amber-soft btn-sm" name="action" value="return">Send back</button>{% endif %}
+  </form>{% endif %}
+
+  <!-- ─── STAT CHIPS ─── -->
+  <div class="schips">
+    <div class="schip c-tot">
+      <div class="sci"><i class="bi bi-people-fill"></i></div>
+      <div><div class="sc-v">{{ stats.total }}</div><div class="sc-l">Total</div></div>
+    </div>
+    <div class="schip c-off">
+      <div class="sci"><i class="bi bi-check-circle-fill"></i></div>
+      <div><div class="sc-v">{{ stats.offering }}</div><div class="sc-l">Offering</div></div>
+    </div>
+    <div class="schip c-no">
+      <div class="sci"><i class="bi bi-dash-circle-fill"></i></div>
+      <div><div class="sc-v">{{ stats.not_offering }}</div><div class="sc-l">Not Offering</div></div>
+    </div>
+    {% if stats.highest is not None %}
+    <div class="schip c-hi">
+      <div class="sci"><i class="bi bi-arrow-up-circle-fill"></i></div>
+      <div><div class="sc-v">{{ stats.highest|floatformat:0 }}</div><div class="sc-l">Highest</div></div>
+    </div>
+    <div class="schip c-lo">
+      <div class="sci"><i class="bi bi-arrow-down-circle-fill"></i></div>
+      <div><div class="sc-v">{{ stats.lowest|floatformat:0 }}</div><div class="sc-l">Lowest</div></div>
+    </div>
+    <div class="schip c-av">
+      <div class="sci"><i class="bi bi-bar-chart-fill"></i></div>
+      <div><div class="sc-v">{{ class_avg.total }}</div><div class="sc-l">Class Average</div></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ─── SCORE TABLE CARD ─── -->
+  <div class="panel score-panel">
+
+    <div class="panel-hdr">
+      <div class="panel-hdr-left">
+        <div class="icon-badge" style="background:var(--champagne-dim);color:var(--champagne);">
+          <i class="bi bi-table"></i>
+        </div>
+        <h3>
+          Score Sheet
+          <span class="session-pill">{{ active_session.name }}</span>
+        </h3>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-blue btn-sm" onclick="markAllNotOffering(false)">
+          <i class="bi bi-check2-all"></i> All Offering
+        </button>
+        <button type="button" class="btn btn-amber-soft btn-sm" onclick="markAllNotOffering(true)">
+          <i class="bi bi-dash-circle"></i> All Not Offering
+        </button>
+      </div>
+    </div>
+
+    <!-- Legend bar -->
+    <div class="legend-bar">
+      <span><i class="bi bi-dash-circle-fill" style="color:var(--amber);"></i> Not Offering = ABS in results, excluded from averages &amp; positions</span>
+      <span><i class="bi bi-calculator" style="color:var(--blue);"></i> Totals update live as you type</span>
+    </div>
+
+    <form method="POST" id="scoreForm"
+          action="?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}">
+      {% csrf_token %}
+      <input type="hidden" name="class"   value="{{ selected_class }}">
+      <input type="hidden" name="subject" value="{{ selected_subject }}">
+      <input type="hidden" name="term"    value="{{ selected_term }}">
+
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th class="tl" style="width:220px;">Student</th>
+              {% for c in scheme.columns %}<th>{{ c.label }}<br><small>({{ c.max }})</small></th>{% endfor %}
+              <th>CBT Score<br><small style="color:var(--amber);">🔒 locked</small></th>
+              <th>Total</th>
+              <th>Grade</th>
+              <th>Position</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            {% with tr=row.tr s=row.student %}
+            <tr id="row_{{ tr.id }}" class="{% if tr.is_not_offering %}not-off{% endif %}">
+
+              <td>{{ forloop.counter }}</td>
+
+              <td class="tl">
+                <div class="sc-cell">
+                  <div class="av">{{ s.full_name|slice:":2"|upper }}</div>
+                  <div>
+                    <div class="sname">{{ s.full_name }}</div>
+                    <div class="sadm">{{ s.admission_number }}</div>
+                  </div>
+                </div>
+              </td>
+
+              {% if tr.is_not_offering %}
+                <td colspan="{{ scheme.columns|length|add:1 }}">
+                  <div class="no-overlay">
+                    <i class="bi bi-dash-circle-fill"></i> Not Offering This Subject
+                  </div>
+                </td>
+                <td><span style="color:var(--amber);font-weight:800;font-size:.84rem;">ABS</span></td>
+                <td><span class="gb gABS">ABS</span></td>
+                <td><span style="color:var(--slate);">—</span></td>
+              {% else %}
+                {% for c in scheme.columns %}<td>
+                  <input type="number" name="{{ c.key }}_{{ tr.id }}" id="{{ c.key }}_{{ tr.id }}"
+                         class="si"{% if c.max > 30 %} style="width:72px;"{% endif %} value="{{ tr|score:c.field|floatformat:'-1' }}"
+                         min="0" max="{{ c.max }}" step="0.5" oninput="recalc('{{ tr.id }}')"
+                         title="{{ c.label }} — out of {{ c.max }}">
+                </td>{% endfor %}
+                <td>
+                  <span class="cbt-chip {% if row.cbt > 0 %}has-cbt{% else %}no-cbt{% endif %}"
+                        title="Locked CBT score — import from CBT Scores page"
+                        data-cbt="{{ row.cbt }}" data-trid="{{ tr.id }}">
+                    {% if row.cbt > 0 %}
+                      <i class="bi bi-cpu-fill"></i> {{ row.cbt|floatformat:0 }}
+                    {% else %}
+                      <i class="bi bi-dash"></i> —
+                    {% endif %}
+                  </span>
+                </td>
+                <td>
+                  <span class="lt {% if tr.total_score >= 70 %}hi{% elif tr.total_score >= 50 %}mid{% else %}lo{% endif %}"
+                        id="tot_{{ tr.id }}">{{ tr.total_score|floatformat:0 }}</span>
+                </td>
+                <td>
+                  {% if tr.grade %}
+                  <span class="gb g{{ tr.grade }}">{{ tr.grade }}</span>
+                  {% else %}
+                  <span style="color:var(--slate);">—</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.position == 1 %}<span class="pos p1">🥇 1st</span>
+                  {% elif row.position == 2 %}<span class="pos p2">🥈 2nd</span>
+                  {% elif row.position == 3 %}<span class="pos p3">🥉 3rd</span>
+                  {% elif row.position != '—' %}<span class="pos pn">{{ row.position }}</span>
+                  {% else %}<span style="color:var(--slate);">—</span>{% endif %}
+                </td>
+              {% endif %}
+
+              <!-- Not Offering toggle -->
+              <td>
+                <input type="checkbox" name="not_offering_{{ tr.id }}" id="nob_{{ tr.id }}"
+                       {% if tr.is_not_offering %}checked{% endif %}
+                       style="display:none;" onchange="toggleNotOffering('{{ tr.id }}')">
+                <label for="nob_{{ tr.id }}"
+                       class="not-btn {% if tr.is_not_offering %}active{% endif %}"
+                       id="nobl_{{ tr.id }}">
+                  <i class="bi {% if tr.is_not_offering %}bi-dash-circle-fill{% else %}bi-dash-circle{% endif %}"
+                     id="nobi_{{ tr.id }}"></i>
+                  <span id="nobt_{{ tr.id }}">{% if tr.is_not_offering %}Not Offering{% else %}Offering{% endif %}</span>
+                </label>
+              </td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+
+            {% if class_avg %}
+            <tr class="avg-row">
+              <td colspan="2" class="tl" style="color:var(--white);font-weight:700;">
+                Class Average
+                <span style="color:var(--slate);font-weight:500;font-size:.78rem;margin-left:4px;">({{ stats.offering }} offering student{{ stats.offering|pluralize }})</span>
+              </td>
+              {% for c in scheme.columns %}<td class="avn">{% for k, v in class_avg.items %}{% if k == c.key %}{{ v }}{% endif %}{% endfor %}</td>{% endfor %}
+              <td class="avn" style="color:var(--green);">{{ class_avg.cbt|default:"—" }}</td>
+              <td class="avn" style="font-size:.9rem;font-weight:800;">{{ class_avg.total }}</td>
+              <td colspan="3"></td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ─── SAVE BAR ─── -->
+      <div class="save-bar">
+        <div class="save-bar-info">
+          <strong id="unsaved">0</strong> unsaved change(s) &nbsp;·&nbsp;
+          <span style="color:var(--slate);">Not-offering students shown as ABS in report cards</span>
+        </div>
+        <div class="save-bar-btns">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="if(confirm('Discard changes?'))location.reload()">
+            <i class="bi bi-x-lg"></i> Discard
+          </button>
+          <button type="submit" class="btn btn-save" id="saveBtn" onclick="return confirmSave()">
+            <i class="bi bi-floppy-fill"></i> Save All Scores
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  {% elif selected_class and selected_subject and selected_term %}
+
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-people"></i></div>
+      <div class="empty-title">No Students Found</div>
+      <p class="empty-sub">No active students in the selected class.</p>
+    </div>
+  </div>
+
+  {% else %}
+
+  <div class="panel">
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-funnel"></i></div>
+      <div class="empty-title">Select Filters Above</div>
+      <p class="empty-sub">Choose a class, subject and term to load the score sheet.</p>
+    </div>
+  </div>
+
+  {% endif %}
+
+</div><!-- /your-wrap -->
+
+<script>
+let unsaved = 0;
+function markUnsaved() {
+  unsaved++;
+  document.getElementById('unsaved').textContent = unsaved;
+}
+
+// Read CBT scores from rendered chips
+const cbtScores = {};
+document.querySelectorAll('[data-cbt]').forEach(el => {
+  cbtScores[el.dataset.trid] = parseFloat(el.dataset.cbt) || 0;
+});
+
+function row_over(id) {
+  document.querySelectorAll('#row_' + id + ' .si').forEach(i => {
+    const over = (parseFloat(i.value) || 0) > parseFloat(i.max);
+    i.style.borderColor = over ? 'var(--red)' : '';
+    i.title = over ? 'Too high — this column is out of ' + i.max : '';
+  });
+}
+
+function recalc(id) {
+  markUnsaved();
+  const v = n => parseFloat(document.getElementById(n + '_' + id)?.value || 0) || 0;
+  const tot = ['ca1','ca2','ca3','essay','exam'].reduce((t, k) => t + v(k), 0);
+  row_over(id);
+  const el = document.getElementById('tot_' + id);
+  if (el) {
+    el.textContent = Math.round(tot * 10) / 10;
+    el.className = 'lt ' + (tot >= 70 ? 'hi' : tot >= 50 ? 'mid' : 'lo');
+  }
+}
+
+function toggleNotOffering(id) {
+  markUnsaved();
+  const cb    = document.getElementById('nob_' + id);
+  const label = document.getElementById('nobl_' + id);
+  const icon  = document.getElementById('nobi_' + id);
+  const text  = document.getElementById('nobt_' + id);
+  const row   = document.getElementById('row_' + id);
+  const isNow = cb.checked;
+  label.classList.toggle('active', isNow);
+  if (icon) icon.className = isNow ? 'bi bi-dash-circle-fill' : 'bi bi-dash-circle';
+  if (text) text.textContent = isNow ? 'Not Offering' : 'Offering';
+  row.classList.toggle('not-off', isNow);
+  row.querySelectorAll('.si').forEach(i => { i.disabled = isNow; if (isNow) i.value = 0; });
+  if (isNow) {
+    const tot = document.getElementById('tot_' + id);
+    if (tot) { tot.textContent = 'ABS'; tot.className = 'lt'; }
+  }
+}
+
+function markAllNotOffering(setTo) {
+  document.querySelectorAll('input[name^="not_offering_"]').forEach(cb => {
+    const id = cb.name.replace('not_offering_', '');
+    if (cb.checked !== setTo) { cb.checked = setTo; toggleNotOffering(id); }
+  });
+}
+
+function confirmSave() {
+  const off = document.querySelectorAll('input[name^="not_offering_"]:checked').length;
+  const all = document.querySelectorAll('input[name^="not_offering_"]').length;
+  return confirm(`Save scores for ${all - off} offering student(s) and mark ${off} as Not Offering?`);
+}
+
+let changed = false;
+document.querySelectorAll('.si').forEach(i => i.addEventListener('input', () => { changed = true; }));
+window.addEventListener('beforeunload', e => { if (changed) { e.preventDefault(); e.returnValue = ''; } });
+document.getElementById('scoreForm')?.addEventListener('submit', () => { changed = false; });
+</script>
+
+{% endblock %}

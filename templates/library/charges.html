@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Library charges{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Charges</em></h1>
+  <p class="fin-sub">Late fines, lost and damaged books and textbook rentals. Parents can pay from the family wallet on their Library page.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div style="display:flex;gap:.4rem;margin-bottom:1rem">
+  <a class="fin-btn fin-btn-sm{% if status == 'UNPAID' %} fin-btn-gold{% endif %}" href="?status=UNPAID">Unpaid</a>
+  <a class="fin-btn fin-btn-sm{% if status == 'PAID' %} fin-btn-gold{% endif %}" href="?status=PAID">Paid</a>
+  <a class="fin-btn fin-btn-sm{% if status == 'WAIVED' %} fin-btn-gold{% endif %}" href="?status=WAIVED">Waived</a>
+</div>
+<div class="panel"><div class="panel-b"><table class="tbl">
+  <thead><tr><th>Date</th><th>Who</th><th>For</th><th class="num">Amount</th><th></th></tr></thead><tbody>
+  {% for c in rows %}<tr><td>{{ c.created_at|date:"j M" }}</td><td class="name">{% if c.student %}{{ c.student.full_name }}{% else %}{{ c.staff.full_name }}{% endif %}</td><td>{{ c.get_kind_display }}<br><small class="hint">{{ c.note }}</small></td><td class="num">₦{{ c.amount|floatformat:2 }}</td>
+    <td>{% if c.status == 'UNPAID' %}<form method="post" style="display:flex;gap:.25rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}">
+      {% if c.student %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="wallet">From wallet</button>{% endif %}
+      <button class="fin-btn fin-btn-sm" type="submit" name="action" value="PAID">Paid cash</button>
+      <button class="fin-btn fin-btn-sm" type="submit" name="action" value="WAIVED">Waive</button></form>{% else %}<span class="chip{% if c.status == 'PAID' %} ok{% endif %}">{{ c.get_status_display }}</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">Nothing here.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

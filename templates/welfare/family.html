@@ -1,0 +1,56 @@
+{% include "communications/_portal_head.html" %}
+<style>table{width:100%;border-collapse:collapse;font-size:.88rem}td{padding:.35rem .2rem;border-bottom:1px solid var(--rim2)}.row{display:flex;gap:.6rem;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.stat{display:inline-block;margin:0 1rem .4rem 0}.stat b{font-size:1.3rem;display:block}</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>Health &amp; <em>wellbeing</em></h1>
+  <p class="sub">Medical details, vaccinations, conduct this term and anything the school nurse or teachers have recorded.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for c in cards %}
+  <div class="card">
+    <h2><i class="bi bi-heart-pulse" style="color:var(--champagne-lt)"></i> {{ c.kid.full_name }}</h2>
+
+    <h2 style="margin-top:1rem">Conduct this term{% if c.report.term %} — {{ c.report.term.name }}{% endif %}</h2>
+    <div><span class="stat"><b>{{ c.report.merits }}</b><small class="hint">merit points</small></span><span class="stat"><b>{{ c.report.demerits }}</b><small class="hint">demerits</small></span>{% if c.report.restorative %}<span class="stat"><b>{{ c.report.restorative }}</b><small class="hint">restorative talks</small></span>{% endif %}</div>
+    {% if c.report.praise %}<p class="hint" style="margin:.2rem 0">Praised most for: {% for p in c.report.praise %}{{ p.label|lower }} ({{ p.n }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    {% for h in c.report.hits %}<p style="margin:.2rem 0"><span class="chip{% if h.threshold.kind == 'MERIT' %} ok{% else %} no{% endif %}">{{ h.threshold.name }}</span></p>{% endfor %}
+    {% for i in c.report.incidents %}<p style="margin:.2rem 0;font-size:.9rem">{{ i.date|date:"j M" }} — {{ i.get_category_display }}{% if i.action %} · {{ i.get_action_display }}{% endif %}</p>{% endfor %}
+    {% for d in c.detentions %}<div class="msg">Detention on {{ d.session.date|date:"l j M" }}, {{ d.session.starts|time:"H:i" }}–{{ d.session.ends|time:"H:i" }} in {{ d.session.room }} — {{ d.reason }}</div>{% endfor %}
+    {% for p in c.plans %}<p class="hint" style="margin:.4rem 0">Support plan: {{ p.title }} — next review {{ p.review_on|date:"j M Y" }}</p>{% endfor %}
+
+    {% if c.accidents or c.screen %}<h2 style="margin-top:1rem">From the school nurse</h2>
+    {% for a in c.accidents %}<p style="margin:.2rem 0;font-size:.9rem">{{ a.happened_at|date:"j M" }} — {{ a.injury }} ({{ a.get_place_display|lower }}){% if a.first_aid %} · {{ a.first_aid }}{% endif %}</p>{% endfor %}
+    {% if c.screen %}<p style="margin:.2rem 0;font-size:.9rem">Health check {{ c.screen.date|date:"j M Y" }}: {% if c.screen.height_cm %}{{ c.screen.height_cm }} cm, {% endif %}{% if c.screen.weight_kg %}{{ c.screen.weight_kg }} kg{% endif %}{% if c.screen.refer %} — <b>please see a doctor</b>{% if c.screen.notes %} ({{ c.screen.notes }}){% endif %}{% endif %}</p>{% endif %}{% endif %}
+
+    <h2 style="margin-top:1rem">Vaccinations</h2>
+    <table>{% for j in c.jabs %}<tr><td>{{ j.name }} {{ j.dose }}</td><td>{% if j.given_on %}{{ j.given_on|date:"j M Y" }}{% endif %}{% if j.next_due %} <small class="hint">next {{ j.next_due|date:"j M Y" }}</small>{% endif %}</td><td>{% if j.verified %}<span class="chip ok">Checked</span>{% else %}<span class="chip">Waiting for the nurse</span>{% endif %}</td></tr>{% empty %}<tr><td class="hint">None recorded.</td></tr>{% endfor %}</table>
+    <details style="margin-top:.4rem"><summary>Add a vaccination</summary>
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="action" value="jab"><input type="hidden" name="student" value="{{ c.kid.pk }}">
+        <div class="row"><div><label>Vaccine</label><select name="vaccine">{% for k, v in vaccines %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Other name</label><input name="other_name" maxlength="80"></div></div>
+        <div class="row"><div><label>Dose</label><input name="dose" maxlength="30"></div><div><label>Given on</label><input type="date" name="given_on"></div><div><label>Next due</label><input type="date" name="next_due"></div></div>
+        <label>Photo of the card</label><input type="file" name="proof" accept="image/*,application/pdf">
+        <button type="submit">Add</button></form></details>
+
+    <details style="margin-top:1rem"><summary><b>Medical details</b>{% if c.p.allergies %} — allergies: {{ c.p.allergies }}{% endif %}</summary>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="profile"><input type="hidden" name="student" value="{{ c.kid.pk }}">
+        <div class="row"><div><label>Blood group</label><select name="blood_group">{% for k, v in blood %}<option value="{{ k }}" {% if k == c.p.blood_group %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>
+        <div><label>Genotype</label><select name="genotype">{% for k, v in genotypes %}<option value="{{ k }}" {% if k == c.p.genotype %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+        <label>Allergies</label><input name="allergies" value="{{ c.p.allergies }}" maxlength="255">
+        <label>Conditions</label><textarea name="conditions" rows="2">{{ c.p.conditions }}</textarea>
+        <label>Emergency medication</label><input name="emergency_medication" value="{{ c.p.emergency_medication }}" maxlength="255">
+        <label>Diet</label><input name="diet" value="{{ c.p.diet }}" maxlength="160">
+        <div class="row"><div><label>Family doctor</label><input name="doctor_name" value="{{ c.p.doctor_name }}" maxlength="160"></div><div><label>Doctor's phone</label><input name="doctor_phone" value="{{ c.p.doctor_phone }}" maxlength="20"></div></div>
+        <label>Hospital / clinic</label><input name="hospital" value="{{ c.p.hospital }}" maxlength="200">
+        <label>Our own HMO / health insurance</label><input name="other_insurance" value="{{ c.p.other_insurance }}" maxlength="160">
+        {% if c.p.plan %}<p class="hint">Covered by the school plan: {{ c.p.plan }}{% if c.p.member_number %} · {{ c.p.member_number }}{% endif %}</p>{% endif %}
+        <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="consent_first_aid" style="width:auto" {% if c.p.consent_first_aid %}checked{% endif %}> I agree to first aid and simple medicines such as paracetamol</label>
+        <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="consent_hospital" style="width:auto" {% if c.p.consent_hospital %}checked{% endif %}> I agree to emergency hospital treatment if I cannot be reached</label>
+        <button type="submit">Save medical details</button></form></details>
+  </div>
+  {% endfor %}
+  {% if resources %}<div class="card"><h2>Tips for families</h2>{% for r in resources %}<details style="margin:.3rem 0"><summary>{{ r.title }}</summary><p>{{ r.body|linebreaksbr }}</p>{% if r.contact %}<p class="hint">{{ r.contact }}</p>{% endif %}</details>{% endfor %}</div>{% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,853 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ asset.name }}{% endblock %}
+
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.your-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+  font-family:'Outfit',sans-serif;
+  color:var(--white);
+}
+
+/* HEADER */
+
+.page-header{
+  margin-bottom:2rem;
+}
+
+.page-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  margin-bottom:.9rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:.22em;
+  font-size:.72rem;
+  font-weight:600;
+}
+
+.page-eyebrow::before{
+  content:"";
+  width:38px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.page-title h1{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title h1 em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.page-title p{
+  margin:.8rem 0 0;
+  color:var(--slate2);
+  font-size:.95rem;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.75rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.2);
+  color:var(--champagne-lt);
+  font-size:.84rem;
+  font-weight:500;
+  white-space:nowrap;
+}
+
+.header-divider{
+  position:relative;
+  margin-top:1.5rem;
+  border-bottom:1px solid var(--rim);
+  padding-bottom:1rem;
+}
+
+.header-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+/* PANELS */
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel:nth-child(1){animation-delay:.05s;}
+.panel:nth-child(2){animation-delay:.1s;}
+.panel:nth-child(3){animation-delay:.15s;}
+.panel:nth-child(4){animation-delay:.2s;}
+.panel:nth-child(5){animation-delay:.25s;}
+.panel:nth-child(6){animation-delay:.3s;}
+
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.2rem 1.4rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-header-left{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:.95rem;
+}
+
+.icon-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.icon-amber{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.icon-purple{
+  background:var(--purple-dim);
+  border:1px solid var(--purple-border);
+  color:var(--purple);
+}
+
+.panel-header h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* KPI GRID */
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1rem;
+  margin-bottom:1.8rem;
+}
+
+.kpi-card{
+  padding:1.4rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+}
+
+.kpi-icon{
+  width:54px;
+  height:54px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  font-size:1.2rem;
+  flex-shrink:0;
+}
+
+.kpi-success .kpi-icon{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.kpi-danger .kpi-icon{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+}
+
+.kpi-warning .kpi-icon{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.kpi-blue .kpi-icon{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:var(--blue);
+}
+
+.kpi-label{
+  color:var(--slate2);
+  font-size:.78rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.kpi-value{
+  margin-top:.35rem;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.2rem;
+  font-weight:700;
+  line-height:1;
+}
+
+/* BUTTONS */
+
+.action-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.8rem;
+  margin-bottom:1.8rem;
+}
+
+.btn-lux{
+  display:inline-flex;
+  align-items:center;
+  gap:.6rem;
+  padding:.82rem 1rem;
+  border-radius:12px;
+  text-decoration:none;
+  font-size:.92rem;
+  font-weight:500;
+  transition:.25s ease;
+  border:1px solid var(--rim2);
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.btn-lux:hover{
+  transform:translateY(-2px);
+  border-color:var(--champagne);
+  color:var(--white);
+}
+
+.btn-gold{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  border:none;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-gold:hover{
+  transform:translateY(-2px);
+  color:#fff;
+}
+
+.btn-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.btn-amber{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+/* TABLES */
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+.lux-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.lux-table thead th{
+  text-align:left;
+  padding:1rem 1.4rem;
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:var(--slate2);
+  border-bottom:1px solid var(--rim);
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.lux-table tbody td{
+  padding:1rem 1.4rem;
+  border-bottom:1px solid var(--rim);
+  color:var(--white);
+  vertical-align:middle;
+}
+
+.lux-table tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.lux-table tbody tr:last-child td{
+  border-bottom:none;
+}
+
+/* BADGES */
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.42rem .75rem;
+  border-radius:999px;
+  font-size:.76rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+
+.badge-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-danger{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-warning{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-muted{
+  background:var(--surface3);
+  border-color:var(--rim);
+  color:var(--slate2);
+}
+
+/* AVATAR */
+
+.avatar{
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#c9a800,#f4d21f);
+  color:#0a1f44;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.04em;
+  flex-shrink:0;
+}
+
+.user-flex{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+/* EMPTY STATE */
+
+.empty-state{
+  padding:3rem 1rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  border-radius:18px;
+  margin:0 auto 1rem;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:grid;
+  place-items:center;
+  color:var(--champagne);
+  font-size:1.5rem;
+}
+
+.empty-state h4{
+  margin:0 0 .45rem;
+  font-size:1rem;
+  color:var(--white);
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.92rem;
+}
+
+/* RESPONSIVE */
+
+@media (max-width:768px){
+
+  .your-wrap{
+    padding:1.3rem 1rem 3rem;
+  }
+
+  .page-title h1{
+    font-size:2.3rem;
+  }
+
+  .panel-header{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .lux-table{
+    min-width:720px;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-eyebrow">Inventory Asset</div>
+
+    <div class="page-title-row">
+      <div class="page-title">
+        <h1>{{ asset.name }} <em>Overview</em></h1>
+        <p>
+          {{ asset.asset_code }} ·
+          {{ asset.category.name }} ·
+          {{ asset.get_asset_type_display }}
+        </p>
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-box-seam"></i>
+        {{ asset.current_stock }} in stock
+      </div>
+    </div>
+
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+
+    <div class="panel kpi-card {% if asset.is_low_stock %}kpi-danger{% else %}kpi-success{% endif %}">
+      <div class="kpi-icon">
+        <i class="bi bi-box-seam"></i>
+      </div>
+
+      <div>
+        <div class="kpi-label">Current Stock</div>
+        <div class="kpi-value">{{ asset.current_stock }}</div>
+      </div>
+    </div>
+
+    <div class="panel kpi-card kpi-blue">
+      <div class="kpi-icon">
+        <i class="bi bi-box-arrow-in-down"></i>
+      </div>
+
+      <div>
+        <div class="kpi-label">Total In</div>
+        <div class="kpi-value">{{ asset.total_stock_in }}</div>
+      </div>
+    </div>
+
+    <div class="panel kpi-card kpi-warning">
+      <div class="kpi-icon">
+        <i class="bi bi-box-arrow-up"></i>
+      </div>
+
+      <div>
+        <div class="kpi-label">Total Out</div>
+        <div class="kpi-value">{{ asset.total_stock_out }}</div>
+      </div>
+    </div>
+
+    <div class="panel kpi-card kpi-blue">
+      <div class="kpi-icon">
+        <i class="bi bi-bell"></i>
+      </div>
+
+      <div>
+        <div class="kpi-label">Reorder Level</div>
+        <div class="kpi-value">{{ asset.reorder_level }}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="action-row">
+
+    <a href="{% url 'inventory:stock_in' %}?asset={{ asset.id }}" class="btn-lux btn-gold">
+      <i class="bi bi-box-arrow-in-down"></i>
+      Add Stock
+    </a>
+
+    <a href="{% url 'inventory:issue_asset' %}?asset={{ asset.id }}" class="btn-lux btn-amber">
+      <i class="bi bi-send"></i>
+      Issue
+    </a>
+
+    <a href="{% url 'inventory:stock_adjust' %}?asset={{ asset.id }}" class="btn-lux">
+      <i class="bi bi-sliders"></i>
+      Adjust
+    </a>
+
+    <a href="{% url 'inventory:add_maintenance' %}?asset={{ asset.id }}" class="btn-lux">
+      <i class="bi bi-tools"></i>
+      Maintenance
+    </a>
+
+    <a href="{% url 'inventory:edit_asset' asset.id %}" class="btn-lux">
+      <i class="bi bi-pencil-square"></i>
+      Edit
+    </a>
+
+    <a href="{% url 'inventory:asset_list' %}" class="btn-lux">
+      <i class="bi bi-arrow-left"></i>
+      Back
+    </a>
+
+  </div>
+
+  <!-- STOCK MOVEMENTS -->
+  <div class="panel" style="margin-bottom:1.5rem;">
+
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+
+        <h3>Stock Movements</h3>
+      </div>
+    </div>
+
+    {% if movements %}
+    <div class="table-wrap">
+      <table class="lux-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>By</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for m in movements %}
+          <tr>
+
+            <td style="white-space:nowrap;">
+              {{ m.date|date:"M j, Y H:i" }}
+            </td>
+
+            <td>
+              {% if m.movement_type == 'IN' %}
+                <span class="badge badge-success">
+                  <i class="bi bi-box-arrow-in-down"></i>
+                  Stock In
+                </span>
+
+              {% elif m.movement_type == 'OUT' %}
+                <span class="badge badge-danger">
+                  <i class="bi bi-box-arrow-up"></i>
+                  Issued
+                </span>
+
+              {% else %}
+                <span class="badge badge-warning">
+                  <i class="bi bi-sliders"></i>
+                  Adjusted
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              <strong>{{ m.quantity }}</strong>
+            </td>
+
+            <td>
+              <div class="user-flex">
+                <div class="avatar">
+                  {{ m.performed_by.username|slice:":2"|upper }}
+                </div>
+
+                <div>
+                  {{ m.performed_by.get_full_name|default:m.performed_by.username }}
+                </div>
+              </div>
+            </td>
+
+            <td style="color:var(--slate2);">
+              {{ m.reason }}
+            </td>
+
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-inboxes"></i>
+      </div>
+
+      <h4>No Movements Yet</h4>
+      <p>No stock movement records have been created for this asset.</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- ASSIGNMENTS -->
+  <div class="panel" style="margin-bottom:1.5rem;">
+
+    <div class="panel-header">
+
+      <div class="panel-header-left">
+        <div class="icon-badge icon-purple">
+          <i class="bi bi-link-45deg"></i>
+        </div>
+
+        <h3>Assignments</h3>
+      </div>
+
+      <a href="{% url 'inventory:return_asset' %}" class="btn-lux">
+        <i class="bi bi-arrow-return-left"></i>
+        Return Asset
+      </a>
+
+    </div>
+
+    {% if assignments %}
+    <div class="table-wrap">
+      <table class="lux-table">
+
+        <thead>
+          <tr>
+            <th>Assigned To</th>
+            <th>Location</th>
+            <th>Qty</th>
+            <th>Condition</th>
+            <th>Issued</th>
+            <th>Return Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for a in assignments %}
+          <tr>
+
+            <td>
+              <div class="user-flex">
+                <div class="avatar">
+                  {{ a.assigned_to_user.username|slice:":2"|upper }}
+                </div>
+
+                <div>
+                  {{ a.assigned_to_user.get_full_name|default:a.assigned_to_user|default:"—" }}
+                </div>
+              </div>
+            </td>
+
+            <td>{{ a.location|default:"—" }}</td>
+
+            <td>{{ a.quantity }}</td>
+
+            <td>
+              <span class="badge badge-muted">
+                {{ a.condition_at_issue }}
+              </span>
+            </td>
+
+            <td>{{ a.issued_at|date:"M j, Y" }}</td>
+
+            <td>{{ a.expected_return_date|date:"M j, Y"|default:"—" }}</td>
+
+            <td>
+              {% if a.returned %}
+                <span class="badge badge-success">
+                  <i class="bi bi-check-circle"></i>
+                  Returned
+                </span>
+              {% else %}
+                <span class="badge badge-warning">
+                  <i class="bi bi-clock-history"></i>
+                  Active
+                </span>
+              {% endif %}
+            </td>
+
+          </tr>
+        {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-person-x"></i>
+      </div>
+
+      <h4>No Assignments</h4>
+      <p>This asset has not been assigned to any user or location.</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- MAINTENANCE -->
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-header-left">
+        <div class="icon-badge icon-green">
+          <i class="bi bi-tools"></i>
+        </div>
+
+        <h3>Maintenance Logs</h3>
+      </div>
+
+      <a href="{% url 'inventory:add_maintenance' %}?asset={{ asset.id }}" class="btn-lux">
+        <i class="bi bi-plus-circle"></i>
+        Add Log
+      </a>
+
+    </div>
+
+    {% if maintenance_logs %}
+    <div class="table-wrap">
+
+      <table class="lux-table">
+
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Issue</th>
+            <th>Action Taken</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for log in maintenance_logs %}
+          <tr>
+
+            <td>{{ log.date|date:"M j, Y" }}</td>
+
+            <td>{{ log.issue_reported }}</td>
+
+            <td style="color:var(--slate2);">
+              {{ log.action_taken }}
+            </td>
+
+            <td>
+              <span class="badge badge-success">
+                ₦{{ log.cost }}
+              </span>
+            </td>
+
+          </tr>
+        {% endfor %}
+        </tbody>
+
+      </table>
+
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-wrench-adjustable-circle"></i>
+      </div>
+
+      <h4>No Maintenance Logs</h4>
+      <p>No repair or maintenance history has been recorded yet.</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

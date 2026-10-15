@@ -1,0 +1,51 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Assessment structure{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .col-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.4fr) 110px;gap:.8rem;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--rim)}
+  .col-row:last-of-type{border-bottom:0}
+  .col-row .what{font-size:.82rem;color:var(--slate2)}
+  .sum{display:flex;justify-content:space-between;align-items:center;margin-top:1rem;padding:.8rem 1rem;border-radius:12px;border:1px solid var(--rim2);font-weight:700}
+  .sum.ok{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+  .sum.bad{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+  .preset{display:flex;justify-content:space-between;gap:.6rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--rim)}
+  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--rim2)}
+  .msgs .success{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+  .msgs .error{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+  @media(max-width:700px){.col-row{grid-template-columns:1fr 90px}.col-row .what{grid-column:1/-1}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Assessment <em>structure</em></h1>
+  <p class="fin-sub">How each subject's 100 marks are made up. Score entry won't accept marks above these limits, and report cards use these column names.</p>
+</div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-ui-checks-grid"></i> Columns</h3><span class="hint">{% if saved %}Now: {{ scheme.summary }}{% else %}Using the default{% endif %}</span></div><div class="panel-b">
+    <form method="post" class="fin-form" id="ca-form">{% csrf_token %}
+      {% for r in rows %}<div class="col-row">
+        <span class="what">{{ r.name }}</span>
+        <input name="{{ r.key }}_label" value="{{ r.label }}" maxlength="24" placeholder="Name on the report card" aria-label="{{ r.name }} name">
+        <input type="number" name="{{ r.key }}_max" value="{{ r.max }}" min="0" max="100" class="mx" aria-label="{{ r.name }} out of">
+      </div>{% endfor %}
+      <div class="sum" id="sum"><span>Total</span><span id="sum-v"></span></div>
+      <p class="hint" style="margin:0">Set a column to 0 to leave it out. Columns must add up to 100.
+        {% if term %}Marks already entered for {{ term.name }} must still fit — you can't lower a column below scores students already have.{% endif %}</p>
+      <button class="fin-btn fin-btn-gold" type="submit">Save structure</button>
+    </form>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-lightning"></i> Common structures</h3></div><div class="panel-b">
+    {% for key, p in presets.items %}<form method="post" class="preset">{% csrf_token %}<span>{{ p.0 }}</span>
+      <button class="fin-btn fin-btn-sm" name="preset" value="{{ key }}">Use</button></form>{% endfor %}
+    <p class="hint">The CBT score fills the examination column when you import it from CBT scores.</p>
+  </div></div>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('ca-form'),box=document.getElementById('sum'),v=document.getElementById('sum-v');
+  function sum(){var t=0;f.querySelectorAll('.mx').forEach(function(i){t+=parseInt(i.value||0,10)||0});
+    v.textContent=t+' / 100'+(t===100?' ✓':'');box.className='sum '+(t===100?'ok':'bad');}
+  f.addEventListener('input',sum);sum();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign-in paused</title>{% include "security/_vars.html" %}</head>
+<body><div style="max-width:460px;margin:12vh auto;padding:0 16px;text-align:center">
+<div style="font-size:3rem">&#128274;</div>
+<h1 style="font-family:var(--serif);font-size:2rem;margin:.4rem 0">Sign-in paused</h1>
+<p style="color:var(--slate2);line-height:1.6">There have been too many unsuccessful attempts to sign in to this account. To keep it safe, please wait about <b>{{ minutes }} minute{{ minutes|pluralize }}</b> and try again.</p>
+<p style="color:var(--slate2);line-height:1.6">Forgotten your password? Ask the school office to reset it.</p>
+<p><a href="javascript:history.back()">Go back</a></p>
+</div></body></html>

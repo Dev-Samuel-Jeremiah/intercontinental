@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Submit Assignment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+</head>
+<body>
+    <h1>Submit Assignment: {{ assignment.title }}</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Upload File:</label><br>
+        <input type="file" name="file"><br><br>
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

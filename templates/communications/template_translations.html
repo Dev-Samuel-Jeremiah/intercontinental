@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Translations — {{ tpl.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'communications:template_list' %}" style="color:inherit">Message templates</a></div>
+  <h1 class="fin-title">{{ tpl.name }} <em>in other languages</em></h1>
+  <p class="fin-sub">Families who chose a language get its version when a campaign uses this template unchanged. Keep placeholders like <code>{% templatetag openvariable %}student_name{% templatetag closevariable %}</code> exactly as they are.</p>
+</div></div>
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>English (original)</h3></div><div class="panel-b">
+  <p><b>{{ tpl.subject }}</b></p><p class="hint">SMS: {{ tpl.body_sms }}</p>
+</div></div>
+{% for r in rows %}
+<details class="panel" style="margin-bottom:1rem" {% if r.t %}open{% endif %}>
+  <summary style="cursor:pointer;padding:1rem 1.2rem;font-weight:600">{{ r.name }} {% if r.t %}<span class="chip green">Ready</span>{% if r.t.ai_drafted %} <span class="chip amber">AI draft — check it</span>{% endif %}{% else %}<span class="chip">Not translated</span>{% endif %} <span class="hint">· {{ r.families }} famil{{ r.families|pluralize:"y,ies" }} chose it</span></summary>
+  <div style="padding:0 1.2rem 1.2rem">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="language" value="{{ r.code }}"><input type="hidden" name="action" value="save">
+      <div><label>Subject</label><input name="subject" value="{{ r.t.subject|default:'' }}" maxlength="300"></div>
+      <div><label>SMS</label><textarea name="body_sms" rows="3" maxlength="800">{{ r.t.body_sms|default:'' }}</textarea></div>
+      <div><label>Email</label><textarea name="body_email" rows="6">{{ r.t.body_email|default:'' }}</textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+    </form>
+    <div style="display:flex;gap:.5rem;margin-top:.6rem">
+      <form method="post">{% csrf_token %}<input type="hidden" name="language" value="{{ r.code }}"><input type="hidden" name="action" value="ai"><button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-stars"></i> {% if r.t %}Redraft{% else %}Draft{% endif %} with AI</button></form>
+      {% if r.t %}<form method="post">{% csrf_token %}<input type="hidden" name="language" value="{{ r.code }}"><input type="hidden" name="action" value="delete"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form>{% endif %}
+    </div>
+  </div>
+</details>
+{% endfor %}
+{% endblock %}

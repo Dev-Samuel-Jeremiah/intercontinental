@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Promotion{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">End of session</div>
+  <h1 class="fin-title">Promotion &amp; <em>graduation</em></h1>
+  <p class="fin-sub">Set the rules once. For each class, review the suggestion for every student, change any with a reason, then apply. Final-year classes graduate.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <form method="get"><select name="session" onchange="this.form.submit()" class="fin-btn fin-btn-sm">{% for s in sessions %}<option value="{{ s.id }}" {% if s.id == session.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></form>
+  <a class="fin-btn fin-btn-sm" href="{% url 'curriculum:graduation_certificates' %}"><i class="bi bi-award"></i> Certificates</a>
+</div></div>
+{% include "curriculum/_nav.html" %}
+{% if not session %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>Create the academic session first.</p></div></div>{% else %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-arrow-up-right-circle"></i> Classes — {{ session.name }}</h3></div>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="map">
+    <div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>Goes next to</th><th>Students</th><th>Progress</th><th></th></tr></thead><tbody>
+      {% for r in map_rows %}<tr><td class="name">{{ r.school_class.name }}</td>
+        <td><select name="next_{{ r.school_class.id }}" class="fin-btn fin-btn-sm" style="padding:.35rem .5rem">
+          <option value="">— not set —</option>
+          <option value="GRADUATE" {% if r.graduates %}selected{% endif %}>🎓 Graduates</option>
+          {% for c in classes %}{% if c.id != r.school_class.id %}<option value="{{ c.id }}" {% if r.to_class and r.to_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endif %}{% endfor %}
+        </select>{% if not r.saved and r.to_class or not r.saved and r.graduates %} <span class="hint" title="Guessed from the class names — save to confirm">guess</span>{% endif %}</td>
+        <td>{{ r.enrolled }}</td>
+        <td>{% if r.summary %}{% if r.summary.applied == r.summary.total %}<span class="chip green">done</span>{% else %}<span class="chip amber">{{ r.summary.applied }}/{{ r.summary.total }} applied</span>{% endif %}{% if r.summary.repeat %} <span class="chip red">{{ r.summary.repeat }} repeat</span>{% endif %}{% else %}<span class="hint">not started</span>{% endif %}</td>
+        <td>{% if r.enrolled or r.summary %}<a class="fin-btn fin-btn-sm{% if not r.summary %} fin-btn-gold{% endif %}" href="{% url 'curriculum:promotion_class' r.school_class.id %}?session={{ session.id }}">{% if r.summary %}Open{% else %}Start{% endif %}</a>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody></table></div>
+    <div class="panel-b"><button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-check2"></i> Save next classes</button></div>
+    </form>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-sliders"></i> Promotion rules</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="policy">
+      <div class="row2"><div><label>Pass average</label><input type="number" step="0.5" min="0" max="100" name="pass_average" value="{{ policy.pass_average|floatformat:'-1' }}"></div>
+      <div><label>Conditional band <span class="hint">(marks below)</span></label><input type="number" step="0.5" min="0" max="100" name="conditional_band" value="{{ policy.conditional_band|floatformat:'-1' }}"></div></div>
+      <div class="row2"><div><label>Subject pass mark</label><input type="number" step="0.5" min="0" max="100" name="subject_pass_mark" value="{{ policy.subject_pass_mark|floatformat:'-1' }}"></div>
+      <div><label>Subjects to pass <span class="hint">(0 = off)</span></label><input type="number" min="0" max="20" name="min_subjects_passed" value="{{ policy.min_subjects_passed }}"></div></div>
+      <div><label>Must pass</label><select name="must_pass" multiple size="5">{% for s in subjects %}<option value="{{ s.id }}" {% if s.id in must_pass %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select><span class="hint">e.g. Mathematics and English Language. Ctrl/⌘ to pick several.</span></div>
+      <div class="row2"><div><label>Minimum attendance % <span class="hint">(0 = off)</span></label><input type="number" min="0" max="100" name="min_attendance" value="{{ policy.min_attendance }}"></div>
+      <div><label>Based on</label><select name="basis"><option value="SESSION" {% if policy.basis == 'SESSION' %}selected{% endif %}>All terms of the session</option><option value="LAST" {% if policy.basis == 'LAST' %}selected{% endif %}>Last term only</option></select></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save rules</button>
+      <p class="hint" style="margin:0">Students meeting every rule are promoted. Those close to the pass average, or failing just one must-pass subject or the attendance rule, are promoted on condition. Others repeat. You can change any decision before applying it.</p>
+    </form>
+  </div></div>
+</div>{% endif %}
+{% endblock %}

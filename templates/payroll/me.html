@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}My pay{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Staff</div>
+  <h1 class="fin-title">My pay &amp; <em>leave</em></h1>
+  <p class="fin-sub">Your payslips, leave taken this year and the details the bursary pays you by.</p>
+</div><a class="fin-btn" href="{% url 'safety:staff_leave' %}"><i class="bi bi-calendar-plus"></i> Ask for leave</a></div>
+{% if not pr %}<div class="panel"><div class="empty"><i class="bi bi-briefcase"></i><p>You are not on payroll yet. Please see the bursary.</p></div></div>
+{% else %}
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-receipt"></i> Payslips</h3></div>
+      {% if slips %}<table class="tbl"><thead><tr><th>Pay</th><th>Gross</th><th>Net</th></tr></thead><tbody>{% for s in slips %}<tr><td class="name"><a href="{% url 'payroll:payslip_v2' s.id %}" style="color:inherit">{{ s.run }}</a></td><td class="money">₦{{ s.gross|floatformat:2|intcomma }}</td><td class="money"><b>₦{{ s.net|floatformat:2|intcomma }}</b></td></tr>{% endfor %}</tbody></table>
+      {% else %}<div class="empty"><p>No payslips yet.</p></div>{% endif %}
+    </div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-check"></i> Leave taken in {{ year }}</h3></div><div class="panel-b">
+      {% for kind, days in leave.items %}<div style="display:flex;justify-content:space-between;padding:.25rem 0"><span>{{ kind }}</span><b>{{ days }} day{{ days|pluralize }}</b></div>{% empty %}<p class="hint" style="margin:0">No leave taken this year.</p>{% endfor %}
+    </div></div>
+    {% if loans %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Loans</h3></div><div class="panel-b">{% for l in loans %}<div style="padding:.25rem 0">{{ l.get_kind_display }}: ₦{{ l.balance|floatformat:2|intcomma }} left · ₦{{ l.monthly_repayment|floatformat:2|intcomma }} a month</div>{% endfor %}</div></div>{% endif %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0;font-size:.95rem">My details</h3>
+    {% if pending %}<div class="chip amber" style="white-space:normal">Changes sent {{ pending.created_at|date:"j M" }} are waiting for the bursary.</div>{% endif %}
+    <div class="row2"><div><label>Bank</label><input name="bank_name" value="{{ pr.bank_name }}"></div><div><label>Account number</label><input name="account_no" value="{{ pr.account_no }}" inputmode="numeric"></div></div>
+    <div><label>Account name</label><input name="account_name" value="{{ pr.account_name }}"></div>
+    <div class="row2"><div><label>Tax ID (TIN)</label><input name="tax_id" value="{{ pr.tax_id }}"></div><div><label>Yearly rent <span class="hint">(bring receipts)</span></label><input name="annual_rent" value="{{ pr.annual_rent }}" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Pension PIN</label><input name="pension_pin" value="{{ pr.pension_pin }}"></div><div><label>PFA</label><input name="pfa_name" value="{{ pr.pfa_name }}"></div></div>
+    <div><label>NHF number</label><input name="nhf_number" value="{{ pr.nhf_number }}"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Send changes to the bursary</button>
+    <p class="hint" style="margin:0">To protect your pay, bank changes only take effect after the bursary checks them.</p>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

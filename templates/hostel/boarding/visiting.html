@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Visiting days{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Visiting <em>days</em></h1>
+  <p class="fin-sub">Families book a time slot on the portal; the gate ticks them in.</p>
+</div>{% if days|length > 1 %}<div style="display:flex;gap:.3rem;flex-wrap:wrap">{% for d in days %}<a class="fin-btn fin-btn-sm{% if current and d.pk == current.pk %} fin-btn-gold{% endif %}" href="?day={{ d.pk }}">{{ d.date|date:"j M" }}</a>{% endfor %}</div>{% endif %}</div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="day">
+    <h3 style="margin:0 0 .6rem">New visiting day</h3>
+    <div><label>Date</label><input type="date" name="date" required></div>
+    <div class="row2"><div><label>From</label><input type="time" name="start" value="10:00" required></div><div><label>To</label><input type="time" name="end" value="16:00" required></div></div>
+    <div class="row2"><div><label>Slot length (min)</label><input name="slot_minutes" value="60" inputmode="numeric"></div><div><label>Families per slot</label><input name="families" value="20" inputmode="numeric"></div></div>
+    <div><label>Notes for families</label><textarea name="notes" rows="3" placeholder="Visiting rules, what food may be brought, parking"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Publish</button>
+  </form>
+  {% if current %}<div class="panel"><div class="panel-h"><h3>{{ current.date|date:"l j F" }} — {{ bookings|length }} famil{{ bookings|length|pluralize:"y,ies" }}</h3></div><div class="panel-b">
+    <p class="hint">{% for s in slots %}{{ s.time|time:"H:i" }}: {{ s.left }} left{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    <form method="post" style="margin-bottom:.6rem">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ current.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if current.open %}Close bookings{% else %}Reopen bookings{% endif %}</button></form>
+    <table class="tbl"><tbody>{% for b in bookings %}<tr><td>{{ b.slot|time:"H:i" }}</td><td class="name">{{ b.boarder.student.full_name }}<br><small class="hint">{{ b.names }} ({{ b.visitors }})</small></td>
+      <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="arrived"><input type="hidden" name="id" value="{{ b.pk }}"><button class="fin-btn fin-btn-sm{% if b.arrived_at %} fin-btn-gold{% endif %}" type="submit">{% if b.arrived_at %}Arrived {{ b.arrived_at|time:"H:i" }}{% else %}Arrived{% endif %}</button></form></td></tr>{% empty %}<tr><td class="empty">No bookings yet.</td></tr>{% endfor %}</tbody></table>
+  </div></div>{% endif %}
+</div>
+{% endblock %}

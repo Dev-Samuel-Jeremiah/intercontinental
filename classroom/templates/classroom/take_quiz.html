@@ -1,0 +1,122 @@
+{% extends "dashboard/student_base.html" %}
+
+{% block title %}{{ quiz.title }} | Student Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ---------- Container ---------- */
+.quiz-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px 25px;
+    background:rgba(255,255,255,.03);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+/* ---------- Headings ---------- */
+.quiz-container h1 {
+    color:var(--blue);
+    font-size: 2em;
+    margin-bottom: 15px;
+}
+
+.quiz-container p {
+    color:var(--white);
+    font-size: 1em;
+    margin-bottom: 12px;
+}
+
+.quiz-container strong {
+    color:var(--white);
+}
+
+/* ---------- Questions ---------- */
+.question {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    background:rgba(255,255,255,.045);
+    transition: box-shadow 0.2s ease;
+}
+
+.question:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.question p {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.question label {
+    display: block;
+    margin-bottom: 6px;
+    cursor: pointer;
+}
+
+/* ---------- Buttons ---------- */
+button {
+    background:linear-gradient(135deg, #2563eb, #1d4ed8);
+    color:#fff;
+    padding: 12px 18px;
+    font-size: 1em;
+    border:none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 15px;
+}
+
+button:hover {
+    background:linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-2px);
+}
+
+/* ---------- Back Button ---------- */
+.back-btn {
+    display: inline-block;
+    margin-top: 25px;
+    background:#6b7280;
+    color:#fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.back-btn:hover {
+    background:#4b5563;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-container">
+    <h1>{{ quiz.title }}</h1>
+    <p>{{ quiz.description }}</p>
+    <p><strong>Duration:</strong> {{ quiz.duration_minutes }} mins | <strong>Pass Mark:</strong> {{ quiz.pass_mark }}%</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        {% for question in questions %}
+        <div class="question">
+            <p>Q{{ forloop.counter }}: {{ question.question_text }}</p>
+            <label><input type="radio" name="{{ question.id }}" value="A"> {{ question.option_a }}</label>
+            <label><input type="radio" name="{{ question.id }}" value="B"> {{ question.option_b }}</label>
+            {% if question.option_c %}
+            <label><input type="radio" name="{{ question.id }}" value="C"> {{ question.option_c }}</label>
+            {% endif %}
+            {% if question.option_d %}
+            <label><input type="radio" name="{{ question.id }}" value="D"> {{ question.option_d }}</label>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit">Submit Quiz</button>
+    </form>
+
+    <a href="{% url 'classroom:student_course_content' course.id %}" class="back-btn">Back to Course</a>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+<h1>Inventory Dashboard</h1>
+
+<ul>
+    <li>Total Assets: {{ metrics.total_assets }}</li>
+    <li>Consumables: {{ metrics.consumables }}</li>
+    <li>Fixed Assets: {{ metrics.fixed_assets }}</li>
+    <li>Low Stock Items: {{ metrics.low_stock_count }}</li>
+    <li>Active Assignments: {{ metrics.active_assignments }}</li>
+</ul>
+
+{% if low_stock_assets %}
+<h2 style="color: red;">⚠ Low Stock Alert</h2>
+<ul>
+{% for asset in low_stock_assets %}
+    <li>
+        {{ asset.name }} — Current Stock: {{ asset.current_stock }}
+        (Reorder Level: {{ asset.reorder_level }})
+    </li>
+{% endfor %}
+</ul>
+{% if perms.inventory.can_adjust_stock %}
+    <p>You have permission to adjust stock.</p>
+{% endif %}
+
+{% endif %}

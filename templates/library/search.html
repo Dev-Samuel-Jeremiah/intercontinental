@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Find a book{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title">Find a <em>book</em></h1>
+  <p class="fin-sub">Search the school library. If every copy is out, reserve it and we will tell you when it is ready.</p>
+</div></div>
+{% include "library/_usernav.html" %}
+<form method="get" class="panel fin-form" style="padding:1rem;display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.2rem">
+  <input name="q" value="{{ q }}" placeholder="Title, author, ISBN or topic" style="flex:3;min-width:180px" autofocus>
+  <select name="subject" style="flex:1"><option value="">All subjects</option>{% for s in subjects %}<option {% if s == subject %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+  <select name="level" style="flex:1"><option value="">All levels</option>{% for k, v in levels %}<option value="{{ k }}" {% if k == level %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  {% if branches %}<select name="branch" style="flex:1"><option value="">All libraries</option>{% for br in branches %}<option value="{{ br.pk }}" {% if br == branch %}selected{% endif %}>{{ br }}</option>{% endfor %}</select>{% endif %}
+  <button class="fin-btn fin-btn-gold" type="submit">Search</button>
+</form>
+{% if books %}
+<div class="books">{% for b in books %}<a class="bk" href="{% url 'library:search_book' b.pk %}">{% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" loading="lazy">{% endif %}<b>{{ b.title }}</b><small>{{ b.authors }}</small><br>{% if b.available %}<span class="chip ok">{{ b.available }} on the shelf</span>{% else %}<span class="chip">All out</span>{% endif %}</a>{% endfor %}</div>
+{% elif q or subject or level %}<p class="empty">No books match.</p>
+{% else %}
+  {% if recs %}<h3>Picked for you</h3><div class="books" style="margin-bottom:1.2rem">{% for b in recs %}<a class="bk" href="{% url 'library:search_book' b.pk %}">{% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" loading="lazy">{% endif %}<b>{{ b.title }}</b><small>{{ b.why }}</small></a>{% endfor %}</div>{% endif %}
+  {% if new %}<h3>New in the library</h3><div class="books">{% for b in new %}<a class="bk" href="{% url 'library:search_book' b.pk %}">{% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" loading="lazy">{% endif %}<b>{{ b.title }}</b><small>{{ b.authors }}</small></a>{% endfor %}</div>{% endif %}
+{% endif %}
+{% if hours %}<div class="panel" style="margin-top:1.2rem"><div class="panel-h"><h3>Opening hours</h3></div><div class="panel-b">{{ hours|linebreaksbr }}</div></div>{% endif %}
+{% endblock %}

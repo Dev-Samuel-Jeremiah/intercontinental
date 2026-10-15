@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ conv.subject }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "communications/_chat_style.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% if member %}{% url 'communications:chat' %}{% else %}{% url 'communications:chat_moderate' %}{% endif %}" style="color:inherit">Parent chat</a></div>
+  <h1 class="fin-title">{{ conv.subject }}</h1>
+  <p class="fin-sub">{{ conv.parent.get_full_name|default:conv.student.parent_name }} (parent of {{ conv.student.full_name }}{% if conv.student.class_assigned %}, {{ conv.student.class_assigned.name }}{% endif %}) and {{ conv.teacher.full_name }}{% if not member %} · you are viewing as an administrator{% endif %}</p>
+</div>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="close"><button class="fin-btn" type="submit">{% if conv.closed %}Reopen{% else %}Close conversation{% endif %}</button></form></div>
+<div class="panel"><div class="panel-b">
+  {% include "communications/_chat_messages.html" %}
+  {% if member and not conv.closed %}
+  <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="send">
+    <textarea name="body" rows="4" required maxlength="4000" placeholder="Write a reply"></textarea>
+    <button class="fin-btn fin-btn-gold" type="submit">Send</button>
+  </form>{% endif %}
+</div></div>
+{% endblock %}

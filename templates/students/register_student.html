@@ -1,0 +1,1062 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Register Student{% endblock %}
+
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ─── DESIGN TOKENS ─── */
+/* design tokens come from dashboard/base.html */
+
+/* ─── BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-serif; }
+
+/* ─── ANIMATIONS ─── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── PAGE WRAPPER ─── */
+.your-wrap {
+  max-width: 900px;
+  padding: 2rem 2.5rem 4rem;
+  margin: 0 auto;
+  animation: riseUp .4s ease both;
+}
+
+/* ─── FLASH MESSAGES ─── */
+.flash {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: .84rem;
+  font-weight: 600;
+  animation: riseUp .35s ease both;
+}
+.flash.success { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green); }
+.flash.error   { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red); }
+.flash.warning { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber); }
+.flash.info    { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue); }
+
+/* ─── PAGE HEADER ─── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rim2);
+  margin-bottom: 32px;
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+.header-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.header-eyebrow span {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.header-title em { color: var(--champagne); font-style: italic; font-weight: 400; }
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 18px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 99px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+/* ─── PANEL ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+  animation-delay: .08s;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ─── SECTION DIVIDER ─── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 24px 0;
+}
+.section-divider-line { flex: 1; height: 1px; background: var(--rim2); }
+.section-divider-label {
+  font-size: .69rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--slate);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-divider-label i { color: var(--champagne); }
+
+/* ─── FORM BODY ─── */
+.form-body { padding: 18px 24px; }
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 22px;
+}
+.span2 { grid-column: span 2; }
+
+/* ─── LABELS ─── */
+.form-body label,
+.field-label {
+  display: block;
+  font-size: .73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--slate2);
+  margin-bottom: 6px;
+  font-family: 'Outfit', sans-serif;
+}
+.label-note {
+  font-size: .68rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--slate);
+  margin-left: 4px;
+}
+
+/* ─── INPUTS & SELECTS ─── */
+.form-body input[type=text],
+.form-body input[type=email],
+.form-body input[type=password],
+.form-body input[type=number],
+.form-body input[type=tel],
+.form-body input[type=date],
+.form-body input[type=url],
+.form-body select,
+.form-body textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  padding: 10px 13px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+}
+.form-body input::placeholder { color: var(--slate); }
+.form-body input:focus,
+.form-body select:focus,
+.form-body textarea:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.form-body select option { background: var(--surface2); }
+.form-body textarea { resize: vertical; min-height: 80px; }
+
+/* ─── PASSPORT SECTION ─── */
+.passport-section {
+  background: var(--surface2);
+  border: 1.5px dashed rgba(244,210,31,.3);
+  border-radius: 14px;
+  padding: 20px;
+  grid-column: span 2;
+}
+.passport-section-title {
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--champagne);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.passport-section-title i { font-size: .9rem; }
+.passport-layout {
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+/* Preview box */
+.preview-wrap { flex: 0 0 140px; text-align: center; }
+.passport-img {
+  width: 130px;
+  height: 155px;
+  object-fit: cover;
+  border-radius: 11px;
+  border: 1.5px solid var(--rim3);
+  background: var(--surface3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  margin: 0 auto;
+}
+.passport-img img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.passport-img .placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--slate);
+  font-size: .73rem;
+  text-align: center;
+  padding: 10px;
+  pointer-events: none;
+}
+.passport-img .placeholder i { font-size: 2rem; opacity: .5; }
+.passport-img.has-image img { display: block; }
+.passport-img.has-image .placeholder { display: none; }
+
+/* Controls */
+.passport-controls { flex: 1; min-width: 220px; }
+.ctrl-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+/* Passport action buttons */
+.upload-btn, .camera-btn, .retake-btn, .snap-btn, .cancel-btn, .switch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 15px;
+  border-radius: 9px;
+  font-size: .79rem;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  cursor: pointer;
+  border: 1px solid;
+  transition: all .18s;
+}
+.upload-btn {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border-color: var(--blue-border);
+}
+.upload-btn:hover { background: rgba(96,165,250,.18); }
+.camera-btn {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border-color: var(--teal-border);
+}
+.camera-btn:hover { background: rgba(45,212,191,.18); }
+.retake-btn {
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-color: var(--amber-border);
+}
+.retake-btn:hover { background: rgba(251,191,36,.18); }
+.switch-btn {
+  background: var(--purple-dim);
+  color: var(--purple);
+  border-color: var(--purple-border);
+}
+.switch-btn:hover { background: rgba(192,132,252,.18); }
+.snap-btn {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green-border);
+}
+.snap-btn:hover { background: rgba(74,222,128,.18); }
+.cancel-btn {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red-border);
+}
+.cancel-btn:hover { background: rgba(248,113,113,.18); }
+
+.file-name {
+  font-size: .75rem;
+  color: var(--slate);
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+  font-family: 'Outfit', sans-serif;
+}
+
+#id_passport { display: none; }
+#captured_passport_data { display: none; }
+
+/* ─── CAMERA PANEL ─── */
+.camera-panel {
+  display: none;
+  margin-top: 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--teal-border);
+  background: #000;
+  position: relative;
+}
+.camera-panel.active { display: block; }
+#cameraFeed {
+  width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 2px dashed rgba(255,255,255,.2);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 60px rgba(0,0,0,.18);
+}
+.guide-box {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110px; height: 140px;
+  border: 2px solid rgba(244,210,31,.7);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.camera-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0,0,0,.6);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ─── CROP MODAL ─── */
+#cropModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,.75);
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+#cropModal.active { display: flex; }
+.crop-box {
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 32px 80px rgba(0,0,0,.6);
+  position: relative;
+}
+.crop-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  border-radius: 16px 16px 0 0;
+}
+.crop-box-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 14px;
+  text-align: center;
+}
+.crop-box-eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--champagne);
+  text-align: center;
+  margin-bottom: 4px;
+}
+#cropCanvas {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--rim2);
+  cursor: crosshair;
+  display: block;
+}
+.crop-hint {
+  font-size: .75rem;
+  color: var(--slate);
+  text-align: center;
+  margin: 10px 0;
+  font-family: 'Outfit', sans-serif;
+}
+.crop-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.crop-confirm {
+  flex: 1;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: .85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(244,210,31,.22);
+  transition: transform .15s, box-shadow .15s;
+}
+.crop-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(244,210,31,.32); }
+.crop-skip {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  padding: 10px 20px;
+  border-radius: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.crop-skip:hover { background: var(--surface2); color: var(--white); }
+
+/* ─── SUBMIT BUTTON ─── */
+.btn-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 24px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  font-family: 'Outfit', sans-serif;
+  font-size: .92rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s;
+  letter-spacing: .2px;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(244,210,31,.34);
+}
+.btn-submit:active { transform: translateY(0); }
+
+/* ─── FORM FOOTER ─── */
+.form-footer {
+  padding: 0 24px 24px;
+  display: flex;
+  gap: 12px;
+}
+.btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 13px 20px;
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .87rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .18s;
+  white-space: nowrap;
+}
+.btn-cancel:hover { background: var(--surface2); color: var(--white); border-color: var(--rim3); }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .your-wrap { padding: 1.4rem 1.4rem 3rem; }
+}
+@media (max-width: 600px) {
+  .your-wrap { padding: 1rem 1rem 3rem; }
+  .form-grid { grid-template-columns: 1fr; }
+  .span2, .passport-section { grid-column: span 1; }
+  .passport-layout { flex-direction: column; gap: 14px; }
+  .preview-wrap { flex: none; width: 100%; }
+  .passport-controls { min-width: 0; width: 100%; }
+  .ctrl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ctrl-row .retake-btn { grid-column: span 2; justify-content: center; }
+  #cameraFeed { max-height: 220px; }
+  .guide-box { width: 80px; height: 105px; }
+  .form-body { padding: 14px 16px; }
+  .form-footer { padding: 0 16px 20px; }
+  .section-divider { padding: 16px 16px 0; }
+  .form-body input[type=text],
+  .form-body input[type=email],
+  .form-body input[type=date],
+  .form-body select,
+  .form-body textarea { font-size: 16px; }
+}
+@media (max-width: 380px) {
+  .ctrl-row { grid-template-columns: 1fr; }
+  .ctrl-row .retake-btn { grid-column: span 1; }
+  .camera-actions { flex-direction: column; align-items: stretch; }
+  .snap-btn, .switch-btn, .cancel-btn { flex: none; width: 100%; }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- ─── FLASH MESSAGES ─── -->
+  {% if messages %}
+  {% for msg in messages %}
+  <div class="flash {% if 'error' in msg.tags %}error{% else %}success{% endif %}">
+    <i class="bi bi-{% if 'error' in msg.tags %}x-circle-fill{% else %}check-circle-fill{% endif %}"></i>
+    {{ msg }}
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <!-- ─── PAGE HEADER ─── -->
+  <div class="page-header">
+    <div>
+      <div class="header-eyebrow">
+        <span>Students &nbsp;·&nbsp; Enrolment</span>
+      </div>
+      <h1 class="header-title">Register <em>New Student</em></h1>
+    </div>
+    <div class="header-badge">
+      <i class="bi bi-person-plus-fill"></i>
+      New Record
+    </div>
+  </div>
+
+  <!-- ─── MAIN PANEL ─── -->
+  <div class="panel">
+
+    <form method="POST" enctype="multipart/form-data" id="studentForm">
+      {% csrf_token %}
+      <input type="hidden" name="captured_passport_data" id="captured_passport_data">
+
+      <!-- ── Photo Section ── -->
+      <div class="section-divider">
+        <div class="section-divider-label">
+          <i class="bi bi-camera-fill"></i> Student Photo
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <!-- Passport / Photo card -->
+          <div class="passport-section span2">
+            <div class="passport-section-title">
+              <i class="bi bi-camera2"></i> Passport / Photo Upload
+            </div>
+            <div class="passport-layout">
+
+              <!-- Preview -->
+              <div class="preview-wrap">
+                <div class="passport-img" id="previewBox">
+                  <img id="previewImg" src="" alt="Preview">
+                  <div class="placeholder">
+                    <i class="bi bi-person-bounding-box"></i>
+                    <span>No photo yet</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="passport-controls">
+                <div class="ctrl-row">
+                  <label class="upload-btn" for="id_passport">
+                    <i class="bi bi-upload"></i> Upload File
+                  </label>
+                  {{ form.passport }}
+
+                  <button type="button" class="camera-btn" id="openCameraBtn">
+                    <i class="bi bi-camera-video"></i> Use Camera
+                  </button>
+
+                  <button type="button" class="retake-btn" id="retakeBtn" style="display:none;">
+                    <i class="bi bi-arrow-counterclockwise"></i> Retake
+                  </button>
+                </div>
+
+                <div class="file-name" id="fileName">No file selected</div>
+
+                <!-- Camera feed -->
+                <div class="camera-panel" id="cameraPanel">
+                  <video id="cameraFeed" autoplay playsinline muted></video>
+                  <div class="camera-overlay"></div>
+                  <div class="guide-box"></div>
+                  <div class="camera-actions">
+                    <button type="button" class="snap-btn" id="snapBtn">
+                      <i class="bi bi-camera"></i> Snap Photo
+                    </button>
+                    <button type="button" class="switch-btn" id="switchCameraBtn" style="display:none;">
+                      <i class="bi bi-arrow-repeat"></i> Switch
+                    </button>
+                    <button type="button" class="cancel-btn" id="closeCameraBtn">
+                      <i class="bi bi-x-lg"></i> Cancel
+                    </button>
+                  </div>
+                </div>
+
+                <canvas id="snapCanvas" style="display:none;"></canvas>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /form-grid -->
+      </div><!-- /form-body -->
+
+      <!-- ── Personal Info Section ── -->
+      <div class="section-divider">
+        <div class="section-divider-label">
+          <i class="bi bi-person-fill"></i> Personal Information
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <div>
+            <label class="field-label">Full Name *</label>
+            {{ form.full_name }}
+          </div>
+
+          <div>
+            <label class="field-label">Gender *</label>
+            {{ form.gender }}
+          </div>
+
+          <div>
+            <label class="field-label">Date of Birth</label>
+            {{ form.date_of_birth }}
+          </div>
+
+          <div>
+            <label class="field-label">
+              Admission Number
+              <span class="label-note">(auto if blank)</span>
+            </label>
+            {{ form.admission_number }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Academic Section ── -->
+      <div class="section-divider">
+        <div class="section-divider-label">
+          <i class="bi bi-mortarboard-fill"></i> Academic Details
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <div>
+            <label class="field-label">Class Assigned *</label>
+            {{ form.class_assigned }}
+          </div>
+
+          <div>
+            <label class="field-label">Status</label>
+            {{ form.status }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Parent / Guardian Section ── -->
+      <div class="section-divider">
+        <div class="section-divider-label">
+          <i class="bi bi-people-fill"></i> Parent / Guardian
+        </div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <div>
+            <label class="field-label">Parent / Guardian Name</label>
+            {{ form.parent_name }}
+          </div>
+
+          <div>
+            <label class="field-label">Parent Phone</label>
+            {{ form.parent_phone }}
+          </div>
+
+          <div class="span2">
+            <label class="field-label">Parent Email</label>
+            {{ form.parent_email }}
+          </div>
+
+          <div class="span2">
+            <label class="field-label">Address</label>
+            {{ form.address }}
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Footer ── -->
+      <div style="height:4px;"></div>
+      <div class="form-footer">
+        <button type="submit" class="btn-submit" style="flex:1;">
+          <i class="bi bi-person-check-fill"></i> Register Student
+        </button>
+        <a href="javascript:history.back()" class="btn-cancel">
+          <i class="bi bi-arrow-left"></i> Cancel
+        </a>
+      </div>
+
+    </form>
+  </div><!-- /panel -->
+
+</div><!-- /your-wrap -->
+
+<!-- ─── CROP MODAL ─── -->
+<div id="cropModal">
+  <div class="crop-box">
+    <div class="crop-box-eyebrow"><i class="bi bi-scissors"></i> &nbsp;Crop Tool</div>
+    <div class="crop-box-title">Crop Passport Photo</div>
+    <canvas id="cropCanvas"></canvas>
+    <p class="crop-hint">Click &amp; drag to select the face area, or skip to use the full image.</p>
+    <div class="crop-actions">
+      <button class="crop-confirm" id="cropConfirmBtn">
+        <i class="bi bi-check-lg"></i> Use Cropped
+      </button>
+      <button class="crop-skip" id="cropSkipBtn">
+        Skip — Full Image
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================================================================
+   PASSPORT / PHOTO HANDLING  (logic unchanged, DOM refs updated)
+   ================================================================ */
+
+const previewBox     = document.getElementById('previewBox');
+const previewImg     = document.getElementById('previewImg');
+const fileInput      = document.getElementById('id_passport');
+const fileNameEl     = document.getElementById('fileName');
+const capturedData   = document.getElementById('captured_passport_data');
+
+const openCameraBtn  = document.getElementById('openCameraBtn');
+const closeCameraBtn = document.getElementById('closeCameraBtn');
+const cameraPanel    = document.getElementById('cameraPanel');
+const cameraFeed     = document.getElementById('cameraFeed');
+const snapBtn        = document.getElementById('snapBtn');
+const snapCanvas     = document.getElementById('snapCanvas');
+const retakeBtn      = document.getElementById('retakeBtn');
+const switchCameraBtn = document.getElementById('switchCameraBtn');
+
+const cropModal      = document.getElementById('cropModal');
+const cropCanvas     = document.getElementById('cropCanvas');
+const cropConfirmBtn = document.getElementById('cropConfirmBtn');
+const cropSkipBtn    = document.getElementById('cropSkipBtn');
+
+let stream           = null;
+let currentFacing    = 'user';
+let hasMultipleCams  = false;
+let fullImageDataURL = null;
+let cropRect         = null;
+let cropDragging     = false;
+let cropStart        = { x: 0, y: 0 };
+const cropCtx        = cropCanvas.getContext('2d');
+let cropImage        = new Image();
+
+async function detectMultipleCams() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    hasMultipleCams = devices.filter(d => d.kind === 'videoinput').length > 1;
+  } catch(e) {}
+}
+
+function showPreview(dataURL) {
+  previewImg.src = dataURL;
+  previewBox.classList.add('has-image');
+}
+
+fileInput.addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  fileNameEl.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => { fullImageDataURL = e.target.result; openCropModal(fullImageDataURL, false); };
+  reader.readAsDataURL(file);
+});
+
+async function startCamera(facing) {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  const constraints = {
+    audio: false,
+    video: facing === 'environment'
+      ? { facingMode: { exact: 'environment' } }
+      : { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+  };
+  try {
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    cameraFeed.srcObject = stream;
+    currentFacing = facing;
+    await detectMultipleCams();
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    switchCameraBtn.style.display = (hasMultipleCams || isMobile) ? 'inline-flex' : 'none';
+    switchCameraBtn.innerHTML = (facing === 'user')
+      ? '<i class="bi bi-arrow-repeat"></i> Back Cam'
+      : '<i class="bi bi-arrow-repeat"></i> Front Cam';
+  } catch(err) {
+    if (facing === 'environment') {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'environment' } });
+        cameraFeed.srcObject = stream;
+        currentFacing = facing;
+        await detectMultipleCams();
+        switchCameraBtn.style.display = 'inline-flex';
+        return;
+      } catch(e2) {}
+    }
+    alert('Camera access denied or unavailable.\nPlease allow camera permission or use file upload instead.');
+    console.error('Camera error:', err);
+  }
+}
+
+openCameraBtn.addEventListener('click', async () => {
+  await startCamera(currentFacing);
+  if (stream) { cameraPanel.classList.add('active'); openCameraBtn.style.display = 'none'; }
+});
+
+switchCameraBtn.addEventListener('click', async () => {
+  await startCamera(currentFacing === 'user' ? 'environment' : 'user');
+});
+
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  cameraPanel.classList.remove('active');
+  openCameraBtn.style.display = '';
+  switchCameraBtn.style.display = 'none';
+}
+
+closeCameraBtn.addEventListener('click', stopCamera);
+
+snapBtn.addEventListener('click', () => {
+  const w = cameraFeed.videoWidth  || 640;
+  const h = cameraFeed.videoHeight || 480;
+  snapCanvas.width = w; snapCanvas.height = h;
+  const ctx = snapCanvas.getContext('2d');
+  ctx.save();
+  if (currentFacing === 'user') { ctx.scale(-1,1); ctx.drawImage(cameraFeed, -w, 0, w, h); }
+  else { ctx.drawImage(cameraFeed, 0, 0, w, h); }
+  ctx.restore();
+  fullImageDataURL = snapCanvas.toDataURL('image/jpeg', 0.92);
+  stopCamera();
+  openCropModal(fullImageDataURL, true);
+});
+
+retakeBtn.addEventListener('click', () => {
+  retakeBtn.style.display = 'none';
+  capturedData.value = '';
+  fileInput.value = '';
+  fileNameEl.textContent = 'No file selected';
+  previewBox.classList.remove('has-image');
+  previewImg.src = '';
+  openCameraBtn.style.display = '';
+  openCameraBtn.click();
+});
+
+/* ── Crop modal ── */
+function openCropModal(dataURL, fromCamera) {
+  cropImage = new Image();
+  cropImage.onload = () => {
+    const maxW = Math.min(cropImage.width, 390);
+    const scale = maxW / cropImage.width;
+    cropCanvas.width  = maxW;
+    cropCanvas.height = cropImage.height * scale;
+    cropCanvas._scale = scale;
+    cropCanvas._img   = cropImage;
+    drawCropCanvas();
+    cropRect = null;
+  };
+  cropImage.src = dataURL;
+  cropModal.classList.add('active');
+  if (fromCamera) { fileNameEl.textContent = 'Camera snapshot'; retakeBtn.style.display = 'inline-flex'; }
+}
+
+function drawCropCanvas(rect) {
+  cropCtx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+  cropCtx.drawImage(cropCanvas._img, 0, 0, cropCanvas.width, cropCanvas.height);
+  if (rect) {
+    cropCtx.fillStyle = 'rgba(0,0,0,0.5)';
+    cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+    cropCtx.clearRect(rect.x, rect.y, rect.w, rect.h);
+    cropCtx.drawImage(
+      cropCanvas._img,
+      rect.x / cropCanvas._scale, rect.y / cropCanvas._scale,
+      rect.w / cropCanvas._scale, rect.h / cropCanvas._scale,
+      rect.x, rect.y, rect.w, rect.h
+    );
+    cropCtx.strokeStyle = '#f4d21f';
+    cropCtx.lineWidth   = 2;
+    cropCtx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  }
+}
+
+cropCanvas.addEventListener('mousedown', e => {
+  const r = cropCanvas.getBoundingClientRect();
+  cropStart = { x: e.clientX - r.left, y: e.clientY - r.top };
+  cropDragging = true; cropRect = null;
+});
+cropCanvas.addEventListener('mousemove', e => {
+  if (!cropDragging) return;
+  const r = cropCanvas.getBoundingClientRect();
+  const cx = e.clientX - r.left, cy = e.clientY - r.top;
+  cropRect = { x: Math.min(cropStart.x,cx), y: Math.min(cropStart.y,cy), w: Math.abs(cx-cropStart.x), h: Math.abs(cy-cropStart.y) };
+  drawCropCanvas(cropRect);
+});
+cropCanvas.addEventListener('mouseup', () => { cropDragging = false; });
+
+cropCanvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0], r = cropCanvas.getBoundingClientRect();
+  cropStart = { x: t.clientX - r.left, y: t.clientY - r.top };
+  cropDragging = true; cropRect = null;
+});
+cropCanvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!cropDragging) return;
+  const t = e.touches[0], r = cropCanvas.getBoundingClientRect();
+  const cx = t.clientX - r.left, cy = t.clientY - r.top;
+  cropRect = { x: Math.min(cropStart.x,cx), y: Math.min(cropStart.y,cy), w: Math.abs(cx-cropStart.x), h: Math.abs(cy-cropStart.y) };
+  drawCropCanvas(cropRect);
+});
+cropCanvas.addEventListener('touchend', () => { cropDragging = false; });
+
+function applyFinalImage(dataURL) {
+  showPreview(dataURL);
+  capturedData.value = dataURL;
+  fileInput.value = '';
+}
+
+cropConfirmBtn.addEventListener('click', () => {
+  if (!cropRect || cropRect.w < 10 || cropRect.h < 10) { applyCropSkip(); return; }
+  const out = document.createElement('canvas');
+  const scale = cropCanvas._scale;
+  out.width  = Math.round(cropRect.w / scale);
+  out.height = Math.round(cropRect.h / scale);
+  out.getContext('2d').drawImage(
+    cropCanvas._img,
+    cropRect.x / scale, cropRect.y / scale,
+    cropRect.w / scale, cropRect.h / scale,
+    0, 0, out.width, out.height
+  );
+  applyFinalImage(out.toDataURL('image/jpeg', 0.92));
+  closeCropModal();
+});
+
+function applyCropSkip() { applyFinalImage(fullImageDataURL); closeCropModal(); }
+cropSkipBtn.addEventListener('click', applyCropSkip);
+function closeCropModal() { cropModal.classList.remove('active'); cropRect = null; }
+cropModal.addEventListener('click', e => { if (e.target === cropModal) applyCropSkip(); });
+
+/* ── Form submit: camera data → File → FormData ── */
+document.getElementById('studentForm').addEventListener('submit', function(e) {
+  const b64 = capturedData.value;
+  if (!b64) return;
+  e.preventDefault();
+  const arr = b64.split(','), mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  const bytes = new Uint8Array(bstr.length);
+  for (let i = 0; i < bstr.length; i++) bytes[i] = bstr.charCodeAt(i);
+  const file = new File([new Blob([bytes], { type: mime })], 'passport_photo.jpg', { type: 'image/jpeg' });
+  const fd = new FormData(this);
+  fd.delete('captured_passport_data');
+  fd.set('passport', file, 'passport_photo.jpg');
+  fetch(this.action || window.location.href, {
+    method: 'POST', body: fd,
+    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+  })
+  .then(resp => { if (resp.redirected) { window.location.href = resp.url; return; } return resp.text(); })
+  .then(html => { if (html) { document.open(); document.write(html); document.close(); } })
+  .catch(err => console.error('Submit error:', err));
+});
+</script>
+
+{% endblock %}

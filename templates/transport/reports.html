@@ -1,0 +1,31 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Transport reports{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Reports &amp; settings</em></h1>
+  <p class="fin-sub">How full and how punctual each route is, what it earns, and what each bus costs to run.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+<div class="panel"><div class="panel-h"><h3>Routes — last 30 days</h3></div><div class="panel-b"><table class="tbl">
+  <thead><tr><th>Route</th><th class="num">Riders</th><th class="num">Seats used</th><th class="num">Trips</th><th class="num">On time</th><th class="num">Boardings</th><th class="num">Incidents</th><th class="num">Billed</th><th class="num">Paid</th></tr></thead><tbody>
+  {% for r in routes %}<tr><td class="name">{{ r.route.name }}</td><td class="num">{{ r.riders }}{% if r.capacity %} / {{ r.capacity }}{% endif %}</td><td class="num">{% if r.use is not None %}{{ r.use }}%{% else %}—{% endif %}</td><td class="num">{{ r.trips }}</td><td class="num">{% if r.on_time is not None %}{{ r.on_time }}%{% else %}—{% endif %}</td><td class="num">{{ r.scans }}</td><td class="num">{{ r.incidents }}</td><td class="num">{{ r.billed|floatformat:2 }}</td><td class="num">{{ r.paid|floatformat:2 }}</td></tr>
+  {% empty %}<tr><td colspan="9" class="empty">No routes.</td></tr>{% endfor %}
+</tbody></table></div></div>
+<div class="fin-grid" style="margin-top:1.2rem">
+  <div class="panel"><div class="panel-h"><h3>Vehicles — last 90 days</h3></div><div class="panel-b"><table class="tbl">
+    <thead><tr><th>Vehicle</th><th class="num">Fuel</th><th class="num">Repairs</th><th class="num">km / L</th><th class="num">Cost / km</th></tr></thead><tbody>
+    {% for v in vehicles %}<tr><td class="name">{{ v.vehicle }}</td><td class="num">{{ v.cost|floatformat:2 }}</td><td class="num">{{ v.maintenance|floatformat:2 }}</td><td class="num">{{ v.km_per_litre|default:"—" }}</td><td class="num">{{ v.cost_per_km|default:"—" }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No vehicles.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Settings</h3>
+    <label style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" name="notify_scans" style="width:auto" {% if cfg.notify_scans %}checked{% endif %}> Tell parents when their child boards and gets off</label>
+    <div class="row2"><div><label>By</label><select name="scan_channel">{% for k, v in channels %}<option value="{{ k }}" {% if k == cfg.scan_channel %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div><div><label>Warn about papers (days ahead)</label><input name="reminder_days" value="{{ cfg.reminder_days }}" inputmode="numeric"></div></div>
+    <div class="row2"><div><label>School latitude</label><input name="school_lat" value="{{ cfg.school_lat|default_if_none:'' }}"></div><div><label>School longitude</label><input name="school_lng" value="{{ cfg.school_lng|default_if_none:'' }}"></div></div>
+    <p class="hint" style="margin:0">The school's map point is the start and end of every suggested stop order.</p>
+    <div><label>Transport managers (besides admins)</label><select name="managers" multiple size="6">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in mgrs %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save settings</button>
+  </form>
+</div>
+{% endblock %}

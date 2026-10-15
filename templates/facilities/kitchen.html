@@ -1,0 +1,40 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Kitchen stock{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Stores</div>
+  <h1 class="fin-title"><em>Kitchen stock</em></h1>
+  <p class="fin-sub">Food stores received, used for each meal and wasted, with the cost of every meal and per head. Last 30 days: ₦{{ costs.total|floatformat:0 }} used, ₦{{ costs.waste|floatformat:0 }} wasted.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>In the store</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for i in items %}<tr><td class="name">{{ i.name }}</td><td class="num">{% if i.reorder_level and i.quantity <= i.reorder_level %}<span class="chip gold">{{ i.quantity|floatformat:"-2" }} {{ i.unit }}</span>{% else %}{{ i.quantity|floatformat:"-2" }} {{ i.unit }}{% endif %}</td><td class="num hint">₦{{ i.unit_cost|floatformat:2 }}/{{ i.unit }}</td></tr>
+      {% empty %}<tr><td class="empty">Add items first.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Cost per meal</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in costs.rows %}<tr><td>{{ r.date|date:"D j M" }}</td><td>{{ r.meal|title }}</td><td class="num">₦{{ r.cost|floatformat:0 }}</td><td class="num hint">{% if r.per_head %}₦{{ r.per_head|floatformat:2 }} a head ({{ r.heads }}){% endif %}</td></tr>{% empty %}<tr><td class="empty">No meals recorded yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent movements</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for m in moves %}<tr><td>{{ m.date|date:"j M" }}</td><td class="name">{{ m.item.name }}</td><td>{{ m.get_kind_display }}{% if m.meal %} · {{ m.get_meal_display }}{% endif %}</td><td class="num">{{ m.quantity|floatformat:"-2" }} {{ m.item.unit }}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    {% if items %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="move">
+      <h3 style="margin:0 0 .6rem">Record stock</h3>
+      <div class="row2"><div><label>Item</label><select name="item">{% for i in items %}<option value="{{ i.pk }}">{{ i.name }} ({{ i.unit }})</option>{% endfor %}</select></div><div><label>What</label><select name="kind">{% for k, v in kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div></div>
+      <div class="row2"><div><label>Quantity</label><input name="quantity" required inputmode="decimal"></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+      <div class="row2"><div><label>Meal (when used)</label><select name="meal"><option value="">—</option>{% for k, v in meals %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>People fed</label><input name="headcount" inputmode="numeric"></div></div>
+      <div class="row2"><div><label>Price per unit (when received)</label><input name="unit_cost" inputmode="decimal"></div><div><label>Note</label><input name="note" maxlength="160"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+    </form>{% endif %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+      <h3 style="margin:0 0 .6rem">Add an item</h3>
+      <div class="row2"><div><label>Name</label><input name="name" required maxlength="80" placeholder="Rice"></div><div><label>Unit</label><input name="unit" value="kg" maxlength="12"></div></div>
+      <div><label>Reorder at</label><input name="reorder_level" inputmode="decimal"></div>
+      <button class="fin-btn" type="submit">Add</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

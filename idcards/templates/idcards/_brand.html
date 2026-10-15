@@ -1,0 +1,18 @@
+{# Shared polish for the ID card & attendance pages — included after each page's styles. #}
+<style>
+.idc-heading { min-width:0; }
+.idc-eyebrow { display:inline-flex; align-items:center; gap:.6rem; font-size:.68rem; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--champagne); margin-bottom:.4rem; }
+.idc-eyebrow::before { content:""; width:26px; height:1px; background:var(--champagne-border); }
+.idc-title { font-family:var(--serif) !important; font-size:clamp(1.6rem,3vw,2.2rem) !important; font-weight:600 !important; letter-spacing:-.01em; line-height:1.15; color:var(--white) !important; margin:0 !important; display:flex; align-items:center; gap:.6rem; }
+.idc-title i { font-size:.7em; width:1.6em; height:1.6em; display:inline-grid; place-items:center; border-radius:12px; background:var(--champagne-dim); border:1px solid var(--champagne-border); color:var(--champagne-lt); }
+#content form select, #content form input[type=date], #content form input[type=text], #content form input[type=search] {
+  background:rgba(0,0,0,.28) !important; color:var(--white) !important; border:1px solid var(--rim2) !important; border-radius:10px !important;
+  padding:.62rem .85rem !important; font:inherit; font-size:.86rem; outline:none; transition:border-color .2s, box-shadow .2s; color-scheme:dark;
+}
+#content form select:focus, #content form input:focus { border-color:var(--champagne) !important; box-shadow:0 0 0 3px rgba(244,210,31,.15); }
+.idc-btn { background:linear-gradient(135deg,var(--champagne-lt),var(--champagne) 60%,var(--champagne-dk)) !important; color:#0a1f44 !important; border-radius:10px !important; box-shadow:0 10px 24px -12px rgba(244,210,31,.8); transition:transform .2s var(--ease), box-shadow .2s; }
+.idc-btn:hover { transform:translateY(-1px); box-shadow:0 14px 30px -12px rgba(244,210,31,.95); }
+#content table { border-radius:16px; }
+#content table th { font-size:.68rem !important; letter-spacing:1px !important; }
+.pg a:hover { border-color:var(--champagne-border) !important; color:var(--champagne-lt) !important; }
+</style>

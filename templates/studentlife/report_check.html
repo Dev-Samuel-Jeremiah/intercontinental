@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Check a report{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:report' %}" style="color:inherit">Report a worry</a></div>
+  <h1 class="fin-title">Check a <em>report</em></h1>
+</div></div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:720px;margin-bottom:1rem">{% csrf_token %}
+  <div class="row2"><div><label>Reference</label><input name="reference" value="{{ reference }}" required placeholder="R123456"></div><div><label>Secret code</label><input name="code" value="{{ code }}" required placeholder="AB12-CD34-EF56" autocomplete="off"></div></div>
+  {% if r %}<div><label>Add more information or reply</label><textarea name="body" rows="3"></textarea></div>{% endif %}
+  <button class="fin-btn fin-btn-gold" type="submit">{% if r %}Send{% else %}Open{% endif %}</button>
+</form>
+{% if r %}
+<div class="panel" style="max-width:720px"><div class="panel-b">
+  <p><b>{{ r.reference }}</b> · {{ r.get_kind_display }} · status: <span class="chip gold">{{ r.get_status_display }}</span></p>
+  <p>{{ r.description|linebreaksbr }}</p>
+  {% for m in msgs %}<div style="border-left:3px solid {% if m.from_school %}var(--champagne,#f4d21f){% else %}var(--rim2){% endif %};padding:.3rem .8rem;margin:.5rem 0"><small class="hint">{% if m.from_school %}The school{% else %}You{% endif %}, {{ m.created_at|date:"j M H:i" }}</small><br>{{ m.body|linebreaksbr }}</div>{% endfor %}
+</div></div>
+{% endif %}
+{% endblock %}

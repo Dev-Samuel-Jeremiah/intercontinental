@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">My <em>tasks</em></h1>
+  <p class="fin-sub">Your own to-do list, plus anything the school leadership has asked of you.</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <div><label>Task</label><input name="title" required maxlength="200"></div>
+    <div class="row2"><div><label>Due</label><input type="date" name="due_date"></div><div><label>Priority</label><select name="priority"><option value="NORMAL">Normal</option><option value="HIGH">High</option><option value="LOW">Low</option></select></div></div>
+    {% if staff %}<div><label>For</label><select name="staff"><option value="">Me</option>{% for s in staff %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>{% endif %}
+    <div><label>Notes</label><textarea name="notes" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for t in items %}<tr{% if t.done %} style="opacity:.55"{% endif %}><td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if t.done %}↺{% else %}✓{% endif %}</button></form></td>
+        <td class="name">{% if t.done %}<s>{{ t.title }}</s>{% else %}{{ t.title }}{% endif %}{% if t.priority == 'HIGH' %} <span class="chip red">High</span>{% endif %}<br><small class="hint">{% if t.due_date %}Due {{ t.due_date|date:"D j M" }}{% if not t.done and t.due_date < today %} — overdue{% endif %}{% endif %}{% if t.assigned_by %} · from {{ t.assigned_by.get_full_name|default:t.assigned_by.username }}{% endif %}</small>{% if t.notes %}<br><small>{{ t.notes }}</small>{% endif %}</td>
+        <td>{% if not t.assigned_by %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm" type="submit">✕</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing on your list.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if assigned %}<div class="panel"><div class="panel-h"><h3>Tasks I have given</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>{% for t in assigned %}<tr><td class="name">{{ t.staff.full_name }}</td><td>{{ t.title }}</td><td>{% if t.done %}<span class="chip green">Done</span>{% else %}<span class="chip">Open</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

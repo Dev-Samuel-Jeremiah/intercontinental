@@ -1,0 +1,30 @@
+# systemd unit for the school portal.
+# Install: sudo cp deploy/intercontinental.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now intercontinental
+[Unit]
+Description=Intercontinental Schools portal (Gunicorn)
+After=network.target
+
+[Service]
+User=school
+Group=www-data
+WorkingDirectory=/srv/intercontinental/app
+# Creates /run/intercontinental for the socket, owned by User/Group above
+RuntimeDirectory=intercontinental
+RuntimeDirectoryMode=0750
+ExecStart=/srv/intercontinental/venv/bin/gunicorn lms_project.wsgi:application -c deploy/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+# Uploaded files must not be world-readable
+UMask=0027
+
+# Hardening: the app may only write to its data folders
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/intercontinental/data /srv/intercontinental/media /srv/intercontinental/private_media /srv/intercontinental/backups
+
+[Install]
+WantedBy=multi-user.target

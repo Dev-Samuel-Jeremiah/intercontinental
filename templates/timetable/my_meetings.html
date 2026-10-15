@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My parent meetings{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>@media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}.tbl td,.tbl th{color:#000!important;border-color:#999!important}}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Staff</div>
+  <h1 class="fin-title">My parent <em>meetings</em></h1>
+  <p class="fin-sub">Which parents booked a slot with you, and when.</p>
+</div><button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+<div class="print">
+{% for s in sessions %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> {{ s.ev.title }}</h3><span class="hint">{{ s.ev.date|date:"D j M Y" }}{% if s.ev.location %} · {{ s.ev.location }}{% endif %}</span></div>
+  <table class="tbl"><thead><tr><th>Time</th><th>Student</th><th>Class</th><th>Parent's note</th></tr></thead><tbody>
+  {% for slot in s.slots %}<tr><td class="name">{{ slot.start|time:"H:i" }}–{{ slot.end|time:"H:i" }}</td>
+    {% if slot.booking %}<td class="name">{{ slot.booking.student.full_name }}</td><td>{{ slot.booking.student.class_assigned.name }}</td><td>{{ slot.booking.note|default:"—" }}</td>
+    {% else %}<td colspan="3" class="hint">free</td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div>
+{% empty %}
+<div class="panel"><div class="empty"><i class="bi bi-calendar-check"></i><p>No parent meetings coming up for {{ staff.full_name }}.</p></div></div>
+{% endfor %}
+</div>
+{% endblock %}

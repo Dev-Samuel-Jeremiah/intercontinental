@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lesson observations{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Staffing</div>
+  <h1 class="fin-title">Lesson <em>observations</em></h1>
+  <p class="fin-sub">Supervisors score a lesson against the school's form, note strengths and what to improve, then share it with the teacher, who can respond.</p>
+</div></div>
+{% include "curriculum/_nav.html" %}
+{% if unread %}<div class="panel" style="border-color:var(--champagne-border)"><div class="panel-b" style="color:var(--champagne-lt)"><i class="bi bi-bell"></i> {{ unread }} observation{{ unread|pluralize }} of your lessons {{ unread|pluralize:"is,are" }} waiting for your response.</div></div>{% endif %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard2-pulse"></i> Observations</h3></div>
+    {% if items %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Teacher</th><th>Lesson</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>
+    {% for o in items %}<tr><td>{{ o.date|date:"j M Y" }}</td><td class="name">{{ o.teacher.full_name }}<div class="hint">by {{ o.observer.full_name|default:"an administrator" }}</div></td>
+      <td>{{ o.subject.name|default:"—" }}<div class="hint">{{ o.school_class.name|default:"" }}</div></td>
+      <td>{% if o.percent %}<span class="chip {% if o.percent >= 75 %}green{% elif o.percent >= 50 %}gold{% else %}red{% endif %}">{{ o.average }}/4</span>{% endif %}</td>
+      <td>{% if not o.shared %}<span class="chip">not shared</span>{% elif o.acknowledged_at %}<span class="chip green">acknowledged</span>{% else %}<span class="chip amber">waiting for teacher</span>{% endif %}</td>
+      <td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:observation' o.id %}">Open</a></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-clipboard2"></i><p>No observations yet.</p></div>{% endif %}
+  </div>
+  <div>
+    {% if observable %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Observe a lesson</h3></div><div class="panel-b">
+      <form method="get" action="{% url 'curriculum:observation_new' %}" class="fin-form">
+        <div><label>Teacher</label><select name="teacher" required>{% for t in observable %}<option value="{{ t.id }}">{{ t.full_name }}</option>{% endfor %}</select></div>
+        <button class="fin-btn fin-btn-gold" type="submit">Start observation</button></form></div></div>{% endif %}
+    {% if can_manage %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Observation form</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="rubric">
+        <div><label>What observers score (one per line, 1–4 each)</label><textarea name="criteria" rows="11">{{ template.criteria }}</textarea></div>
+        <button class="fin-btn fin-btn-sm" type="submit">Save form</button></form></div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

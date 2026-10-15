@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Gate & safety settings{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Gate &amp; safety <em>settings</em></h1>
+</div></div>
+<div style="max-width:620px"><div class="panel"><div class="panel-b">
+  <form method="post" class="fin-form">{% csrf_token %}
+    <div><label>School closes at</label><input type="time" name="school_ends_at" value="{{ cfg.school_ends_at|time:'H:i' }}" required><div class="hint">Children collected before this are early pickups, and the reason goes on their register.</div></div>
+    <div><label>Pickup codes work for (hours)</label><input type="number" name="pass_valid_hours" min="1" max="24" value="{{ cfg.pass_valid_hours }}"></div>
+    <div><label>ID card replacement fee (₦)</label><input type="number" name="card_replacement_fee" min="0" step="50" value="{{ cfg.card_replacement_fee|floatformat:'-2' }}"></div>
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" name="notify_parent_on_pickup" value="1" style="width:auto"{% if cfg.notify_parent_on_pickup %} checked{% endif %}> Text the family whenever their child is collected</label>
+    <hr style="border:0;border-top:1px solid var(--rim);margin:.4rem 0">
+    <label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" name="phone_clock_in" value="1" style="width:auto"{% if cfg.phone_clock_in %} checked{% endif %}> Let staff clock in from their phone on school grounds</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem">
+      <div><label>School latitude</label><input name="school_latitude" id="lat" value="{{ cfg.school_latitude|default_if_none:'' }}" inputmode="decimal" placeholder="6.524379"></div>
+      <div><label>School longitude</label><input name="school_longitude" id="lng" value="{{ cfg.school_longitude|default_if_none:'' }}" inputmode="decimal" placeholder="3.379206"></div>
+    </div>
+    <div><button type="button" class="fin-btn fin-btn-sm" id="here"><i class="bi bi-geo-alt"></i> Use my current position</button> <span class="hint" id="here-msg">Stand in the middle of the school compound and tap this.</span></div>
+    <div><label>Allowed distance (metres)</label><input type="number" name="clock_radius_m" min="30" max="2000" value="{{ cfg.clock_radius_m }}"><div class="hint">Cover the whole compound. Phone positions can be off by 20–50 m.</div></div>
+    <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save</button>
+  </form>
+</div></div></div>
+<script>
+  (function(){var b=document.getElementById('here'),m=document.getElementById('here-msg');
+  b.addEventListener('click',function(){if(!navigator.geolocation){m.textContent='This browser cannot share its position.';return;}
+    m.textContent='Finding your position…';
+    navigator.geolocation.getCurrentPosition(function(p){document.getElementById('lat').value=p.coords.latitude.toFixed(6);
+      document.getElementById('lng').value=p.coords.longitude.toFixed(6);m.textContent='Got it — accurate to about '+Math.round(p.coords.accuracy)+' m. Save to keep it.';},
+      function(e){m.textContent='Could not get your position: '+e.message;},{enableHighAccuracy:true,timeout:15000});});})();
+</script>
+{% endblock %}

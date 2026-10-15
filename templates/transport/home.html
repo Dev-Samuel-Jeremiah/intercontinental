@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Transport{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transport</div>
+  <h1 class="fin-title"><em>Bus routes</em></h1>
+  <p class="fin-sub">Routes, stops and riders. Drivers and attendants run their trips from their phones; parents see the bus on their portal.</p>
+</div></div>
+{% include "transport/_nav.html" %}
+{% if docs or licences or due or changes %}
+<div class="panel" style="border-color:var(--red-border)"><div class="panel-h"><h3>Needs attention</h3></div><div class="panel-b">
+  {% for d in docs %}<p style="margin:.2rem 0">{{ d.vehicle }} — {{ d.get_kind_display }} {% if d.expires_on < day %}expired{% else %}expires{% endif %} {{ d.expires_on|date:"j M Y" }}</p>{% endfor %}
+  {% for d in licences %}<p style="margin:.2rem 0">{{ d.name }} — driving licence expires {{ d.licence_expires|date:"j M Y" }}</p>{% endfor %}
+  {% for v, text in due %}<p style="margin:.2rem 0">{{ v }} — {{ text }}</p>{% endfor %}
+  {% if changes %}<p style="margin:.2rem 0"><a href="{% url 'transport:changes' %}">{{ changes }} pickup change request{{ changes|pluralize }} waiting</a></p>{% endif %}
+</div></div>
+{% endif %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Routes</h3></div><div class="panel-b"><table class="tbl">
+      <thead><tr><th>Route</th><th>Bus</th><th>Driver</th><th class="num">Riders</th></tr></thead><tbody>
+      {% for r in routes %}<tr><td class="name"><a href="{% url 'transport:route' r.pk %}">{{ r.name }}</a>{% if not r.active %} <span class="chip">Off</span>{% endif %}</td><td>{{ r.vehicle|default:"—" }}</td><td>{{ r.driver.name|default:"—" }}</td><td class="num">{{ r.n }}{% if r.vehicle %} / {{ r.vehicle.capacity }}{% endif %}</td></tr>
+      {% empty %}<tr><td colspan="4" class="empty">No routes yet. Add vehicles and drivers first, then a route.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Today's trips</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for t in trips %}<tr><td class="name">{{ t.route.name|default:"Field trip" }} · {{ t.get_leg_display }}</td><td>{% if t.ended_at %}<span class="chip ok">Ended {{ t.ended_at|time:"H:i" }}</span>{% elif t.started_at %}<span class="chip gold">On the road</span>{% else %}<span class="chip">Not started</span>{% endif %}{% if t.delay_minutes %} <span class="chip red">{{ t.delay_minutes }} min late</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No trip has started today.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">New route</h3>
+    <div><label>Name</label><input name="name" required maxlength="80" placeholder="e.g. Lekki – Ajah"></div>
+    <div class="row2"><div><label>Bus</label><select name="vehicle"><option value="">—</option>{% for v in vehicles %}<option value="{{ v.pk }}">{{ v }} ({{ v.capacity }} seats)</option>{% endfor %}</select></div>
+    <div><label>Driver</label><select name="driver"><option value="">—</option>{% for d in drivers %}<option value="{{ d.pk }}">{{ d.name }}</option>{% endfor %}</select></div></div>
+    <div><label>Attendant</label><select name="attendant"><option value="">—</option>{% for d in attendants %}<option value="{{ d.pk }}">{{ d.name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Morning departs</label><input type="time" name="morning_departs"></div><div><label>Afternoon departs</label><input type="time" name="afternoon_departs"></div></div>
+    <div class="row2"><div><label>Fee per term</label><input name="fee_term" value="0" inputmode="decimal"></div><div><label>Fee per month</label><input name="fee_month" value="0" inputmode="decimal"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add route</button>
+  </form>
+</div>
+{% endblock %}

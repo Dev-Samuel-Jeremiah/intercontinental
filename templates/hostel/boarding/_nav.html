@@ -1,0 +1,15 @@
+{% include "finance/_fin_styles.html" %}
+<style>.pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .5rem .3rem 0;font-size:.85rem}.pill input{width:auto}
+@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}</style>
+<div class="no-print" style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:bed_map' %}"><i class="bi bi-grid-3x3-gap"></i> Bed map</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:roll_calls' %}"><i class="bi bi-list-check"></i> Roll call &amp; prep</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:exeats' %}"><i class="bi bi-door-open"></i> Exeats</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:visiting' %}"><i class="bi bi-people"></i> Visiting days</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:inspections' %}"><i class="bi bi-clipboard-check"></i> Inspections</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:sick_bay' %}"><i class="bi bi-heart-pulse"></i> Sick bay</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:room_changes' %}"><i class="bi bi-arrow-left-right"></i> Room changes</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:boarding_reports' %}"><i class="bi bi-file-earmark-text"></i> Reports</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:kitchen' %}"><i class="bi bi-egg-fried"></i> Kitchen list</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'hostel:night_sheet' %}"><i class="bi bi-moon-stars"></i> Night sheet</a>
+</div>

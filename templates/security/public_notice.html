@@ -1,0 +1,16 @@
+{% include "security/_public_head.html" %}
+<div class="wrap">
+  <h1>Privacy notice</h1>
+  <p class="sub">{{ n.controller|default:request.tenant.name }} · last updated {{ n.updated_at|date:"j F Y" }}</p>
+  <div class="card art">{{ body|safe }}</div>
+  <div class="card"><h3 style="margin-top:0">Data Protection Officer</h3>
+    <p>{{ n.dpo_name|default:"The school office" }}{% if n.dpo_email %}<br><a href="mailto:{{ n.dpo_email }}">{{ n.dpo_email }}</a>{% endif %}{% if n.dpo_phone %}<br>{{ n.dpo_phone }}{% endif %}{% if n.dpo_address %}<br>{{ n.dpo_address }}{% endif %}</p>
+    {% if n.dpco %}<p class="hint">Our data protection audits are carried out by {{ n.dpco }}.</p>{% endif %}
+    <p><a class="btn" href="/privacy/request/">Make a data protection request</a></p></div>
+  <div class="card"><h3 style="margin-top:0">What we use personal information for</h3>
+    <table><thead><tr><th>Purpose</th><th>Information</th><th>Lawful basis</th></tr></thead><tbody>
+    {% for p in purposes %}<tr><td><b>{{ p.name }}</b>{% if p.description %}<br><span class="hint">{{ p.description }}</span>{% endif %}</td><td>{{ p.data_used }}</td><td>{{ p.get_lawful_basis_display }}</td></tr>{% endfor %}
+    </tbody></table></div>
+  {% if rules %}<div class="card"><h3 style="margin-top:0">How long we keep it</h3><table>{% for r in rules %}<tr><td>{{ r.spec.label }}</td><td>{{ r.days }} days, then: {{ r.spec.action|lower }}</td></tr>{% endfor %}</table></div>{% endif %}
+  <p class="hint">You can complain to the Nigeria Data Protection Commission at <a href="https://ndpc.gov.ng" rel="noopener">ndpc.gov.ng</a>.</p>
+</div></body></html>

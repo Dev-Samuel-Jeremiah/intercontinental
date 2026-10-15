@@ -1,0 +1,127 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Document{% endblock %}
+{% block extra_css %}
+{% endblock %}
+{% block content %}
+    <style>
+    /* ---------- Container ---------- */
+    .lesson-container {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 30px 25px;
+        background:rgba(255,255,255,.03);
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        font-family: 'Inter', Arial, sans-serif;
+        transition: transform 0.3s ease;
+        perspective: 1000px;
+    }
+
+    .lesson-container:hover {
+        transform: translateY(-3px) scale(1.01);
+    }
+
+    /* ---------- Headings ---------- */
+    .lesson-container h1 {
+        color:var(--blue);
+        font-size: 2em;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* ---------- Labels ---------- */
+    .lesson-container p strong,
+    .lesson-container label {
+        display: block;
+        margin-top: 15px;
+        margin-bottom: 6px;
+        color:var(--blue);
+        font-weight: 600;
+    }
+
+    /* ---------- Form Inputs ---------- */
+    .lesson-container input[type="text"],
+    .lesson-container input[type="file"],
+    .lesson-container input[type="number"],
+    .lesson-container textarea {
+        width: 100%;
+        padding: 10px 15px;
+        border-radius: 8px;
+        border:1px solid var(--rim2);
+        font-size: 0.95em;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+
+    .lesson-container input:focus,
+    .lesson-container textarea:focus {
+        outline:none;
+        border-color:#2563eb;
+        box-shadow: 0 0 8px rgba(37,99,235,0.3);
+    }
+
+    /* ---------- Buttons ---------- */
+    .lesson-container button,
+    .lesson-container .back-btn {
+        display: inline-block;
+        padding: 10px 20px;
+        font-weight: 500;
+        border:none;
+        border-radius: 10px;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s ease;
+        margin-top: 15px;
+    }
+
+    .lesson-container button {
+        background:linear-gradient(135deg, #16a34a, #15803d);
+        color:#fff;
+    }
+
+    .lesson-container .back-btn {
+        background:linear-gradient(135deg, #2563eb, #1d4ed8);
+        color:#fff;
+    }
+
+    .lesson-container button:hover,
+    .lesson-container .back-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+        .lesson-container {
+            padding: 20px 15px;
+        }
+    }
+    </style>
+
+    <div class="lesson-container">
+        <h1>Edit Lesson</h1>
+
+        <p><strong>Course:</strong> {{ lesson.section.course.name }}</p>
+        <p><strong>Section:</strong> {{ lesson.section.title }}</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label>Lesson Title</label>
+            {{ form.title }}
+
+            <label>Video File</label>
+            {{ form.video }}
+
+            <label>Duration (minutes)</label>
+            {{ form.duration_minutes }}
+
+            <button type="submit">Update Lesson</button>
+        </form>
+
+    <a href="{% url 'classroom:teacher_course_detail' lesson.section.course.id %}" class="back-btn">Back to Course</a>
+
+    </div>
+{% endblock %}

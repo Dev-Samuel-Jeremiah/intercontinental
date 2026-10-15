@@ -1,0 +1,4 @@
+{% if exam.parts.count == 0 %}
+    <a href="{% url 'cbt:add_exam_part' exam.id 'CBT' %}" class="btn btn-primary">Add CBT Part</a>
+    <a href="{% url 'cbt:add_exam_part' exam.id 'ESSAY' %}" class="btn btn-secondary">Add Essay Part</a>
+{% endif %}

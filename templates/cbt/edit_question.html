@@ -1,0 +1,753 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Edit Question{% endblock %}
+
+{% block content %}
+<style>
+/* ================= VARIABLES ================= */
+:root{
+  --warning: #f59e0b;
+  --info: #0ea5e9;
+  --dark: #1f2937;
+  --light-bg: #f8fafc;
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --hover-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* ================= BASE ================= */
+body {
+    background: linear-gradient(135deg, #f8faff 0%, #eef2ff 100%);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+.edit-question-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 25px;
+}
+
+/* ================= PAGE HEADER ================= */
+.page-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 20px;
+    padding: 40px;
+    margin-bottom: 30px;
+    box-shadow: var(--card-shadow);
+    color: #0a1f44;
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.page-header-content {
+    position: relative;
+    z-index: 1;
+}
+
+.page-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.page-header h1 i {
+    font-size: 2.5rem;
+}
+
+.page-header p {
+    margin: 0;
+    opacity: 0.95;
+    font-size: 1.05rem;
+}
+
+.breadcrumb-custom {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.breadcrumb-custom a {
+    color: white;
+    text-decoration: none;
+    opacity: 0.9;
+}
+
+.breadcrumb-custom a:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
+/* ================= FORM CARD ================= */
+.form-card {
+    background: white;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: var(--card-shadow);
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section {
+    margin-bottom: 35px;
+    padding-bottom: 35px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.form-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.section-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.section-icon.blue { background: rgba(37, 99, 235, 0.1); color: var(--primary-light); }
+.section-icon.green { background: rgba(22, 163, 74, 0.1); color: var(--success); }
+.section-icon.orange { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+.section-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
+.section-title {
+    flex: 1;
+}
+
+.section-title h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+}
+
+.section-title p {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin: 5px 0 0 0;
+}
+
+/* ================= FORM GROUPS ================= */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.form-label i {
+    color: var(--primary);
+}
+
+.required-star {
+    color: var(--danger);
+    margin-left: 3px;
+}
+
+.form-control,
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: white;
+    font-family: inherit;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
+}
+
+.form-helper {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-helper i {
+    font-size: 0.75rem;
+}
+
+/* ================= OPTIONS SECTION ================= */
+.options-container {
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.option-item:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+.option-letter {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #0a1f44;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.option-item input[type="text"] {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: #f9fafb;
+    font-size: 0.95rem;
+}
+
+.option-item input[type="text"]:focus {
+    background: white;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.option-item input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--success);
+}
+
+.remove-option {
+    background: none;
+    border: none;
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+}
+
+.remove-option:hover {
+    transform: scale(1.2);
+}
+
+/* ================= BUTTONS ================= */
+.btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #0a1f44;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #6b7280;
+    border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+
+.btn-add-option {
+    background: white;
+    border: 2px dashed var(--primary);
+    color: var(--primary);
+    width: 100%;
+    margin-top: 12px;
+}
+
+.btn-add-option:hover {
+    background: #eff6ff;
+    border-style: solid;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+}
+
+.btn-lg {
+    padding: 15px 35px;
+    font-size: 1.05rem;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px solid #f1f5f9;
+}
+
+/* ================= INFO BANNER ================= */
+.info-banner {
+    background: linear-gradient(135deg, #eff6ff, #dbeafe);
+    border-left: 4px solid var(--primary);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.info-banner i {
+    font-size: 1.3rem;
+    color: var(--primary);
+}
+
+.info-banner p {
+    margin: 0;
+    color: #1e40af;
+    font-size: 0.9rem;
+}
+
+/* ================= LOADING STATE ================= */
+.btn-primary.loading {
+    position: relative;
+    color: transparent;
+    pointer-events: none;
+}
+
+.btn-primary.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+    .edit-question-container {
+        padding: 20px 15px;
+    }
+
+    .page-header {
+        padding: 25px 20px;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .form-card {
+        padding: 25px 20px;
+    }
+
+    .form-footer {
+        flex-direction: column-reverse;
+        gap: 15px;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .option-item {
+        flex-wrap: wrap;
+    }
+
+    .option-item input[type="text"] {
+        width: 100%;
+        order: 1;
+    }
+}
+</style>
+
+<div class="edit-question-container">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <h1>
+                <i class="fas fa-edit"></i>
+                Edit Question
+            </h1>
+            <p>Modify question details and options</p>
+            <div class="breadcrumb-custom">
+                <a href="{% url 'cbt:questions_overview' %}"><i class="fas fa-list"></i> Questions</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Edit</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <i class="fas fa-info-circle"></i>
+        <p><strong>Note:</strong> Changes will be reflected immediately. Students who haven't started the exam will see the updated version.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+        <form id="editQuestionForm" method="POST">
+            {% csrf_token %}
+
+            <!-- SECTION 1: Question Content -->
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="section-icon blue">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <div class="section-title">
+                        <h3>Question Content</h3>
+                        <p>Edit the question text and basic details</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-pen"></i>
+                        Question Text
+                        <span class="required-star">*</span>
+                    </label>
+                    <textarea name="question_text" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="Enter your question here..." 
+                              required>{{ question.question_text }}</textarea>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Write a clear, concise question
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-lightbulb"></i> Explanation <span style="opacity:.6;font-weight:400">(optional)</span></label>
+                    <textarea name="explanation" class="form-control" rows="2" placeholder="Why the answer is correct — shown when students review their answers">{{ question.explanation }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-list-ul"></i>
+                                Question Type
+                                <span class="required-star">*</span>
+                            </label>
+                            <select name="question_type" id="questionType" class="form-select" required>
+                                <option value="">— Select Type —</option>
+                                <option value="MCQ" {% if question.question_type == "MCQ" %}selected{% endif %}>Multiple Choice Question</option>
+                                <option value="TF" {% if question.question_type == "TF" %}selected{% endif %}>True / False</option>
+                                <option value="SA" {% if question.question_type == "SA" %}selected{% endif %}>Short Answer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-star"></i>
+                                Marks/Points
+                                <span class="required-star">*</span>
+                            </label>
+                            <input type="number" 
+                                name="marks" 
+                                class="form-control" 
+                                min="0.5" 
+                                max="100"
+                                step="0.5"
+                                value="{{ question.marks }}" 
+                                required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: Answer Options -->
+            <div class="form-section" id="optionsContainer" style="display:none;">
+                <div class="section-header">
+                    <div class="section-icon green">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="section-title">
+                        <h3>Answer Options</h3>
+                        <p>Add options and select the correct answer</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-list-check"></i>
+                        Options
+                        <span class="required-star">*</span>
+                    </label>
+                    
+                    <div class="options-container">
+                        <div id="optionFields">
+                            {% for opt in options %}
+                            <div class="option-item">
+                                <div class="option-letter">{{ forloop.counter|upper|slice:":1" }}{% if forloop.counter == 2 %}B{% elif forloop.counter == 3 %}C{% elif forloop.counter == 4 %}D{% endif %}</div>
+                                <input type="text" 
+                                       name="option_text" 
+                                       placeholder="Enter option text" 
+                                       value="{{ opt.text }}"
+                                       required>
+                                <input type="radio" 
+                                       name="correct_index" 
+                                       value="{{ forloop.counter0 }}" 
+                                       {% if opt.is_correct %}checked{% endif %}
+                                       required
+                                       title="Mark as correct answer">
+                                {% if forloop.counter > 2 %}
+                                <button type="button" class="remove-option" onclick="removeOption(this)">
+                                    <i class="fas fa-times-circle"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" id="addOption" class="btn btn-add-option btn-sm">
+                            <i class="fas fa-plus"></i>
+                            Add Another Option
+                        </button>
+                    </div>
+
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Select the radio button next to the correct answer
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Footer -->
+            <div class="form-footer">
+                <a href="{% url 'cbt:questions_overview' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save"></i>
+                    Update Question
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+$(document).ready(function(){
+
+    // Show/hide options based on question type
+    function toggleOptions() {
+        let val = $('#questionType').val();
+        if(val === 'MCQ' || val === 'TF'){
+            $('#optionsContainer').slideDown(300);
+            
+            // Auto-populate True/False if TF selected
+            if(val === 'TF') {
+                const currentOptions = $('#optionFields .option-item').length;
+                if(currentOptions !== 2) {
+                    $('#optionFields').empty();
+                    addOption('True', 0, true);
+                    addOption('False', 1, false);
+                    $('#addOption').hide();
+                }
+            } else {
+                $('#addOption').show();
+            }
+        } else {
+            $('#optionsContainer').slideUp(300);
+        }
+    }
+    
+    toggleOptions();
+    $('#questionType').change(toggleOptions);
+
+    // Add new option dynamically
+    let optionCount = $('#optionFields .option-item').length;
+    
+    $('#addOption').click(function(){
+        if(optionCount >= 10) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Maximum Options',
+                text: 'You can add maximum 10 options',
+                confirmButtonColor: '#2563eb'
+            });
+            return;
+        }
+        
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const html = `
+            <div class="option-item">
+                <div class="option-letter">${letters[optionCount]}</div>
+                <input type="text" 
+                       name="option_text" 
+                       placeholder="Enter option ${letters[optionCount]}" 
+                       required>
+                <input type="radio" 
+                       name="correct_index" 
+                       value="${optionCount}"
+                       required
+                       title="Mark as correct answer">
+                <button type="button" class="remove-option" onclick="removeOption(this)">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </div>
+        `;
+        $('#optionFields').append(html);
+        optionCount++;
+    });
+
+    // Helper function to add option
+    window.addOption = function(text, index, isCorrect) {
+        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+        const html = `
+            <div class="option-item">
+                <div class="option-letter">${letters[index]}</div>
+                <input type="text" 
+                       name="option_text" 
+                       value="${text}"
+                       placeholder="Enter option ${letters[index]}" 
+                       required>
+                <input type="radio" 
+                       name="correct_index" 
+                       value="${index}"
+                       ${isCorrect ? 'checked' : ''}
+                       required
+                       title="Mark as correct answer">
+                ${index > 1 ? `
+                    <button type="button" class="remove-option" onclick="removeOption(this)">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        $('#optionFields').append(html);
+    };
+
+    // Remove option
+    window.removeOption = function(btn) {
+        $(btn).closest('.option-item').remove();
+        optionCount = $('#optionFields .option-item').length;
+        
+        // Update option letters
+        $('#optionFields .option-item').each(function(index) {
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+            $(this).find('.option-letter').text(letters[index]);
+            $(this).find('input[type="radio"]').val(index);
+            $(this).find('input[type="text"]').attr('placeholder', 'Enter option ' + letters[index]);
+        });
+    };
+
+
+
+
+});
+</script>
+{% endblock %}

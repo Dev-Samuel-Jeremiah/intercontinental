@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Staff directory{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .dir{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.9rem}
+  .person{display:flex;gap:.8rem;align-items:center;padding:1rem;border:1px solid var(--rim);border-radius:16px;background:rgba(255,255,255,.03)}
+  .person img,.person .ph{width:54px;height:54px;border-radius:50%;object-fit:cover;flex-shrink:0;background:rgba(244,210,31,.15);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--champagne-lt,#ffe066)}
+  .person .who{min-width:0}.person .who b{display:block}.person .who small{display:block;color:var(--slate2);font-size:.78rem;overflow:hidden;text-overflow:ellipsis}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">People &amp; HR</div>
+  <h1 class="fin-title">Staff <em>directory</em></h1>
+  <p class="fin-sub">Find a colleague's role, department, phone and extension.</p>
+</div></div>
+{% if is_admin %}{% include "hr/_nav.html" %}{% endif %}
+<form method="get" class="fin-form" style="display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:1.2rem">
+  <input name="q" value="{{ q }}" placeholder="Name, job title, phone or extension" style="flex:1;min-width:200px">
+  <select name="department" style="max-width:220px"><option value="">All departments</option>{% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == department %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select>
+  <button class="fin-btn fin-btn-gold" type="submit">Search</button>
+</form>
+<div class="dir">
+{% for p in people %}
+  <div class="person">
+    {% if p.record.photo %}<img src="{% url 'hr:photo' p.staff.pk %}" alt="">{% else %}<div class="ph">{{ p.staff.full_name|slice:":1" }}</div>{% endif %}
+    <div class="who">
+      <b>{% if is_admin %}<a href="{% url 'hr:staff_file' p.staff.pk %}">{{ p.staff.full_name }}</a>{% else %}{{ p.staff.full_name }}{% endif %}</b>
+      <small>{{ p.record.job_title|default:p.staff.get_role_display }}{% if p.record.department %} · {{ p.record.department.name }}{% endif %}</small>
+      {% if p.record.phone %}<small><i class="bi bi-telephone"></i> <a href="tel:{{ p.record.phone }}">{{ p.record.phone }}</a>{% if p.record.extension %} · ext {{ p.record.extension }}{% endif %}</small>{% elif p.record.extension %}<small>Ext {{ p.record.extension }}</small>{% endif %}
+      {% if p.staff.user.email %}<small><i class="bi bi-envelope"></i> <a href="mailto:{{ p.staff.user.email }}">{{ p.staff.user.email }}</a></small>{% endif %}
+    </div>
+  </div>
+{% empty %}<p class="empty">Nobody matches.</p>{% endfor %}
+</div>
+{% endblock %}

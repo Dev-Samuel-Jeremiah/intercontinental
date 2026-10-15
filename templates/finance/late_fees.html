@@ -1,0 +1,186 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Late payment charges{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Paying <em>late</em></h1>
+    <p class="fin-sub">{{ term }} — set the due date and what a late family is charged. Nothing is charged until you run a rule.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:debtors' %}"><i class="bi bi-person-exclamation"></i> Debtors</a>
+    <a class="fin-btn" href="{% url 'finance:payment_plans' %}"><i class="bi bi-calendar2-check"></i> Payment plans</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Rules for this term</small><b>{{ rules|length }}</b></div>
+  <div class="fin-stat"><small>Charges standing</small><b style="color:var(--red)">₦{{ standing|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Waived</small><b style="color:var(--green)">₦{{ waived|floatformat:0|intcomma }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add a rule</h3></div>
+    <div class="panel-b">
+      {% if not session or not term %}
+        <p class="hint">Set the current session and term in academics before adding a rule.</p>
+      {% else %}
+      <form method="post" class="fin-form">{% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <label>What to call it</label>
+        <input name="name" placeholder="Late payment charge" maxlength="160">
+
+        <label>Fees are late after</label>
+        <input type="date" name="due_date" required>
+
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1">
+            <label>Grace days</label>
+            <input type="number" name="grace_days" min="0" value="0">
+          </div>
+          <div style="flex:1">
+            <label>Skip families owing under (₦)</label>
+            <input type="number" name="minimum_balance" min="0" step="0.01" placeholder="0">
+          </div>
+        </div>
+
+        <label>Charge</label>
+        <select name="charge_type">
+          {% for value, label in charge_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1">
+            <label>How much</label>
+            <input type="number" name="value" min="0.01" step="0.01" required placeholder="2500 or 5">
+          </div>
+          <div style="flex:1">
+            <label>Never more than (₦)</label>
+            <input type="number" name="max_total" min="0" step="0.01" placeholder="optional cap">
+          </div>
+        </div>
+
+        <label>How often</label>
+        <select name="repeat">
+          {% for value, label in repeats %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+
+        <label>Note</label>
+        <input name="note" placeholder="Agreed at the PTA meeting" maxlength="255">
+
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save rule</button>
+        <p class="hint" style="margin-top:.6rem">Saving a rule charges nobody. Preview it, then run it when you are ready.</p>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-clipboard-check"></i> Rules</h3></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Rule</th><th></th></tr></thead>
+        <tbody>
+          {% for rule in rules %}
+          <tr>
+            <td>
+              <b>{{ rule.name }}</b>
+              {% if not rule.is_active %}<span class="chip">paused</span>{% endif %}
+              <br><span class="hint">Late after {{ rule.starts_on|date:"j M Y" }}{% if rule.grace_days %} ({{ rule.grace_days }} day grace){% endif %}</span>
+              <br><span class="hint">{% if rule.charge_type == 'PERCENT' %}{{ rule.value|floatformat:"-2" }}% of the balance{% else %}₦{{ rule.value|floatformat:0|intcomma }}{% endif %}, {{ rule.get_repeat_display|lower }}{% if rule.max_total %}, capped at ₦{{ rule.max_total|floatformat:0|intcomma }}{% endif %}</span>
+              {% if rule.note %}<br><span class="hint">{{ rule.note }}</span>{% endif %}
+            </td>
+            <td style="white-space:nowrap;text-align:right">
+              <a class="fin-btn fin-btn-sm" href="?preview={{ rule.id }}"><i class="bi bi-eye"></i> Preview</a>
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="run"><input type="hidden" name="rule_id" value="{{ rule.id }}">
+                <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit"><i class="bi bi-play"></i> Run</button>
+              </form>
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="toggle"><input type="hidden" name="rule_id" value="{{ rule.id }}">
+                <button class="fin-btn fin-btn-sm" type="submit">{% if rule.is_active %}Pause{% else %}Resume{% endif %}</button>
+              </form>
+              <form method="post" style="display:inline" onsubmit="return confirm('Remove this rule and every charge it raised?')">{% csrf_token %}
+                <input type="hidden" name="action" value="delete"><input type="hidden" name="rule_id" value="{{ rule.id }}">
+                <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit">Remove</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="empty"><i class="bi bi-calendar-x"></i><p>No rule yet. Families are never charged for paying late until you add one.</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if preview_rule %}
+<div class="panel" style="margin-top:1rem">
+  <div class="panel-h">
+    <h3><i class="bi bi-eye"></i> If you run “{{ preview_rule.name }}” today</h3>
+    <span class="chip amber">{{ preview|length }} famil{{ preview|length|pluralize:"y,ies" }}</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Student</th><th>Still owes</th><th>Would be charged</th><th>Charge no.</th></tr></thead>
+      <tbody>
+        {% for row in preview %}
+        <tr>
+          <td>{{ row.student.full_name }}<br><span class="hint">{{ row.student.admission_number }}</span></td>
+          <td class="money">₦{{ row.balance|floatformat:0|intcomma }}</td>
+          <td class="money" style="color:var(--amber)">₦{{ row.amount|floatformat:0|intcomma }}</td>
+          <td>{{ row.period }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="empty"><i class="bi bi-emoji-smile"></i><p>Nobody would be charged — no family is late under this rule yet.</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<div class="panel" style="margin-top:1rem">
+  <div class="panel-h"><h3><i class="bi bi-receipt"></i> Charges raised</h3></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Student</th><th>Rule</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for charge in charges %}
+        <tr{% if charge.waived %} style="opacity:.6"{% endif %}>
+          <td>{{ charge.charged_on|date:"j M Y" }}</td>
+          <td>{{ charge.child_billing.student.full_name }}<br><span class="hint">balance then ₦{{ charge.balance_then|floatformat:0|intcomma }}</span></td>
+          <td>{{ charge.rule.name }}{% if charge.period > 1 %} <span class="hint">#{{ charge.period }}</span>{% endif %}</td>
+          <td class="money">₦{{ charge.amount|floatformat:0|intcomma }}</td>
+          <td>
+            {% if charge.waived %}<span class="chip green">waived</span>
+              {% if charge.waived_reason %}<br><span class="hint">{{ charge.waived_reason }}</span>{% endif %}
+              {% if charge.waived_by %}<br><span class="hint">by {% if charge.waived_by.get_full_name %}{{ charge.waived_by.get_full_name }}{% else %}{{ charge.waived_by.username }}{% endif %}</span>{% endif %}
+            {% else %}<span class="chip red">standing</span>{% endif %}
+          </td>
+          <td style="white-space:nowrap">
+            {% if charge.waived %}
+            <form method="post" style="display:inline">{% csrf_token %}
+              <input type="hidden" name="action" value="restore"><input type="hidden" name="charge_id" value="{{ charge.id }}">
+              <button class="fin-btn fin-btn-sm" type="submit">Restore</button>
+            </form>
+            {% else %}
+            <form method="post" style="display:inline;gap:.3rem">{% csrf_token %}
+              <input type="hidden" name="action" value="waive"><input type="hidden" name="charge_id" value="{{ charge.id }}">
+              <input name="reason" placeholder="Why" maxlength="255" style="width:130px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.76rem">
+              <button class="fin-btn fin-btn-sm" type="submit">Waive</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty"><i class="bi bi-inbox"></i><p>No charge has been raised yet.</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

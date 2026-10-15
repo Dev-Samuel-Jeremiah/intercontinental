@@ -1,0 +1,69 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Invigilate — {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .iv td{vertical-align:middle}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:.35rem;background:rgba(255,255,255,.2)}
+  .dot.on{background:var(--green);box-shadow:0 0 8px var(--green)} .dot.off{background:var(--red)}
+  .pbar{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;min-width:80px}
+  .pbar i{display:block;height:100%;background:var(--champagne)}
+  .iv form{display:inline-flex;gap:.25rem;align-items:center}
+  .iv input[type=number]{width:56px;padding:.3rem .4rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem}
+  #evbox{position:fixed;inset:0;z-index:99999;display:none;place-items:center;background:rgba(0,0,0,.6)}
+  #evbox .in{width:min(440px,92vw);max-height:80vh;overflow:auto;padding:1.2rem;border-radius:16px;background:var(--surface2,#172f5c);border:1px solid var(--rim2)}
+  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--rim2)}
+  .msgs .success{border-color:var(--green-border);color:var(--green);background:var(--green-dim)}
+  .msgs .error{border-color:var(--red-border);color:var(--red);background:var(--red-dim)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Invigilator console · <span id="clock">live</span></div>
+  <h1 class="fin-title">{{ exam.title }}</h1>
+  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, H:i" }}–{{ exam.end_time|date:"H:i" }} · {{ data.total_questions }} questions. Updates every 15 seconds.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if parts|length > 1 %}{% for p in parts %}<a class="fin-btn fin-btn-sm{% if p.id == part.id %} fin-btn-gold{% endif %}" href="?part={{ p.id }}">{{ p.get_part_type_display }}</a>{% endfor %}{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'cbt:print_paper' exam.id %}"><i class="bi bi-printer"></i> Paper</a>
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Writing now</small><b id="c-writing" style="color:var(--green)">{{ data.counts.writing }}</b></div>
+  <div class="fin-stat"><small>Submitted</small><b id="c-submitted">{{ data.counts.submitted }}</b></div>
+  <div class="fin-stat"><small>Not started</small><b id="c-not_started" style="color:var(--amber)">{{ data.counts.not_started }}</b></div>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl iv"><thead><tr><th>Candidate</th><th>Status</th><th>Progress</th><th>Time left</th><th>Flags</th><th></th></tr></thead><tbody>
+  {% for r in data.rows %}<tr data-sid="{{ r.student.id }}">
+    <td class="name">{{ r.student.full_name }}<div class="hint">{{ r.student.class_assigned.name }} · {{ r.student.admission_number }}</div></td>
+    <td class="st">{% if r.state == 'writing' %}<span class="dot {% if r.connected %}on{% else %}off{% endif %}"></span>{% if r.connected %}writing{% else %}<span style="color:var(--red)">no connection</span>{% endif %}{% elif r.state == 'submitted' %}<span class="chip green">submitted · {{ r.attempt.score|floatformat:"-1" }}</span>{% else %}<span class="chip">not started</span>{% endif %}</td>
+    <td class="pg">{% if r.attempt %}<div style="display:flex;gap:.4rem;align-items:center"><div class="pbar"><i style="width:{% widthratio r.answered data.total_questions|default:1 100 %}%"></i></div><span class="hint">{{ r.answered }}/{{ data.total_questions }}</span></div>{% endif %}</td>
+    <td class="tl">{% if r.left is not None %}{{ r.left }}{% endif %}</td>
+    <td class="fl">{% if r.events %}<button type="button" class="fin-btn fin-btn-sm" style="color:var(--amber)" onclick="showEvents({{ r.attempt.id }})"><i class="bi bi-flag-fill"></i> {{ r.events }}</button>{% endif %}</td>
+    <td>{% if r.state == 'writing' %}<form method="post">{% csrf_token %}<input type="hidden" name="attempt_id" value="{{ r.attempt.id }}"><input type="number" name="minutes" value="10" min="1" max="120" aria-label="Minutes"><button class="fin-btn fin-btn-sm" name="action" value="extend" title="Give this candidate more time"><i class="bi bi-plus-circle"></i> time</button>
+      <button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="submit" onclick="return confirm('Submit {{ r.student.full_name|escapejs }}\'s paper now with their saved answers?')" title="Submit now"><i class="bi bi-stop-circle"></i></button></form>{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="6"><div class="empty"><p>No candidates — check the exam's classes.</p></div></td></tr>{% endfor %}
+</tbody></table></div></div>
+<div id="evbox" onclick="if(event.target===this)this.style.display='none'"><div class="in"><h3 id="evname" style="margin:0 0 .6rem">Flags</h3><div id="evlist"></div><button class="fin-btn fin-btn-sm" style="margin-top:.8rem" onclick="document.getElementById('evbox').style.display='none'">Close</button></div></div>
+<script>
+(function(){
+  var box=document.getElementById('evbox');document.body.appendChild(box);
+  function fmt(s){if(s==null)return '';var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+  document.querySelectorAll('td.tl').forEach(function(td){var v=td.textContent.trim();if(v)td.textContent=fmt(+v);});
+  window.showEvents=function(id){fetch('{% url "cbt:invigilate_events" 0 %}'.replace('/0/','/'+id+'/')).then(r=>r.json()).then(function(d){
+    document.getElementById('evname').textContent=d.student;
+    document.getElementById('evlist').innerHTML=d.events.map(e=>'<div style="display:flex;justify-content:space-between;gap:.6rem;padding:.35rem 0;border-bottom:1px solid rgba(255,255,255,.06)"><span>'+e.kind+(e.seconds_away?' ('+e.seconds_away+'s)':'')+'</span><span class="hint">'+e.at+'</span></div>').join('')||'<p class="hint">Nothing logged.</p>';
+    box.style.display='grid';});};
+  function refresh(){fetch(location.pathname+location.search+(location.search?'&':'?')+'format=json').then(r=>r.json()).then(function(d){
+    document.getElementById('clock').textContent='updated '+d.time;
+    ['writing','submitted','not_started'].forEach(k=>document.getElementById('c-'+k).textContent=d.counts[k]);
+    var changed=false;
+    d.rows.forEach(function(r){var tr=document.querySelector('tr[data-sid="'+r.id+'"]');if(!tr)return;
+      if(tr.dataset.state&&tr.dataset.state!==r.state)changed=true;tr.dataset.state=r.state;
+      var tl=tr.querySelector('td.tl');if(tl)tl.textContent=fmt(r.left);
+      var pg=tr.querySelector('td.pg .hint');if(pg)pg.textContent=r.answered+'/{{ data.total_questions }}';
+      var bar=tr.querySelector('td.pg .pbar i');if(bar)bar.style.width=({{ data.total_questions|default:1 }}?Math.round(100*r.answered/{{ data.total_questions|default:1 }}):0)+'%';
+      if(r.state==='writing'){var st=tr.querySelector('td.st');if(st)st.innerHTML='<span class="dot '+(r.connected?'on':'off')+'"></span>'+(r.connected?'writing':'<span style="color:var(--red)">no connection</span>');}
+    });
+    if(changed)location.reload();}).catch(function(){document.getElementById('clock').textContent='offline — retrying';});}
+  document.querySelectorAll('tr[data-sid]').forEach(function(tr){var c=tr.querySelector('td.st').textContent;tr.dataset.state=c.indexOf('submitted')>=0?'submitted':(c.indexOf('not started')>=0?'not_started':'writing');});
+  setInterval(refresh,15000);
+})();
+</script>
+{% endblock %}

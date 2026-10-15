@@ -1,0 +1,938 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Add Question{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ═══════════════════════════════════════════════════
+   BASE
+═══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  font-family: 'Outfit', 'Segoe UI', sans-serif;
+  color: var(--white);
+  min-height: 100vh;
+}
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ═══════════════════════════════════════════════════
+   WRAPPER
+═══════════════════════════════════════════════════ */
+.aq-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════════════ */
+.aq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+
+.aq-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+}
+
+.aq-header-left { display: flex; flex-direction: column; gap: .5rem; }
+
+.aq-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+
+.aq-eyebrow::before {
+  content: '';
+  display: block;
+  width: 22px; height: 1px;
+  background: var(--champagne);
+  opacity: .7;
+}
+
+.aq-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--white);
+}
+
+.aq-title em { font-style: italic; color: var(--champagne); }
+
+.aq-subtitle {
+  font-size: .85rem;
+  color: var(--slate2);
+  margin-top: .1rem;
+}
+
+.aq-context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem 1.1rem;
+  border-radius: 100px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  color: var(--champagne-lt);
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════
+   TIP / INFO BANNER
+═══════════════════════════════════════════════════ */
+.aq-tip {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem 1.2rem;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  border-radius: 10px;
+  margin-bottom: 1.75rem;
+  font-size: .83rem;
+  color: var(--blue);
+  animation: riseUp .45s .05s ease both;
+}
+
+.aq-tip i { flex-shrink: 0; font-size: 1rem; }
+.aq-tip a { color: var(--champagne-lt); font-weight: 700; text-decoration: none; }
+.aq-tip a:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════
+   MAIN PANEL
+═══════════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s .08s ease both;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════
+   SECTION DIVIDER
+═══════════════════════════════════════════════════ */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1.75rem 2rem 0;
+  margin-bottom: 1.4rem;
+}
+
+.section-divider-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.section-divider-icon.blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border); }
+.section-divider-icon.amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border); }
+.section-divider-icon.teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border); }
+.section-divider-icon.purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+.section-divider-icon.green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border); }
+
+.section-divider h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--slate2);
+  margin: 0;
+}
+
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rim2);
+}
+
+/* ═══════════════════════════════════════════════════
+   PANEL BODY & FORM GROUPS
+═══════════════════════════════════════════════════ */
+.panel-body {
+  padding: 0 2rem 2rem;
+}
+
+.form-group { margin-bottom: 1.4rem; }
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  margin-bottom: .5rem;
+}
+
+.form-label .req { color: var(--red); margin-left: 2px; }
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: .7rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .9rem;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23f4d21f' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .9rem center;
+  padding-right: 2.4rem;
+}
+
+select option { background: var(--surface2); color: var(--white); }
+
+textarea { resize: vertical; min-height: 110px; }
+
+::placeholder { color: var(--slate); opacity: .65; }
+
+.helper-text {
+  font-size: .75rem;
+  color: var(--slate);
+  margin-top: .35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .35rem;
+  line-height: 1.5;
+}
+
+.helper-text i { margin-top: 1px; flex-shrink: 0; }
+.helper-text a { color: var(--champagne); font-weight: 600; text-decoration: none; }
+.helper-text a:hover { text-decoration: underline; }
+
+/* ═══════════════════════════════════════════════════
+   PASSAGE SECTION
+═══════════════════════════════════════════════════ */
+.passage-zone {
+  background: var(--surface2);
+  border: 1px solid var(--amber-border);
+  border-radius: 14px;
+  padding: 1.4rem 1.6rem;
+  margin-bottom: 1.4rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.passage-zone::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  opacity: .4;
+}
+
+.passage-zone-title {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--amber);
+  margin-bottom: .4rem;
+}
+
+.passage-zone-sub {
+  font-size: .78rem;
+  color: var(--slate);
+  margin-bottom: 1.2rem;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════
+   IMAGE UPLOAD ZONE
+═══════════════════════════════════════════════════ */
+.image-upload-zone {
+  border: 1.5px dashed rgba(244,210,31,.3);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface2);
+  transition: all .25s;
+}
+
+.image-upload-zone:hover {
+  border-color: var(--champagne);
+  background: var(--champagne-dim);
+}
+
+.image-upload-zone .upload-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--champagne);
+  margin: 0 auto .9rem;
+}
+
+.image-upload-zone h4 {
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .3rem;
+}
+
+.image-upload-zone p {
+  font-size: .78rem;
+  color: var(--slate);
+}
+
+#questionImage { display: none; }
+
+/* ── Image preview ── */
+.image-preview { display: none; margin-top: 1rem; }
+.image-preview.show { display: block; }
+
+.preview-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--rim2);
+}
+
+.preview-container img {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: var(--surface2);
+  display: block;
+}
+
+.remove-image {
+  position: absolute;
+  top: 10px; right: 10px;
+  background: var(--red-dim);
+  border: 1px solid var(--red-border);
+  color: var(--red);
+  border-radius: 8px;
+  width: 34px; height: 34px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .18s;
+}
+
+.remove-image:hover { background: var(--red); color: #fff; }
+
+/* ═══════════════════════════════════════════════════
+   OPTIONS BOX
+═══════════════════════════════════════════════════ */
+.info-callout {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .8rem 1.1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-left: 3px solid var(--champagne);
+  border-radius: 8px;
+  margin-bottom: 1.2rem;
+  font-size: .8rem;
+  color: var(--slate2);
+}
+
+.info-callout i { color: var(--champagne); flex-shrink: 0; }
+
+.options-box {
+  background: var(--surface2);
+  border: 1px dashed var(--rim2);
+  border-radius: 14px;
+  padding: 1.2rem;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem 1rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim);
+  border-radius: 10px;
+  margin-bottom: .65rem;
+  transition: border-color .2s;
+}
+
+.option-item:last-of-type { margin-bottom: 0; }
+
+.option-item:has(input[type="radio"]:checked) {
+  border-color: var(--green-border);
+  background: var(--green-dim);
+}
+
+.option-letter {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--blue-dim);
+  border: 1px solid var(--blue-border);
+  color: var(--blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.option-item input[type="text"] {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 7px;
+  padding: .5rem .85rem;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+}
+
+.option-item input[type="text"]:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.08);
+}
+
+/* Custom radio */
+.option-item input[type="radio"] {
+  width: 18px; height: 18px;
+  cursor: pointer;
+  accent-color: var(--green);
+  flex-shrink: 0;
+}
+
+.remove-option-btn {
+  background: none;
+  border: none;
+  color: var(--slate);
+  cursor: pointer;
+  font-size: .95rem;
+  padding: .25rem;
+  border-radius: 6px;
+  transition: all .18s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.remove-option-btn:hover {
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+/* Add option button */
+.btn-add-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  width: 100%;
+  margin-top: .75rem;
+  padding: .65rem;
+  background: transparent;
+  border: 1.5px dashed rgba(244,210,31,.3);
+  border-radius: 9px;
+  color: var(--champagne);
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.btn-add-option:hover {
+  background: var(--champagne-dim);
+  border-color: var(--champagne);
+}
+
+/* ═══════════════════════════════════════════════════
+   FORM FOOTER
+═══════════════════════════════════════════════════ */
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid var(--rim);
+  background: var(--surface2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .65rem 1.5rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all .2s;
+}
+
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-champagne:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px rgba(244,210,31,.32);
+  color: #fff;
+}
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  text-decoration: none;
+}
+
+.btn-ghost:hover {
+  background: var(--rim);
+  color: var(--white);
+  border-color: var(--rim3);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .aq-wrap { padding: 1.5rem 1.25rem 3rem; }
+  .aq-header { flex-direction: column; gap: 1rem; }
+}
+
+@media (max-width: 600px) {
+  .aq-title { font-size: 2rem; }
+  .panel-body { padding: 0 1.25rem 1.5rem; }
+  .section-divider { padding: 1.4rem 1.25rem 0; }
+  .form-footer { flex-direction: column-reverse; gap: .75rem; padding: 1.2rem; }
+  .btn { width: 100%; justify-content: center; }
+  .option-item { flex-wrap: wrap; }
+}
+</style>
+
+<div class="aq-wrap">
+
+  <!-- ══════════════════ PAGE HEADER ══════════════════ -->
+  <header class="aq-header">
+    <div class="aq-header-left">
+      <div class="aq-eyebrow">
+        <i class="bi bi-journal-text"></i> CBT Management
+      </div>
+      <h1 class="aq-title">Create <em>New</em> Question</h1>
+      <p class="aq-subtitle">Add a question with optional passage and image support</p>
+    </div>
+    <div class="aq-context-badge">
+      <i class="bi bi-plus-circle-fill"></i>
+      New Question
+    </div>
+  </header>
+
+  <!-- ══════════════════ TIP BANNER ══════════════════ -->
+  <div class="aq-tip">
+    <i class="bi bi-lightbulb-fill"></i>
+    <span>
+      <strong>Tip:</strong> For bulk uploads with passages and images, use the
+      <a href="{% url 'cbt:bulk_question_upload' %}">Bulk Upload</a> feature instead.
+    </span>
+  </div>
+
+  <!-- ══════════════════ MAIN PANEL ══════════════════ -->
+  <div class="panel">
+    <form method="POST" enctype="multipart/form-data" id="questionForm">
+      {% csrf_token %}
+
+      <!-- ── EXAM ASSIGNMENT ── -->
+      <div class="section-divider">
+        <div class="section-divider-icon blue"><i class="bi bi-clipboard2-check"></i></div>
+        <h4>Exam Assignment</h4>
+      </div>
+
+      <div class="panel-body">
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-book"></i> Exam Section <span class="req">*</span>
+          </label>
+          <select name="exam_part" id="examPartSelect" required>
+            <option value="">— Select exam section —</option>
+            {% for part in exam_parts %}
+              <option value="{{ part.id }}" data-part-type="{{ part.part_type }}">
+                {{ part.exam.title }} — {{ part.exam.subject.name }} ({{ part.get_part_type_display }})
+              </option>
+            {% endfor %}
+          </select>
+          <div class="helper-text">
+            <i class="bi bi-info-circle"></i>
+            Choose which exam and section this question belongs to
+          </div>
+        </div>
+      </div>
+
+      <!-- ── READING PASSAGE ── -->
+      <div class="section-divider">
+        <div class="section-divider-icon amber"><i class="bi bi-book-half"></i></div>
+        <h4>Reading Passage <span style="font-size:.7rem;font-weight:400;color:var(--slate);text-transform:none;letter-spacing:0">(Optional)</span></h4>
+      </div>
+
+      <div class="panel-body">
+        <div class="passage-zone">
+          <div class="passage-zone-title">
+            <i class="bi bi-scroll"></i> Comprehension Passage
+          </div>
+          <div class="passage-zone-sub">
+            Add a reading passage for Literature, English comprehension, or any subject requiring extended text
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-type-h1"></i> Passage Title
+            </label>
+            <input type="text" name="passage_title" placeholder="e.g., 'The Adventures of Tom Sawyer — Chapter 3'">
+            <div class="helper-text">
+              <i class="bi bi-info-circle"></i> Give your passage a title for easy reference
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-align-start"></i> Passage Text
+            </label>
+            <textarea name="passage" rows="8" placeholder="Paste your reading passage here. This can be a literary excerpt, poem, article, or any text for comprehension questions…"></textarea>
+            <div class="helper-text">
+              <i class="bi bi-info-circle"></i> Multiple questions can share the same passage using the passage group feature
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">
+              <i class="bi bi-layers"></i> Passage Group ID
+            </label>
+            <input type="text" name="passage_group" placeholder="e.g., 'passage_1' or 'shakespeare_excerpt_1'">
+            <div class="helper-text">
+              <i class="bi bi-info-circle"></i> Use the same Group ID for multiple questions that share this passage
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── QUESTION CONTENT ── -->
+      <div class="section-divider">
+        <div class="section-divider-icon teal"><i class="bi bi-pencil-square"></i></div>
+        <h4>Question Content</h4>
+      </div>
+
+      <div class="panel-body">
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-list-ul"></i> Question Type <span class="req">*</span>
+          </label>
+          <select name="question_type" id="questionType" required>
+            <option value="">— Select question format —</option>
+            <option value="MCQ">Multiple Choice Question (MCQ)</option>
+            <option value="TF">True / False</option>
+            <option value="SA">Short Answer</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-chat-square-text"></i> Question Text <span class="req">*</span>
+          </label>
+          <textarea name="question_text" rows="4" placeholder="Enter your question here…" required></textarea>
+          <div class="helper-text">
+            <i class="bi bi-lightbulb"></i> For questions with formulas, use
+            <a href="{% url 'cbt:bulk_question_upload' %}">Bulk Upload</a> with Word documents
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label"><i class="bi bi-lightbulb"></i> Explanation <span style="opacity:.6;font-weight:400">(optional)</span></label>
+          <textarea name="explanation" rows="2" placeholder="Why the answer is correct — shown when students review their answers"></textarea>
+        </div>
+
+        <!-- Image upload -->
+        <div class="form-group">
+          <label class="form-label">
+            <i class="bi bi-image"></i> Question Image
+            <span style="font-size:.68rem;font-weight:400;color:var(--slate);text-transform:none;letter-spacing:0;margin-left:.25rem">(Optional)</span>
+          </label>
+
+          <div class="image-upload-zone" onclick="document.getElementById('questionImage').click()">
+            <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+            <h4>Click to upload an image</h4>
+            <p>Supports: JPG, PNG, GIF &nbsp;·&nbsp; Max 5 MB</p>
+          </div>
+
+          <input type="file" name="image" id="questionImage" accept="image/*">
+
+          <div class="image-preview" id="imagePreview">
+            <div class="preview-container">
+              <img id="previewImg" src="" alt="Preview">
+              <button type="button" class="remove-image" onclick="removeImage()">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div class="form-group" style="margin-top:.9rem">
+              <input type="text" name="image_caption" placeholder="Add image caption (optional)">
+            </div>
+          </div>
+
+          <div class="helper-text">
+            <i class="bi bi-info-circle"></i> Upload diagrams, charts, maps, or visual aids for your question
+          </div>
+        </div>
+
+        <!-- Marks -->
+        <div style="max-width: 220px;">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-star"></i> Points / Marks <span class="req">*</span>
+            </label>
+            <input type="number" name="marks" min="0.5" step="0.5" value="1" required>
+          </div>
+        </div>
+
+      </div><!-- /.panel-body -->
+
+      <!-- ── ANSWER OPTIONS ── -->
+      <div id="optionsSection" style="display:none;">
+
+        <div class="section-divider">
+          <div class="section-divider-icon green"><i class="bi bi-check2-circle"></i></div>
+          <h4>Answer Options</h4>
+        </div>
+
+        <div class="panel-body">
+          <div class="info-callout">
+            <i class="bi bi-info-circle-fill"></i>
+            <span>Add your answer choices and select the correct answer using the radio button on the right.</span>
+          </div>
+
+          <div class="options-box">
+            <div id="optionFields"></div>
+            <button type="button" class="btn-add-option" id="addOption">
+              <i class="bi bi-plus-lg"></i> Add Another Option
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── FORM FOOTER ── -->
+      <div class="form-footer">
+        <a href="{% url 'cbt:admin_exam_list' %}" class="btn btn-ghost">
+          <i class="bi bi-x-circle"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-champagne">
+          <i class="bi bi-floppy-fill"></i> Save Question
+        </button>
+      </div>
+
+    </form>
+  </div><!-- /.panel -->
+</div><!-- /.aq-wrap -->
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+$(function () {
+  let optionCount = 0;
+
+  function addOption(text = '', isCorrect = false) {
+    const letter = String.fromCharCode(65 + optionCount);
+    const canRemove = optionCount > 1;
+    const html = `
+      <div class="option-item">
+        <div class="option-letter">${letter}</div>
+        <input type="text" name="option_text"
+               placeholder="Enter option ${letter}"
+               value="${text}" required>
+        <input type="radio" name="correct_option"
+               value="${optionCount}"
+               ${isCorrect ? 'checked' : ''} required
+               title="Mark as correct answer">
+        ${canRemove ? `
+          <button type="button" class="remove-option-btn" onclick="removeOption(this)" title="Remove option">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        ` : '<span style="width:26px;flex-shrink:0;"></span>'}
+      </div>
+    `;
+    $('#optionFields').append(html);
+    optionCount++;
+  }
+
+  window.removeOption = function (btn) {
+    $(btn).closest('.option-item').remove();
+    optionCount = 0;
+    $('#optionFields .option-item').each(function () {
+      const letter = String.fromCharCode(65 + optionCount);
+      $(this).find('.option-letter').text(letter);
+      $(this).find('input[type="text"]').attr('placeholder', 'Enter option ' + letter);
+      $(this).find('input[type="radio"]').val(optionCount);
+      optionCount++;
+    });
+  };
+
+  function toggleOptionsSection() {
+    const partType = $('#examPartSelect option:selected').data('part-type');
+    const qType = $('#questionType').val();
+
+    $('#optionFields').empty();
+    optionCount = 0;
+
+    if (partType === 'CBT' && (qType === 'MCQ' || qType === 'TF')) {
+      $('#optionsSection').slideDown(350);
+      if (qType === 'TF') {
+        addOption('True', true);
+        addOption('False', false);
+      } else {
+        addOption('', true);
+        addOption('', false);
+      }
+    } else {
+      $('#optionsSection').slideUp(350);
+    }
+
+    if (partType === 'ESSAY') {
+      $('#questionType').val('SA').prop('disabled', true);
+    } else {
+      $('#questionType').prop('disabled', false);
+    }
+  }
+
+  $('#examPartSelect, #questionType').change(toggleOptionsSection);
+
+  $('#addOption').click(function () {
+    if (optionCount < 10) {
+      addOption('', false);
+    } else {
+      alert('Maximum 10 options allowed');
+    }
+  });
+
+  $('#questionForm').submit(function (e) {
+    const qType = $('#questionType').val();
+    if (qType === 'MCQ' || qType === 'TF') {
+      if (!$('input[name="correct_option"]:checked').length) {
+        e.preventDefault();
+        alert('Please select the correct answer');
+        return false;
+      }
+      if ($('#optionFields .option-item').length < 2) {
+        e.preventDefault();
+        alert('Please add at least 2 options');
+        return false;
+      }
+    }
+  });
+});
+
+// Image upload
+document.getElementById('questionImage').addEventListener('change', function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5242880) {
+    alert('File size must be less than 5 MB');
+    this.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    document.getElementById('previewImg').src = e.target.result;
+    document.getElementById('imagePreview').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+});
+
+function removeImage() {
+  document.getElementById('questionImage').value = '';
+  document.getElementById('imagePreview').classList.remove('show');
+  document.getElementById('previewImg').src = '';
+}
+</script>
+{% endblock %}

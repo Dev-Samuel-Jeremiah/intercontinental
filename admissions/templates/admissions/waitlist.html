@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Waitlist{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">Waiting <em>list</em></h1>
+    <p class="adm-sub">When a place opens, offer it to the strongest applicant waiting.</p>
+  </div>
+  <div class="adm-actions">
+    <a class="adm-btn" href="{% url 'admissions:ranking' %}"><i class="bi bi-list-ol"></i> Ranking</a>
+    <a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-kanban"></i> Pipeline</a>
+  </div>
+</div>
+
+{% if openings %}
+<div class="panel" style="margin-bottom:1.2rem">
+  <div class="panel-h"><h3><i class="bi bi-door-open"></i> Places available now</h3></div>
+  <div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap">
+    {% for o in openings %}<span class="chip green">{{ o.school_class.name }} — {{ o.left }} seat{{ o.left|pluralize }}</span>{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="panel">
+  <div style="overflow-x:auto">
+    <table class="adm-table">
+      <thead><tr><th>#</th><th>Applicant</th><th>Class</th><th>Total score</th><th>Waiting since</th><th></th></tr></thead>
+      <tbody>
+        {% for a in ranked %}
+        <tr>
+          <td style="color:var(--champagne-lt);font-weight:700">{{ a.rank }}</td>
+          <td><a href="{% url 'admissions:detail' a.pk %}">{{ a.full_name }}</a><br><small style="color:var(--slate)">{{ a.parent_phone }}</small></td>
+          <td>{{ a.applying_for.name|default:"—" }}</td>
+          <td style="color:var(--white)">{{ a.total_score|default:"—" }}</td>
+          <td>{{ a.updated_at|date:"j M Y" }}</td>
+          <td>
+            <form method="post" action="{% url 'admissions:detail' a.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="change_status">
+              <input type="hidden" name="status" value="OFFERED">
+              <input type="hidden" name="note" value="Offered a place from the waiting list">
+              <button class="adm-btn adm-btn-sm adm-btn-gold" type="submit"><i class="bi bi-envelope-paper"></i> Offer place</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="bi bi-hourglass"></i>Nobody is on the waiting list.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

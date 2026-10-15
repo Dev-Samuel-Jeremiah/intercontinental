@@ -1,0 +1,66 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Petty cash{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Petty <em>cash</em></h1>
+    <p class="fin-sub">What went into the tin, what came out, and what should still be there.</p>
+  </div>
+  <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-arrow-left"></i> Expenses</a>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Should be in hand</small><b style="color:var(--champagne-lt)">₦{{ balance|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Total topped up</small><b>₦{{ topped_total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Spent from the tin</small><b style="color:var(--red)">₦{{ spent_total|floatformat:0|intcomma }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Top up the tin</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">
+        {% csrf_token %}
+        <div><label>Amount (₦)</label><input type="number" name="amount" step="0.01" min="0.01" required placeholder="20000"></div>
+        <div><label>Note</label><input type="text" name="note" placeholder="Withdrawn from the bank by the bursar"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-plus-lg"></i> Record top-up</button>
+      </form>
+      <p class="hint" style="margin-top:1rem">To record spending from petty cash, add an expense and choose <strong>Petty cash</strong> as the payment method.</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-arrow-down-circle"></i> Money in</h3></div>
+      <table class="tbl">
+        <tbody>
+          {% for t in topups %}
+          <tr>
+            <td>{{ t.topped_up_on|date:"j M Y" }}<br><span class="hint">{% if t.recorded_by %}{{ t.recorded_by.get_full_name|default:t.recorded_by.username }}{% endif %}</span></td>
+            <td>{{ t.note|default:"—" }}</td>
+            <td class="money" style="text-align:right;color:var(--green)">+ ₦{{ t.amount|floatformat:0|intcomma }}</td>
+          </tr>
+          {% empty %}<tr><td><div class="empty"><i class="bi bi-wallet2"></i>No top-ups recorded.</div></td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h3><i class="bi bi-arrow-up-circle"></i> Money out</h3></div>
+      <table class="tbl">
+        <tbody>
+          {% for e in spending %}
+          <tr>
+            <td>{{ e.spent_on|date:"j M Y" }}<br><span class="hint">{{ e.category.name }}</span></td>
+            <td class="name">{{ e.description }}<br><span class="hint">{{ e.paid_to }}</span></td>
+            <td class="money" style="text-align:right;color:var(--red)">− ₦{{ e.amount|floatformat:0|intcomma }}</td>
+          </tr>
+          {% empty %}<tr><td><div class="empty"><i class="bi bi-receipt"></i>Nothing spent from petty cash yet.</div></td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}Reception Clock-In QR{% endblock %}
+
+{% block content %}
+<style>
+/* design tokens come from dashboard/base.html */
+.rq-toolbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.rq-toolbar h2{ color:var(--white); font-weight:600; margin:0; font-size:1.15rem; }
+.idc-btn{ background:var(--champagne); color:#112850; border:none; padding:10px 18px;
+  border-radius:8px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; white-space:nowrap; }
+.rq-wrap{ display:flex; justify-content:center; padding:20px 0; }
+.rq-poster{ width:min(420px, 94vw); text-align:center; padding:36px 30px; border-radius:20px;
+  background:linear-gradient(160deg,var(--surface2),#112850); border:1px solid var(--rim);
+  color:var(--white); font-family:'Outfit',Arial,sans-serif; }
+.rq-poster .school{ font-weight:700; font-size:1.2rem; }
+.rq-poster .title{ font-size:1rem; color:var(--champagne-lt); margin:6px 0 20px; text-transform:uppercase; letter-spacing:.06em; }
+.rq-poster img{ width:min(240px, 60vw); height:min(240px, 60vw); background:#fff; padding:14px; border-radius:14px; }
+.rq-poster .instr{ margin-top:20px; font-size:.9rem; color:var(--slate); line-height:1.5; }
+.rq-note{ text-align:center; margin-top:14px; font-size:.8rem; color:var(--slate); }
+
+@media print{
+  body *{ visibility:hidden; }
+  .rq-toolbar{ display:none !important; }
+  .rq-wrap, .rq-wrap *{ visibility:visible; }
+  .rq-wrap{ position:absolute; left:0; top:0; width:100%; }
+  .rq-poster{ border:none; width:100%; }
+}
+@media(max-width:480px){
+  .rq-toolbar{ flex-direction:column; align-items:stretch; }
+  .rq-toolbar .idc-btn{ width:100%; text-align:center; }
+  .rq-poster{ padding:28px 20px; }
+}
+</style>
+{% include 'idcards/_brand.html' %}
+
+<div class="rq-toolbar">
+  <div class="idc-heading"><div class="idc-eyebrow">ID Cards &amp; Attendance</div><h2 class="idc-title"><i class="bi bi-qr-code"></i> Reception Clock-In QR</h2></div>
+  <button class="idc-btn" onclick="window.print()"><i class="bi bi-printer-fill"></i> Print Poster</button>
+</div>
+
+<div class="rq-wrap">
+  <div class="rq-poster">
+    <div class="school">{{ tenant.name|default:"School" }}</div>
+    <div class="title">Staff Clock In / Out</div>
+    <img src="{% url 'idcards:reception_qr_image' uid=station.station_uid %}" alt="Reception QR">
+    <div class="instr">
+      Scan this code with your phone when you arrive and when you leave.<br>
+      Your first scan of the day clocks you <strong>IN</strong> — your next scan clocks you <strong>OUT</strong>.
+      You must be logged in to your staff account for it to work.
+    </div>
+  </div>
+</div>
+<p class="rq-note">Print this page and post it at the reception desk. One QR code covers every staff member — nobody needs their own.</p>
+{% endblock %}

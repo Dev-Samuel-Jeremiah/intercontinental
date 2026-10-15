@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Practice result{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "cbt/_math.html" %}
+<style>
+  .rq{padding:.9rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .o{display:flex;gap:.5rem;padding:.35rem .6rem;margin:.2rem 0;border-radius:9px;border:1px solid var(--rim);font-size:.9rem}
+  .o.ok{border-color:var(--green-border);background:var(--green-dim)} .o.bad{border-color:var(--red-border);background:var(--red-dim)}
+  .ex{margin-top:.5rem;padding:.5rem .8rem;border-left:3px solid var(--champagne);background:var(--champagne-dim);border-radius:0 9px 9px 0;font-size:.86rem}
+  details summary{cursor:pointer}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ session.get_mode_display }}{% if session.topic %} · {{ session.topic }}{% endif %}</div>
+  <h1 class="fin-title">{{ session.score }} / {{ session.total }} — <em>{{ session.percent }}%</em></h1>
+  <p class="fin-sub">{% if utme is not None %}That's roughly <b>{{ utme }}/400</b> on the UTME scale. {% endif %}Finished {{ session.submitted_at|date:"j M Y, H:i" }}.</p>
+</div><div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'cbt:practice' %}"><i class="bi bi-arrow-repeat"></i> Practise again</a></div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal"></i> By subject</h3></div><table class="tbl"><tbody>
+    {% for s in subjects %}<tr><td class="name">{{ s.subject }}</td><td>{{ s.right }}/{{ s.total }}</td><td><span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span></td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-bullseye"></i> By topic — weakest first</h3></div><table class="tbl"><tbody>
+    {% for t in topics %}<tr><td class="name">{{ t.topic }}<div class="hint">{{ t.subject }}</div></td><td>{{ t.right }}/{{ t.total }}</td><td><span class="chip {% if t.percent >= 80 %}green{% elif t.percent >= 50 %}amber{% else %}red{% endif %}">{{ t.percent }}%</span></td></tr>{% endfor %}</tbody></table></div>
+</div>
+{% for s in sections %}<div class="panel"><details {% if forloop.first %}open{% endif %}><summary class="panel-h"><h3><i class="bi bi-list-check"></i> {{ s.subject.name }} — answers</h3></summary>
+  {% for q in s.questions %}<div class="rq"><div class="hint">Q{{ forloop.counter }}{% if q.topic %} · {{ q.topic }}{% endif %} · {% if q.was_right %}<span style="color:var(--green)">right</span>{% elif q.chosen_id %}<span style="color:var(--red)">wrong</span>{% else %}<span style="color:var(--amber)">not answered</span>{% endif %}</div>
+    <div style="margin:.3rem 0">{{ q.text|safe }}</div>
+    {% for o in q.ordered_options %}<div class="o{% if o.is_correct %} ok{% elif q.chosen_id == o.id %} bad{% endif %}">{% if o.is_correct %}<i class="bi bi-check-circle-fill" style="color:var(--green)"></i>{% elif q.chosen_id == o.id %}<i class="bi bi-x-circle-fill" style="color:var(--red)"></i>{% else %}<i class="bi bi-circle" style="color:var(--slate)"></i>{% endif %} {{ o.text }}</div>{% endfor %}
+    {% if q.explanation %}<div class="ex"><b>Why:</b> {{ q.explanation|linebreaksbr }}</div>{% endif %}</div>{% endfor %}
+</details></div>{% endfor %}
+{% endblock %}

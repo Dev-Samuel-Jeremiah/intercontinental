@@ -1,0 +1,749 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Communication Centre{% endblock %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background:var(--ink); color:var(--white); font-family: 'Outfit', sans-serif; min-height: 100vh; }
+a { text-decoration: none; color:inherit; }
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.cui-wrap {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   MESSAGES
+════════════════════════════════════════════ */
+.msg {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .75rem 1.1rem;
+  border-radius: 10px;
+  margin-bottom: .85rem;
+  font-size: .86rem;
+  font-weight: 500;
+  border:1px solid;
+  animation: riseUp .3s ease both;
+}
+.msg.success { background:var(--green-dim); border-color:var(--green-border); color:var(--green); }
+.msg.error   { background:var(--red-dim);   border-color:var(--red-border);   color:var(--red);   }
+.msg.info    { background:var(--blue-dim);  border-color:var(--blue-border);  color:var(--blue);  }
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom:1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background:var(--champagne);
+  border-radius: 2px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color:var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px; height: 1px;
+  background:var(--champagne);
+  flex-shrink: 0;
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color:var(--white);
+  margin-bottom: .4rem;
+}
+.page-title em { color:var(--champagne); font-style: italic; }
+.page-subtitle { font-size: .88rem; color:var(--slate2); }
+.header-actions { display: flex; gap: .65rem; flex-wrap: wrap; align-items: flex-end; padding-bottom: .25rem; }
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.15rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border:none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-champagne {
+  background:linear-gradient(135deg, #f4d21f, #d1ad00);
+  color:#0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.36); }
+.btn-ghost {
+  background:var(--surface3);
+  color:var(--slate2);
+  border:1px solid var(--rim2);
+}
+.btn-ghost:hover { background:var(--rim2); color:var(--white); }
+.btn-ghost-full {
+  background:var(--surface3);
+  color:var(--slate2);
+  border:1px solid var(--rim2);
+  width: 100%;
+  justify-content: space-between;
+}
+.btn-ghost-full:hover { background:var(--rim2); color:var(--white); border-color:var(--rim3); }
+.btn-sm { padding: .38rem .8rem; font-size: .78rem; border-radius: 8px; }
+
+/* ════════════════════════════════════════════
+   CONFIG BANNER
+════════════════════════════════════════════ */
+.config-banner {
+  display: none;
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  border-radius: 10px;
+  padding: .85rem 1.1rem;
+  margin-bottom: 1.5rem;
+  font-size: .84rem;
+  color:var(--amber);
+  align-items: center;
+  gap: .65rem;
+  flex-wrap: wrap;
+}
+.config-banner a { color:var(--blue); font-weight: 700; margin-left: .5rem; }
+.config-banner a:hover { text-decoration: underline; }
+
+/* ════════════════════════════════════════════
+   STAT CARDS
+════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  animation: riseUp .45s ease both;
+  transition: border-color .2s, transform .2s;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:linear-gradient(180deg, var(--rim3) 0%, transparent 4%);
+  pointer-events: none; border-radius: inherit;
+}
+.stat-card:hover { border-color:var(--rim3); transform: translateY(-3px); }
+.stat-card:nth-child(1) { animation-delay: .04s; }
+.stat-card:nth-child(2) { animation-delay: .09s; }
+.stat-card:nth-child(3) { animation-delay: .14s; }
+.stat-card:nth-child(4) { animation-delay: .19s; }
+.stat-card:nth-child(5) { animation-delay: .24s; }
+.stat-card:nth-child(6) { animation-delay: .29s; }
+
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem;
+  flex-shrink: 0;
+}
+.stat-label {
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color:var(--slate);
+  margin-bottom: .3rem;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color:var(--white);
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════
+   TWO-COLUMN GRID
+════════════════════════════════════════════ */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none; z-index: 0; border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+.panel:nth-of-type(1) { animation-delay: .3s; }
+.panel:nth-of-type(2) { animation-delay: .36s; }
+.panel:nth-of-type(3) { animation-delay: .42s; }
+.panel:nth-of-type(4) { animation-delay: .48s; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom:1px solid var(--rim);
+}
+.panel-title { display: flex; align-items: center; gap: .75rem; }
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem; font-weight: 600; color:var(--white);
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom:1px solid var(--rim2); }
+thead th {
+  padding: .75rem 1.25rem;
+  font-size: .7rem; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  color:var(--slate); text-align: left; white-space: nowrap;
+  background:var(--surface2);
+}
+thead th:first-child { padding-left: 1.5rem; }
+thead th:last-child  { padding-right: 1.5rem; }
+tbody tr { border-bottom:1px solid var(--rim); transition: background .18s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(255,255,255,.025); }
+tbody td {
+  padding: .9rem 1.25rem;
+  font-size: .84rem; color:var(--slate2);
+  vertical-align: middle;
+}
+tbody td:first-child { padding-left: 1.5rem; }
+tbody td:last-child  { padding-right: 1.5rem; }
+.td-title { font-weight: 600; color:var(--white); font-size: .86rem; }
+.td-link  { color:var(--blue); font-size: .78rem; font-weight: 600; transition: color .15s; }
+.td-link:hover { color:var(--champagne); }
+.td-date  { font-size: .78rem; color:var(--slate); white-space: nowrap; }
+
+/* ════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .25rem .65rem; border-radius: 999px;
+  font-size: .72rem; font-weight: 600; white-space: nowrap;
+}
+.badge-green  { background:var(--green-dim);  border:1px solid var(--green-border);  color:var(--green);  }
+.badge-red    { background:var(--red-dim);    border:1px solid var(--red-border);    color:var(--red);    }
+.badge-blue   { background:var(--blue-dim);   border:1px solid var(--blue-border);   color:var(--blue);   }
+.badge-amber  { background:var(--amber-dim);  border:1px solid var(--amber-border);  color:var(--amber);  }
+.badge-ghost  { background:var(--surface3);   border:1px solid var(--rim2);          color:var(--slate2); }
+
+/* ════════════════════════════════════════════
+   QUICK ACTIONS LIST
+════════════════════════════════════════════ */
+.quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  padding: 1.25rem 1.5rem;
+}
+
+/* ════════════════════════════════════════════
+   CONTACT GAPS BOX
+════════════════════════════════════════════ */
+.gaps-body { padding: 1.25rem 1.5rem; }
+.gap-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .85rem 1rem;
+  border-radius: 10px;
+  margin-bottom: .65rem;
+  border:1px solid;
+}
+.gap-row.red   { background:var(--red-dim);   border-color:var(--red-border); }
+.gap-row.amber { background:var(--amber-dim); border-color:var(--amber-border); }
+.gap-label { font-size: .84rem; color:var(--slate2); }
+.gap-count {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.gap-row.red   .gap-count { color:var(--red); }
+.gap-row.amber .gap-count { color:var(--amber); }
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 3rem 2rem;
+}
+.empty-icon-box {
+  width: 56px; height: 56px;
+  background:var(--surface3); border:1px solid var(--rim2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color:var(--slate);
+  margin-bottom: 1rem;
+}
+.empty-state h4 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 600; color:var(--white);
+  margin-bottom: .35rem;
+}
+.empty-state p { font-size: .84rem; color:var(--slate2); }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .cui-wrap { padding: 1.5rem 1.25rem 3rem; }
+  .two-col   { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-actions { padding-bottom: 0; }
+}
+@media (max-width: 768px) {
+  .cui-wrap  { padding: 1rem .9rem 2.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  .page-title { font-size: 1.8rem; }
+
+  table thead { display: none; }
+  table, table tbody, table tr, table td { display: block; width: 100%; }
+  table tr {
+    background:var(--surface3); border:1px solid var(--rim2);
+    border-radius: 12px; padding: 1rem; margin-bottom: .85rem;
+  }
+  table td {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .5rem 0; border:none; border-bottom:1px solid var(--rim);
+    font-size: .82rem; gap: .5rem;
+  }
+  table td:last-child { border-bottom:none; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color:var(--slate); flex-shrink: 0;
+  }
+}
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.6rem; }
+}
+</style>
+
+<!-- ══ MESSAGES ════════════════════════════════════════ -->
+{% if messages %}
+{% for m in messages %}
+<div class="msg {% if m.tags == 'success' %}success{% elif m.tags == 'error' %}error{% else %}info{% endif %}">
+  <i class="bi {% if m.tags == 'success' %}bi-check-circle-fill{% elif m.tags == 'error' %}bi-x-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+  {{ m }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="cui-wrap">
+
+  <!-- ══ PAGE HEADER ══════════════════════════════════ -->
+  <header class="page-header">
+    <div>
+      <div class="eyebrow">Parent Notifications</div>
+      <h1 class="page-title">Communication <em>Centre</em></h1>
+      <p class="page-subtitle">Email &amp; SMS — broadcast campaigns and quick messages to parents</p>
+    </div>
+    <div class="header-actions">
+      <a href="{% url 'communications:campaign_create' %}" class="btn btn-champagne">
+        <i class="bi bi-plus-lg"></i> New Campaign
+      </a>
+      <a href="{% url 'communications:quick_message' %}" class="btn btn-ghost">
+        <i class="bi bi-chat-dots-fill"></i> Quick Message
+      </a>
+      <a href="{% url 'communications:fee_reminders' %}" class="btn btn-ghost">
+        <i class="bi bi-cash-coin"></i> Fee Reminders
+      </a>
+      <a href="{% url 'communications:calendar' %}" class="btn btn-ghost">
+        <i class="bi bi-calendar3"></i> Calendar
+      </a>
+    </div>
+  </header>
+
+  <!-- ══ CONFIG BANNER ═══════════════════════════════ -->
+  <div class="config-banner" id="config-banner">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Email or SMS not configured.</strong>
+    <a href="{% url 'communications:test_email' %}">Check Configuration →</a>
+  </div>
+
+  <!-- ══ STAT CARDS ════════════════════════════════════ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--champagne-dim);">
+        <i class="bi bi-send-fill" style="color:var(--champagne);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Campaigns Sent</div>
+        <div class="stat-value">{{ sent_campaigns }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-dim);">
+        <i class="bi bi-envelope-fill" style="color:var(--blue);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Emails Sent</div>
+        <div class="stat-value">{{ email_sent }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--teal-dim);">
+        <i class="bi bi-phone-fill" style="color:var(--teal);"></i>
+      </div>
+      <div>
+        <div class="stat-label">SMS Sent</div>
+        <div class="stat-value">{{ sms_sent }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-dim);">
+        <i class="bi bi-x-circle-fill" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-label">Failed</div>
+        <div class="stat-value">{{ failed_msgs }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--red-dim);">
+        <i class="bi bi-envelope-x-fill" style="color:var(--red);"></i>
+      </div>
+      <div>
+        <div class="stat-label">No Email</div>
+        <div class="stat-value">{{ no_email_count }}</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-dim);">
+        <i class="bi bi-phone-slash-fill" style="color:var(--amber);"></i>
+      </div>
+      <div>
+        <div class="stat-label">No Phone</div>
+        <div class="stat-value">{{ no_phone_count }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ROW 1: Recent Campaigns + Quick Actions ══════ -->
+  <div class="two-col">
+
+    <!-- Recent Campaigns -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge" style="background:var(--blue-dim);">
+            <i class="bi bi-megaphone-fill" style="color:var(--blue);"></i>
+          </div>
+          <h3>Recent Campaigns</h3>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Channel</th>
+              <th>Status</th>
+              <th>Recipients</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in recent_campaigns %}
+            <tr>
+              <td data-label="Title">
+                <span class="td-title">{{ c.title|truncatechars:32 }}</span>
+              </td>
+              <td data-label="Channel">
+                {% if c.channel == 'EMAIL' %}
+                  <span class="badge badge-blue"><i class="bi bi-envelope-fill"></i> Email</span>
+                {% elif c.channel == 'SMS' %}
+                  <span class="badge badge-amber"><i class="bi bi-phone-fill"></i> SMS</span>
+                {% else %}
+                  <span class="badge badge-ghost"><i class="bi bi-broadcast"></i> {{ c.channel }}</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if c.status == 'SENT' %}
+                  <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> Sent</span>
+                {% elif c.status == 'DRAFT' %}
+                  <span class="badge badge-ghost"><i class="bi bi-pencil-fill"></i> Draft</span>
+                {% else %}
+                  <span class="badge badge-amber">{{ c.status }}</span>
+                {% endif %}
+              </td>
+              <td data-label="Recipients">
+                <span style="font-weight:600;color:var(--white);">{{ c.total_recipients }}</span>
+              </td>
+              <td data-label="View">
+                <a href="{% url 'communications:campaign_detail' c.id %}" class="td-link">
+                  View <i class="bi bi-arrow-right"></i>
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon-box"><i class="bi bi-megaphone"></i></div>
+                  <h4>No Campaigns Yet</h4>
+                  <p>Create your first campaign to notify parents.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge" style="background:var(--champagne-dim);">
+            <i class="bi bi-lightning-fill" style="color:var(--champagne);"></i>
+          </div>
+          <h3>Quick Actions</h3>
+        </div>
+      </div>
+      <div class="quick-list">
+        <a href="{% url 'communications:fee_reminders' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-cash-coin" style="color:var(--amber);"></i> Send Fee Reminders
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+        <a href="{% url 'communications:campaign_create' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-megaphone-fill" style="color:var(--blue);"></i> New Campaign
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+        <a href="{% url 'communications:template_list' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-files" style="color:var(--teal);"></i> Manage Templates
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+        <a href="{% url 'communications:contact_audit' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-search" style="color:var(--purple);"></i> Contact Audit
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+        <a href="{% url 'communications:message_logs' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-journal-text" style="color:var(--green);"></i> Message Logs
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+        <a href="{% url 'communications:opt_outs' %}" class="btn btn-ghost-full">
+          <span style="display:flex;align-items:center;gap:.6rem;">
+            <i class="bi bi-slash-circle-fill" style="color:var(--red);"></i> Opt-Out Management
+          </span>
+          <i class="bi bi-arrow-right" style="color:var(--slate);"></i>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /two-col -->
+
+  <!-- ══ ROW 2: Quick Messages + Contact Gaps ═════════ -->
+  <div class="two-col">
+
+    <!-- Recent Quick Messages -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge" style="background:var(--green-dim);">
+            <i class="bi bi-chat-dots-fill" style="color:var(--green);"></i>
+          </div>
+          <h3>Recent Quick Messages</h3>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Channel</th>
+              <th>Status</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in quick_msgs %}
+            <tr>
+              <td data-label="Student">
+                <span style="font-weight:600;color:var(--white);">{{ q.student.full_name }}</span>
+              </td>
+              <td data-label="Channel">
+                {% if q.channel == 'EMAIL' %}
+                  <span class="badge badge-blue"><i class="bi bi-envelope-fill"></i> Email</span>
+                {% elif q.channel == 'SMS' %}
+                  <span class="badge badge-amber"><i class="bi bi-phone-fill"></i> SMS</span>
+                {% else %}
+                  <span class="badge badge-green"><i class="bi bi-broadcast"></i> Both</span>
+                {% endif %}
+              </td>
+              <td data-label="Status">
+                {% if q.status == 'SENT' %}
+                  <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> Sent</span>
+                {% else %}
+                  <span class="badge badge-red"><i class="bi bi-x-circle-fill"></i> Failed</span>
+                {% endif %}
+              </td>
+              <td data-label="Date" class="td-date">{{ q.sent_at|date:"d M Y H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4">
+                <div class="empty-state">
+                  <div class="empty-icon-box"><i class="bi bi-chat-dots"></i></div>
+                  <h4>No Quick Messages</h4>
+                  <p>Send individual messages to parents from the student record.</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Contact Gaps -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge" style="background:var(--red-dim);">
+            <i class="bi bi-exclamation-triangle-fill" style="color:var(--red);"></i>
+          </div>
+          <h3>Contact Gaps</h3>
+        </div>
+      </div>
+      <div class="gaps-body">
+        <div class="gap-row red">
+          <div class="gap-label">
+            <i class="bi bi-envelope-x-fill" style="color:var(--red);margin-right:.4rem;"></i>
+            Students missing parent email
+          </div>
+          <div class="gap-count">{{ no_email_count }}</div>
+        </div>
+        <div class="gap-row amber">
+          <div class="gap-label">
+            <i class="bi bi-phone-slash-fill" style="color:var(--amber);margin-right:.4rem;"></i>
+            Students missing parent phone
+          </div>
+          <div class="gap-count">{{ no_phone_count }}</div>
+        </div>
+        <a href="{% url 'communications:contact_audit' %}" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:.75rem;">
+          <i class="bi bi-search"></i> View Full Contact Audit
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /two-col -->
+
+</div><!-- /cui-wrap -->
+
+{% endblock %}

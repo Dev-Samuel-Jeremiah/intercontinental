@@ -1,0 +1,47 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Facilities{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Procurement &amp; facilities</div>
+  <h1 class="fin-title"><em>Facilities</em></h1>
+  <p class="fin-sub">Buying, assets, maintenance, power and the school site. What you see depends on whether you are a store keeper, on the maintenance team or an administrator.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+{% if store %}<div class="fin-stats">
+  <div class="fin-stat"><small>Requisitions to approve</small><b>{{ waiting|length }}</b></div>
+  <div class="fin-stat"><small>Approved, not ordered</small><b>{{ approved }}</b></div>
+  <div class="fin-stat"><small>Orders awaiting delivery</small><b>{{ open_pos|length }}</b></div>
+  <div class="fin-stat"><small>Low stock</small><b>{{ low_count }}</b></div>
+</div>{% endif %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% if store and waiting %}<div class="panel"><div class="panel-h"><h3>Requisitions to approve</h3><a class="fin-btn fin-btn-sm" href="{% url 'facilities:requisitions' %}?status=SUBMITTED">Open</a></div><div class="panel-b">{% for r in waiting %}<p style="margin:.2rem 0">{{ r.title }} — ₦{{ r.total|floatformat:2 }}</p>{% endfor %}</div></div>{% endif %}
+    {% if maint %}<div class="panel"><div class="panel-h"><h3>Open maintenance jobs</h3><a class="fin-btn fin-btn-sm" href="{% url 'facilities:maintenance' %}">All</a></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for j in jobs %}<tr><td class="name">{{ j.title }}<br><small class="hint">{{ j.space|default:j.where }} · {{ j.get_category_display }}{% if j.assigned_to %} · {{ j.assigned_to.full_name }}{% endif %}</small></td><td><span class="chip{% if j.priority == 'URGENT' %} red{% elif j.priority == 'HIGH' %} gold{% endif %}">{{ j.get_status_display }}</span></td></tr>
+      {% empty %}<tr><td class="empty">No open jobs.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if tasks %}<div class="panel"><div class="panel-h"><h3>Servicing due this week</h3></div><div class="panel-b">{% for t in tasks %}<p style="margin:.2rem 0">{{ t.title }} — {% if t.next_due < today %}<span class="chip red">overdue {{ t.next_due|date:"j M" }}</span>{% else %}{{ t.next_due|date:"D j M" }}{% endif %}</p>{% endfor %}</div></div>{% endif %}
+    {% for g, s in gens %}<div class="panel"><div class="panel-h"><h3>{{ g }}</h3><a class="fin-btn fin-btn-sm" href="{% url 'facilities:generators' %}">Log</a></div><div class="panel-b"><p style="margin:0">Last 30 days: {{ s.hours }} h, {{ s.litres }} L, ₦{{ s.cost|floatformat:0 }}{% if s.lph %} · {{ s.lph }} L/h{% endif %}</p>{% if s.service_due %}<span class="chip red">Service due ({{ s.since_service }} h since last)</span>{% endif %}</div></div>{% endfor %}
+    {% if patrols %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-h"><h3>Patrol points not checked</h3></div><div class="panel-b">{% for p in patrols %}<p style="margin:.2rem 0">{{ p.point.name }}{% if p.last %} — last {{ p.last.at|date:"D H:i" }}{% else %} — never{% endif %}</p>{% endfor %}</div></div>{% endif %}
+    {% endif %}
+    <div class="panel"><div class="panel-h"><h3>My requests</h3></div><div class="panel-b">
+      {% for j in my_jobs %}<p style="margin:.2rem 0"><i class="bi bi-tools"></i> {{ j.title }} — {{ j.get_status_display }}</p>{% endfor %}
+      {% for r in my_reqs %}<p style="margin:.2rem 0"><i class="bi bi-cart"></i> {{ r.title }} — {{ r.get_status_display }}</p>{% endfor %}
+      {% if not my_jobs and not my_reqs %}<p class="empty">Nothing yet.</p>{% endif %}
+      <a class="fin-btn fin-btn-sm" href="{% url 'facilities:maintenance' %}">Report a fault</a> <a class="fin-btn fin-btn-sm" href="{% url 'facilities:requisitions' %}">Ask for items</a>
+    </div></div>
+  </div>
+  {% if store %}<div style="display:grid;gap:1.2rem">
+    {% if low or low_chem or low_kitchen %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-h"><h3>Low stock</h3></div><div class="panel-b">
+      {% for a in low %}<p style="margin:.15rem 0">{{ a.name }} — {{ a.current_stock }} {{ a.unit }}</p>{% endfor %}
+      {% for c in low_chem %}<p style="margin:.15rem 0">{{ c.name }} (lab) — {{ c.quantity|floatformat:"-2" }} {{ c.unit }}</p>{% endfor %}
+      {% for k in low_kitchen %}<p style="margin:.15rem 0">{{ k.name }} (kitchen) — {{ k.quantity|floatformat:"-2" }} {{ k.unit }}</p>{% endfor %}
+    </div></div>{% endif %}
+    {% if open_pos %}<div class="panel"><div class="panel-h"><h3>Awaiting delivery</h3></div><div class="panel-b">{% for po in open_pos %}<p style="margin:.15rem 0"><a href="{% url 'facilities:order' po.pk %}">{{ po.number }}</a> — {{ po.vendor }}{% if po.expected_by %} · by {{ po.expected_by|date:"j M" }}{% endif %}</p>{% endfor %}</div></div>{% endif %}
+    {% if bills %}<div class="panel"><div class="panel-h"><h3>Bills due</h3></div><div class="panel-b">{% for b in bills %}<p style="margin:.15rem 0">{{ b.get_kind_display }} — ₦{{ b.amount|floatformat:2 }} by {{ b.due_date|date:"j M" }}</p>{% endfor %}</div></div>{% endif %}
+    {% if contracts %}<div class="panel"><div class="panel-h"><h3>Contracts ending</h3></div><div class="panel-b">{% for c in contracts %}<p style="margin:.15rem 0">{{ c.vendor }} — {{ c.title }} · {{ c.ends|date:"j M Y" }}</p>{% endfor %}</div></div>{% endif %}
+    {% if disposals %}<div class="panel"><div class="panel-h"><h3>Disposals to approve</h3></div><div class="panel-b">{% for d in disposals %}<p style="margin:.15rem 0"><a href="{% url 'facilities:disposals' %}">{{ d.tag }}</a> — {{ d.get_method_display }}</p>{% endfor %}</div></div>{% endif %}
+    {% if hires %}<div class="panel"><div class="panel-h"><h3>Coming hires</h3></div><div class="panel-b">{% for h in hires %}<p style="margin:.15rem 0"><a href="{% url 'facilities:booking' h.pk %}">{{ h.event }}</a> — {{ h.space }} · {{ h.starts|date:"D j M" }}</p>{% endfor %}</div></div>{% endif %}
+  </div>{% endif %}
+</div>
+{% endblock %}

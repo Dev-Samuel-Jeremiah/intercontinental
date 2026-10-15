@@ -1,0 +1,716 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Boarders{% endblock %}
+{% block content %}
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:#0f2348;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* Header */
+.page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.2rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-header::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:2px;
+  background:linear-gradient(90deg,var(--champagne),transparent);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:.22em;
+  font-size:.68rem;
+  font-weight:700;
+  margin-bottom:.7rem;
+}
+
+.eyebrow::before{
+  content:"";
+  width:38px;
+  height:1px;
+  background:var(--champagne);
+  opacity:.7;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.page-sub{
+  margin-top:.7rem;
+  color:var(--slate2);
+  font-size:.92rem;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.8rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.78rem;
+  font-weight:700;
+}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  padding:.88rem 1.15rem;
+  border-radius:12px;
+  font-size:.82rem;
+  font-weight:700;
+  text-decoration:none;
+  border:1px solid var(--rim2);
+  cursor:pointer;
+  transition:.22s ease;
+  font-family:'Outfit',sans-serif;
+}
+
+.btn i{
+  font-size:.95rem;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  border:none;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(244,210,31,.28);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+  transform:translateY(-1px);
+}
+
+/* Panels */
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:1.5rem;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(2){animation-delay:.04s;}
+.panel:nth-child(3){animation-delay:.08s;}
+.panel:nth-child(4){animation-delay:.12s;}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-body{
+  padding:1.25rem;
+}
+
+.panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  padding:1.1rem 1.25rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.92rem;
+  flex-shrink:0;
+}
+
+.icon-teal{
+  background:var(--teal-dim);
+  color:var(--teal);
+  border:1px solid var(--teal-border);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  color:var(--blue);
+  border:1px solid var(--blue-border);
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:.96rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+/* Form */
+.filter-form{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  align-items:flex-end;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+  flex:1;
+  min-width:180px;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:600;
+}
+
+.fg input,
+.fg select{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:.9rem 1rem;
+  color:var(--white);
+  font-size:.87rem;
+  outline:none;
+  font-family:'Outfit',sans-serif;
+  transition:.2s ease;
+}
+
+.fg input:focus,
+.fg select:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* Table */
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl th{
+  padding:1rem 1rem;
+  text-align:left;
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--slate2);
+  font-weight:700;
+  border-bottom:1px solid var(--rim);
+}
+
+.tbl td{
+  padding:1rem;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+  color:var(--white);
+  font-size:.84rem;
+}
+
+.tbl tbody tr{
+  transition:.2s ease;
+}
+
+.tbl tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.student-cell{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.avatar{
+  width:42px;
+  height:42px;
+  border-radius:11px;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#0a1f44;
+  font-weight:800;
+  font-size:.83rem;
+  flex-shrink:0;
+}
+
+.student-name{
+  font-weight:700;
+  color:var(--white);
+}
+
+.student-meta{
+  margin-top:.18rem;
+  font-size:.73rem;
+  color:var(--slate);
+}
+
+.room-muted{
+  color:var(--slate);
+  font-size:.78rem;
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.35rem;
+  padding:.38rem .72rem;
+  border-radius:999px;
+  font-size:.71rem;
+  font-weight:700;
+  border:1px solid transparent;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.badge-neutral{
+  background:rgba(255,255,255,.05);
+  border-color:var(--rim2);
+  color:var(--slate2);
+}
+
+/* Empty State */
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:4rem 1.5rem;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.8rem;
+  color:var(--champagne);
+  margin-bottom:1rem;
+}
+
+.empty-title{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.empty-sub{
+  margin-top:.45rem;
+  color:var(--slate2);
+  max-width:420px;
+  font-size:.88rem;
+}
+
+.small-note{
+  color:var(--slate2);
+  font-size:.82rem;
+}
+
+.profile-btn{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#fca5a5;
+  transition:.22s ease;
+}
+
+.profile-btn:hover{
+  transform:translateY(-1px);
+  background:rgba(239,68,68,.18);
+}
+
+@media(max-width:768px){
+
+  .your-wrap{
+    padding:1.2rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.2rem;
+  }
+
+  .filter-form{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .fg{
+    min-width:100%;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Boarding Administration</div>
+
+      <h1 class="page-title">
+        Student <em>Boarders</em>
+      </h1>
+
+      <div class="page-sub">
+        Monitor all hostel residents, assignments, statuses and accommodation records.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.8rem;flex-wrap:wrap;align-items:center;">
+      <div class="context-badge">
+        <i class="bi bi-people-fill"></i>
+        {{ boarders|length }} Boarder{{ boarders|length|pluralize }}
+      </div>
+
+      <a href="{% url 'hostel:assign_bed' %}" class="btn btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Assign Bed
+      </a>
+
+      <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge icon-teal">
+          <i class="bi bi-funnel-fill"></i>
+        </div>
+        <h3>Boarder Filters</h3>
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <form method="GET" class="filter-form">
+
+        <div class="fg">
+          <label>Search</label>
+          <input name="q" value="{{ q }}" placeholder="Name or admission no.">
+        </div>
+
+        <div class="fg">
+          <label>Status</label>
+          <select name="status">
+            <option value="ACTIVE" {% if status_f == 'ACTIVE' %}selected{% endif %}>Active Boarders</option>
+            <option value="" {% if not status_f %}selected{% endif %}>All</option>
+            <option value="EXEAT" {% if status_f == 'EXEAT' %}selected{% endif %}>On Exeat</option>
+            <option value="CHECKED_OUT" {% if status_f == 'CHECKED_OUT' %}selected{% endif %}>Checked Out</option>
+            <option value="SUSPENDED" {% if status_f == 'SUSPENDED' %}selected{% endif %}>Suspended</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Type</label>
+          <select name="type">
+            <option value="" {% if not type_f %}selected{% endif %}>All Types</option>
+            <option value="BOARDER" {% if type_f == 'BOARDER' %}selected{% endif %}>Full Boarder</option>
+            <option value="WEEKLY" {% if type_f == 'WEEKLY' %}selected{% endif %}>Weekly Boarder</option>
+            <option value="DAY" {% if type_f == 'DAY' %}selected{% endif %}>Day Student</option>
+          </select>
+        </div>
+
+        <div class="fg">
+          <label>Hostel</label>
+          <select name="hostel">
+            <option value="">All Hostels</option>
+            {% for h in hostels %}
+            <option value="{{ h.id }}" {% if hostel_f == h.id|stringformat:"s" %}selected{% endif %}>
+              {{ h.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-search"></i>
+          Filter
+        </button>
+
+        <a href="{% url 'hostel:boarder_list' %}" class="btn btn-ghost">
+          <i class="bi bi-x-circle"></i>
+          Clear
+        </a>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-table"></i>
+        </div>
+        <h3>Boarder Directory</h3>
+      </div>
+
+      <div class="small-note">
+        {{ boarders|length }} boarder(s) found
+      </div>
+    </div>
+
+    <div class="panel-body" style="padding-top:.2rem;">
+
+      {% if boarders %}
+
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Type</th>
+              <th>Hostel</th>
+              <th>Room / Bed</th>
+              <th>Status</th>
+              <th>Parent</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for bp in boarders %}
+            <tr>
+
+              <td>
+                <div class="student-cell">
+
+                  <div class="avatar">
+                    {{ bp.student.full_name|slice:":2"|upper }}
+                  </div>
+
+                  <div>
+                    <div class="student-name">
+                      {{ bp.student.full_name }}
+                    </div>
+
+                    <div class="student-meta">
+                      {{ bp.student.admission_number }}
+                    </div>
+                  </div>
+
+                </div>
+              </td>
+
+              <td>
+                {{ bp.student.class_assigned.name|default:"—" }}
+              </td>
+
+              <td>
+                <span class="badge badge-blue">
+                  {{ bp.get_student_type_display }}
+                </span>
+              </td>
+
+              <td>
+                {{ bp.hostel.name|default:"—" }}
+              </td>
+
+              <td>
+                {% if bp.room %}
+                  Room {{ bp.room.room_number }} / Bed {{ bp.bed.bed_number }}
+                {% else %}
+                  <span class="room-muted">Not assigned</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if bp.status == 'ACTIVE' %}
+                  <span class="badge badge-green">Active</span>
+
+                {% elif bp.status == 'EXEAT' %}
+                  <span class="badge badge-amber">On Exeat</span>
+
+                {% elif bp.status == 'SUSPENDED' %}
+                  <span class="badge badge-red">Suspended</span>
+
+                {% else %}
+                  <span class="badge badge-neutral">
+                    {{ bp.get_status_display }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td style="font-size:.8rem;">
+                {{ bp.student.parent_name|default:"—" }}
+
+                {% if bp.student.parent_phone %}
+                <br>
+                <span class="student-meta">
+                  {{ bp.student.parent_phone }}
+                </span>
+                {% endif %}
+              </td>
+
+              <td>
+                <a href="{% url 'hostel:boarder_profile' bp.student.id %}"
+                   class="btn profile-btn"
+                   style="padding:.58rem .82rem;font-size:.74rem;">
+                  <i class="bi bi-person-vcard"></i>
+                  Profile
+                </a>
+              </td>
+
+            </tr>
+            {% endfor %}
+
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-people"></i>
+        </div>
+
+        <div class="empty-title">
+          No Boarders Found
+        </div>
+
+        <div class="empty-sub">
+          No matching hostel residents were found with the selected filters. Try adjusting your search or assign a new student to a hostel bed.
+        </div>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

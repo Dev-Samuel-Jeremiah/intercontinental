@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My wellbeing{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student</div>
+  <h1 class="fin-title">My <em>wellbeing</em></h1>
+  <p class="fin-sub">Your merits this term, your teams, help when you need it, and tips from the school.</p>
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Merit points this term</small><b>{{ pts.merits }}</b></div>
+  <div class="fin-stat"><small>Demerits this term</small><b>{{ pts.demerits }}</b></div>
+</div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <h3 style="margin:0 0 .6rem">Talk to a counsellor</h3>
+      {% if asked %}<p>You have asked to see a counsellor. They will find a quiet time to see you soon.</p>{% else %}
+      <p class="hint">Only the school counsellors will see this. If you are in danger right now, tell any teacher straight away.</p>
+      <div><label>It's about</label><select name="reason">{% for k, v in reasons %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+      <div><label>Anything you want to say first (optional)</label><input name="text" maxlength="255"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Ask to talk</button>{% endif %}
+      <p class="hint" style="margin:.6rem 0 0">Being bullied? You can also <a href="{% url 'studentlife:report' %}">report it anonymously</a>.</p>
+    </form>
+    {% if teams or bests %}<div class="panel"><div class="panel-h"><h3>Sport</h3></div><div class="panel-b">
+      {% for m in teams %}<p style="margin:.2rem 0"><b>{{ m.team.name }}</b>{% if m.position %} · {{ m.position }}{% endif %}{% if m.captain %} <span class="chip gold">Captain</span>{% endif %}</p>{% endfor %}
+      {% for label, best in bests.items %}<p class="hint" style="margin:.15rem 0">{{ label }}: <b>{{ best.0.value|floatformat:"-2" }}</b> ({{ best.0.date|date:"j M Y" }})</p>{% endfor %}
+    </div></div>{% endif %}
+  </div>
+  <div class="panel"><div class="panel-h"><h3>Help and tips</h3></div><div class="panel-b">
+    {% for r in resources %}<details style="padding:.4rem 0;border-bottom:1px solid var(--rim)"><summary><b>{{ r.title }}</b></summary><p style="font-size:.9rem">{{ r.body|linebreaksbr }}</p>{% if r.contact %}<p class="hint">{{ r.contact }}</p>{% endif %}{% if r.link %}<p><a href="{{ r.link }}" target="_blank" rel="noopener">Read more</a></p>{% endif %}</details>
+    {% empty %}<p class="empty">Nothing here yet.</p>{% endfor %}
+  </div></div>
+</div>
+{% endblock %}

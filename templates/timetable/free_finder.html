@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Free period finder{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .pick{display:flex;flex-wrap:wrap;gap:.4rem;max-height:220px;overflow:auto;padding:.2rem}
+  .pick label{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;border:1px solid var(--rim2);border-radius:99px;font-size:.8rem;color:var(--slate2);cursor:pointer;margin:0}
+  .pick input{width:auto;accent-color:var(--champagne)}
+  .pick label:has(input:checked){border-color:var(--champagne-border);color:var(--champagne-lt);background:var(--champagne-dim)}
+  .fg{width:100%;border-collapse:separate;border-spacing:4px;font-size:.8rem}
+  .fg th{font-size:.66rem;letter-spacing:1px;text-transform:uppercase;color:var(--slate);padding:.4rem;font-weight:700}
+  .fg td{border-radius:10px;padding:.55rem;text-align:center;vertical-align:middle;min-width:90px}
+  .fg td.pt{text-align:left;color:var(--white);font-weight:600;min-width:110px}
+  .fg td.free{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);font-weight:700}
+  .fg td.busy{background:rgba(255,255,255,.03);border:1px solid var(--rim);color:var(--slate);font-size:.72rem;text-align:left}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Timetable</div>
+  <h1 class="fin-title">Free period <em>finder</em></h1>
+  <p class="fin-sub">Pick the teachers who need to meet (and a room if you need one). Green periods are when all of them are free.</p>
+</div></div>
+{% if not tt %}
+<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>There is no published timetable yet.</p></div></div>
+{% else %}
+<form method="get" class="panel"><div class="panel-b fin-form">
+  <div><label>Teachers</label><div class="pick">{% for t in teachers %}<label><input type="checkbox" name="t" value="{{ t.id }}" {% if t.id in chosen_ids %}checked{% endif %}> {{ t.full_name }}</label>{% endfor %}</div></div>
+  <div class="row2">
+    <div><label>Room <span class="hint">(optional)</span></label><select name="room"><option value="">No room needed</option>{% for r in rooms %}<option value="{{ r.id }}" {% if room and room.id == r.id %}selected{% endif %}>{{ r.name }}</option>{% endfor %}</select></div>
+    <div><label>On a date <span class="hint">(optional — counts one-off room bookings)</span></label><input type="date" name="date" value="{{ on_date|date:'Y-m-d' }}"></div>
+  </div>
+  <div><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-search"></i> Find free periods</button></div>
+</div></form>
+{% if result %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-grid-3x3-gap"></i> {{ result.free_count }} free period{{ result.free_count|pluralize }}</h3>
+  <span class="hint">{% for t in chosen %}{{ t.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if room %}{% if chosen %} · {% endif %}{{ room.name }}{% endif %}{% if on_date %} · {{ on_date|date:"l j M" }}{% endif %}</span></div>
+  <div class="panel-b" style="overflow-x:auto">
+  {% if result.days %}
+  <table class="fg"><thead><tr><th></th>{% for c, l in result.days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
+    {% for r in result.rows %}<tr><td class="pt">{{ r.period.name }}<div class="hint">{{ r.period.start_time|time:"H:i" }}–{{ r.period.end_time|time:"H:i" }}</div></td>
+      {% for c in r.cells %}{% if c.free %}<td class="free"><i class="bi bi-check2"></i> Free</td>{% else %}<td class="busy">{% for why in c.reasons %}<div>{{ why }}</div>{% endfor %}</td>{% endif %}{% endfor %}</tr>{% endfor %}
+  </tbody></table>
+  {% else %}<div class="empty"><p>The school is closed that day.</p></div>{% endif %}
+  </div></div>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Consent forms{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Consent <em>forms</em></h1>
+  <p class="fin-sub">Trips and activities that need a parent's permission. Parents sign on the portal by typing their name; you see who has replied.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-plus-circle"></i> New consent form</h3>
+    <div><label>Title</label><input name="title" required maxlength="160" placeholder="e.g. JSS 2 excursion to the National Museum, Jos"></div>
+    <div><label>Details</label><textarea name="details" rows="5" required placeholder="Date and time, place, transport, supervision, what to bring"></textarea></div>
+    <div class="row2"><div><label>Reply by</label><input type="date" name="deadline" required></div><div><label>Cost (₦)</label><input name="cost" value="0" inputmode="decimal"></div></div>
+    <div><label>Classes <span class="hint">none ticked = whole school</span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:.3rem .9rem">{% for c in classes %}<label style="display:flex;gap:.3rem;align-items:center;margin:0"><input type="checkbox" name="classes" value="{{ c.pk }}" style="width:auto"> {{ c.name }}</label>{% endfor %}</div></div>
+    {% if events %}<div><label>Linked event</label><select name="event"><option value="">—</option>{% for e in events %}<option value="{{ e.pk }}">{{ e.start_date|date:"j M" }} — {{ e.title }}</option>{% endfor %}</select></div>{% endif %}
+    <div class="row2"><div><label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="notify" value="1" style="width:auto" checked> Tell parents now</label></div>
+      <div><select name="channel"><option value="BOTH">SMS and email</option><option value="EMAIL">Email only</option><option value="SMS">SMS only</option></select></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Create</button>
+  </form>
+  <div class="panel"><div class="panel-b">
+    <table class="tbl" data-no-export><thead><tr><th>Form</th><th>Reply by</th><th>Yes</th><th>No</th><th>Waiting</th></tr></thead><tbody>
+    {% for f in items %}<tr><td class="name"><a href="{% url 'communications:consent_detail' f.pk %}">{{ f.title }}</a><br><small class="hint">{% for c in f.classes.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}Whole school{% endfor %}</small></td>
+      <td>{{ f.deadline|date:"j M Y" }}{% if f.closed or f.deadline < today %} <span class="chip">Closed</span>{% endif %}</td>
+      <td>{{ f.summary.yes }}</td><td>{{ f.summary.no }}</td><td>{{ f.summary.waiting }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="empty">No consent forms yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Observation — {{ obs.teacher.full_name }}{% endblock %}
+{% block content %}
+<style>
+  .sbar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;width:120px}
+  .sbar i{display:block;height:100%;border-radius:99px;background:var(--champagne)}
+  .tr{display:flex;gap:.3rem;align-items:flex-end;height:70px}
+  .tr span{flex:1;max-width:28px;border-radius:5px 5px 0 0;background:var(--champagne-dim);border:1px solid var(--champagne-border)}
+  .tr span.me{background:var(--champagne)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Lesson observation · {{ obs.date|date:"j F Y" }}</div>
+  <h1 class="fin-title">{{ obs.teacher.full_name }} — <em>{{ obs.average|default:"—" }}/4</em></h1>
+  <p class="fin-sub">{{ obs.subject.name|default:"" }}{% if obs.school_class %} · {{ obs.school_class.name }}{% endif %}{% if obs.topic %} · {{ obs.topic }}{% endif %} · observed by {{ obs.observer.full_name|default:"an administrator" }}</p>
+</div><div style="display:flex;gap:.4rem">
+  {% if may_manage and not obs.shared %}<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="share"><i class="bi bi-send"></i> Share with teacher</button></form>{% endif %}
+  <button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
+  <div class="panel"><table class="tbl"><thead><tr><th>Criterion</th><th>Score</th><th>Comment</th></tr></thead><tbody>
+    {% for s in obs.scores %}<tr><td class="name">{{ s.criterion }}</td>
+      <td style="white-space:nowrap"><div style="display:flex;gap:.5rem;align-items:center"><div class="sbar"><i style="width:{% widthratio s.score 4 100 %}%"></i></div><b>{{ s.score }}</b></div>
+        <span class="hint">{% for k, v in scale.items %}{% if k == s.score %}{{ v }}{% endif %}{% endfor %}</span></td>
+      <td class="hint">{{ s.comment }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  <div>
+    {% if obs.strengths %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-star"></i> Strengths</h3></div><div class="panel-b">{{ obs.strengths|linebreaksbr }}</div></div>{% endif %}
+    {% if obs.improvements %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-arrow-up-right"></i> To improve</h3></div><div class="panel-b">{{ obs.improvements|linebreaksbr }}</div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-chat-left-text"></i> Teacher's response</h3></div><div class="panel-b">
+      {% if obs.acknowledged_at %}<p style="margin-top:0">{{ obs.teacher_response|default:"Acknowledged."|linebreaksbr }}</p><span class="hint">{{ obs.acknowledged_at|date:"j M Y, H:i" }}</span>
+      {% elif is_teacher %}<form method="post" class="fin-form">{% csrf_token %}<textarea name="response" rows="4" placeholder="Your comments (optional)"></textarea><button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="acknowledge">Acknowledge</button></form>
+      {% elif obs.shared %}<span class="hint">Shared {{ obs.shared_at|date:"j M" }} — waiting for the teacher.</span>{% else %}<span class="hint">Not shared with the teacher yet.</span>{% endif %}
+    </div></div>
+    {% if trend|length > 1 %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-graph-up"></i> Over time</h3></div><div class="panel-b"><div class="tr">
+      {% for d, p in trend %}<span class="{% if d == obs.date %}me{% endif %}" style="height:{{ p }}%" title="{{ d|date:'j M Y' }}: {{ p }}%"></span>{% endfor %}</div></div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

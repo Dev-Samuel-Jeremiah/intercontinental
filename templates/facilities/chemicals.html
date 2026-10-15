@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Laboratory chemicals{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Stores</div>
+  <h1 class="fin-title"><em>Laboratory chemicals</em></h1>
+  <p class="fin-sub">Every reagent with its hazards, where it is kept, how much is left and when it expires. Teachers record what a practical used; the store keeper records deliveries and safe disposal.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+{% if expiring %}<div class="panel" style="border-color:var(--red-border);margin-bottom:1.2rem"><div class="panel-h"><h3>Expired or expiring within 60 days</h3></div><div class="panel-b">{% for c in expiring %}<p style="margin:.15rem 0">{{ c.name }} — {% if c.expires_on < today %}<span class="chip red">expired {{ c.expires_on|date:"j M Y" }}</span>{% else %}{{ c.expires_on|date:"j M Y" }}{% endif %}</p>{% endfor %}</div></div>{% endif %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+      {% for c in rows %}<tr><td class="name">{{ c.name }}{% if c.formula %} <small class="hint">{{ c.formula }}</small>{% endif %}<br>
+        {% for h in c.hazard_labels %}<span class="chip red" style="font-size:.7rem">{{ h }}</span> {% endfor %}
+        <small class="hint">{{ c.space|default:"" }} {{ c.storage }}{% if c.cas_number %} · CAS {{ c.cas_number }}{% endif %}{% if c.first_aid %} · First aid: {{ c.first_aid }}{% endif %}</small>{% if c.sds %} <a class="hint" href="{% url 'facilities:sds_file' c.pk %}">Safety sheet</a>{% endif %}</td>
+        <td class="num">{% if c.reorder_level and c.quantity <= c.reorder_level %}<span class="chip gold">{{ c.quantity|floatformat:"-2" }} {{ c.unit }}</span>{% else %}{{ c.quantity|floatformat:"-2" }} {{ c.unit }}{% endif %}</td>
+        <td><form method="post" class="fin-form" style="display:flex;gap:.2rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ c.pk }}">
+          {% if store %}<select name="kind" style="width:auto"><option value="USE">Used</option><option value="IN">Received</option><option value="DISP">Disposed</option></select>{% endif %}
+          <input name="quantity" placeholder="{{ c.unit }}" inputmode="decimal" style="width:70px" required><input name="purpose" placeholder="Practical / class" style="width:120px"><button class="fin-btn fin-btn-sm" type="submit">{% if store %}Record{% else %}Used{% endif %}</button></form></td></tr>
+      {% empty %}<tr><td class="empty">No chemicals recorded.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent use</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>{% for u in uses %}<tr><td>{{ u.date|date:"j M" }}</td><td class="name">{{ u.chemical.name }}</td><td>{{ u.get_kind_display }} {{ u.quantity|floatformat:"-2" }} {{ u.chemical.unit }}</td><td class="hint">{{ u.purpose }} · {{ u.by.get_full_name|default:u.by.username }}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+  {% if store %}<form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a chemical</h3>
+    <div class="row2"><div><label>Name</label><input name="name" required maxlength="120"></div><div><label>Formula</label><input name="formula" maxlength="60"></div></div>
+    <div class="row2"><div><label>Quantity</label><input name="quantity" inputmode="decimal"></div><div><label>Unit</label><input name="unit" value="g" maxlength="10"></div></div>
+    <div class="row2"><div><label>Reorder at</label><input name="reorder_level" inputmode="decimal"></div><div><label>Expires</label><input type="date" name="expires_on"></div></div>
+    <div><label>Hazards</label>{% for k, v in hazards %}<label class="pill"><input type="checkbox" name="hazards" value="{{ k }}"> {{ v }}</label>{% endfor %}</div>
+    <div class="row2"><div><label>Lab</label><select name="space"><option value="">—</option>{% for s in spaces %}<option value="{{ s.pk }}">{{ s }}</option>{% endfor %}</select></div><div><label>Kept in</label><input name="storage" maxlength="160" placeholder="Acid cabinet"></div></div>
+    <div class="row2"><div><label>CAS number</label><input name="cas_number" maxlength="20"></div><div><label>Supplier</label><select name="supplier"><option value="">—</option>{% for v in vendors %}<option value="{{ v.pk }}">{{ v }}</option>{% endfor %}</select></div></div>
+    <div><label>First aid</label><input name="first_aid" maxlength="255" placeholder="e.g. Rinse with water for 15 minutes"></div>
+    <div><label>Safety data sheet (PDF)</label><input type="file" name="sds"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

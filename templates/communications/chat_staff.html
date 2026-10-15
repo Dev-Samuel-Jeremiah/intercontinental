@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Parent chat{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Parent <em>chat</em></h1>
+  <p class="fin-sub">Messages from parents of the children you teach. Office hours: {{ hours }} — you are only emailed about new messages during these hours.</p>
+</div>{% if admin %}<a class="fin-btn" href="{% url 'communications:chat_moderate' %}"><i class="bi bi-shield-check"></i> Moderation</a>{% endif %}</div>
+{% include "communications/_engage_nav.html" %}
+<div class="panel"><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>
+  {% for c in convs %}<tr><td class="name"><a href="{% url 'communications:chat_thread' c.pk %}">{{ c.subject }}</a>{% if c.unread %} <span class="chip gold">{{ c.unread }} new</span>{% endif %}{% if c.closed %} <span class="chip">Closed</span>{% endif %}</td>
+    <td>{{ c.student.full_name }}</td><td>{{ c.parent.get_full_name|default:c.student.parent_name }}</td><td>{{ c.last_at|date:"j M H:i" }}</td></tr>
+  {% empty %}<tr><td class="empty">No conversations yet.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

@@ -1,0 +1,711 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Student Subject Manager{% endblock %}
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.ssm-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 100%;
+  padding: 2rem 2.5rem 4rem;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ── HERO HEADER ── */
+.hero {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+  padding: 2rem 2.5rem;
+}
+.hero::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--champagne) 35%, var(--champagne-lt) 55%, transparent 100%);
+}
+.hero-canvas {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.hero-canvas svg { width: 100%; height: 100%; }
+
+.hero-left { position: relative; z-index: 1; }
+.hero-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .5rem; margin-bottom: .55rem;
+}
+.hero-eyebrow::before { content: ""; width: 16px; height: 1px; background: var(--champagne); }
+.hero-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 500; line-height: 1.1; color: var(--white);
+  margin-bottom: .45rem;
+}
+.hero-title em { font-style: italic; color: var(--champagne); }
+.hero-sub { font-size: .83rem; color: var(--slate); max-width: 440px; line-height: 1.5; }
+
+.hero-stats {
+  position: relative; z-index: 1;
+  display: flex; gap: .75rem;
+}
+.stat-bub {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 12px; padding: .85rem 1.25rem;
+  text-align: center; min-width: 80px;
+}
+.stat-bub .n {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.8rem; font-weight: 500; color: var(--white);
+  line-height: 1; display: block; margin-bottom: .15rem;
+}
+.stat-bub .l {
+  font-size: .62rem; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--slate);
+}
+
+/* ── MESSAGES ── */
+.msg-list { margin-bottom: 1rem; }
+.msg {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .75rem 1rem; border-radius: var(--radius-sm);
+  font-size: .82rem; border: 1px solid; margin-bottom: .4rem;
+}
+.msg i { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+.msg-success { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+.msg-error   { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red); }
+.msg-info    { background: var(--blue-dim);  border-color: rgba(96,168,232,.28);color: var(--blue); }
+
+/* ── TWO-COLUMN LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+@media(max-width:900px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── PANEL BASE ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  overflow: hidden; position: relative;
+}
+.panel::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel-head {
+  padding: 1rem 1.3rem .8rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; gap: .65rem;
+}
+.panel-head-icon {
+  width: 28px; height: 28px; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+.phi-gold   { background: var(--champagne-dim); color: var(--champagne); }
+.phi-blue   { background: var(--blue-dim);      color: var(--blue); }
+.phi-purple { background: var(--purple-dim);    color: var(--purple); }
+.panel-head h3 {
+  font-size: .85rem; font-weight: 600; color: var(--white); margin: 0;
+}
+
+/* ── LEFT: STUDENT FINDER ── */
+.finder-filters { padding: 1rem 1.1rem; border-bottom: 1px solid var(--rim); display: flex; flex-direction: column; gap: .7rem; }
+.field-label {
+  font-size: .67rem; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate); margin-bottom: .35rem; display: block;
+}
+.styled-select, .styled-input {
+  width: 100%;
+  padding: .65rem .9rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2); border-radius: var(--radius-xs);
+  font-size: .82rem; color: var(--white);
+  font-family: "Outfit", inherit; outline: none;
+  transition: border-color .17s, box-shadow .17s;
+}
+.styled-select { appearance: none; cursor: pointer; }
+.styled-select.active { border-color: rgba(244,210,31,.4); }
+.styled-select:focus, .styled-input:focus {
+  border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.styled-select option, .styled-input option { background: #172f5c; color: var(--white); }
+.styled-input::placeholder { color: rgba(255,255,255,.2); }
+
+/* Student scrollable list */
+.student-scroll {
+  max-height: calc(100vh - 360px); overflow-y: auto;
+}
+.student-scroll::-webkit-scrollbar { width: 3px; }
+.student-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+
+.student-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 1.1rem;
+  border-bottom: 1px solid var(--rim);
+  text-decoration: none;
+  transition: background .13s;
+  position: relative;
+}
+.student-row:last-child { border-bottom: none; }
+.student-row:hover { background: rgba(255,255,255,.025); }
+.student-row.selected {
+  background: var(--champagne-dim);
+  border-left: 2px solid var(--champagne);
+}
+
+.stu-avatar {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 700;
+}
+.stu-info { flex: 1; min-width: 0; }
+.stu-name {
+  font-size: .81rem; font-weight: 600; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.stu-adm { font-size: .68rem; color: var(--slate); margin-top: .1rem; }
+
+.stu-badge {
+  flex-shrink: 0; font-size: .63rem; font-weight: 700;
+  padding: .2rem .6rem; border-radius: 50px;
+}
+.badge-ok   { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-border); }
+.badge-cust { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+
+.finder-empty {
+  padding: 2rem 1.1rem; text-align: center;
+  font-size: .8rem; color: var(--slate);
+}
+
+/* ── RIGHT: SUBJECT MANAGER ── */
+/* Empty state */
+.rp-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .85rem; padding: 4rem 2rem; text-align: center;
+}
+.rp-empty-icon {
+  width: 58px; height: 58px; border-radius: 15px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: var(--slate);
+}
+.rp-empty-title { font-size: .95rem; font-weight: 600; color: var(--slate2); }
+.rp-empty-sub { font-size: .78rem; color: var(--slate); }
+
+/* Student detail header */
+.student-dhead {
+  padding: 1.1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; gap: 1rem;
+}
+.sdh-avatar {
+  width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--purple), var(--blue));
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1rem; font-weight: 600; letter-spacing: .5px;
+}
+.sdh-name {
+  font-size: .95rem; font-weight: 600; color: var(--white); margin-bottom: .35rem;
+}
+.sdh-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.sdh-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: var(--surface3); border: 1px solid var(--rim);
+  border-radius: 50px; padding: .2rem .7rem;
+  font-size: .68rem; font-weight: 500; color: var(--slate2);
+}
+.sdh-chip i { font-size: .75rem; color: var(--champagne); }
+
+/* Status info bar */
+.info-bar {
+  padding: .75rem 1.4rem;
+  background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .6rem;
+}
+.status-all {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--green-dim); border: 1px solid var(--green-border);
+  border-radius: 50px; padding: .3rem .9rem;
+  font-size: .72rem; font-weight: 700; color: var(--green);
+}
+.status-custom {
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: var(--amber-dim); border: 1px solid var(--amber-border);
+  border-radius: 50px; padding: .3rem .9rem;
+  font-size: .72rem; font-weight: 700; color: var(--amber);
+}
+
+/* Subject grid header */
+.subj-grid-head {
+  padding: .9rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .6rem;
+}
+.subj-grid-title {
+  display: flex; align-items: center; gap: .6rem;
+  font-size: .85rem; font-weight: 600; color: var(--white);
+}
+.subj-count {
+  background: var(--surface3); color: var(--slate2); border: 1px solid var(--rim);
+  border-radius: 50px; padding: .15rem .65rem;
+  font-size: .67rem; font-weight: 700;
+}
+.quick-acts { display: flex; gap: .45rem; }
+.btn-ghost-sm {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .38rem .8rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: var(--radius-xs);
+  font-size: .72rem; font-weight: 600; color: var(--slate2);
+  cursor: pointer; font-family: "Outfit", inherit;
+  transition: all .14s;
+}
+.btn-ghost-sm:hover { background: var(--surface3); border-color: var(--rim3); color: var(--white); }
+
+/* Subject cards grid */
+.subj-grid {
+  padding: 1.1rem 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: .75rem;
+}
+
+.sc {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rim2);
+  padding: 1rem;
+  cursor: pointer; position: relative;
+  background: var(--surface2);
+  user-select: none;
+  transition: border-color .15s, background .15s, transform .12s;
+}
+.sc:hover { transform: translateY(-1px); }
+.sc input[type=checkbox] { display: none; }
+
+.sc-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; margin-bottom: .7rem;
+  transition: background .15s;
+}
+.sc-name {
+  font-size: .82rem; font-weight: 600; margin-bottom: .18rem;
+  color: var(--slate2); transition: color .15s;
+}
+.sc-code { font-size: .69rem; color: var(--slate); }
+.sc-tag {
+  position: absolute; top: .6rem; right: .6rem;
+  font-size: .62rem; font-weight: 700;
+  padding: .18rem .55rem; border-radius: 50px;
+  transition: all .15s;
+}
+
+/* OFFERING state */
+.sc.on {
+  border-color: var(--green-border);
+  background: var(--green-dim);
+}
+.sc.on .sc-icon { background: rgba(94,203,142,.18); color: var(--green); }
+.sc.on .sc-name { color: var(--green); }
+.sc.on .sc-tag  { background: rgba(94,203,142,.2); color: var(--green); }
+
+/* NOT OFFERING state */
+.sc.off {
+  border-color: var(--red-border);
+  background: var(--red-dim);
+}
+.sc.off .sc-icon { background: rgba(232,112,112,.15); color: var(--red); }
+.sc.off .sc-name { color: var(--red); }
+.sc.off .sc-tag  { background: rgba(232,112,112,.15); color: var(--red); }
+
+/* No subjects placeholder */
+.subj-none {
+  grid-column: 1 / -1;
+  text-align: center; padding: 2.5rem;
+  font-size: .82rem; color: var(--slate);
+}
+.subj-none a { color: var(--champagne); font-weight: 600; text-decoration: none; }
+.subj-none a:hover { color: var(--champagne-lt); }
+
+/* ── ACTION BAR ── */
+.action-bar {
+  position: sticky; bottom: 0; z-index: 50;
+  background: var(--surface);
+  border-top: 1px solid var(--rim2);
+  padding: .9rem 1.4rem;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem;
+  box-shadow: 0 -6px 20px rgba(0,0,0,.25);
+}
+.abar-info {
+  font-size: .8rem; color: var(--slate);
+  display: flex; align-items: center; gap: .5rem;
+}
+.abar-info strong { color: var(--white); }
+.abar-warn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .72rem; font-weight: 600; color: var(--amber);
+}
+.abar-btns { display: flex; gap: .5rem; }
+
+.btn-discard {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .62rem 1rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  font-size: .8rem; font-weight: 600; font-family: "Outfit", inherit;
+  color: var(--slate2); text-decoration: none;
+  transition: all .14s; cursor: pointer;
+}
+.btn-discard:hover { border-color: var(--red-border); color: var(--red); background: var(--red-dim); }
+
+.btn-save {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .62rem 1.2rem;
+  background: linear-gradient(135deg, var(--champagne) 0%, #d1ad00 100%);
+  border: none; border-radius: var(--radius-sm);
+  font-size: .8rem; font-weight: 700; font-family: "Outfit", inherit;
+  color: #0a1f44; cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 4px 16px rgba(244,210,31,.22);
+  transition: transform .13s, box-shadow .13s;
+}
+.btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(244,210,31,.3); }
+.btn-save:active { transform: translateY(0); }
+
+.btn-restore {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .38rem .85rem;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: var(--radius-xs);
+  font-size: .73rem; font-weight: 600; font-family: "Outfit", inherit;
+  color: var(--slate2); cursor: pointer;
+  transition: all .14s;
+}
+.btn-restore:hover { border-color: var(--green-border); color: var(--green); background: var(--green-dim); }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media(max-width:600px) {
+  .ssm-wrap { padding: 1.25rem 1rem 3rem; }
+  .subj-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+</style>
+
+<div class="ssm-wrap">
+
+  <!-- ── HERO ── -->
+  <div class="hero">
+    <div class="hero-canvas" aria-hidden="true">
+      <svg viewBox="0 0 1200 140" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hg1" cx="20%" cy="50%" r="55%">
+            <stop offset="0%" stop-color="#f4d21f" stop-opacity=".1"/>
+            <stop offset="100%" stop-color="#f4d21f" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="hg2" cx="85%" cy="50%" r="45%">
+            <stop offset="0%" stop-color="#a890f0" stop-opacity=".08"/>
+            <stop offset="100%" stop-color="#a890f0" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <rect width="1200" height="140" fill="url(#hg1)"/>
+        <rect width="1200" height="140" fill="url(#hg2)"/>
+        <circle cx="980" cy="70" r="100" fill="none" stroke="rgba(244,210,31,.05)" stroke-width="1"/>
+        <circle cx="980" cy="70" r="60" fill="none" stroke="rgba(244,210,31,.06)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="hero-left">
+      <div class="hero-eyebrow">Academic Management</div>
+      <h1 class="hero-title">Student <em>Subject</em> Manager</h1>
+      <p class="hero-sub">Mark students as offering or not offering individual subjects. Changes update their results immediately.</p>
+    </div>
+    {% if selected_student and class_subjects %}
+    <div class="hero-stats">
+      <div class="stat-bub">
+        <span class="n">{{ class_subjects|length }}</span>
+        <span class="l">Subjects</span>
+      </div>
+      <div class="stat-bub">
+        <span class="n">{{ offering_ids|length }}</span>
+        <span class="l">Offering</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── MESSAGES ── -->
+  {% if messages %}
+  <div class="msg-list">
+    {% for message in messages %}
+    <div class="msg {% if message.tags == 'success' %}msg-success{% elif message.tags == 'error' %}msg-error{% else %}msg-info{% endif %}">
+      <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'error' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ── MAIN LAYOUT ── -->
+  <div class="layout">
+
+    <!-- LEFT — Student Finder -->
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-head-icon phi-purple"><i class="bi bi-people-fill"></i></div>
+        <h3>Find Student</h3>
+      </div>
+
+      <form method="GET" class="finder-filters">
+        <div>
+          <label class="field-label" for="classSelect">Class</label>
+          <select class="styled-select {% if sel_class %}active{% endif %}"
+                  name="class" id="classSelect" onchange="this.form.submit()">
+            <option value="">— Select Class —</option>
+            {% for cls in all_classes %}
+            <option value="{{ cls.id }}" {% if sel_class == cls.id|stringformat:"s" %}selected{% endif %}>
+              {{ cls.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        {% if selected_class %}
+        <div>
+          <label class="field-label" for="searchInput">Search</label>
+          <input class="styled-input" type="text" name="q" id="searchInput"
+                 value="{{ search_q }}" placeholder="Name or admission no." autocomplete="off">
+          <input type="hidden" name="class" value="{{ sel_class }}">
+        </div>
+        {% endif %}
+      </form>
+
+      <div class="student-scroll">
+        {% if selected_class %}
+          {% if students_qs %}
+            {% for stu in students_qs %}
+            <a href="?class={{ sel_class }}&student={{ stu.id }}"
+               class="student-row {% if sel_student == stu.id|stringformat:'s' %}selected{% endif %}">
+              <div class="stu-avatar">{{ stu.full_name|slice:":2"|upper }}</div>
+              <div class="stu-info">
+                <div class="stu-name">{{ stu.full_name }}</div>
+                <div class="stu-adm">{{ stu.admission_number }}</div>
+              </div>
+              {% if stu.student_subjects.count > 0 %}
+                <span class="stu-badge badge-cust">Custom</span>
+              {% else %}
+                <span class="stu-badge badge-ok">All</span>
+              {% endif %}
+            </a>
+            {% endfor %}
+          {% else %}
+            <div class="finder-empty">
+              No students{% if search_q %} matching "{{ search_q }}"{% endif %}.
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="finder-empty">Select a class to list students.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- RIGHT — Subject Manager -->
+    <div class="panel">
+      {% if not selected_student %}
+      <div class="rp-empty">
+        <div class="rp-empty-icon"><i class="bi bi-arrow-left-square"></i></div>
+        <div class="rp-empty-title">No student selected</div>
+        <div class="rp-empty-sub">Choose a class, then click a student to manage their subjects.</div>
+      </div>
+
+      {% else %}
+      <!-- Student header -->
+      <div class="student-dhead">
+        <div class="sdh-avatar">{{ selected_student.full_name|slice:":2"|upper }}</div>
+        <div>
+          <div class="sdh-name">{{ selected_student.full_name }}</div>
+          <div class="sdh-chips">
+            <span class="sdh-chip"><i class="bi bi-building"></i> {{ selected_student.class_assigned.name }}</span>
+            <span class="sdh-chip"><i class="bi bi-hash"></i> {{ selected_student.admission_number }}</span>
+            {% if selected_student.gender %}
+            <span class="sdh-chip"><i class="bi bi-person"></i> {{ selected_student.gender }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Status + Restore bar -->
+      <div class="info-bar">
+        {% if offering_ids|length == class_subjects|length %}
+          <span class="status-all">
+            <i class="bi bi-check-circle-fill"></i>
+            Offering all {{ class_subjects|length }} subjects
+          </span>
+        {% else %}
+          <span class="status-custom">
+            <i class="bi bi-dash-circle-fill"></i>
+            {{ offering_ids|length }} offering &middot; {{ class_subjects|length|add:"-"|add:offering_ids|length }} not offering
+          </span>
+        {% endif %}
+
+        <form method="POST" style="display:inline;">
+          {% csrf_token %}
+          <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+          {% for cs in class_subjects %}
+          <input type="hidden" name="offering_subjects" value="{{ cs.subject_id }}">
+          {% endfor %}
+          <button type="submit" class="btn-restore"
+                  onclick="return confirm('Restore all subjects for {{ selected_student.full_name }}?')">
+            <i class="bi bi-arrow-counterclockwise"></i> Restore All
+          </button>
+        </form>
+      </div>
+
+      <!-- Grid header -->
+      <div class="subj-grid-head">
+        <div class="subj-grid-title">
+          <i class="bi bi-book-fill" style="color:var(--blue);"></i>
+          Class Subjects
+          <span class="subj-count">{{ class_subjects|length }}</span>
+        </div>
+        <div class="quick-acts">
+          <button type="button" class="btn-ghost-sm" onclick="setAll(true)">
+            <i class="bi bi-check2-all"></i> All Offering
+          </button>
+          <button type="button" class="btn-ghost-sm" onclick="setAll(false)">
+            <i class="bi bi-dash-circle"></i> None
+          </button>
+        </div>
+      </div>
+
+      <!-- Subject cards + sticky save bar -->
+      <form method="POST" id="subjForm">
+        {% csrf_token %}
+        <input type="hidden" name="student_id" value="{{ selected_student.id }}">
+
+        <div class="subj-grid">
+          {% if class_subjects %}
+            {% for cs in class_subjects %}
+            {% if cs.subject_id in offering_ids %}
+            <div class="sc on" onclick="toggleCard(this)" data-id="{{ cs.subject_id }}">
+              <input type="checkbox" name="offering_subjects" value="{{ cs.subject_id }}" checked>
+              <div class="sc-icon"><i class="bi bi-check-circle-fill"></i></div>
+              <div class="sc-name">{{ cs.subject.name }}</div>
+              {% if cs.subject.code %}<div class="sc-code">{{ cs.subject.code }}</div>{% endif %}
+              <span class="sc-tag">Offering</span>
+            </div>
+            {% else %}
+            <div class="sc off" onclick="toggleCard(this)" data-id="{{ cs.subject_id }}">
+              <input type="checkbox" name="offering_subjects" value="{{ cs.subject_id }}">
+              <div class="sc-icon"><i class="bi bi-x-circle-fill"></i></div>
+              <div class="sc-name">{{ cs.subject.name }}</div>
+              {% if cs.subject.code %}<div class="sc-code">{{ cs.subject.code }}</div>{% endif %}
+              <span class="sc-tag">Not Offering</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+          {% else %}
+          <div class="subj-none">
+            No subjects assigned to {{ selected_student.class_assigned.name }} yet.
+            <a href="{% url 'users:assign_subjects' %}?class={{ selected_student.class_assigned.id }}">Assign subjects →</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Sticky action bar -->
+        <div class="action-bar">
+          <div class="abar-info">
+            <strong id="offeringCount">0</strong> of {{ class_subjects|length }} offering
+            <span class="abar-warn" id="warnNote" style="display:none;">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              Not-offering subjects will be marked ABS in results
+            </span>
+          </div>
+          <div class="abar-btns">
+            <a href="?class={{ sel_class }}&student={{ sel_student }}" class="btn-discard">
+              <i class="bi bi-x-lg"></i> Discard
+            </a>
+            <button type="submit" class="btn-save" onclick="return confirmSave()">
+              <i class="bi bi-floppy-fill"></i> Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleCard(card) {
+  event.preventDefault();
+  const cb   = card.querySelector('input[type=checkbox]');
+  const icon = card.querySelector('.sc-icon i');
+  const tag  = card.querySelector('.sc-tag');
+  cb.checked = !cb.checked;
+  const on = cb.checked;
+  card.classList.toggle('on',  on);
+  card.classList.toggle('off', !on);
+  if (icon) icon.className = on ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill';
+  if (tag)  tag.textContent = on ? 'Offering' : 'Not Offering';
+  updateCount();
+}
+
+function setAll(on) {
+  document.querySelectorAll('.sc').forEach(card => {
+    const cb   = card.querySelector('input[type=checkbox]');
+    const icon = card.querySelector('.sc-icon i');
+    const tag  = card.querySelector('.sc-tag');
+    cb.checked = on;
+    card.classList.toggle('on',  on);
+    card.classList.toggle('off', !on);
+    if (icon) icon.className = on ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill';
+    if (tag)  tag.textContent = on ? 'Offering' : 'Not Offering';
+  });
+  updateCount();
+}
+
+function updateCount() {
+  const total = document.querySelectorAll('.sc').length;
+  const on    = document.querySelectorAll('.sc.on').length;
+  const el    = document.getElementById('offeringCount');
+  const note  = document.getElementById('warnNote');
+  if (el)   el.textContent = on;
+  if (note) note.style.display = (on < total) ? 'inline-flex' : 'none';
+}
+
+function confirmSave() {
+  const total = document.querySelectorAll('.sc').length;
+  const off   = total - document.querySelectorAll('.sc.on').length;
+  if (off === 0) return confirm('Save? All subjects will be marked as offering.');
+  const names = Array.from(document.querySelectorAll('.sc.off .sc-name'))
+                     .map(e => e.textContent.trim()).join(', ');
+  return confirm(`Save changes?\n\n${off} subject(s) will be marked NOT OFFERING:\n${names}\n\nThese will appear as ABS in results.`);
+}
+
+updateCount();
+</script>
+{% endblock %}

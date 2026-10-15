@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ tt.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .tt{width:100%;border-collapse:collapse;font-size:.84rem}
+  .tt th,.tt td{border:1px solid var(--rim);padding:.5rem .6rem;vertical-align:top;text-align:left}
+  .tt th{color:var(--slate2);font-size:.7rem;letter-spacing:1px;text-transform:uppercase;background:var(--surface2,#172f5c)}
+  .pp{padding:.45rem .55rem;border-radius:10px;border:1px solid var(--rim2);margin-bottom:.35rem;background:rgba(255,255,255,.02)}
+  .pp b{display:block}
+  .pp details summary{list-style:none;cursor:pointer;font-size:.72rem;color:var(--slate)}
+  .pp form{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem}
+  .pp select,.pp input{padding:.3rem .4rem;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.74rem}
+  @media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}.tt th,.tt td{color:#000!important;background:#fff!important;border-color:#999!important}.noprint{display:none!important}@page{size:A4 landscape;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Exam timetable · {% if tt.published %}<span style="color:var(--green)">published</span>{% else %}draft{% endif %}</div>
+  <h1 class="fin-title">{{ tt.name }}</h1>
+  <p class="fin-sub">{{ tt.start_date|date:"j M" }} – {{ tt.end_date|date:"j M Y" }} · {{ count }} papers · {% if clashes %}<span style="color:var(--red)">{{ clashes|length }} clash{{ clashes|length|pluralize:"es" }}</span>{% else %}<span style="color:var(--green)">no clashes</span>{% endif %}</p>
+</div><form method="post" style="display:flex;gap:.4rem;flex-wrap:wrap">{% csrf_token %}
+  <button class="fin-btn fin-btn-sm{% if not tt.published %} fin-btn-gold{% endif %}" name="action" value="publish">{% if tt.published %}Unpublish{% else %}<i class="bi bi-send"></i> Publish to families{% endif %}</button>
+  <button class="fin-btn fin-btn-sm" name="action" value="make_all" onclick="return confirm('Create an unpublished CBT exam for every paper that has none?')"><i class="bi bi-pc-display"></i> Create CBT exams</button>
+  <button class="fin-btn fin-btn-sm" name="action" value="regenerate" onclick="return confirm('Rebuild the whole timetable? Manual moves are lost.')"><i class="bi bi-arrow-repeat"></i> Rebuild</button>
+  <button type="button" class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  <button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="delete" onclick="return confirm('Delete this timetable?')"><i class="bi bi-trash"></i></button>
+</form></div>
+{% include "cbt/_bank_msgs.html" %}
+{% for d, s, c, subs in clashes %}<div class="chip red" style="margin:0 .3rem .5rem 0">{{ d|date:"D j M" }} {{ s }} · {{ c }}: {{ subs|join:", " }}</div>{% endfor %}
+<div class="print panel"><div style="overflow-x:auto"><table class="tt"><thead><tr><th style="width:130px">Day</th><th>Morning · {{ tt.morning_start|time:"H:i" }}</th>{% if tt.afternoon %}<th>Afternoon · {{ tt.afternoon_start|time:"H:i" }}</th>{% endif %}</tr></thead><tbody>
+  {% for d in days %}<tr><td><b>{{ d.date|date:"l" }}</b><br>{{ d.date|date:"j M Y" }}</td>
+    <td>{% for e in d.AM %}{% include "cbt/_tt_entry.html" %}{% empty %}<span class="hint">—</span>{% endfor %}</td>
+    {% if tt.afternoon %}<td>{% for e in d.PM %}{% include "cbt/_tt_entry.html" %}{% empty %}<span class="hint">—</span>{% endfor %}</td>{% endif %}
+  </tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

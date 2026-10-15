@@ -1,0 +1,149 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Withholding tax &amp; VAT{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .tax-month{display:flex;gap:.6rem;align-items:flex-end;flex-wrap:wrap}
+  .tax-month input{padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .tax-auth{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1rem}
+  .tax-rates td input[type=number]{width:78px;padding:.38rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem;text-align:right}
+  .tax-rates td input[type=text]{width:100%;padding:.38rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem}
+  .tax-note{padding:.85rem 1rem;border-radius:12px;border:1px solid var(--rim2);background:rgba(244,210,31,.06);font-size:.8rem;color:var(--slate2);line-height:1.55}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Withholding tax &amp; <em>VAT</em></h1>
+    <p class="fin-sub">Tax withheld from suppliers, what is still owed to each authority, and the schedule to file with each payment.</p>
+  </div>
+  <form method="get" class="tax-month">
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">Month</label>
+      <input type="month" name="month" value="{{ first|date:'Y-m' }}" onchange="this.form.submit()"></div>
+    <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-receipt-cutoff"></i> Expenses</a>
+  </form>
+</div>
+
+<div class="fin-stats">
+  {% for p in position %}
+  <div class="fin-stat"><small>Owed to {{ p.label }}</small><b style="color:{% if p.owed %}var(--amber){% else %}var(--green){% endif %}">₦{{ p.owed|floatformat:"-2"|intcomma }}</b>
+    <span class="hint">{% if p.owed %}{{ p.owed_count }} deduction{{ p.owed_count|pluralize }} not yet paid over{% else %}nothing outstanding{% endif %}</span></div>
+  {% endfor %}
+  <div class="fin-stat"><small>VAT paid to suppliers</small><b>₦{{ vat_paid|floatformat:"-2"|intcomma }}</b><span class="hint">{{ first|date:"F Y" }}</span></div>
+</div>
+
+<div class="tax-auth">
+  {% for g in groups %}
+  <div class="panel">
+    <div class="panel-h">
+      <h3><i class="bi bi-building{% if g.key == 'STATE' %}-check{% endif %}"></i> {{ g.label }}</h3>
+      <span class="hint">{{ first|date:"F Y" }}</span>
+    </div>
+    <div class="panel-b" style="display:flex;gap:1.5rem;flex-wrap:wrap">
+      <div><div class="hint">Withheld</div><div class="money" style="font-size:1.15rem">₦{{ g.total|floatformat:"-2"|intcomma }}</div></div>
+      <div><div class="hint">Waiting to be paid over</div><div class="money" style="font-size:1.15rem;color:{% if g.waiting %}var(--amber){% else %}var(--green){% endif %}">₦{{ g.waiting|floatformat:"-2"|intcomma }}</div></div>
+      <div style="margin-left:auto;align-self:center">
+        <a class="fin-btn fin-btn-sm" href="{% url 'finance:wht_schedule_csv' %}?month={{ first|date:'Y-m' }}&authority={{ g.key }}"><i class="bi bi-filetype-csv"></i> Schedule</a>
+      </div>
+    </div>
+    {% if g.waiting %}
+    <div class="panel-b" style="border-top:1px solid var(--rim)">
+      <form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}
+        <input type="hidden" name="action" value="remit"><input type="hidden" name="authority" value="{{ g.key }}">
+        <input type="hidden" name="month" value="{{ first|date:'Y-m' }}">
+        <div class="row2">
+          <div><label>Paid on</label><input type="date" name="paid_on" value="{{ today|date:'Y-m-d' }}"></div>
+          <div><label>Paid by</label><select name="method">{% for v, l in methods %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+        </div>
+        <div class="row2">
+          <div><label>Reference</label><input type="text" name="reference" maxlength="80" placeholder="Payment or receipt no."></div>
+          <div><label>Receipt</label><input type="file" name="receipt" accept=".pdf,.jpg,.jpeg,.png"></div>
+        </div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-send-check"></i> Record ₦{{ g.waiting|floatformat:"-2"|intcomma }} paid over</button>
+      </form>
+    </div>
+    {% endif %}
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Date</th><th>Supplier</th><th style="text-align:right">Gross</th><th style="text-align:right">WHT</th></tr></thead>
+        <tbody>
+          {% for e in g.rows %}
+          <tr>
+            <td style="white-space:nowrap">{{ e.spent_on|date:"j M" }}</td>
+            <td>{{ e.paid_to }}<br><span class="hint">{% if e.wht_rate %}{{ e.wht_rate.name }}{% else %}{{ e.category.name }}{% endif %}{% if e.vendor.tin %} · TIN {{ e.vendor.tin }}{% elif e.vendor %} · <span style="color:var(--amber)">no TIN</span>{% endif %}</span></td>
+            <td class="money" style="text-align:right">₦{{ e.amount|floatformat:"-2"|intcomma }}</td>
+            <td class="money" style="text-align:right">₦{{ e.wht_amount|floatformat:"-2"|intcomma }}<br><span class="hint">{{ e.wht_percent|floatformat:"-2" }}%{% if e.wht_remittance %} · <span style="color:var(--green)">paid over</span>{% endif %}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="empty"><i class="bi bi-check2-circle"></i><p>Nothing withheld for {{ g.label }} in {{ first|date:"F" }}.</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="fin-grid" style="margin-top:1rem">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-percent"></i> Rate table</h3></div>
+    <form method="post">{% csrf_token %}
+      <input type="hidden" name="action" value="save_rates"><input type="hidden" name="month" value="{{ first|date:'Y-m' }}">
+      <div style="overflow-x:auto">
+        <table class="tbl tax-rates">
+          <thead><tr><th>Transaction</th><th style="text-align:right">Company %</th><th style="text-align:right">Individual %</th><th>Use</th></tr></thead>
+          <tbody>
+            {% for r in rates %}
+            <tr{% if not r.is_active %} style="opacity:.55"{% endif %}>
+              <td>{{ r.name }}</td>
+              <td style="text-align:right"><input type="number" name="company_{{ r.id }}" value="{{ r.company_rate|floatformat:'-2' }}" min="0" max="100" step="0.01" required></td>
+              <td style="text-align:right"><input type="number" name="individual_{{ r.id }}" value="{{ r.individual_rate|floatformat:'-2' }}" min="0" max="100" step="0.01" required></td>
+              <td><input type="checkbox" name="active_{{ r.id }}" value="1"{% if r.is_active %} checked{% endif %}></td>
+            </tr>
+            {% endfor %}
+            <tr>
+              <td><input type="text" name="new_name" maxlength="120" placeholder="Add a transaction type"></td>
+              <td style="text-align:right"><input type="number" name="new_company" min="0" max="100" step="0.01" placeholder="%"></td>
+              <td style="text-align:right"><input type="number" name="new_individual" min="0" max="100" step="0.01" placeholder="%"></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="panel-b">
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save rates</button>
+        <div class="tax-note" style="margin-top:.9rem"><i class="bi bi-info-circle" style="color:var(--champagne-lt)"></i>
+          These are starting values, not tax advice. Rates and exemptions change — confirm the table with your tax adviser. Changing a rate never alters an expense already recorded.</div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-journal-check"></i> Paid over</h3></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Paid on</th><th>Authority</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+        <tbody>
+          {% for w in remittances %}
+          <tr>
+            <td style="white-space:nowrap">{{ w.paid_on|date:"j M Y" }}<br><span class="hint">for {{ w.period_start|date:"M Y" }}</span></td>
+            <td>{{ w.get_authority_display }}<br><span class="hint">{{ w.get_method_display }}{% if w.reference %} · {{ w.reference }}{% endif %}{% if w.receipt %} · <a href="{{ w.receipt.url }}" target="_blank" rel="noopener" style="color:var(--champagne-lt)">receipt</a>{% endif %}</span></td>
+            <td class="money" style="text-align:right">₦{{ w.amount|floatformat:"-2"|intcomma }}</td>
+            <td style="text-align:right">
+              <form method="post" onsubmit="return confirm('Remove this remittance? Its deductions will show as owed again.')">{% csrf_token %}
+                <input type="hidden" name="action" value="undo_remit"><input type="hidden" name="remittance_id" value="{{ w.id }}">
+                <input type="hidden" name="month" value="{{ first|date:'Y-m' }}">
+                <button class="fin-btn fin-btn-sm" type="submit">Undo</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="empty"><i class="bi bi-inbox"></i><p>No withholding tax paid over yet.</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="panel-b"><div class="tax-note">Tax withheld from a company goes to the NRS (formerly FIRS); from an individual, to the State Internal Revenue Service where the school is. VAT on tuition is not charged — education is an exempt supply — so VAT here is only what suppliers charged the school.</div></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Health screening{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health{% if term %} · {{ term.name }}{% endif %}</div>
+  <h1 class="fin-title"><em>Health screening</em></h1>
+  <p class="fin-sub">Termly height, weight, eyesight, hearing and teeth checks, class by class. Ticking "see a doctor" emails the family.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<form method="get" class="no-print" style="display:flex;gap:.4rem;margin-bottom:1rem"><select name="class" onchange="this.form.submit()"><option value="">Choose a class…</option>{% for k in classes %}<option value="{{ k.pk }}" {% if k == cls %}selected{% endif %}>{{ k.name }}</option>{% endfor %}</select></form>
+{% if cls %}
+<div class="panel"><div class="panel-b" style="overflow-x:auto"><table class="tbl" data-no-export>
+  <thead><tr><th>Student</th><th>This term</th><th>Height cm</th><th>Weight kg</th><th>Eyes L / R</th><th>Hearing</th><th>Teeth</th><th>Doctor</th><th></th></tr></thead><tbody>
+  {% for st, s in rows %}<tr><td class="name">{{ st.full_name }}</td><td class="hint">{% if s %}{{ s.date|date:"j M" }}{% if s.bmi %} · BMI {{ s.bmi }}{% endif %}{% else %}—{% endif %}</td>
+    <td colspan="7"><form method="post" class="fin-form" style="display:flex;gap:.25rem;align-items:center">{% csrf_token %}<input type="hidden" name="student" value="{{ st.pk }}"><input type="hidden" name="class" value="{{ cls.pk }}"><input type="hidden" name="date" value="{{ today|date:'Y-m-d' }}">
+      <input name="height_cm" inputmode="decimal" style="width:70px"><input name="weight_kg" inputmode="decimal" style="width:70px"><input name="vision_left" style="width:52px" placeholder="6/6"><input name="vision_right" style="width:52px" placeholder="6/6">
+      <select name="hearing_ok" style="width:auto"><option value="">—</option><option value="1">OK</option><option value="0">!</option></select><select name="dental_ok" style="width:auto"><option value="">—</option><option value="1">OK</option><option value="0">!</option></select>
+      <input type="checkbox" name="refer" style="width:auto" title="Advise a doctor"><input name="notes" placeholder="Note" style="width:100px"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td></tr>
+  {% empty %}<tr><td class="empty">No students in this class.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endif %}
+{% if referred %}<div class="panel" style="margin-top:1.2rem"><div class="panel-h"><h3>Recently referred</h3></div><div class="panel-b">{% for s in referred %}<p style="margin:.2rem 0">{{ s.date|date:"j M" }} — <a href="{% url 'welfare:medical' s.student_id %}">{{ s.student.full_name }}</a> <span class="hint">{{ s.notes }}</span></p>{% endfor %}</div></div>{% endif %}
+{% endblock %}

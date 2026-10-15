@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ v.name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Vendor</div>
+  <h1 class="fin-title"><em>{{ v.name }}</em></h1>
+  <p class="fin-sub">{{ v.supplies }}{% if score %} · rated ★ {{ score }}{% endif %} · ₦{{ spend|floatformat:2 }} ordered</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Orders</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for po in orders %}<tr><td class="name"><a href="{% url 'facilities:order' po.pk %}">{{ po.number }}</a> <span class="hint">{{ po.order_date|date:"j M Y" }}</span></td><td class="num">₦{{ po.total|floatformat:2 }}</td><td>{{ po.get_status_display }}</td></tr>{% empty %}<tr><td class="empty">No orders yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Contracts</h3></div><div class="panel-b">
+      {% for c in contracts %}<p style="margin:.2rem 0"><b>{{ c.title }}</b> <span class="hint">{{ c.starts|date:"j M Y" }}{% if c.ends %} – {{ c.ends|date:"j M Y" }}{% endif %}{% if c.value %} · ₦{{ c.value|floatformat:0 }}{% endif %}</span>{% if c.ends and c.ends < today %} <span class="chip red">Ended</span>{% endif %}{% if c.file %} <a href="{% url 'facilities:contract_file' c.pk %}">File</a>{% endif %}</p>{% empty %}<p class="empty">None.</p>{% endfor %}
+      <details><summary>Add a contract</summary><form method="post" enctype="multipart/form-data" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="contract">
+        <div><label>Title</label><input name="title" required maxlength="160" placeholder="e.g. Diesel supply 2026/27"></div>
+        <div class="row2"><div><label>Starts</label><input type="date" name="starts" required></div><div><label>Ends</label><input type="date" name="ends"></div></div>
+        <div class="row2"><div><label>Value ₦</label><input name="value" inputmode="decimal"></div><div><label>Signed copy</label><input type="file" name="file"></div></div>
+        <button class="fin-btn fin-btn-sm" type="submit">Add</button></form></details>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Ratings</h3></div><div class="panel-b">{% for r in ratings %}<p style="margin:.2rem 0">★ {{ r.score }} <span class="hint">quality {{ r.quality }} · on time {{ r.delivery }} · price {{ r.price }} · {{ r.created_at|date:"j M Y" }}</span>{% if r.comment %}<br><span class="hint">{{ r.comment }}</span>{% endif %}</p>{% empty %}<p class="empty">No ratings yet.</p>{% endfor %}
+      <details><summary>Rate</summary><form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="rate">
+        <div class="row2"><div><label>Quality</label><select name="quality">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div><div><label>On time</label><select name="delivery">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div></div>
+        <div class="row2"><div><label>Price</label><select name="price">{% for n in "54321" %}<option>{{ n }}</option>{% endfor %}</select></div><div><label>Comment</label><input name="comment" maxlength="255"></div></div>
+        <button class="fin-btn fin-btn-sm" type="submit">Save</button></form></details>
+    </div></div>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="edit">
+    <h3 style="margin:0 0 .6rem">Details</h3>
+    {% include "facilities/_vendor_form.html" %}
+    <label class="pill"><input type="checkbox" name="active" {% if v.active %}checked{% endif %}> Active</label>
+    <button class="fin-btn" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

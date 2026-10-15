@@ -1,0 +1,30 @@
+{% include "family/_top.html" %}
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Parent portal</a>
+  <h1>Family <em>hub</em></h1>
+  <p class="sub">Everything for {% for k in kids %}{{ k.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %} in one place.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if score_due %}
+  <div class="card">
+    <h2><i class="bi bi-emoji-smile" style="color:var(--champagne-lt)"></i> How likely are you to recommend the school to a friend?</h2>
+    <form method="post">{% csrf_token %}
+      <div class="row" style="gap:.35rem">{% for n in scale %}<label class="opt" style="margin:0;flex-direction:column;gap:.1rem;font-size:.8rem"><input type="radio" name="score" value="{{ n }}" required>{{ n }}</label>{% endfor %}</div>
+      <p class="hint" style="margin:.3rem 0 0">0 = not at all likely, 10 = extremely likely. Asked once a term.</p>
+      <label>What is the main reason for your score? (optional)</label><textarea name="comment" rows="2" maxlength="2000"></textarea>
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  {% endif %}
+  <div class="grid">
+    <a class="tile" href="{% url 'family:digest' %}"><i class="bi bi-sun"></i><b>Today at school</b><span>{% for i in today.items %}{{ i.student.full_name|truncatewords:1 }}: {{ i.attendance|default:"not marked yet" }}{% if not forloop.last %} · {% endif %}{% endfor %}</span></a>
+    <a class="tile" href="{% url 'family:teachers' %}"><i class="bi bi-person-video3"></i><b>Teachers</b><span>Who teaches your children, and how to reach them</span></a>
+    <a class="tile" href="{% url 'family:book' %}"><i class="bi bi-calendar-check"></i><b>Appointments{% if appointments %}<span class="badge">{{ appointments|length }}</span>{% endif %}</b><span>Book time with a teacher or the principal</span></a>
+    <a class="tile" href="{% url 'communications:consent_parent' %}"><i class="bi bi-pen"></i><b>Consent forms{% if consents_waiting %}<span class="badge">{{ consents_waiting }}</span>{% endif %}</b><span>{% if consents_waiting %}Waiting for your signature{% else %}All signed{% endif %}</span></a>
+    <a class="tile" href="{% url 'family:feedback' %}"><i class="bi bi-chat-square-text"></i><b>Feedback{% if open_tickets %}<span class="badge">{{ open_tickets }}</span>{% endif %}</b><span>Complaints, suggestions and compliments</span></a>
+    <a class="tile" href="{% url 'family:pta' %}"><i class="bi bi-people"></i><b>PTA</b><span>Meetings, minutes, executives and levies</span></a>
+    <a class="tile" href="{% url 'family:volunteer' %}"><i class="bi bi-hand-thumbs-up"></i><b>Volunteer</b><span>Help at school events</span></a>
+    {% for k in kids %}<a class="tile" href="{% url 'family:statement' k.pk %}"><i class="bi bi-receipt"></i><b>Fee statement</b><span>{{ k.full_name }}</span></a>{% endfor %}
+    <a class="tile" href="{% url 'communications:chat' %}"><i class="bi bi-chat-left-text"></i><b>Messages</b><span>Talk to a teacher</span></a>
+    <a class="tile" href="{% url 'communications:preferences' %}"><i class="bi bi-sliders"></i><b>Preferences</b><span>Language and how we reach you</span></a>
+  </div>
+  {% if appointments %}<div class="card"><h2>Coming up</h2>{% for a in appointments %}<p style="margin:.3rem 0">{{ a.date|date:"D j M" }} {{ a.start|time:"H:i" }} — {{ a.staff.full_name }} ({{ a.get_mode_display }})</p>{% endfor %}</div>{% endif %}
+{% include "family/_end.html" %}

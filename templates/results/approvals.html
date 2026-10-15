@@ -1,0 +1,38 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Result approvals{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .sh{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:.6rem;align-items:center;padding:.5rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .sh form{display:flex;gap:.3rem;align-items:center}
+  .sh input{padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem;width:170px}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">Result <em>approvals</em></h1>
+  <p class="fin-sub">Subject teachers submit their scores; heads of department approve or send them back; the principal approves each class before its results can be published.</p>
+</div><form method="get"><select name="term" class="fin-btn fin-btn-sm" onchange="this.form.submit()">{% for t in terms %}<option value="{{ t.id }}" {% if t.id == term.id %}selected{% endif %}>{{ t.session.name }} · {{ t.name }}</option>{% endfor %}</select></form></div>
+{% include "results/_msgs.html" %}
+{% if not enabled %}<div class="panel" style="border-color:var(--amber-border)"><div class="panel-b" style="color:var(--amber)"><i class="bi bi-info-circle"></i> Approval before publishing is switched off, so results can be published straight away.{% if can_manage %} <a href="{% url 'results:release' %}" style="color:var(--champagne-lt)">Switch it on</a>{% endif %}</div></div>{% endif %}
+{% for b in boards %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> {{ b.school_class.name }}</h3>
+  <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">
+    <span class="hint">{{ b.counts.approved }}/{{ b.counts.total }} approved{% if b.counts.waiting %} · {{ b.counts.waiting }} waiting{% endif %}</span>
+    {% if b.approval %}<span class="chip green"><i class="bi bi-patch-check-fill"></i> approved by {{ b.approval.approved_by.get_full_name|default:b.approval.approved_by.username }} {{ b.approval.approved_at|date:"j M" }}</span>
+      {% if can_manage %}<form method="post">{% csrf_token %}<input type="hidden" name="class" value="{{ b.school_class.id }}"><button class="fin-btn fin-btn-sm" name="action" value="withdraw" onclick="return confirm('Withdraw approval for {{ b.school_class.name|escapejs }}? Published results stay published.')">Withdraw</button></form>{% endif %}
+    {% elif can_manage %}<form method="post" style="display:flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="class" value="{{ b.school_class.id }}">
+      {% if b.counts.approved < b.counts.total %}<input name="comment" maxlength="255" placeholder="Why approve before every sheet is reviewed?" style="padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem;width:240px">{% endif %}
+      <button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="approve_class"><i class="bi bi-check2-all"></i> Approve class</button></form>{% endif %}
+  </div></div>
+  {% for r in b.rows %}<div class="sh">
+    <div><b>{{ r.subject.name }}</b> <span class="hint">{{ r.rows }} score{{ r.rows|pluralize }}{% if r.sheet.submitted_by %} · submitted by {{ r.sheet.submitted_by.get_full_name|default:r.sheet.submitted_by.username }}{% endif %}</span>
+      {% if r.sheet.comment %}<div class="hint" style="color:var(--amber)">{{ r.sheet.comment }}</div>{% endif %}</div>
+    <div>{% if not r.rows %}<span class="chip">no scores</span>{% elif not r.sheet or r.sheet.status == 'ENTERED' %}<span class="chip">being entered</span>{% elif r.sheet.status == 'SUBMITTED' %}<span class="chip gold">waiting for review</span>{% elif r.sheet.status == 'APPROVED' %}<span class="chip green">approved</span>{% else %}<span class="chip red">sent back</span>{% endif %}</div>
+    <div style="display:flex;gap:.3rem">
+      <a class="fin-btn fin-btn-sm" href="{% url 'results:manual_score_entry' %}?class={{ b.school_class.id }}&subject={{ r.subject.id }}&term={{ term.id }}" title="Open scores"><i class="bi bi-eye"></i></a>
+      {% if r.sheet.status == 'SUBMITTED' %}<form method="post" action="{% url 'results:sheet_action' %}">{% csrf_token %}<input type="hidden" name="class" value="{{ b.school_class.id }}"><input type="hidden" name="subject" value="{{ r.subject.id }}"><input type="hidden" name="term" value="{{ term.id }}"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+        <input name="comment" maxlength="255" placeholder="Comment (needed to send back)"><button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-danger fin-btn-sm" name="action" value="return">Send back</button></form>{% endif %}
+    </div>
+  </div>{% endfor %}
+</div>
+{% empty %}<div class="panel"><div class="empty"><i class="bi bi-inbox"></i><p>No classes with subjects to review.</p></div></div>{% endfor %}
+{% endblock %}

@@ -1,0 +1,491 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Settings | {{ tenant.name }}{% endblock %}
+{% block extra_css %}
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+    :root{
+  --navy:var(--ink);
+  --panel:#11264c;
+  --gold:#f4d21f;
+  --gold-light:#ffe580;
+  --muted:var(--slate);
+  --text:var(--white);
+  --info:var(--blue);
+}
+    *{box-sizing:border-box;margin:0;padding:0;}
+    #content{font-family:var(--sans);color:var(--text);}
+    .page{max-width:900px;margin:0 auto;}
+    .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;}
+    .eyebrow{font-size:.73rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;}
+    h1{font-family:var(--serif);font-size:clamp(1.8rem,3vw,2.4rem);font-weight:600;letter-spacing:-.01em;line-height:1.15;color:var(--white);}
+    .back-link{color:var(--muted);text-decoration:none;font-size:.85rem;display:inline-flex;align-items:center;gap:.35rem;}
+    .back-link:hover{color:var(--text);}
+
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:2rem;}
+    .section-title{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:#fff;
+                   margin-bottom:.35rem;display:flex;align-items:center;gap:.5rem;}
+    .section-title i{color:var(--gold);}
+    .section-sub{font-size:.82rem;color:var(--muted);margin-bottom:1.5rem;}
+
+    .messages{margin-bottom:1.5rem;}
+    .msg{font-size:.85rem;padding:.75rem 1rem;border-radius:10px;margin-bottom:.6rem;border:1px solid var(--border);}
+    .msg.success{color:var(--success);border-color:rgba(74,222,128,.3);background:rgba(74,222,128,.06);}
+    .msg.error{color:var(--danger);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);}
+
+    .field{margin-bottom:1.15rem;}
+    .field label{display:block;font-size:.72rem;font-weight:600;letter-spacing:.5px;
+                 text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;}
+    .field input[type=text], .field input[type=tel], .field textarea{
+      width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;
+      padding:.75rem .9rem;font-size:.88rem;color:var(--text);font-family:inherit;outline:none;
+      transition:border-color .2s;
+    }
+    .field input:focus, .field textarea:focus{border-color:var(--gold);}
+    .field textarea{resize:vertical;min-height:70px;}
+    .field input:disabled{opacity:.55;cursor:not-allowed;}
+
+    .logo-row{display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;}
+    .logo-preview{width:84px;height:84px;border-radius:14px;background:rgba(255,255,255,.03);
+                  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+                  overflow:hidden;flex-shrink:0;}
+    .logo-preview img{width:100%;height:100%;object-fit:contain;}
+    .logo-preview .initials{font-family:var(--serif);font-weight:800;font-size:1.4rem;color:var(--gold);}
+    .file-input-wrap{flex:1;}
+    .file-input-wrap input[type=file]{
+      width:100%;font-size:.82rem;color:var(--muted);
+      background:rgba(255,255,255,.03);border:1px dashed var(--border);border-radius:10px;padding:.7rem;
+    }
+    .hint{font-size:.75rem;color:var(--muted);margin-top:.4rem;}
+
+    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.4rem;
+         border-radius:10px;font-size:.86rem;font-weight:600;text-decoration:none;
+         border:none;cursor:pointer;font-family:inherit;}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),#c9a800);color:#0a1f44;
+              box-shadow:0 4px 16px rgba(245,158,11,.25);}
+    .btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(245,158,11,.35);}
+    .btn-danger{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:var(--danger);
+                padding:.4rem .75rem;font-size:.78rem;}
+    .btn-danger:hover{background:rgba(248,113,113,.18);}
+
+    /* Grading table */
+    .grading-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:1.5rem;}
+    .grading-table th{text-align:left;padding:.6rem .8rem;color:var(--muted);
+                       font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;
+                       border-bottom:1px solid var(--border);}
+    .grading-table td{padding:.7rem .8rem;border-bottom:1px solid rgba(255,255,255,.04);}
+    .grading-table tr:hover td{background:rgba(255,255,255,.02);}
+    .grade-pill{display:inline-block;background:var(--gold-dim);border:1px solid rgba(245,158,11,.25);
+                color:var(--gold-light);font-weight:700;border-radius:6px;padding:.15rem .55rem;font-size:.8rem;}
+    .empty-note{color:var(--muted);font-size:.85rem;padding:1rem 0;}
+
+    .add-grade-row{display:grid;grid-template-columns:100px 120px 1fr auto;gap:.75rem;align-items:end;}
+    .add-grade-row .field{margin-bottom:0;}
+
+    .sig-row{display:flex;align-items:center;gap:1.5rem;}
+    .sig-preview{width:140px;height:70px;border-radius:10px;background:rgba(255,255,255,.03);
+                 border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+                 overflow:hidden;flex-shrink:0;}
+    .sig-preview img{width:100%;height:100%;object-fit:contain;}
+    .sig-preview .none{font-size:.75rem;color:var(--muted);}
+
+    @media (max-width:600px){
+      .add-grade-row{grid-template-columns:1fr;}
+      .logo-row, .sig-row{flex-direction:column;align-items:flex-start;}
+    }
+
+    /* Theme picker */
+    .theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.8rem;margin-top:.4rem;}
+    .theme-swatch{position:relative;display:flex;flex-direction:column;align-items:center;gap:.5rem;
+                  padding:.9rem .6rem;border-radius:12px;border:1px solid var(--border);
+                  background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .15s,transform .15s;}
+    .theme-swatch:hover{transform:translateY(-2px);}
+    .theme-swatch input{position:absolute;opacity:0;width:1px;height:1px;}
+    .theme-swatch.theme-selected{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,158,11,.25);}
+    .theme-swatch-preview{width:100%;height:52px;border-radius:8px;overflow:hidden;position:relative;
+                          border:1px solid rgba(0,0,0,.15);}
+    .theme-swatch-preview .ts-paper{position:absolute;inset:0;}
+    .theme-swatch-preview .ts-gold{position:absolute;top:0;left:0;right:0;height:8px;}
+    .theme-swatch-name{font-size:.72rem;color:var(--muted);text-align:center;line-height:1.2;}
+    .theme-selected .theme-swatch-name{color:var(--text);font-weight:600;}
+
+    .theme-classic_gold      .ts-paper{background:#f7f4ef;} .theme-classic_gold      .ts-gold{background:#0a1f44;}
+    .theme-royal_navy        .ts-paper{background:#eef2f8;} .theme-royal_navy        .ts-gold{background:#1d3f7a;}
+    .theme-emerald_prestige  .ts-paper{background:#f2f7f2;} .theme-emerald_prestige  .ts-gold{background:#1f6b3f;}
+    .theme-burgundy_elegance .ts-paper{background:#f8f1ef;} .theme-burgundy_elegance .ts-gold{background:#7a1f2b;}
+    .theme-sapphire_scholar  .ts-paper{background:#f0f4f8;} .theme-sapphire_scholar  .ts-gold{background:#1a5c96;}
+    .theme-rose_quartz       .ts-paper{background:#faf3f2;} .theme-rose_quartz       .ts-gold{background:#b76e6e;}
+    .theme-midnight_platinum .ts-paper{background:#161a20;} .theme-midnight_platinum .ts-gold{background:#a9b4c2;}
+    .theme-forest_academia   .ts-paper{background:#f4f2ea;} .theme-forest_academia   .ts-gold{background:#0a1f44;}
+    .theme-coral_sunrise     .ts-paper{background:#fdf5ee;} .theme-coral_sunrise     .ts-gold{background:#d9722c;}
+    .theme-slate_minimal     .ts-paper{background:#f5f5f6;} .theme-slate_minimal     .ts-gold{background:#454850;}
+  </style>
+{% endblock %}
+{% block content %}
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">School Portal</div>
+      <h1>Settings</h1>
+    </div>
+    <a href="{% url 'dashboard:router' %}" class="back-link">
+      <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+  </div>
+
+  <!-- ═══════════════ SCHOOL BRANDING ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-image-fill"></i> School Branding</div>
+    <div class="section-sub">Your school name, logo and motto appear across the portal and on printed result sheets.</div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_branding">
+
+      <div class="field">
+        <label for="school_name">School Name</label>
+        <input type="text" id="school_name" name="school_name" value="{{ tenant.name }}" maxlength="255" required placeholder="e.g. Sunshine Academy">
+        <div class="hint">Shown everywhere across your portal — dashboards, result sheets, receipts and emails.</div>
+      </div>
+
+      <div class="field">
+        <label for="portal_address">Portal Address</label>
+        <input type="text" id="portal_address" value="{{ tenant.portal_url }}" disabled>
+        <div class="hint">Your portal address (subdomain) stays the same when you change your school name. Contact support to change it.</div>
+      </div>
+
+      <div class="logo-row">
+        <div class="logo-preview">
+          {% if tenant.logo %}
+            <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}">
+          {% else %}
+            <span class="initials">{{ tenant.name|slice:":2"|upper }}</span>
+          {% endif %}
+        </div>
+        <div class="file-input-wrap">
+          <input type="file" name="logo" accept="image/*">
+          <div class="hint">PNG or JPG, square works best. Replaces your current logo.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="motto">School Motto</label>
+        <input type="text" id="motto" name="motto" value="{{ tenant.motto }}" placeholder="e.g. Knowledge, Character, Excellence">
+      </div>
+
+      <div class="field">
+        <label for="address">School Address</label>
+        <textarea id="address" name="address" placeholder="Full postal address shown on result sheets">{{ tenant.address }}</textarea>
+      </div>
+
+      <div class="field">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" name="phone" value="{{ tenant.phone }}" placeholder="e.g. 0803 123 4567">
+      </div>
+
+      <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Save Branding</button>
+    </form>
+  </div>
+
+  <!-- ═══════════════ RESULT CUSTOMIZATION: GRADING SCALE ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-bar-chart-fill"></i> Grading Scale</div>
+    <div class="section-sub">Defines how raw scores map to letter grades on every result sheet.</div>
+
+    {% if grading_scale %}
+    <table class="grading-table">
+      <thead>
+        <tr><th>Grade</th><th>Minimum Score</th><th>Description</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for g in grading_scale %}
+        <tr>
+          <td><span class="grade-pill">{{ g.grade }}</span></td>
+          <td>{{ g.min_score }}+</td>
+          <td>{{ g.description|default:"—" }}</td>
+          <td style="text-align:right;">
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Remove grade {{ g.grade }}?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete_grade">
+              <input type="hidden" name="grade_id" value="{{ g.id }}">
+              <button type="submit" class="btn btn-danger"><i class="bi bi-trash3"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-note">No grading scale set up yet — add one below (e.g. A, 70, Excellent).</div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_grade">
+      <div class="add-grade-row">
+        <div class="field">
+          <label for="grade">Grade</label>
+          <input type="text" id="grade" name="grade" maxlength="2" placeholder="A" required>
+        </div>
+        <div class="field">
+          <label for="min_score">Min Score</label>
+          <input type="text" id="min_score" name="min_score" placeholder="70" required>
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <input type="text" id="description" name="description" placeholder="Excellent">
+        </div>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══════════════ SUBJECTS ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-journal-bookmark-fill"></i> Subjects</div>
+    <div class="section-sub">Subjects offered at your school — used across classes, results, and attendance.</div>
+
+    {% if subjects %}
+    <table class="grading-table">
+      <thead>
+        <tr><th>Name</th><th>Code</th><th>Description</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for s in subjects %}
+        <tr>
+          <td><span class="grade-pill">{{ s.name }}</span></td>
+          <td>{{ s.code|default:"—" }}</td>
+          <td>{{ s.description|default:"—" }}</td>
+          <td style="text-align:right;">
+            <form method="POST" style="display:inline;" onsubmit="return confirm('Remove subject {{ s.name }}?');">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="delete_subject">
+              <input type="hidden" name="subject_id" value="{{ s.id }}">
+              <button type="submit" class="btn btn-danger"><i class="bi bi-trash3"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-note">No subjects added yet — add your school's subjects below.</div>
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_subject">
+      <div class="add-grade-row">
+        <div class="field">
+          <label for="subject_name">Name</label>
+          <input type="text" id="subject_name" name="name" placeholder="Mathematics" required>
+        </div>
+        <div class="field">
+          <label for="subject_code">Code</label>
+          <input type="text" id="subject_code" name="code" placeholder="MTH">
+        </div>
+        <div class="field">
+          <label for="subject_description">Description</label>
+          <input type="text" id="subject_description" name="description" placeholder="Optional notes">
+        </div>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══════════════ SKILLS & BEHAVIOUR RATING ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-star-fill"></i> Skills &amp; Behaviour Rating</div>
+    <div class="section-sub">Traits rated 1–5 on every student's report card (e.g. Punctuality, Neatness, Leadership).</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+      <div>
+        <div class="hint" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;font-weight:600;">Skills</div>
+        {% if skills %}
+        <table class="grading-table">
+          <tbody>
+            {% for s in skills %}
+            <tr>
+              <td><span class="grade-pill">{{ s.name }}</span></td>
+              <td style="text-align:right;">
+                <form method="POST" style="display:inline;" onsubmit="return confirm('Remove {{ s.name }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_skill">
+                  <input type="hidden" name="skill_id" value="{{ s.id }}">
+                  <button type="submit" class="btn-danger"><i class="bi bi-trash3"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-note">No skills added yet.</div>
+        {% endif %}
+      </div>
+
+      <div>
+        <div class="hint" style="text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;font-weight:600;">Behaviour</div>
+        {% if behaviours %}
+        <table class="grading-table">
+          <tbody>
+            {% for b in behaviours %}
+            <tr>
+              <td><span class="grade-pill">{{ b.name }}</span></td>
+              <td style="text-align:right;">
+                <form method="POST" style="display:inline;" onsubmit="return confirm('Remove {{ b.name }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_skill">
+                  <input type="hidden" name="skill_id" value="{{ b.id }}">
+                  <button type="submit" class="btn-danger"><i class="bi bi-trash3"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="empty-note">No behaviour traits added yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_skill">
+      <div class="add-grade-row">
+        <div class="field">
+          <label for="skill_name">Name</label>
+          <input type="text" id="skill_name" name="skill_name" placeholder="Punctuality" required>
+        </div>
+        <div class="field">
+          <label for="category">Category</label>
+          <select id="category" name="category" required
+                  style="width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);
+                         border-radius:10px;padding:.75rem .9rem;font-size:.88rem;color:var(--text);
+                         font-family:inherit;outline:none;">
+            <option value="skill">Skill</option>
+            <option value="behaviour">Behaviour</option>
+          </select>
+        </div>
+        <div class="field"></div>
+        <button type="submit" class="btn btn-gold"><i class="bi bi-plus-lg"></i> Add</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ═══════════════ RESULT SHEET LAYOUT ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-layout-text-window-reverse"></i> Result Sheet Layout</div>
+    <div class="section-sub">Choose what shows on every student's printed result sheet.</div>
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_result_layout">
+
+      <div class="field">
+        <label>Result Sheet Theme</label>
+        <div class="theme-grid">
+          {% for value, label in theme_choices %}
+          <label class="theme-swatch theme-{{ value }} {% if result_settings.theme == value %}theme-selected{% endif %}">
+            <input type="radio" name="theme" value="{{ value }}"
+                   {% if result_settings.theme == value %}checked{% endif %}>
+            <span class="theme-swatch-preview">
+              <span class="ts-gold"></span>
+              <span class="ts-paper"></span>
+            </span>
+            <span class="theme-swatch-name">{{ label }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="field" style="display:flex;align-items:center;gap:.6rem;">
+        <input type="checkbox" id="show_ca_breakdown" name="show_ca_breakdown"
+               {% if result_settings.show_ca_breakdown %}checked{% endif %}
+               style="width:16px;height:16px;">
+        <label for="show_ca_breakdown" style="margin:0;text-transform:none;font-size:.85rem;color:var(--text);">
+          Show each CA column separately — otherwise only the CA total shows. <a href="{% url 'results:assessment' %}" style="color:var(--champagne-lt)">Change the CA structure</a>
+        </label>
+      </div>
+
+      <div class="field" style="display:flex;align-items:center;gap:.6rem;">
+        <input type="checkbox" id="show_class_average" name="show_class_average"
+               {% if result_settings.show_class_average %}checked{% endif %}
+               style="width:16px;height:16px;">
+        <label for="show_class_average" style="margin:0;text-transform:none;font-size:.85rem;color:var(--text);">
+          Show Class Average
+        </label>
+      </div>
+
+      <div class="field" style="display:flex;align-items:center;gap:.6rem;">
+        <input type="checkbox" id="show_skills_section" name="show_skills_section"
+               {% if result_settings.show_skills_section %}checked{% endif %}
+               style="width:16px;height:16px;">
+        <label for="show_skills_section" style="margin:0;text-transform:none;font-size:.85rem;color:var(--text);">
+          Show Skills section
+        </label>
+      </div>
+
+      <div class="field" style="display:flex;align-items:center;gap:.6rem;">
+        <input type="checkbox" id="show_behaviour_section" name="show_behaviour_section"
+               {% if result_settings.show_behaviour_section %}checked{% endif %}
+               style="width:16px;height:16px;">
+        <label for="show_behaviour_section" style="margin:0;text-transform:none;font-size:.85rem;color:var(--text);">
+          Show Behaviour section
+        </label>
+      </div>
+
+      <div class="field">
+        <label for="footer_note">Footer Note</label>
+        <input type="text" id="footer_note" name="footer_note"
+               value="{{ result_settings.footer_note }}"
+               placeholder="e.g. Visit yourschool.com/results for detailed reports monitoring.">
+      </div>
+
+      <button type="submit" class="btn btn-gold"><i class="bi bi-check-lg"></i> Save Layout</button>
+    </form>
+  </div>
+
+  <!-- ═══════════════ RESULT CUSTOMIZATION: SIGNATURE ═══════════════ -->
+  <div class="card">
+    <div class="section-title"><i class="bi bi-pen-fill"></i> Head Teacher's Signature</div>
+    <div class="section-sub">Appears on every printed result sheet, above "Head Teacher's Signature &amp; School Stamp".</div>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="save_signature">
+
+      <div class="sig-row">
+        <div class="sig-preview">
+          {% if signature %}
+            <img src="{{ signature.signature.url }}" alt="Signature">
+          {% else %}
+            <span class="none">No signature uploaded</span>
+          {% endif %}
+        </div>
+        <div class="file-input-wrap">
+          <input type="file" name="signature" accept="image/*">
+          <div class="hint">A scanned or transparent-background PNG signature works best.</div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-gold" style="margin-top:1.15rem;">
+        <i class="bi bi-check-lg"></i> Save Signature
+      </button>
+    </form>
+  </div>
+
+</div>
+<script>
+  document.querySelectorAll('.theme-swatch input[name="theme"]').forEach(function (input) {
+    input.addEventListener('change', function () {
+      document.querySelectorAll('.theme-swatch').forEach(function (sw) {
+        sw.classList.remove('theme-selected');
+      });
+      input.closest('.theme-swatch').classList.add('theme-selected');
+    });
+  });
+</script>
+{% endblock %}

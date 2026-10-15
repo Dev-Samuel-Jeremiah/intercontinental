@@ -1,0 +1,813 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Incident Reports{% endblock %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{box-sizing:border-box;}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{opacity:0;transform:translateY(18px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.1rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:2px;
+  background:linear-gradient(90deg,var(--champagne),transparent);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  color:var(--champagne);
+  font-size:.7rem;
+  font-weight:700;
+  letter-spacing:.24rem;
+  text-transform:uppercase;
+  margin-bottom:.8rem;
+}
+
+.eyebrow::before{
+  content:"";
+  width:42px;
+  height:1px;
+  background:var(--champagne);
+  opacity:.8;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.7rem;
+  font-weight:700;
+  line-height:1;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.head-actions{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  flex-wrap:wrap;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.7rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.78rem;
+  font-weight:700;
+}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  position:relative;
+  animation:riseUp .45s ease both;
+  margin-bottom:1.5rem;
+}
+
+.panel:nth-child(2){animation-delay:.06s;}
+.panel:nth-child(3){animation-delay:.12s;}
+.panel:nth-child(4){animation-delay:.18s;}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  inset:0 auto auto 0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-head{
+  padding:1rem 1.25rem;
+  border-bottom:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:.9rem;
+  flex-shrink:0;
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  border:1px solid var(--blue-border);
+  color:#93c5fd;
+}
+
+.icon-amber{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:#fcd34d;
+}
+
+.panel-title h3{
+  margin:0;
+  font-size:.98rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.25rem;
+}
+
+.form-row{
+  display:flex;
+  gap:1rem;
+  flex-wrap:wrap;
+  align-items:flex-end;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+  min-width:180px;
+  flex:1;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  color:var(--white);
+  padding:.82rem .95rem;
+  font-size:.88rem;
+  font-family:'Outfit',sans-serif;
+  outline:none;
+  transition:.2s ease;
+}
+
+.fg textarea{
+  resize:vertical;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.btn{
+  border:none;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.55rem;
+  border-radius:10px;
+  padding:.82rem 1.15rem;
+  font-size:.84rem;
+  font-weight:700;
+  font-family:'Outfit',sans-serif;
+  transition:.24s ease;
+}
+
+.btn-main{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-main:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  color:var(--slate2);
+}
+
+.btn-ghost:hover{
+  background:var(--surface3);
+  color:var(--white);
+}
+
+.btn-danger{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:#fca5a5;
+}
+
+.btn-danger:hover{
+  background:rgba(239,68,68,.18);
+}
+
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+  min-width:980px;
+}
+
+.tbl thead th{
+  padding:1rem 1.1rem;
+  text-align:left;
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.08rem;
+  color:var(--slate2);
+  font-weight:700;
+  border-bottom:1px solid var(--rim);
+}
+
+.tbl tbody td{
+  padding:1rem 1.1rem;
+  border-bottom:1px solid var(--rim);
+  vertical-align:middle;
+  font-size:.88rem;
+  color:var(--white);
+}
+
+.tbl tbody tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+.student-cell{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  font-size:.8rem;
+  font-weight:800;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;
+  flex-shrink:0;
+}
+
+.student-link{
+  color:#dbe7ff;
+  text-decoration:none;
+  font-weight:600;
+}
+
+.student-link:hover{
+  color:var(--champagne-lt);
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.38rem;
+  padding:.38rem .72rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  border:1px solid transparent;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:#93c5fd;
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:#fcd34d;
+}
+
+.badge-purple{
+  background:var(--purple-dim);
+  border-color:var(--purple-border);
+  color:#c4b5fd;
+}
+
+.modal-ov{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  backdrop-filter:blur(4px);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
+}
+
+.modal-ov.active{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:480px;
+  background:var(--surface);
+  border:1px solid var(--rim2);
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+}
+
+.modal-box::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.modal-head{
+  padding:1.15rem 1.25rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.modal-title{
+  margin:0;
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.modal-body{
+  padding:1.25rem;
+}
+
+.modal-actions{
+  display:flex;
+  gap:.8rem;
+  margin-top:1rem;
+}
+
+.empty-state{
+  padding:3.5rem 1.5rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:68px;
+  height:68px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  color:var(--champagne);
+  font-size:1.5rem;
+}
+
+.empty-title{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--white);
+  margin-bottom:.35rem;
+}
+
+.empty-sub{
+  font-size:.88rem;
+  color:var(--slate2);
+}
+
+.alert{
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  margin-bottom:1rem;
+  font-size:.85rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:#86efac;
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:#fca5a5;
+}
+
+.alert-info{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:#93c5fd;
+}
+
+@media(max-width:768px){
+  .your-wrap{
+    padding:1.25rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2rem;
+  }
+
+  .form-row{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .fg{
+    min-width:100%;
+  }
+
+  .modal-actions{
+    flex-direction:column;
+  }
+}
+</style>
+
+<script>
+function openModal(id){
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(m=>{
+    m.addEventListener('click',e=>{
+      if(e.target===m){
+        m.classList.remove('active');
+      }
+    });
+  });
+});
+</script>
+
+<div class="your-wrap">
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert
+        {% if m.tags == 'success' %}alert-success
+        {% elif m.tags == 'error' %}alert-error
+        {% else %}alert-info{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Hostel Administration</div>
+      <h1 class="page-title">
+        Incident <em>Reports</em>
+      </h1>
+    </div>
+
+    <div class="head-actions">
+      <div class="context-badge">
+        <i class="bi bi-shield-exclamation"></i>
+        {{ incidents|length }} Report{{ incidents|length|pluralize }}
+      </div>
+
+      <a href="{% url 'hostel:dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <div class="icon-badge icon-amber">
+          <i class="bi bi-funnel"></i>
+        </div>
+        <h3>Filter Incidents</h3>
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <form method="GET">
+        <div class="form-row">
+
+          <div class="fg" style="max-width:220px;">
+            <label>Status</label>
+            <select name="status">
+              <option value="" {% if not status_f %}selected{% endif %}>All</option>
+              <option value="OPEN" {% if status_f == 'OPEN' %}selected{% endif %}>Open</option>
+              <option value="UNDER_REVIEW" {% if status_f == 'UNDER_REVIEW' %}selected{% endif %}>Under Review</option>
+              <option value="RESOLVED" {% if status_f == 'RESOLVED' %}selected{% endif %}>Resolved</option>
+            </select>
+          </div>
+
+          <div class="fg" style="max-width:220px;">
+            <label>Severity</label>
+            <select name="severity">
+              <option value="" {% if not severity_f %}selected{% endif %}>All</option>
+              <option value="CRITICAL" {% if severity_f == 'CRITICAL' %}selected{% endif %}>Critical</option>
+              <option value="HIGH" {% if severity_f == 'HIGH' %}selected{% endif %}>High</option>
+              <option value="MEDIUM" {% if severity_f == 'MEDIUM' %}selected{% endif %}>Medium</option>
+              <option value="LOW" {% if severity_f == 'LOW' %}selected{% endif %}>Low</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-main">
+            <i class="bi bi-funnel-fill"></i>
+            Filter Reports
+          </button>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-journal-text"></i>
+        </div>
+        <h3>Incident Registry</h3>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Severity</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th style="width:140px;">Action</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for inc in incidents %}
+          <tr>
+
+            <td>
+              <div class="student-cell">
+                <div class="avatar">
+                  {{ inc.boarder.student.full_name|slice:":2"|upper }}
+                </div>
+
+                <div>
+                  <a href="{% url 'hostel:boarder_profile' inc.boarder.student.id %}" class="student-link">
+                    {{ inc.boarder.student.full_name }}
+                  </a>
+                </div>
+              </div>
+            </td>
+
+            <td>{{ inc.title }}</td>
+
+            <td>{{ inc.get_incident_type_display }}</td>
+
+            <td>
+              {% if inc.severity == 'CRITICAL' %}
+                <span class="badge badge-red">
+                  <i class="bi bi-exclamation-octagon"></i>
+                  Critical
+                </span>
+
+              {% elif inc.severity == 'HIGH' %}
+                <span class="badge badge-amber">
+                  <i class="bi bi-exclamation-triangle"></i>
+                  High
+                </span>
+
+              {% elif inc.severity == 'MEDIUM' %}
+                <span class="badge badge-blue">
+                  <i class="bi bi-info-circle"></i>
+                  Medium
+                </span>
+
+              {% else %}
+                <span class="badge badge-purple">
+                  <i class="bi bi-dot"></i>
+                  Low
+                </span>
+              {% endif %}
+            </td>
+
+            <td>{{ inc.incident_date|date:"d M Y" }}</td>
+
+            <td>
+              {% if inc.status == 'RESOLVED' or inc.status == 'CLOSED' %}
+                <span class="badge badge-green">
+                  <i class="bi bi-check-circle"></i>
+                  {{ inc.get_status_display }}
+                </span>
+
+              {% elif inc.status == 'UNDER_REVIEW' %}
+                <span class="badge badge-amber">
+                  <i class="bi bi-search"></i>
+                  Under Review
+                </span>
+
+              {% else %}
+                <span class="badge badge-red">
+                  <i class="bi bi-exclamation-circle"></i>
+                  Open
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+
+              {% if inc.status != 'RESOLVED' and inc.status != 'CLOSED' %}
+
+              <button onclick="openModal('resolve_{{ inc.id }}')" class="btn btn-danger" style="padding:.6rem .9rem;font-size:.76rem;">
+                <i class="bi bi-check2-circle"></i>
+                Resolve
+              </button>
+
+              <div class="modal-ov" id="resolve_{{ inc.id }}">
+
+                <div class="modal-box">
+
+                  <div class="modal-head">
+                    <h3 class="modal-title">
+                      Resolve Incident
+                    </h3>
+                  </div>
+
+                  <div class="modal-body">
+
+                    <form method="POST" action="{% url 'hostel:resolve_incident' inc.id %}">
+                      {% csrf_token %}
+
+                      <div class="fg">
+                        <label>Action Taken *</label>
+
+                        <textarea
+                          name="action_taken"
+                          rows="4"
+                          required
+                          placeholder="Describe the action taken to resolve this incident"></textarea>
+                      </div>
+
+                      <div class="modal-actions">
+
+                        <button type="submit" class="btn btn-main" style="flex:1;">
+                          <i class="bi bi-check2-all"></i>
+                          Mark Resolved
+                        </button>
+
+                        <button type="button" onclick="closeModal('resolve_{{ inc.id }}')" class="btn btn-ghost">
+                          <i class="bi bi-x-circle"></i>
+                          Cancel
+                        </button>
+
+                      </div>
+                    </form>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {% else %}
+
+              <span class="badge badge-green">
+                <i class="bi bi-check2-all"></i>
+                Closed
+              </span>
+
+              {% endif %}
+
+            </td>
+
+          </tr>
+
+          {% empty %}
+
+          <tr>
+            <td colspan="7">
+
+              <div class="empty-state">
+
+                <div class="empty-icon">
+                  <i class="bi bi-folder2-open"></i>
+                </div>
+
+                <div class="empty-title">
+                  No Incident Reports Found
+                </div>
+
+                <div class="empty-sub">
+                  There are currently no incidents matching your selected filters.
+                </div>
+
+              </div>
+
+            </td>
+          </tr>
+
+          {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

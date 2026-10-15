@@ -1,0 +1,13 @@
+{% extends "partials/status_base.html" %}
+{% block title %}Something Went Wrong{% endblock %}
+{% block tone %}tone-red{% endblock %}
+{% block body %}
+<div class="icon"><i class="bi bi-exclamation-circle"></i></div>
+<div class="eyebrow">Parent portal</div>
+<h1>Something went <em>wrong</em></h1>
+<p>{{ message|default:"An error occurred. Please try again or contact the school office." }}</p>
+<div class="actions">
+  <a href="{% url 'users:parent_login' %}" class="btn btn-gold"><i class="bi bi-arrow-left"></i> Back to parent login</a>
+  <a href="{% url 'users:home' %}" class="btn"><i class="bi bi-house"></i> Home</a>
+</div>
+{% endblock %}

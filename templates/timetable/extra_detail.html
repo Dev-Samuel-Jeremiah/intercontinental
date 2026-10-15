@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}{{ g.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .pick{display:flex;flex-wrap:wrap;gap:.35rem;max-height:220px;overflow:auto}
+  .pick label{display:inline-flex!important;align-items:center;gap:.3rem;padding:.3rem .6rem;border:1px solid var(--rim2);border-radius:99px;font-size:.76rem!important;cursor:pointer;margin:0!important}
+  .pick input{width:auto!important;accent-color:var(--champagne)}
+  .pick label:has(input:checked){border-color:var(--champagne-border);color:var(--champagne-lt)}
+  @media print{body *{visibility:hidden!important}.print,.print *{visibility:visible!important}.print{position:absolute;left:0;top:0;width:100%}.tbl td,.tbl th{color:#000!important;border-color:#999!important}.noprint{display:none!important}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'timetable:extras' %}" style="color:inherit">After-school lessons</a></div>
+  <h1 class="fin-title">{{ g.name }}</h1>
+  <p class="fin-sub">{{ g.get_day_display }}s {{ g.start_time|time:"H:i" }}–{{ g.end_time|time:"H:i" }}{% if g.room %} · {{ g.room.name }}{% endif %} · {{ g.teacher.full_name|default:"no teacher yet" }}{% if g.term %} · {{ g.term }}{% endif %} · ₦{{ g.fee|floatformat:2|intcomma }} per child</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print list</button>
+  {% if runs %}<form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="toggle">{% if g.active %}<i class="bi bi-lock"></i> Close group{% else %}<i class="bi bi-unlock"></i> Reopen{% endif %}</button></form>{% endif %}
+</div></div>
+{% for c in clashes %}<div class="chip amber" style="margin-bottom:.5rem;white-space:normal"><i class="bi bi-exclamation-triangle"></i> {{ c }}</div>{% endfor %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Children</small><b>{{ money.count }}{% if g.capacity %}<span class="hint"> / {{ g.capacity }}</span>{% endif %}</b></div>
+  {% if runs %}<div class="fin-stat"><small>Expected</small><b>₦{{ money.expected|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Paid</small><b style="color:var(--green)">₦{{ money.paid|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Still to pay</small><b style="color:var(--amber)">₦{{ money.due|floatformat:0|intcomma }}</b></div>{% endif %}
+</div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)">
+  <div class="panel print"><div class="panel-h"><h3><i class="bi bi-people"></i> Children</h3><span class="hint">{{ g.name }}</span></div>
+    {% if members %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Child</th><th>Class</th>{% if runs %}<th>Fee</th><th class="noprint"></th>{% else %}<th>Present</th>{% endif %}</tr></thead><tbody>
+    {% for m in members %}<tr><td class="name">{{ m.student.full_name }}</td><td>{{ m.student.class_assigned.name|default:"—" }}</td>
+      {% if runs %}<td><span class="chip {% if m.status == 'PAID' %}green{% elif m.status == 'DUE' %}amber{% endif %}">{{ m.get_status_display }}{% if m.status != 'WAIVED' %} · ₦{{ m.fee|floatformat:0|intcomma }}{% endif %}</span>{% if m.payment_note %}<div class="hint">{{ m.payment_note }}</div>{% endif %}</td>
+      <td class="noprint" style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ m.id }}">
+        {% if m.status == 'DUE' %}<button class="fin-btn fin-btn-sm" name="action" value="paid" title="Paid in cash or by transfer at the bursary"><i class="bi bi-cash"></i> Paid</button><button class="fin-btn fin-btn-sm" name="action" value="waive" title="Waive the fee"><i class="bi bi-gift"></i></button>{% endif %}
+        <button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="withdraw" title="Withdraw" onclick="return confirm('Take {{ m.student.full_name|escapejs }} out of this group?{% if m.status == 'PAID' and m.transaction_id %} The fee goes back to the family wallet.{% endif %}')"><i class="bi bi-x-lg"></i></button></form></td>
+      {% else %}<td style="width:90px"></td>{% endif %}</tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-people"></i><p>Nobody has joined yet.</p></div>{% endif %}
+  </div>
+  {% if runs %}<div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-person-plus"></i> Add children</h3>{% if left is not None %}<span class="hint">{{ left }} place{{ left|pluralize }} left</span>{% endif %}</div><div class="panel-b">
+      {% if candidates %}<form method="post" class="fin-form">{% csrf_token %}<div class="pick">{% for s in candidates %}<label><input type="checkbox" name="students" value="{{ s.id }}"> {{ s.full_name }} <span class="hint">{{ s.class_assigned.name }}</span></label>{% endfor %}</div>
+        <button class="fin-btn fin-btn-gold" name="action" value="enrol">Add ticked children</button></form>
+      {% else %}<p class="hint" style="margin:0">Everyone who can join is already in.</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-pencil"></i> Edit group</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}{% include "timetable/_extra_form.html" %}<button class="fin-btn" name="action" value="edit">Save changes</button></form>
+    </div></div>
+  </div>{% endif %}
+</div>
+{% endblock %}

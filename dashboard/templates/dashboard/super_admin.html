@@ -1,0 +1,553 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Super Admin Dashboard{% endblock %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Utilities are scoped to #sad-root and the CSS reset is off, so the shared
+  // sidebar and top bar keep their own styles.
+  tailwind.config = {
+    important: '#sad-root',
+    corePlugins: { preflight: false },
+    theme: { extend: {
+      colors: {"primary": "#000000", "primary-container": "#0a1f44", "tertiary-container": "#061430", "tertiary": "#000000", "surface-tint": "#1d3a75", "on-primary": "#ffffff", "on-primary-container": "#8197c4", "primary-fixed": "#dbe5fb", "primary-fixed-dim": "#b8c7e6", "inverse-primary": "#b8c7e6", "on-primary-fixed": "#061430", "on-primary-fixed-variant": "#243d70", "secondary": "#8a6d00", "on-secondary": "#ffffff", "secondary-container": "#f4d21f", "on-secondary-container": "#3d3000", "secondary-fixed": "#fbe88a", "secondary-fixed-dim": "#e8c40f", "on-secondary-fixed": "#2a2000", "on-secondary-fixed-variant": "#5c4900", "background": "#f8f9fc", "surface": "#f8f9fc", "surface-bright": "#fbfcfe", "surface-container-lowest": "#ffffff", "surface-container-low": "#f2f4f9", "surface-container": "#eceff5", "surface-container-high": "#e6e9f0", "surface-container-highest": "#e0e4ec", "surface-dim": "#d6dae3", "surface-variant": "#e0e4ec", "on-surface": "#141a26", "on-background": "#141a26", "on-surface-variant": "#444b5a", "outline": "#747b8a", "outline-variant": "#c4c9d4"},
+      borderRadius: {DEFAULT: "0.125rem", lg: "0.25rem", xl: "0.5rem", full: "0.75rem"},
+      spacing: {"space-xs": "0.25rem", "space-sm": "0.5rem", "space-md": "1rem", "space-lg": "1.5rem", "space-xl": "2.5rem"},
+      fontFamily: {"label-caps": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title-md": ["Plus Jakarta Sans"], "display-lg": ["Playfair Display"], "body-lg": ["Plus Jakarta Sans"], "headline-sm": ["Playfair Display"], "body-md": ["Plus Jakarta Sans"], "headline-md": ["Playfair Display"], "title-lg": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "headline-lg": ["Playfair Display"], "label-md": ["Plus Jakarta Sans"]},
+      fontSize: {"label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.08em", fontWeight: "700"}], "body-sm": ["12px", {lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "400"}], "title-md": ["16px", {lineHeight: "24px", letterSpacing: "-0.005em", fontWeight: "600"}], "body-lg": ["16px", {lineHeight: "26px", letterSpacing: "0", fontWeight: "400"}], "headline-sm": ["22px", {lineHeight: "30px", letterSpacing: "0", fontWeight: "600"}], "body-md": ["14px", {lineHeight: "22px", letterSpacing: "0", fontWeight: "400"}], "headline-md": ["28px", {lineHeight: "36px", letterSpacing: "-0.01em", fontWeight: "500"}], "title-lg": ["18px", {lineHeight: "26px", letterSpacing: "-0.01em", fontWeight: "600"}], "label-lg": ["13px", {lineHeight: "18px", letterSpacing: "0.03em", fontWeight: "600"}], "headline-lg": ["40px", {lineHeight: "48px", letterSpacing: "-0.015em", fontWeight: "600"}], "label-md": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600"}]}
+    } }
+  };
+</script>
+<style>
+  /* This page uses a light canvas inside the navy app shell */
+  body { background: #f8f9fc; }
+  .topbar { background: rgba(10,31,68,.97); }
+  #sad-root { font-family: "Plus Jakarta Sans", system-ui, sans-serif; color: #141a26; }
+  #sad-root h1, #sad-root h2, #sad-root h3 { margin: 0; }
+  #sad-root a { text-decoration: none; }
+  #sad-root button { border: 0; cursor: pointer; font-family: inherit; }
+  /* The shared layout styles every th/td for its dark pages; reset them here */
+  #sad-root th { color: #444b5a; background: transparent; }
+  #sad-root td { color: inherit; background: transparent; }
+  #sad-root .material-symbols-outlined { font-family: "Material Symbols Outlined"; font-weight: normal; font-style: normal;
+    line-height: 1; letter-spacing: normal; text-transform: none; display: inline-block; white-space: nowrap; direction: ltr;
+    -webkit-font-feature-settings: "liga"; font-feature-settings: "liga"; -webkit-font-smoothing: antialiased; }
+</style>
+
+<div id="sad-root" class="bg-background font-body-md text-on-surface antialiased">
+<div class="flex flex-col w-full">
+<div class="relative w-full overflow-hidden pb-space-xl">
+  <!-- Ambient glow -->
+  <div class="absolute -top-32 right-12 w-96 h-96 bg-secondary-container/20 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute top-48 left-1/4 w-80 h-80 bg-primary-container/10 rounded-full blur-2xl pointer-events-none"></div>
+
+  <!-- ════ HERO ════ -->
+  <section class="relative w-full rounded-2xl bg-gradient-to-br from-primary-container via-[#0b2350] to-[#06142e] text-surface-bright shadow-xl overflow-hidden p-space-lg md:p-space-xl mb-space-lg">
+    <div class="absolute -right-20 -top-24 w-96 h-96 border border-solid border-secondary-container/15 rounded-full pointer-events-none"></div>
+    <div class="absolute -right-8 -top-12 w-72 h-72 border border-solid border-secondary-container/10 rounded-full pointer-events-none"></div>
+    <div class="absolute right-8 top-4 w-44 h-44 border border-solid border-secondary-container/20 rounded-full pointer-events-none"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-secondary-container/5 to-transparent pointer-events-none"></div>
+    <div class="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-space-lg">
+      <div class="flex flex-col max-w-2xl">
+        <div class="flex flex-wrap items-center gap-space-xs mb-space-sm">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container/20 text-secondary-fixed-dim font-label-caps text-label-caps uppercase tracking-wider">
+            <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-ping"></span>
+            Super Admin Authority
+          </span>
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-white/10 font-label-md text-label-md text-primary-fixed-dim">
+            <span class="material-symbols-outlined text-[14px] text-secondary-fixed">school</span>
+            {{ tenant.name }}
+          </span>
+          {% if active_session %}
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-white/10 font-label-md text-label-md text-primary-fixed-dim">
+            <span class="material-symbols-outlined text-[14px] text-secondary-fixed">event</span>
+            {{ active_session.name }}
+          </span>
+          {% endif %}
+          {% if active_term %}
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-secondary-container text-on-secondary-container font-label-caps text-label-caps font-bold">
+            {{ active_term.get_name_display|default:active_term.name }}
+          </span>
+          {% else %}
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-red-500/20 text-red-200 font-label-caps text-label-caps font-bold">No active term</span>
+          {% endif %}
+        </div>
+        <h1 class="font-headline-lg text-headline-lg text-surface-bright tracking-tight leading-tight">
+          Welcome, {{ request.user.get_full_name|default:request.user.username }}
+        </h1>
+        <p class="font-body-lg text-body-lg text-primary-fixed-dim/90 mt-space-xs font-normal">
+          Institutional Registry &amp; Academic Governance Portal{% if picked_campus %} &middot; showing <strong class="text-secondary-fixed">{{ picked_campus.name }}</strong>{% else %} &middot; all sections{% endif %}.
+        </p>
+        <div class="flex flex-wrap items-center gap-space-md mt-space-lg pt-space-md border-0 border-t border-solid border-white/10">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+            <span class="font-label-md text-label-md text-primary-fixed-dim">Attendance today:</span>
+            <span class="font-title-md text-title-md text-surface-bright font-bold">{% if attendance_today is not None %}{{ attendance_today }}%{% else %}Not marked yet{% endif %}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></div>
+            <span class="font-label-md text-label-md text-primary-fixed-dim">Published exams:</span>
+            <span class="font-title-md text-title-md text-surface-bright font-bold">{{ published_exams }} of {{ total_exams }}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-sky-400"></div>
+            <span class="font-label-md text-label-md text-primary-fixed-dim">CBT live now:</span>
+            <span class="font-title-md text-title-md text-surface-bright font-bold">{{ live_exams }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Term progress -->
+      <div class="flex flex-col gap-space-md bg-white/5 backdrop-blur-md p-space-lg rounded-xl border border-solid border-white/10 max-w-md w-full">
+        <div class="flex items-center justify-between">
+          <span class="font-label-caps text-label-caps uppercase text-secondary-fixed-dim tracking-widest">{% if active_term %}{{ active_term.get_name_display|default:active_term.name }}{% else %}Term{% endif %} Progress</span>
+          {% if term_progress %}
+          <span class="font-label-md text-label-md text-surface-bright bg-white/10 px-2 py-0.5 rounded font-semibold">Week {{ term_progress.week }} of {{ term_progress.weeks }}</span>
+          {% endif %}
+        </div>
+        <div class="w-full bg-white/10 rounded-full h-2.5 overflow-hidden">
+          <div class="bg-gradient-to-r from-secondary-fixed-dim to-secondary-container h-full rounded-full transition-all duration-1000" style="width: {{ term_progress.percent|default:0 }}%"></div>
+        </div>
+        <div class="flex justify-between items-center text-primary-fixed-dim font-label-md text-label-md">
+          {% if term_progress %}
+          <span>{{ term_progress.percent }}% complete</span>
+          <span class="text-secondary-fixed-dim font-medium">{{ term_progress.days_left }} day{{ term_progress.days_left|pluralize }} to the end of term</span>
+          {% else %}
+          <span>Term dates not set</span>
+          <a class="text-secondary-fixed-dim font-medium hover:underline" href="{% url 'academics:manage_sessions' %}">Set them in Sessions</a>
+          {% endif %}
+        </div>
+        <div class="flex items-center justify-between pt-space-xs border-0 border-t border-solid border-white/10 text-primary-fixed-dim font-body-sm text-body-sm">
+          <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-secondary-fixed">calendar_month</span>
+            <span>{% if active_term.start_date %}{{ active_term.start_date|date:"j M" }} – {{ active_term.end_date|date:"j M Y" }}{% else %}No dates yet{% endif %}</span>
+          </div>
+          <span class="font-label-caps text-label-caps text-surface-bright/70 uppercase">{{ picked_campus.name|default:"All sections" }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ SECTION FILTER ════ -->
+  <div class="flex flex-wrap items-center justify-between gap-space-md mb-space-lg bg-surface-container-lowest p-space-sm rounded-xl shadow-sm">
+    <form method="post" action="{% url 'platform_school:pick_campus' %}" class="flex flex-wrap items-center gap-space-xs">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <span class="font-label-caps text-label-caps uppercase text-on-surface-variant px-space-sm">School Sections:</span>
+      <button type="submit" name="campus" value="" class="px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-all {% if not picked_campus %}bg-primary-container text-surface-bright font-semibold shadow-sm{% else %}bg-surface-container-low text-on-surface hover:bg-surface-container{% endif %}">All Sections</button>
+      {% for c in campuses %}
+      <button type="submit" name="campus" value="{{ c.pk }}" class="px-space-md py-1.5 rounded-lg font-label-md text-label-md transition-all {% if picked_campus and picked_campus.pk == c.pk %}bg-primary-container text-surface-bright font-semibold shadow-sm{% else %}bg-surface-container-low text-on-surface hover:bg-surface-container{% endif %}">{{ c.name }}</button>
+      {% endfor %}
+    </form>
+    <div class="flex items-center gap-space-xs">
+      <a class="inline-flex items-center gap-1 px-space-md py-1.5 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md font-bold shadow-sm hover:opacity-90 transition-all" href="{% url 'users:register_student' %}">
+        <span class="material-symbols-outlined text-[16px]">person_add</span>
+        Quick Register
+      </a>
+    </div>
+  </div>
+
+  <!-- ════ METRIC CARDS ════ -->
+  <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-md mb-space-xl">
+    <div class="group relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-container to-secondary"></div>
+      <div class="flex items-start justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Enrolled Scholars</span>
+          <span class="font-display-lg text-headline-lg font-bold text-on-surface mt-1 counter" data-target="{{ total_students }}">{{ total_students }}</span>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-secondary-container/20 text-secondary flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">school</span>
+        </div>
+      </div>
+      <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span class="inline-flex items-center text-emerald-700 font-semibold gap-0.5"><span class="material-symbols-outlined text-[16px]">how_to_reg</span> Registered</span>
+        <span>{{ picked_campus.name|default:"All sections" }}</span>
+      </div>
+    </div>
+
+    <div class="group relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-container to-surface-tint"></div>
+      <div class="flex items-start justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Academic Faculty</span>
+          <span class="font-display-lg text-headline-lg font-bold text-on-surface mt-1 counter" data-target="{{ total_staff }}">{{ total_staff }}</span>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-primary-container/10 text-primary-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">badge</span>
+        </div>
+      </div>
+      <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span class="inline-flex items-center text-emerald-700 font-semibold gap-0.5"><span class="material-symbols-outlined text-[16px]">check_circle</span> {{ total_teachers }}</span>
+        <span>Teacher{{ total_teachers|pluralize }}</span>
+      </div>
+    </div>
+
+    <div class="group relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-fixed-dim to-secondary-container"></div>
+      <div class="flex items-start justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">CBT Assessments</span>
+          <span class="font-display-lg text-headline-lg font-bold text-on-surface mt-1 counter" data-target="{{ total_exams }}">{{ total_exams }}</span>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-secondary-container/20 text-on-secondary-container flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">assignment_turned_in</span>
+        </div>
+      </div>
+      <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span class="inline-flex items-center text-sky-700 font-semibold gap-0.5"><span class="material-symbols-outlined text-[16px]">sensors</span> {{ live_exams }} Live</span>
+        <span>{{ published_exams }} published</span>
+      </div>
+    </div>
+
+    <div class="group relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-surface-tint to-outline"></div>
+      <div class="flex items-start justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Scholastic Disciplines</span>
+          <span class="font-display-lg text-headline-lg font-bold text-on-surface mt-1 counter" data-target="{{ total_subjects }}">{{ total_subjects }}</span>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-surface-container text-on-surface flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">menu_book</span>
+        </div>
+      </div>
+      <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span class="text-on-surface font-semibold">Subjects</span>
+        <a class="hover:text-secondary" href="{% url 'users:assign_subjects' %}">Manage</a>
+      </div>
+    </div>
+
+    <div class="group relative bg-surface-container-lowest rounded-xl p-space-lg shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col justify-between">
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary-container"></div>
+      <div class="flex items-start justify-between">
+        <div class="flex flex-col">
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant tracking-wider">Classrooms &amp; Arms</span>
+          <span class="font-display-lg text-headline-lg font-bold text-on-surface mt-1 counter" data-target="{{ total_classes }}">{{ total_classes }}</span>
+        </div>
+        <div class="w-11 h-11 rounded-xl bg-surface-container-high text-on-surface flex items-center justify-center">
+          <span class="material-symbols-outlined text-[24px]">meeting_room</span>
+        </div>
+      </div>
+      <div class="mt-space-md pt-space-xs flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span class="text-on-surface font-semibold">{% if students_per_class is not None %}1:{{ students_per_class }} Ratio{% else %}No classes yet{% endif %}</span>
+        <span>Students per class</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ REGISTRY BANNER ════ -->
+  <div class="mb-space-xl p-space-md rounded-2xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-md shadow-sm">
+    <div class="flex items-center gap-space-md">
+      <div class="w-12 h-12 rounded-xl bg-secondary-container/30 flex items-center justify-center text-secondary">
+        <span class="material-symbols-outlined text-[28px]">verified</span>
+      </div>
+      <div class="flex flex-col">
+        <span class="font-title-md text-title-md text-on-surface">Student Registry &amp; CBT Console</span>
+        <span class="font-body-md text-body-md text-on-surface-variant">{{ total_students }} student{{ total_students|pluralize }} on roll &middot; {{ total_users }} portal account{{ total_users|pluralize }} for {{ tenant.name }}</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-space-sm">
+      <a class="px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md font-semibold hover:bg-surface-bright transition-all shadow-sm" href="{% url 'users:all_students' %}">Browse Registry</a>
+      <a class="px-space-md py-2 rounded-lg bg-primary-container text-surface-bright font-label-md text-label-md font-semibold hover:opacity-90 transition-all shadow-sm" href="{% url 'cbt:admin_exam_list' %}">Monitor CBT Console</a>
+    </div>
+  </div>
+
+  <!-- ════ THREE COLUMNS ════ -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg mb-space-xl">
+
+    <!-- Recent students -->
+    <section class="lg:col-span-4 bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-space-md border-0 border-b border-solid border-surface-container-highest mb-space-md">
+          <div class="flex items-center gap-space-xs">
+            <span class="material-symbols-outlined text-secondary text-[20px]">how_to_reg</span>
+            <h2 class="font-title-md text-title-md text-on-surface">Recent Matriculants</h2>
+          </div>
+          <a class="font-label-caps text-label-caps uppercase text-secondary hover:underline" href="{% url 'users:all_students' %}">View All</a>
+        </div>
+        <div class="space-y-space-sm">
+          {% for student in recent_students %}
+          <div class="flex items-center justify-between p-space-sm rounded-xl hover:bg-surface-container-low transition-colors group">
+            <div class="flex items-center gap-space-sm min-w-0">
+              <div class="w-10 h-10 shrink-0 rounded-full bg-surface-container-high text-on-surface font-title-md text-title-md flex items-center justify-center font-bold">{{ student.full_name|slice:":1"|upper }}</div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-title-md text-title-md text-on-surface truncate group-hover:text-secondary transition-colors">{{ student.full_name }}</span>
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">{{ student.admission_number }}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-space-xs">
+              <span class="px-2 py-0.5 rounded bg-surface-container text-on-surface font-label-caps text-label-caps font-semibold whitespace-nowrap">{{ student.class_assigned|default:"No class" }}</span>
+              <span class="w-2 h-2 rounded-full {% if student.status == 'Active' %}bg-emerald-500{% else %}bg-amber-500{% endif %}" title="{{ student.status }}"></span>
+            </div>
+          </div>
+          {% empty %}
+          <div class="py-space-xl text-center flex flex-col items-center justify-center">
+            <span class="material-symbols-outlined text-on-surface-variant text-[36px] mb-2">person_off</span>
+            <span class="font-body-md text-body-md text-on-surface-variant">No recently admitted students logged.</span>
+            <a class="mt-2 text-secondary font-label-md text-label-md hover:underline font-bold" href="{% url 'users:register_student' %}">Register Candidate</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="pt-space-md mt-space-md border-0 border-t border-solid border-surface-container-highest flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span>Admissions pipeline</span>
+        <a class="text-emerald-700 font-semibold flex items-center gap-1 hover:underline" href="{% url 'admissions:board' %}">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Open board
+        </a>
+      </div>
+    </section>
+
+    <!-- Recent staff -->
+    <section class="lg:col-span-4 bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-space-md border-0 border-b border-solid border-surface-container-highest mb-space-md">
+          <div class="flex items-center gap-space-xs">
+            <span class="material-symbols-outlined text-primary-container text-[20px]">groups</span>
+            <h2 class="font-title-md text-title-md text-on-surface">Faculty Appointments</h2>
+          </div>
+          <a class="font-label-caps text-label-caps uppercase text-secondary hover:underline" href="{% url 'users:create_staff' %}">Add Staff</a>
+        </div>
+        <div class="space-y-space-sm">
+          {% for staff in recent_staff %}
+          {% with name=staff.full_name|default:staff.user.get_full_name|default:staff.user.username %}
+          <div class="flex items-center justify-between p-space-sm rounded-xl hover:bg-surface-container-low transition-colors group">
+            <div class="flex items-center gap-space-sm min-w-0">
+              <div class="w-10 h-10 shrink-0 rounded-full bg-primary-container text-surface-bright font-title-md text-title-md flex items-center justify-center font-bold">{{ name|slice:":1"|upper }}</div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-title-md text-title-md text-on-surface truncate group-hover:text-primary-container transition-colors">{{ name }}</span>
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">{{ staff.get_role_display }}</span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              {% if staff.user.is_active %}
+              <span class="px-2 py-0.5 rounded-full bg-secondary-container/20 text-on-secondary-container font-label-caps text-label-caps font-semibold">Active</span>
+              {% else %}
+              <span class="px-2 py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-caps text-label-caps font-semibold">Inactive</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endwith %}
+          {% empty %}
+          <div class="py-space-xl text-center flex flex-col items-center justify-center">
+            <span class="material-symbols-outlined text-on-surface-variant text-[36px] mb-2">badge</span>
+            <span class="font-body-md text-body-md text-on-surface-variant">No faculty records updated recently.</span>
+            <a class="mt-2 text-secondary font-label-md text-label-md hover:underline font-bold" href="{% url 'users:create_staff' %}">Enroll Faculty Member</a>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="pt-space-md mt-space-md border-0 border-t border-solid border-surface-container-highest flex items-center justify-between text-on-surface-variant font-label-md text-label-md">
+        <span>Staff on record</span>
+        <span class="font-semibold text-on-surface">{{ total_staff }} &middot; {{ total_teachers }} teaching</span>
+      </div>
+    </section>
+
+    <!-- Quick actions -->
+    <section class="lg:col-span-4 bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-space-md border-0 border-b border-solid border-surface-container-highest mb-space-md">
+          <div class="flex items-center gap-space-xs">
+            <span class="material-symbols-outlined text-secondary text-[20px]">bolt</span>
+            <h2 class="font-title-md text-title-md text-on-surface">Executive Directives</h2>
+          </div>
+          <span class="font-label-caps text-label-caps uppercase text-on-surface-variant">Fast Dispatch</span>
+        </div>
+        <div class="grid grid-cols-1 gap-space-xs">
+          <a class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low hover:bg-secondary-container/15 transition-all group" href="{% url 'users:register_student' %}">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-lg bg-surface-container text-on-surface flex items-center justify-center group-hover:bg-secondary-container group-hover:text-on-secondary-container transition-colors"><span class="material-symbols-outlined text-[20px]">person_add</span></div>
+              <div class="flex flex-col">
+                <span class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-secondary">Register New Scholar</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant">Admit student into designated arm</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary text-[18px]">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low hover:bg-secondary-container/15 transition-all group" href="{% url 'users:create_staff' %}">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-lg bg-surface-container text-on-surface flex items-center justify-center group-hover:bg-primary-container group-hover:text-surface-bright transition-colors"><span class="material-symbols-outlined text-[20px]">badge</span></div>
+              <div class="flex flex-col">
+                <span class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-secondary">Create Staff Dossier</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant">Assign department, faculty role</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary text-[18px]">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low hover:bg-secondary-container/15 transition-all group" href="{% url 'cbt:cbt_create_exam' %}">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-lg bg-surface-container text-on-surface flex items-center justify-center group-hover:bg-secondary group-hover:text-surface-bright transition-colors"><span class="material-symbols-outlined text-[20px]">edit_calendar</span></div>
+              <div class="flex flex-col">
+                <span class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-secondary">Schedule CBT Exam</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant">Draft electronic assessment session</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary text-[18px]">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-space-sm rounded-xl bg-surface-container-low hover:bg-secondary-container/15 transition-all group" href="{% url 'cbt:bulk_question_upload' %}">
+            <div class="flex items-center gap-space-sm">
+              <div class="w-9 h-9 rounded-lg bg-surface-container text-on-surface flex items-center justify-center group-hover:bg-secondary-container group-hover:text-on-secondary-container transition-colors"><span class="material-symbols-outlined text-[20px]">upload_file</span></div>
+              <div class="flex flex-col">
+                <span class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-secondary">Bulk Question Upload</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant">CSV/Excel item bank ingestion</span>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary text-[18px]">chevron_right</span>
+          </a>
+        </div>
+      </div>
+      <div class="pt-space-sm mt-space-sm border-0 border-t border-solid border-surface-container-highest flex items-center justify-between">
+        <a class="text-secondary font-label-md text-label-md font-bold hover:underline flex items-center gap-1" href="{% url 'cbt:admin_exam_list' %}">
+          <span class="material-symbols-outlined text-[16px]">visibility</span>
+          Audit Full Examination Registry
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <!-- ════ EXAM LEDGER ════ -->
+  <section class="w-full bg-surface-container-lowest rounded-2xl p-space-lg shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between pb-space-md border-0 border-b border-solid border-surface-container-highest mb-space-md gap-space-sm">
+      <div class="flex items-center gap-space-sm">
+        <div class="w-10 h-10 rounded-xl bg-primary-container text-surface-bright flex items-center justify-center"><span class="material-symbols-outlined text-[22px]">quiz</span></div>
+        <div class="flex flex-col">
+          <h2 class="font-title-lg text-title-lg text-on-surface">Scholastic Examination Ledger &amp; CBT Control</h2>
+          <span class="font-body-sm text-body-sm text-on-surface-variant">Latest assessments, publishing status and target classes</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-space-xs">
+        <a class="inline-flex items-center gap-1 px-space-md py-2 rounded-lg bg-primary-container text-surface-bright font-label-md text-label-md font-semibold hover:opacity-90 transition-all shadow-sm" href="{% url 'cbt:cbt_create_exam' %}">
+          <span class="material-symbols-outlined text-[18px]">add_circle</span>
+          New Examination
+        </a>
+        <a class="inline-flex items-center gap-1 px-space-md py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md font-semibold hover:bg-surface-container-high transition-all" href="{% url 'cbt:admin_exam_list' %}">
+          <span class="material-symbols-outlined text-[18px]">inventory_2</span>
+          Archives
+        </a>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-0 border-b border-solid border-surface-container-highest text-on-surface-variant font-label-caps text-label-caps uppercase">
+            <th class="py-3 px-space-md font-bold tracking-wider">Assessment Title</th>
+            <th class="py-3 px-space-md font-bold tracking-wider">Discipline / Subject</th>
+            <th class="py-3 px-space-md font-bold tracking-wider">Target Arm</th>
+            <th class="py-3 px-space-md font-bold tracking-wider text-center">Status</th>
+            <th class="py-3 px-space-md font-bold tracking-wider text-right">Direct Action</th>
+          </tr>
+        </thead>
+        <tbody class="font-body-md text-body-md">
+          {% for exam in recent_exams %}
+          <tr class="border-0 border-b border-solid border-surface-container-highest hover:bg-surface-container-low/70 transition-colors group">
+            <td class="py-space-md px-space-md">
+              <div class="flex flex-col">
+                <span class="font-title-md text-title-md text-on-surface font-semibold group-hover:text-secondary transition-colors">{{ exam.title }}</span>
+                <span class="font-body-sm text-body-sm text-on-surface-variant">Exam code: #EX-{{ exam.id }}{% if exam.start_time %} &middot; {{ exam.start_time|date:"j M Y, H:i" }}{% endif %}</span>
+              </div>
+            </td>
+            <td class="py-space-md px-space-md">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container font-label-md text-label-md text-on-surface font-medium">
+                <span class="material-symbols-outlined text-[14px] text-secondary">book</span>
+                {{ exam.subject.name }}
+              </span>
+            </td>
+            <td class="py-space-md px-space-md">
+              <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">{% for c in exam.classes.all %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}No class set{% endfor %}</span>
+            </td>
+            <td class="py-space-md px-space-md text-center">
+              {% if exam.published %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-caps text-label-caps font-bold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                Published
+              </span>
+              {% else %}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-label-caps text-label-caps font-bold">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                Draft Pending
+              </span>
+              {% endif %}
+            </td>
+            <td class="py-space-md px-space-md text-right">
+              <div class="inline-flex items-center gap-1">
+                <a class="inline-flex items-center gap-1 px-3 py-1 rounded bg-surface-container text-on-surface font-label-md text-label-md font-semibold hover:bg-secondary-container hover:text-on-secondary-container transition-all" href="{% url 'cbt:edit_exam' exam.id %}">
+                  <span class="material-symbols-outlined text-[16px]">edit</span>
+                  Edit
+                </a>
+                <a class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" href="{% url 'cbt:exam_analysis' exam.id %}" title="Exam analysis">
+                  <span class="material-symbols-outlined text-[18px]">insights</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td class="py-space-xl text-center" colspan="5">
+              <div class="flex flex-col items-center justify-center">
+                <span class="material-symbols-outlined text-on-surface-variant text-[44px] mb-2">assignment_late</span>
+                <span class="font-title-md text-title-md text-on-surface">No CBT examinations queued for this term</span>
+                <p class="font-body-md text-body-md text-on-surface-variant max-w-sm mt-1 mx-auto">Initiate and configure questions, assessment duration, and pass marks.</p>
+                <a class="mt-space-md px-space-md py-2 rounded-lg bg-primary-container text-surface-bright font-label-md text-label-md font-semibold shadow-sm hover:opacity-90" href="{% url 'cbt:cbt_create_exam' %}">Construct Examination</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="pt-space-md mt-space-md border-0 border-t border-solid border-surface-container-highest flex flex-col sm:flex-row items-center justify-between text-on-surface-variant font-label-md text-label-md gap-2">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px] text-secondary">security</span>
+        <span>Showing the {{ recent_exams|length }} most recent of {{ total_exams }} exam{{ total_exams|pluralize }}</span>
+      </div>
+      <div class="flex items-center gap-space-sm">
+        <span>{{ published_exams }} published</span>
+        <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+        <span>{{ live_exams }} live now</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ HERITAGE BANNER ════ -->
+  <div class="mt-space-xl rounded-2xl overflow-hidden relative shadow-lg bg-primary-container text-surface-bright flex flex-col md:flex-row items-center">
+    <div class="p-space-lg md:p-space-xl md:w-3/5 z-10">
+      <span class="font-label-caps text-label-caps uppercase text-secondary-fixed-dim tracking-widest">Intercontinental Legacy Charter</span>
+      <h3 class="font-headline-md text-headline-md text-surface-bright mt-1">Pinnacle of Educational Excellence in Kano</h3>
+      <p class="font-body-md text-body-md text-primary-fixed-dim/90 mt-space-xs max-w-xl">
+        Integrating scholastic discipline with contemporary automated testing infrastructures. Direct oversight over all faculties, student matriculation ledgers, and terminal grades.
+      </p>
+      <div class="mt-space-md flex items-center gap-space-md">
+        <a class="px-space-md py-2 rounded-lg bg-secondary-container text-on-secondary-container font-label-md text-label-md font-bold hover:opacity-90 transition-all" href="{% url 'users:all_students' %}">Scholastic Registry</a>
+        <a class="px-space-md py-2 rounded-lg bg-white/10 text-surface-bright font-label-md text-label-md font-medium hover:bg-white/20 transition-all" href="{% url 'school_settings:home' %}">Portal Protocols</a>
+      </div>
+    </div>
+    <div class="md:w-2/5 w-full h-48 md:h-64 relative overflow-hidden flex items-center justify-center p-space-md">
+      <img alt="Intercontinental Schools Kano campus" class="object-cover w-full h-full rounded-xl opacity-40 mix-blend-luminosity scale-105 hover:opacity-60 transition-opacity duration-700" src="{% static 'images/landing/campus.jpg' %}"/>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+  // Count the metric cards up from zero
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#sad-root .counter').forEach(counter => {
+      const target = parseInt(counter.getAttribute('data-target'), 10);
+      if (isNaN(target)) return;
+      const duration = 1200;
+      const startTime = performance.now();
+      function updateCounter(currentTime) {
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        counter.textContent = Math.floor(easeOut * target).toLocaleString();
+        if (progress < 1) requestAnimationFrame(updateCounter);
+        else counter.textContent = target.toLocaleString();
+      }
+      requestAnimationFrame(updateCounter);
+    });
+  });
+</script>
+{% endblock %}

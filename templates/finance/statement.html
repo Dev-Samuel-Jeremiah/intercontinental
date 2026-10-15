@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Income &amp; expenditure{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Income &amp; <em>expenditure</em></h1>
+    <p class="fin-sub">{{ start|date:"j M Y" }} – {{ end|date:"j M Y" }}</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:budgets' %}"><i class="bi bi-sliders"></i> Budgets</a>
+    <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-receipt-cutoff"></i> Expenses</a>
+    <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  </div>
+</div>
+
+<form method="get" class="panel">
+  <div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end">
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.25rem">From</label>
+      <input type="date" name="start" value="{{ start|date:'Y-m-d' }}" style="padding:.55rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"></div>
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.25rem">To</label>
+      <input type="date" name="end" value="{{ end|date:'Y-m-d' }}" style="padding:.55rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"></div>
+    <button class="fin-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Update</button>
+    <a class="fin-btn" href="?start={{ quick.this_month }}&end={{ quick.today }}">This month</a>
+    <a class="fin-btn" href="?start={{ quick.last_30 }}&end={{ quick.today }}">Last 30 days</a>
+  </div>
+</form>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Income</small><b style="color:{% if report.income < 0 %}var(--red){% else %}var(--green){% endif %}">{% if report.income < 0 %}−₦{{ report.income|floatformat:0|cut:"-"|intcomma }}{% else %}₦{{ report.income|floatformat:0|intcomma }}{% endif %}</b>{% if report.refunds or report.shop_takings %}<span class="hint">₦{{ report.received|floatformat:0|intcomma }} fees{% if report.shop_takings %} · ₦{{ report.shop_takings|floatformat:0|intcomma }} shop{% endif %}{% if report.refunds %} · ₦{{ report.refunds|floatformat:0|intcomma }} refunded{% endif %}</span>{% endif %}</div>
+  <div class="fin-stat"><small>Expenditure</small><b style="color:var(--red)">₦{{ report.expenses|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Net</small><b style="color:{% if report.net < 0 %}var(--red){% else %}var(--champagne-lt){% endif %}">{% if report.net < 0 %}−₦{{ report.net|floatformat:0|cut:"-"|intcomma }}{% else %}₦{{ report.net|floatformat:0|intcomma }}{% endif %}</b></div>
+  <div class="fin-stat"><small>Awaiting approval</small><b style="color:var(--amber)">₦{{ report.awaiting_approval|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Petty cash in hand</small><b>₦{{ report.petty_cash|floatformat:0|intcomma }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-arrow-down-circle"></i> Where the money came from</h3><span class="chip green">₦{{ report.income|floatformat:0|intcomma }}</span></div>
+    <table class="tbl">
+      <tbody>
+        {% for row in report.by_method %}
+        <tr><td class="name">{{ row.label }}<br><span class="hint">{{ row.count }} payment{{ row.count|pluralize }}</span></td>
+            <td class="money" style="text-align:right">₦{{ row.total|floatformat:0|intcomma }}</td></tr>
+        {% empty %}<tr><td><div class="empty"><i class="bi bi-cash-coin"></i>No payments received in this period.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-arrow-up-circle"></i> Where it went</h3><span class="chip red">₦{{ report.expenses|floatformat:0|intcomma }}</span></div>
+    <table class="tbl">
+      <thead><tr><th>Category</th><th style="text-align:right">Spent</th><th style="text-align:right">Budget</th></tr></thead>
+      <tbody>
+        {% for row in report.by_category %}
+        <tr>
+          <td class="name">{{ row.category|default:"Uncategorised" }}<br><span class="hint">{{ row.count }} payment{{ row.count|pluralize }}</span></td>
+          <td class="money" style="text-align:right">₦{{ row.total|floatformat:0|intcomma }}</td>
+          <td class="money" style="text-align:right">{% if row.budget %}₦{{ row.budget|floatformat:0|intcomma }}{% if row.over %} <span class="chip red">over</span>{% endif %}{% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="3"><div class="empty"><i class="bi bi-receipt"></i>No expenses paid in this period.</div></td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

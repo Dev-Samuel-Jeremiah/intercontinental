@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Restorative conversations{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Conduct</div>
+  <h1 class="fin-title"><em>Restorative conversations</em></h1>
+  <p class="fin-sub">Bring the students involved together: what happened, who was affected, and what everyone agrees to do. Set a follow-up date and you will be reminded on the day.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    {% for m in items %}<div style="padding:.6rem 0;border-bottom:1px solid var(--rim)"><b>{% for s in m.students.all %}{{ s.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</b> <span class="hint">{{ m.date|date:"j M Y" }}</span> <span class="chip{% if m.outcome == 'RESOLVED' %} ok{% elif m.outcome == 'NOT' %} red{% else %} gold{% endif %}">{{ m.get_outcome_display }}</span>
+      <div class="hint">{{ m.what_happened|truncatechars:160 }}</div><div style="font-size:.88rem">Agreed: {{ m.agreement }}</div>
+      {% if m.follow_up_on %}{% if m.followed_up %}<div class="hint">Followed up{% if m.follow_up_note %}: {{ m.follow_up_note }}{% endif %}</div>{% else %}<form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="op" value="followed"><input type="hidden" name="id" value="{{ m.pk }}"><input name="follow_up_note" placeholder="Follow-up on {{ m.follow_up_on|date:'j M' }} — how is it going?" style="flex:1"><button class="fin-btn fin-btn-sm" type="submit">Followed up</button></form>{% endif %}{% endif %}</div>
+    {% empty %}<p class="empty">None recorded.</p>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Record a conversation</h3>
+    <div><label>Students</label><select name="students" multiple size="6" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Also present</label><input name="others" maxlength="255"></div></div>
+    <div><label>What happened</label><textarea name="what_happened" rows="2" required></textarea></div>
+    <div><label>Who was affected and how</label><textarea name="who_was_affected" rows="2"></textarea></div>
+    <div><label>What was agreed</label><textarea name="agreement" rows="2" required></textarea></div>
+    <div class="row2"><div><label>Outcome</label><select name="outcome">{% for k, v in outcomes %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Follow up on</label><input type="date" name="follow_up_on"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

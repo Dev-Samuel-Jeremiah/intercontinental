@@ -1,0 +1,201 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Document{% endblock %}
+{% block extra_css %}
+{% endblock %}
+{% block content %}
+    
+    <style>
+    /* ---------- Container ---------- */
+    .grade-container {
+        max-width: 1100px;
+        margin: 50px auto;
+        padding: 30px 25px;
+        background:rgba(255,255,255,.03);
+        border-radius: 16px;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        font-family: 'Inter', Arial, sans-serif;
+        perspective: 1000px;
+        overflow: visible; /* important for 3D hover */
+    }
+
+    /* ---------- Headings ---------- */
+    .grade-container h1 {
+        color:var(--blue);
+        font-size: 2.2em;
+        margin-bottom: 25px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* ---------- Table ---------- */
+    .grade-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+        background:rgba(255,255,255,.045);
+    }
+
+    .grade-table th, .grade-table td {
+        padding: 15px 20px;
+        text-align: left;
+        transition: all 0.3s ease;
+    }
+
+    .grade-table th {
+        background:linear-gradient(135deg, #2563eb, #1d4ed8);
+        color:#fff;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.95em;
+    }
+
+    /* ---------- Table Rows ---------- */
+    .grade-table tbody tr {
+        background:rgba(255,255,255,.03);
+        transition: all 0.3s ease, transform 0.3s ease;
+        transform-style: preserve-3d;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .grade-table tbody tr:hover {
+        transform: translateY(-5px) rotateX(2deg);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        background:#f0f4ff;
+    }
+
+    /* ---------- Highlight Ungraded Rows ---------- */
+    .grade-table tbody tr.not-graded-row {
+        background:var(--amber-dim);
+        box-shadow: 0 6px 18px rgba(245, 158, 11, 0.2);
+    }
+
+    .grade-table tbody tr.not-graded-row:hover {
+        transform: translateY(-6px) rotateX(3deg);
+        box-shadow: 0 15px 30px rgba(245, 158, 11, 0.3);
+    }
+
+    /* ---------- Buttons ---------- */
+    .grade-table td .btn {
+        padding: 6px 14px;
+        font-size: 0.85em;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .grade-table td .btn:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* ---------- Grade Badges ---------- */
+    .grade-badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-weight: 600;
+        color:#fff;
+        font-size: 0.85em;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .grade-badge.graded {
+        background:linear-gradient(135deg, #16a34a, #15803d);
+    }
+
+    .grade-badge.not-graded {
+        background:linear-gradient(135deg, #f59e0b, #b45309);
+    }
+
+    /* ---------- No submissions ---------- */
+    .no-submissions {
+        font-size: 1.1em;
+        color:var(--slate2);
+        margin-top: 20px;
+        font-style: italic;
+    }
+
+    /* ---------- Back Button ---------- */
+    .back-btn {
+        display: inline-block;
+        margin-top: 30px;
+        background:linear-gradient(135deg, #2563eb, #1d4ed8);
+        color:#fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        background:linear-gradient(135deg, #1d4ed8, #1e40af);
+    }
+    @media (max-width: 768px) {
+
+    
+
+    .grade-container {
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        padding: 16px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+}
+
+    </style>
+
+
+    <div class="grade-container">
+        <h1>Grade Assignment: {{ assignment.title }}</h1>
+
+        {% if submissions %}
+        {% if similar %}<div style="padding:.8rem 1rem;border-radius:12px;margin-bottom:1rem;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.07)">
+          <b style="color:#fbbf24"><i class="bi bi-files"></i> Submissions that look alike</b>
+          {% for p in similar %}<div style="font-size:.88rem;margin-top:.3rem">{{ p.a.student.get_full_name|default:p.a.student.username }} &amp; {{ p.b.student.get_full_name|default:p.b.student.username }} — <b>{{ p.score }}%</b> · {{ p.why }}</div>{% endfor %}
+          <div style="opacity:.6;font-size:.78rem;margin-top:.3rem">A starting point for a conversation, not proof — students may have studied together or quoted the same source.</div></div>{% endif %}
+        <table class="grade-table">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Submitted At</th>
+                    <th>Grade</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in submissions %}
+                <tr class="{% if sub.grade is None %}not-graded-row{% endif %}">
+                    <td>{{ sub.student.get_full_name }}</td>
+                    <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                    <td>
+                        {% if sub.grade is not None %}
+                            <span class="grade-badge graded">{{ sub.final_grade }}</span>{% if sub.penalty_percent %} <small style="opacity:.7" title="{{ sub.grade }} less the late penalty">−{{ sub.penalty_percent }}% late</small>{% endif %}
+                        {% else %}
+                            <span class="grade-badge not-graded">Not Graded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'classroom:grade_assignment' assignment.id %}?submission_id={{ sub.id }}" class="btn btn-primary btn-sm">
+                            Grade
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-submissions">No submissions yet for this assignment.</p>
+        {% endif %}
+
+        <a href="{% url 'classroom:teacher_course_detail' course.id %}" class="back-btn">Back to Course Details</a>
+    </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,1 @@
+{% if n.status == 'APPROVED' %}<span class="chip green">approved</span>{% elif n.status == 'SUBMITTED' %}<span class="chip gold">waiting for review</span>{% elif n.status == 'RETURNED' %}<span class="chip red">sent back</span>{% else %}<span class="chip">draft</span>{% endif %}

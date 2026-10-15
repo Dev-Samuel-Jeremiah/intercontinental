@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Careers{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a></div>
+  <h1 class="fin-title">Career <em>guidance</em></h1>
+  <p class="fin-sub">Find areas that match your interests, then check whether your subjects fit the courses you like. Always confirm combinations in the current JAMB brochure — universities differ.</p>
+</div><a class="fin-btn" href="{% url 'studentlife:combination' %}">Subject combination checker</a></div>
+<p class="hint">Your subjects: {{ subjects|join:", "|default:"none recorded yet — ask your form teacher" }}</p>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="quiz">
+    <h3 style="margin:0 0 .6rem">Interest quiz</h3>
+    <table class="tbl" data-no-export><tbody>{% for i, q in quiz %}<tr><td style="font-size:.88rem">{{ q.0 }}</td><td style="white-space:nowrap">
+      <label class="pill"><input type="radio" name="q{{ i }}" value="1" required> No</label><label class="pill"><input type="radio" name="q{{ i }}" value="2"> A bit</label><label class="pill"><input type="radio" name="q{{ i }}" value="3"> Yes!</label></td></tr>{% endfor %}</tbody></table>
+    <button class="fin-btn fin-btn-gold" type="submit">See my areas</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    {% if top %}<div class="panel"><div class="panel-h"><h3>Your top areas</h3></div><div class="panel-b">{% for name, score in top %}<span class="chip gold" style="margin:.2rem">{{ name }}</span>{% endfor %}</div></div>{% endif %}
+    {% if suggest %}<div class="panel"><div class="panel-h"><h3>Courses to look at</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for s in suggest %}<tr><td class="name">{{ s.course.name }}<br><small class="hint">{{ s.cluster }}</small></td>
+        <td>{% if s.ok %}<span class="chip green">Your subjects fit</span>{% else %}<small class="hint">{% if s.missing %}Needs {{ s.missing|join:", " }}{% endif %}{% for g in s.choose %} · one of {{ g|join:"/" }}{% endfor %}</small>{% endif %}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="choose"><input type="hidden" name="course" value="{{ s.course.name }}"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td></tr>{% endfor %}
+    </tbody></table></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>Courses I am considering</h3></div><div class="panel-b">
+      {% for c in chosen %}<div style="padding:.4rem 0;border-bottom:1px solid var(--rim)"><b>{{ c.course.name }}</b> {% if c.ok %}<span class="chip green">Subjects fit</span>{% else %}<span class="chip red">Check subjects</span>{% endif %}
+        <div class="hint">UTME: {{ c.course.required|join:", " }}{% for g in c.course.one_of %} + one of {{ g|join:"/" }}{% endfor %}</div>
+        {% if c.missing %}<div class="hint">Missing: {{ c.missing|join:", " }}</div>{% endif %}
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="choose"><input type="hidden" name="course" value="{{ c.course.name }}"><input type="hidden" name="remove" value="1"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></div>
+      {% empty %}<p class="empty">Take the quiz, or add a course from the checker.</p>{% endfor %}
+      <form method="post" class="fin-form" style="display:flex;gap:.4rem;margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="choose"><select name="course">{% for c in all_courses %}<option>{{ c.name }}</option>{% endfor %}</select><button class="fin-btn fin-btn-sm" type="submit">Add</button></form>
+    </div></div>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="notes"><h3 style="margin:0 0 .4rem">My thoughts</h3><textarea name="notes" rows="3">{{ profile.notes }}</textarea><button class="fin-btn fin-btn-sm" type="submit">Save</button></form>
+    {% if notes %}<div class="panel"><div class="panel-h"><h3>From the counsellor</h3></div><div class="panel-b">{% for n in notes %}<p><small class="hint">{{ n.staff.full_name }}, {{ n.created_at|date:"j M Y" }}</small><br>{{ n.note|linebreaksbr }}</p>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

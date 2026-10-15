@@ -1,0 +1,52 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}{{ run }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.steps{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}.steps span{padding:.35rem .75rem;border-radius:99px;border:1px solid var(--rim2);font-size:.78rem;color:var(--slate)}.steps span.on{color:var(--champagne-lt);border-color:var(--champagne-border);background:var(--champagne-dim)}.steps span.done{color:var(--green);border-color:var(--green-border)}
+.adj input{width:90px;padding:.3rem .45rem;border-radius:7px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'payroll:runs' %}" style="color:inherit">Payroll runs</a></div>
+  <h1 class="fin-title">{{ run }}</h1>
+  <p class="fin-sub">{{ run.get_kind_display }}{% if run.kind != 'MONTHLY' %} · {{ run.bonus_percent|floatformat:0 }}% of basic{% endif %} · prepared by {{ run.prepared_by.get_full_name|default:run.prepared_by.username }}{% if run.approved_by %} · approved by {{ run.approved_by.get_full_name|default:run.approved_by.username }}{% endif %}{% if run.paid_by %} · released {{ run.paid_at|date:"j M Y" }}{% endif %}</p>
+</div><span class="chip {% if run.status == 'PAID' %}green{% elif run.status == 'APPROVED' %}gold{% elif run.status == 'SUBMITTED' %}amber{% elif run.status == 'CANCELLED' %}red{% endif %}">{{ run.get_status_display }}</span></div>
+<div class="steps"><span class="{% if run.status == 'DRAFT' %}on{% else %}done{% endif %}">1. Bursary prepares</span><span class="{% if run.status == 'SUBMITTED' %}on{% elif run.status == 'APPROVED' or run.status == 'PAID' %}done{% endif %}">2. Principal approves</span><span class="{% if run.status == 'APPROVED' %}on{% elif run.status == 'PAID' %}done{% endif %}">3. Payment released</span></div>
+{% if run.note and run.status == 'DRAFT' %}<div class="chip amber" style="white-space:normal;margin-bottom:.8rem;padding:.5rem .8rem"><i class="bi bi-arrow-return-left"></i> {{ run.note }}</div>{% endif %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Gross pay</small><b>₦{{ money.gross|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>PAYE</small><b>₦{{ money.paye|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Pension (staff + school)</small><b>₦{{ money.pension_total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Net pay to banks</small><b style="color:var(--green)">₦{{ money.net|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Cost to school</small><b>₦{{ money.cost|floatformat:0|intcomma }}</b></div>
+</div>
+<div class="panel"><div class="panel-b" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
+  <form method="post" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">{% csrf_token %}
+  {% if run.status == 'DRAFT' %}
+    <button class="fin-btn" name="action" value="rebuild"><i class="bi bi-arrow-repeat"></i> Recalculate</button>
+    <button class="fin-btn fin-btn-gold" name="action" value="submit"><i class="bi bi-send"></i> Send for approval</button>
+  {% elif run.status == 'SUBMITTED' %}
+    {% if is_admin and not me_prepared or is_admin and not second %}<button class="fin-btn fin-btn-gold" name="action" value="approve" onclick="return confirm('Approve this payroll?')"><i class="bi bi-check2-circle"></i> Approve</button>{% elif is_admin %}<span class="hint">Someone other than you must approve — you prepared it.</span>{% else %}<span class="hint">Waiting for the principal or an administrator to approve.</span>{% endif %}
+  {% elif run.status == 'APPROVED' %}
+    {% if is_admin and not me_prepared or is_admin and not second %}<button class="fin-btn fin-btn-gold" name="action" value="release" onclick="return confirm('Mark this payroll as paid? Loan repayments will be posted and payslips emailed.')"><i class="bi bi-bank"></i> Release payment</button>{% else %}<span class="hint">Waiting for an administrator to release payment.</span>{% endif %}
+  {% elif run.status == 'PAID' %}
+    <button class="fin-btn" name="action" value="email"><i class="bi bi-envelope"></i> Email payslips again</button>
+  {% endif %}
+  {% if run.status == 'SUBMITTED' or run.status == 'APPROVED' %}<input name="note" maxlength="255" placeholder="What needs changing?" style="padding:.55rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><button class="fin-btn" name="action" value="send_back"><i class="bi bi-arrow-return-left"></i> Send back</button>{% endif %}
+  {% if run.status != 'PAID' and run.status != 'CANCELLED' %}<button class="fin-btn fin-btn-danger" name="action" value="cancel" onclick="return confirm('Cancel this run?')">Cancel run</button>{% endif %}
+  </form>
+  <span style="margin-left:auto;display:flex;gap:.3rem;flex-wrap:wrap" class="exp">
+    {% if run.status == 'APPROVED' or run.status == 'PAID' %}<a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'payroll:run_download' run.id 'bank' %}?export=csv"><i class="bi bi-bank"></i> Bank file</a>{% endif %}
+    <a class="fin-btn fin-btn-sm" href="{% url 'payroll:run_download' run.id 'register' %}?export=xlsx"><i class="bi bi-file-earmark-excel"></i> Register</a>
+    <a class="fin-btn fin-btn-sm" href="{% url 'payroll:run_download' run.id 'paye' %}?export=xlsx">PAYE schedule</a>
+    <a class="fin-btn fin-btn-sm" href="{% url 'payroll:run_download' run.id 'pension' %}?export=xlsx">Pension schedule</a>
+    <a class="fin-btn fin-btn-sm" href="{% url 'payroll:run_download' run.id 'nhf' %}?export=xlsx">NHF schedule</a>
+  </span>
+</div></div>
+{% if problems %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle" style="color:var(--amber)"></i> Check before paying ({{ problems|length }})</h3></div><div class="panel-b">{% for p in problems %}<div style="padding:.2rem 0">{{ p }}</div>{% endfor %}</div></div>{% endif %}
+<div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Staff</th><th>Gross</th><th>PAYE</th><th>Pension</th><th>NHF</th><th>Loan</th><th>Other</th><th>Net</th>{% if run.status == 'DRAFT' %}<th>Adjust</th>{% endif %}</tr></thead><tbody>
+  {% for s in slips %}<tr><td class="name"><a href="{% url 'payroll:payslip_v2' s.id %}" style="color:inherit">{{ s.staff_payroll.staff.full_name }}</a>{% if s.unpaid_leave %}<div class="hint">unpaid leave −₦{{ s.unpaid_leave|floatformat:0|intcomma }}</div>{% endif %}{% if s.extra_pay %}<div class="hint">extra +₦{{ s.extra_pay|floatformat:0|intcomma }}</div>{% endif %}{% if s.note %}<div class="hint">{{ s.note }}</div>{% endif %}{% if s.emailed_at %}<div class="hint"><i class="bi bi-envelope-check"></i> emailed</div>{% endif %}</td>
+    <td class="money">₦{{ s.gross|floatformat:2|intcomma }}</td><td class="money">₦{{ s.paye|floatformat:2|intcomma }}</td><td class="money">₦{{ s.pension_employee|floatformat:2|intcomma }}</td><td class="money">₦{{ s.nhf|floatformat:2|intcomma }}</td>
+    <td class="money">₦{{ s.loan_repayment|floatformat:2|intcomma }}</td><td class="money">₦{{ s.other_total|floatformat:2|intcomma }}</td><td class="money"><b>₦{{ s.net|floatformat:2|intcomma }}</b></td>
+    {% if run.status == 'DRAFT' %}<td><form method="post" class="adj" style="display:flex;gap:.25rem;align-items:center">{% csrf_token %}<input type="hidden" name="action" value="adjust"><input type="hidden" name="slip" value="{{ s.id }}"><input name="extra_pay" value="{{ s.extra_pay }}" title="Extra pay (overtime, extra lessons)" placeholder="+ pay"><input name="other_deductions" value="{{ s.other_deductions }}" title="Other deductions" placeholder="− deduct"><input name="note" value="{{ s.note }}" placeholder="note" style="width:110px"><button class="fin-btn fin-btn-sm" title="Recalculate"><i class="bi bi-check2"></i></button></form></td>{% endif %}</tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

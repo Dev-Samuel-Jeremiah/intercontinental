@@ -1,0 +1,107 @@
+{% extends "admissions/public_base.html" %}
+{% block title %}Apply for admission{% endblock %}
+{% block body %}
+<div class="eyebrow">Admissions {% if settings_obj.session %}· {{ settings_obj.session.name }}{% endif %}</div>
+<h1>Apply to <em>{{ tenant.name }}</em></h1>
+<p class="lead">Fill in your child's details below. It takes about three minutes, and you'll get a reference number to track your application.</p>
+
+{% if settings_obj.instructions %}
+<div class="note" style="margin-top:1.4rem"><i class="bi bi-info-circle-fill"></i><div>{{ settings_obj.instructions|linebreaksbr }}</div></div>
+{% endif %}
+
+{% if settings_obj.application_fee %}
+<div class="note" style="margin-top:1rem"><i class="bi bi-cash-coin"></i>
+  <div>An application fee of <strong style="color:var(--text)">₦{{ settings_obj.application_fee|floatformat:0 }}</strong> applies. The school will contact you with payment details after you submit.</div>
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="errors" style="margin-top:1.4rem">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div class="card">
+    <h2>The child</h2>
+    <p class="hint">Please use the names exactly as they appear on the birth certificate.</p>
+    <div class="grid">
+      <div class="field full">
+        <label for="{{ form.full_name.id_for_label }}">{{ form.full_name.label }} <span class="req">*</span></label>
+        {{ form.full_name }}{% for e in form.full_name.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.gender.id_for_label }}">{{ form.gender.label }}</label>
+        {{ form.gender }}
+      </div>
+      <div class="field">
+        <label for="{{ form.date_of_birth.id_for_label }}">{{ form.date_of_birth.label }}</label>
+        {{ form.date_of_birth }}{% for e in form.date_of_birth.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.applying_for.id_for_label }}">{{ form.applying_for.label }} <span class="req">*</span></label>
+        {{ form.applying_for }}{% for e in form.applying_for.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.previous_school.id_for_label }}">{{ form.previous_school.label }}</label>
+        {{ form.previous_school }}
+      </div>
+      <div class="field full">
+        <label for="{{ form.passport.id_for_label }}">{{ form.passport.label }}</label>
+        {{ form.passport }}
+        <span class="help">A clear photo of the child's face. JPG or PNG.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Parent or guardian</h2>
+    <p class="hint">This is how the school will reach you about the application.</p>
+    <div class="grid">
+      <div class="field">
+        <label for="{{ form.parent_name.id_for_label }}">{{ form.parent_name.label }} <span class="req">*</span></label>
+        {{ form.parent_name }}{% for e in form.parent_name.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.relationship.id_for_label }}">{{ form.relationship.label }}</label>
+        {{ form.relationship }}
+      </div>
+      <div class="field">
+        <label for="{{ form.parent_phone.id_for_label }}">{{ form.parent_phone.label }} <span class="req">*</span></label>
+        {{ form.parent_phone }}{% for e in form.parent_phone.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field">
+        <label for="{{ form.parent_email.id_for_label }}">{{ form.parent_email.label }}</label>
+        {{ form.parent_email }}{% for e in form.parent_email.errors %}<span class="err">{{ e }}</span>{% endfor %}
+      </div>
+      <div class="field full">
+        <label for="{{ form.address.id_for_label }}">{{ form.address.label }}</label>
+        {{ form.address }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Documents {% if settings_obj.require_documents %}<span class="req">*</span>{% endif %}</h2>
+    <p class="hint">Birth certificate, last school result, transfer certificate — whatever you have. You can select several files.</p>
+    <div class="field">
+      <input type="file" name="documents" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+      <span class="help">PDF or photos, up to 10 files.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>How did you hear about us?</h2>
+    <p class="hint">This helps the school know what is working. Optional.</p>
+    <div class="grid">
+      <div class="field">{{ form.source }}</div>
+      <div class="field">{{ form.source_detail }}</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.8rem;display:flex;gap:.8rem;flex-wrap:wrap;align-items:center">
+    <button type="submit" class="btn"><i class="bi bi-send-fill"></i> Submit application</button>
+    <span class="help">You'll get a reference number on the next screen.</span>
+  </div>
+</form>
+{% endblock %}

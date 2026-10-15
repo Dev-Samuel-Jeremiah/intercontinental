@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ ch.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Reading challenge · {{ ch.starts|date:"j M" }}–{{ ch.ends|date:"j M Y" }}</div>
+  <h1 class="fin-title"><em>{{ ch.title }}</em></h1>
+  <p class="fin-sub">Read {{ ch.target }} book{{ ch.target|pluralize }} to earn the "{{ ch.badge }}" badge. {{ badges }} student{{ badges|pluralize }} ha{{ badges|pluralize:"s,ve" }} earned it.{% if ch.description %} {{ ch.description }}{% endif %}</p>
+</div></div>
+<div class="panel"><div class="panel-b"><table class="tbl" data-no-export>
+  <thead><tr><th>#</th><th>Reader</th><th>Class</th><th class="num">Books</th></tr></thead><tbody>
+  {% for s in board %}<tr><td>{{ forloop.counter }}</td><td class="name">{{ s.full_name }}{% if s.n >= ch.target %} <span class="chip gold">{{ ch.badge }}</span>{% endif %}</td><td>{{ s.class_assigned|default:"" }}</td><td class="num">{{ s.n }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No approved books yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

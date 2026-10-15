@@ -1,0 +1,17 @@
+<style>
+  .heat{display:flex;gap:4px;overflow-x:auto;padding:.3rem 0 .5rem}
+  .heat-week{display:flex;flex-direction:column;gap:4px}
+  .heat-day{width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.05);transition:transform .15s}
+  .heat-day:hover{transform:scale(1.35);outline:1px solid rgba(255,255,255,.35)}
+  .heat-day.out{background:transparent}
+  .heat-day.none{background:rgba(255,255,255,.05)}
+  .heat-day.present,.heat-day.l4{background:#22c55e}
+  .heat-day.l3{background:#86efac}
+  .heat-day.late,.heat-day.l2{background:#fbbf24}
+  .heat-day.absent,.heat-day.l1{background:#ef4444}
+  .heat-day.excused{background:#60a5fa}
+  .heat-days{display:flex;flex-direction:column;gap:4px;font-size:.62rem;color:var(--slate);padding-right:4px}
+  .heat-days span{height:18px;line-height:18px}
+  .heat-legend{display:flex;flex-wrap:wrap;gap:.8rem;font-size:.72rem;color:var(--slate2);margin-top:.3rem}
+  .heat-legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:.3rem;vertical-align:-1px}
+</style>

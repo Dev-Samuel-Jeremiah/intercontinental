@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Utility bills{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Running costs</div>
+  <h1 class="fin-title"><em>Utility bills</em></h1>
+  <p class="fin-sub">Electricity, water, internet and the rest — with generator diesel alongside, so you can see the full cost of keeping the school running month by month.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+{% if months %}<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>By month</h3></div><div class="panel-b" style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Month</th>{% for k, label in cols %}<th class="num">{{ label }}</th>{% endfor %}<th class="num">Total</th></tr></thead><tbody>
+  {% for m, row in months.items %}<tr><td>{{ m }}</td>{% for k, label in cols %}<td class="num">{% for kk, vv in row.items %}{% if kk == k %}{{ vv|floatformat:0 }}{% endif %}{% endfor %}</td>{% endfor %}<td class="num"><b>{{ row.total|floatformat:0 }}</b></td></tr>{% endfor %}
+</tbody></table></div></div>{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+    {% for b in rows %}<tr><td class="name">{{ b.get_kind_display }} — {{ b.provider }}<br><small class="hint">{{ b.period_start|date:"j M" }}–{{ b.period_end|date:"j M Y" }}{% if b.units %} · {{ b.units|floatformat:"-2" }} units{% endif %}{% if b.account_number %} · {{ b.account_number }}{% endif %}</small></td><td class="num">₦{{ b.amount|floatformat:2 }}</td>
+      <td>{% if b.paid_on %}<span class="chip ok">Paid {{ b.paid_on|date:"j M" }}</span>{% else %}{% if b.due_date and b.due_date < today %}<span class="chip red">Due {{ b.due_date|date:"j M" }}</span>{% elif b.due_date %}<small class="hint">due {{ b.due_date|date:"j M" }}</small>{% endif %}
+        <form method="post" style="display:flex;gap:.25rem;margin-top:.2rem">{% csrf_token %}<input type="hidden" name="action" value="paid"><input type="hidden" name="id" value="{{ b.pk }}"><input name="reference" placeholder="Ref" style="width:80px"><button class="fin-btn fin-btn-sm" type="submit">Paid</button></form>{% endif %}
+        {% if b.file %}<a class="hint" href="{% url 'facilities:bill_file' b.pk %}">Bill</a>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No bills yet.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">
+    <h3 style="margin:0 0 .6rem">Add a bill</h3>
+    <div class="row2"><div><label>Utility</label><select name="kind">{% for k, v in kinds %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Provider</label><input name="provider" required maxlength="120"></div></div>
+    <div class="row2"><div><label>From</label><input type="date" name="period_start" required></div><div><label>To</label><input type="date" name="period_end" required></div></div>
+    <div class="row2"><div><label>Amount ₦</label><input name="amount" required inputmode="decimal"></div><div><label>Units (kWh…)</label><input name="units" inputmode="decimal"></div></div>
+    <div class="row2"><div><label>Due</label><input type="date" name="due_date"></div><div><label>Paid on</label><input type="date" name="paid_on"></div></div>
+    <div class="row2"><div><label>Meter / account no.</label><input name="account_number" maxlength="60"></div><div><label>Reference</label><input name="reference" maxlength="80"></div></div>
+    <div><label>Copy of the bill</label><input type="file" name="file"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Health plans{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health</div>
+  <h1 class="fin-title"><em>Health plans &amp; insurance</em></h1>
+  <p class="fin-sub">School health plans (HMO or insurer) and the students covered. Add a child to a plan from their medical record. {{ uncovered }} student{{ uncovered|pluralize }} ha{{ uncovered|pluralize:"s,ve" }} no cover recorded.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% for hp in plans %}<div class="panel"{% if not hp.active %} style="opacity:.6"{% endif %}><div class="panel-h"><h3>{{ hp.name }}</h3><form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ hp.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if hp.active %}End{% else %}Restart{% endif %}</button></form></div><div class="panel-b">
+      <p class="hint" style="margin:0 0 .4rem">{{ hp.provider }}{% if hp.phone %} · {{ hp.phone }}{% endif %}{% if hp.hospital %} · {{ hp.hospital }}{% endif %}{% if hp.ends %} · until {{ hp.ends|date:"j M Y" }}{% endif %}</p>
+      {% if hp.covers %}<p style="font-size:.88rem">{{ hp.covers|linebreaksbr }}</p>{% endif %}
+      <table class="tbl"><tbody>{% for m in hp.list %}<tr><td class="name"><a href="{% url 'welfare:medical' m.student_id %}">{{ m.student.full_name }}</a></td><td>{{ m.student.class_assigned|default:"" }}</td><td>{{ m.member_number }}</td><td>{% if m.cover_expires and m.cover_expires < today %}<span class="chip red">Expired</span>{% elif m.cover_expires %}{{ m.cover_expires|date:"j M Y" }}{% endif %}</td></tr>{% empty %}<tr><td class="empty">No members yet.</td></tr>{% endfor %}</tbody></table>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No school health plan yet.</p></div></div>{% endfor %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add a plan</h3>
+    <div><label>Name</label><input name="name" required maxlength="120"></div>
+    <div class="row2"><div><label>HMO / insurer</label><input name="provider" required maxlength="120"></div><div><label>Phone</label><input name="phone" maxlength="30"></div></div>
+    <div><label>Hospital / clinic</label><input name="hospital" maxlength="200"></div>
+    <div class="row2"><div><label>Starts</label><input type="date" name="starts"></div><div><label>Ends</label><input type="date" name="ends"></div></div>
+    <div><label>What it covers</label><textarea name="covers" rows="3"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

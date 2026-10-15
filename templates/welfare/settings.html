@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Welfare settings{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Welfare</div>
+  <h1 class="fin-title"><em>Settings</em></h1>
+  <p class="fin-sub">Who does what. Administrators can already see health and discipline records and act as safeguarding leads; counselling notes are only ever visible to the counsellors named here.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="roles">
+    <div class="row2">
+      <div><label>School nurses</label><select name="nurses" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in sel.nurses %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label>Counsellors</label><select name="counsellors" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in sel.counsellors %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+    </div>
+    <div class="row2">
+      <div><label>Safeguarding leads</label><select name="safeguarding_leads" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in sel.safeguarding_leads %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label>Discipline team</label><select name="discipline_team" multiple size="7">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in sel.discipline_team %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+    </div>
+    <label class="pill"><input type="checkbox" name="tell_parents_incidents" {% if cfg.tell_parents_incidents %}checked{% endif %}> Email families about discipline incidents</label>
+    <div><label>Remind families about vaccinations (days before)</label><input name="immunisation_reminder_days" value="{{ cfg.immunisation_reminder_days }}" inputmode="numeric"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="survey">
+      <h3 style="margin:0 0 .6rem">Termly wellbeing survey</h3>
+      <p class="hint">Opens a short anonymous survey for every student: happiness, safety, sleep, workload, a trusted adult and bullying. Results appear in Communications → Surveys.</p>
+      <div><label>Closes on</label><input type="date" name="closes" required></div>
+      <button class="fin-btn" type="submit">Open the survey</button>
+    </form>
+    {% if surveys %}<div class="panel"><div class="panel-h"><h3>Earlier wellbeing surveys</h3></div><div class="panel-b">{% for s in surveys %}<p style="margin:.2rem 0"><a href="/communications/surveys/{{ s.pk }}/results/">{{ s.title }}</a> <span class="hint">closes {{ s.closes|date:"j M Y" }}</span></p>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ levy.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'family:pta_manage' %}" style="color:inherit">PTA</a></div>
+  <h1 class="fin-title">{{ levy.title }}</h1>
+  <p class="fin-sub">₦{{ levy.amount|floatformat:"2g" }} per family · {{ rep.paid }} of {{ rep.total }} paid · ₦{{ rep.collected|floatformat:"2g" }} collected</p>
+</div>
+<div style="display:flex;gap:.4rem"><a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="toggle"><button class="fin-btn" type="submit">{% if levy.active %}Close levy{% else %}Reopen{% endif %}</button></form></div></div>
+<div class="panel"><div class="panel-b">
+  <table class="tbl exp"><thead><tr><th>Children</th><th>Parent</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for r in rep.rows %}<tr><td class="name">{% for c in r.children %}{{ c.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{{ r.children.0.parent_name|default:"" }}</td>
+    <td>{% if r.payment %}<span class="chip green">{{ r.payment.get_method_display }}</span>{% else %}<span class="chip">Not paid</span>{% endif %}</td>
+    <td>{% if not r.payment %}<form method="post" style="display:flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="student" value="{{ r.children.0.pk }}"><select name="method" style="width:auto"><option value="CASH">Cash</option><option value="TRANSFER">Transfer</option><option value="WAIVED">Waive</option></select><button class="fin-btn fin-btn-sm" type="submit">Record</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

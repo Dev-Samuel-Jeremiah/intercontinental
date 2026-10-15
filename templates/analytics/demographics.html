@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Gender &amp; age{% endblock %}
+{% block content %}
+{% include "analytics/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Analytics</div>
+  <h1 class="fin-title">Gender &amp; <em>age</em></h1>
+  <p class="fin-sub">Students on roll by class, gender and age on {{ today|date:"j F Y" }} — the figures ministry and donor returns ask for. Click a number to list the students.</p>
+</div>{% include "analytics/_export.html" %}</div>
+{% include "analytics/_nav.html" %}
+<div class="fin-stats">
+  <div class="kpi"><small>Boys</small><b>{{ d.totals.male }}</b></div>
+  <div class="kpi"><small>Girls</small><b>{{ d.totals.female }}</b></div>
+  <div class="kpi"><small>Gender not recorded</small><b>{{ d.totals.unspecified }}</b></div>
+  <div class="kpi"><small>Total</small><b>{{ d.totals.total }}</b></div>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Class</th><th>Boys</th><th>Girls</th><th>Not recorded</th><th>Total</th>{% for b in d.bands %}<th>{{ b }}</th>{% endfor %}</tr></thead><tbody>
+  {% for r in d.rows %}<tr><td class="name">{{ r.name }}</td>
+    <td><a href="{% url 'analytics:students' %}?gender=Male{% if r.class_id %}&amp;class={{ r.class_id }}{% endif %}" style="color:inherit">{{ r.male }}</a></td>
+    <td><a href="{% url 'analytics:students' %}?gender=Female{% if r.class_id %}&amp;class={{ r.class_id }}{% endif %}" style="color:inherit">{{ r.female }}</a></td>
+    <td><a href="{% url 'analytics:students' %}?gender=none{% if r.class_id %}&amp;class={{ r.class_id }}{% endif %}" style="color:inherit">{{ r.unspecified }}</a></td>
+    <td><b>{{ r.total }}</b></td>{% for n in r.ages %}<td>{{ n }}</td>{% endfor %}</tr>{% endfor %}
+  <tr><td class="name">All classes</td><td><b>{{ d.totals.male }}</b></td><td><b>{{ d.totals.female }}</b></td><td><b>{{ d.totals.unspecified }}</b></td><td><b>{{ d.totals.total }}</b></td>
+    {% for n in d.totals.ages %}<td><b>{{ n }}</b></td>{% endfor %}</tr>
+</tbody></table></div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-badge"></i> By age band</h3></div><div class="panel-b">
+  {% for b in d.summary %}<a class="hbar" href="{% url 'analytics:students' %}?age={{ b.band|urlencode }}"><span>{{ b.band }}</span><span class="track"><i style="width:{{ b.share }}%"></i></span><span class="hint">{{ b.count }}</span></a>{% endfor %}
+</div></div>
+{% endblock %}

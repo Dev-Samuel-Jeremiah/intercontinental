@@ -1,0 +1,22 @@
+{% include "family/_top.html" %}
+  {% include "family/_back.html" %}
+  <h1><em>Volunteer</em> at school</h1>
+  <p class="sub">Sports day marshals, reading helpers, excursion chaperones — thank you for offering your time.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for o in opps %}
+  <div class="card job">
+    <h2>{{ o.title }}</h2>
+    <p>{{ o.date|date:"l j F Y" }}{% if o.start_time %}, {{ o.start_time|time:"H:i" }}{% if o.end_time %}–{{ o.end_time|time:"H:i" }}{% endif %}{% endif %}{% if o.left is not None %} · {{ o.left }} place{{ o.left|pluralize }} left{% endif %}</p>
+    {% if o.details %}<p>{{ o.details|linebreaksbr }}</p>{% endif %}
+    {% if o.joined %}<span class="chip ok">You are signed up</span>
+      <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ o.pk }}"><input type="hidden" name="action" value="withdraw"><button class="btn ghost" type="submit">Withdraw</button></form>
+    {% elif o.left != 0 %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ o.pk }}">
+      <div class="row"><input name="name" value="{{ default_name }}" required placeholder="Your name" style="flex:1"><input name="phone" value="{{ default_phone }}" placeholder="Phone" style="flex:1"></div>
+      <input name="note" placeholder="Anything we should know (optional)" style="margin-top:.5rem">
+      <button type="submit">Count me in</button>
+    </form>
+    {% else %}<span class="chip">Full</span>{% endif %}
+  </div>
+  {% empty %}<div class="card"><p class="sub" style="margin:0">No volunteering needed right now. Thank you!</p></div>{% endfor %}
+{% include "family/_end.html" %}

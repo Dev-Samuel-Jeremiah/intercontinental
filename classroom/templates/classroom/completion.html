@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Progress — {{ course.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;min-width:120px}.bar i{display:block;height:100%;background:var(--champagne)}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ course.name }}</div>
+  <h1 class="fin-title">Student <em>progress</em></h1>
+  <p class="fin-sub">Lessons watched, assignments submitted and quizzes passed. A certificate is issued automatically when a student finishes everything.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'classroom:course_hub' course.id %}"><i class="bi bi-arrow-left"></i> Course</a></div>
+<div class="panel"><table class="tbl"><thead><tr><th>Student</th><th>Progress</th><th>Lessons</th><th>Assignments</th><th>Quizzes</th><th></th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.student.full_name }}</td><td><div style="display:flex;gap:.5rem;align-items:center"><div class="bar"><i style="width:{{ r.prog.percent }}%"></i></div><span class="hint">{{ r.prog.percent }}%</span></div></td>
+    <td>{{ r.prog.lessons.0 }}/{{ r.prog.lessons.1 }}</td><td>{{ r.prog.assignments.0 }}/{{ r.prog.assignments.1 }}</td><td>{{ r.prog.quizzes.0 }}/{{ r.prog.quizzes.1 }}</td>
+    <td>{% if r.cert %}<span class="chip green"><i class="bi bi-award"></i> certificate</span>{% elif r.prog.complete %}<span class="chip gold">complete</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6"><div class="empty"><p>No students in this course.</p></div></td></tr>{% endfor %}
+</tbody></table></div>
+{% endblock %}

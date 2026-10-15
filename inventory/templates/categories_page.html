@@ -1,0 +1,21 @@
+<h1>Manage Categories</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Add / Update Category</button>
+</form>
+
+<hr>
+
+<h2>Existing Categories</h2>
+<ul>
+{% for c in categories %}
+    <li>
+        {{ c.name }}
+        <a href="{% url 'inventory:delete_category' c.id %}">Delete</a>
+    </li>
+{% empty %}
+    <li>No categories yet</li>
+{% endfor %}
+</ul>

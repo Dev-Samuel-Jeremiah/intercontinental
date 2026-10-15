@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Tutor — {{ course.name }}{% endblock %}
+{% block content %}
+{% include "assistant/_styles.html" %}
+<style>
+  .chat{display:flex;flex-direction:column;gap:.7rem;padding:1.2rem;max-height:60vh;overflow-y:auto}
+  .msg{max-width:78%;padding:.7rem .95rem;border-radius:16px;line-height:1.55;white-space:pre-wrap;font-size:.92rem}
+  .msg.user{align-self:flex-end;background:var(--champagne-dim);border:1px solid var(--champagne-border)}
+  .msg.assistant{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--rim)}
+  .msg small{display:block;color:var(--slate);font-size:.7rem;margin-top:.3rem}
+  @media(max-width:700px){.msg{max-width:92%}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'classroom:student_course_content' course.id %}" style="color:inherit">{{ course.name }}</a></div>
+  <h1 class="fin-title">Course <em>tutor</em></h1>
+  <p class="fin-sub">Ask about anything in this course. The tutor explains and gives hints — it won't do your assignments for you. Your teacher can read these chats.</p>
+</div>{% if s.enabled %}<span class="chip gold">{{ left }} question{{ left|pluralize }} left today</span>{% endif %}</div>
+{% if not s.enabled %}
+<div class="panel"><div class="empty"><i class="bi bi-robot"></i><p>Your teacher hasn't switched the tutor on for this course yet.</p></div></div>
+{% else %}
+<div class="panel">
+  <div class="chat" id="chat">
+    {% for m in chat %}<div class="msg {{ m.role }}">{{ m.text }}<small>{% if m.role == 'user' %}You{% else %}Tutor{% endif %} · {{ m.created_at|date:"j M H:i" }}</small></div>
+    {% empty %}<div class="hint" style="text-align:center;padding:2rem">Try: "Can you explain photosynthesis simply?" or "I'm stuck on simultaneous equations — where do I start?"</div>{% endfor %}
+  </div>
+  <form method="post" class="panel-b" style="display:flex;gap:.6rem;border-top:1px solid var(--rim)">{% csrf_token %}
+    <textarea name="text" rows="2" maxlength="1500" required placeholder="Type your question…" style="flex:1;padding:.7rem .85rem;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;resize:vertical" {% if not left %}disabled{% endif %}></textarea>
+    <button class="fin-btn fin-btn-gold" type="submit" {% if not left %}disabled{% endif %}><i class="bi bi-send"></i> Ask</button>
+  </form>
+</div>
+<script>var c=document.getElementById('chat');if(c)c.scrollTop=c.scrollHeight;</script>
+{% endif %}
+{% endblock %}

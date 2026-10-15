@@ -1,0 +1,14 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Gradebook{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title"><em>Gradebook</em></h1>
+  <p class="fin-sub">Record classwork, homework, tests and projects through the term; weighted averages build up as you go, and you can send them to the report card's CA columns.{% if term %} Term: {{ term }} {{ term.session }}.{% endif %}</p>
+</div></div>
+{% include "teaching/_nav.html" %}
+<div class="panel"><div class="panel-b"><table class="tbl" data-no-export><tbody>
+  {% for p in pairs %}<tr><td class="name">{{ p.school_class.name }}</td><td>{{ p.subject.name }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="school_class" value="{{ p.school_class_id }}"><input type="hidden" name="subject" value="{{ p.subject_id }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Open gradebook</button></form></td></tr>
+  {% empty %}<tr><td class="empty">You have no classes and subjects assigned yet.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

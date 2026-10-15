@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Teacher availability{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .av{border-collapse:separate;border-spacing:4px}
+  .av th{font-size:.68rem;color:var(--slate2);letter-spacing:1px;text-transform:uppercase;padding:.3rem;text-align:left}
+  .av td label{display:grid;place-items:center;width:84px;height:38px;border-radius:9px;border:1px solid var(--rim2);cursor:pointer;font-size:.72rem;color:var(--slate)}
+  .av td input{display:none}
+  .av td input:checked+label{background:var(--red-dim);border-color:var(--red-border);color:var(--red)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ config.name }}</div>
+  <h1 class="fin-title">Teacher <em>availability</em></h1>
+  <p class="fin-sub">Mark periods a teacher can't teach — part-time days, other duties. The generator won't place lessons there.</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'timetable:config_detail' config.pk %}"><i class="bi bi-arrow-left"></i> Configuration</a></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2.2fr)">
+  <div class="panel"><table class="tbl"><tbody>{% for t in teachers %}<tr{% if teacher and t.id == teacher.id %} style="background:var(--champagne-dim)"{% endif %}><td class="name"><a href="?teacher={{ t.id }}" style="color:inherit;text-decoration:none">{{ t.full_name }}</a></td><td>{% if t.off_count %}<span class="chip red">{{ t.off_count }} off</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  <div class="panel">{% if teacher %}<div class="panel-h"><h3><i class="bi bi-person-x"></i> {{ teacher.full_name }}</h3><span class="hint">tap to mark unavailable</span></div><div class="panel-b" style="overflow-x:auto">
+    <form method="post">{% csrf_token %}<input type="hidden" name="teacher" value="{{ teacher.id }}">
+      <table class="av"><thead><tr><th></th>{% for c, l in days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
+        {% for row in grid %}<tr><th>{{ row.period.name }}<div class="hint" style="font-weight:400;text-transform:none;letter-spacing:0">{{ row.period.start_time|time:"H:i" }}</div></th>
+          {% for c in row.cells %}<td><input type="checkbox" name="off" value="{{ c.key }}" id="o{{ c.key }}" {% if c.off %}checked{% endif %}><label for="o{{ c.key }}">available</label></td>{% endfor %}</tr>{% endfor %}
+      </tbody></table>
+      <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.8rem">Save</button></form>
+  </div>{% else %}<div class="empty"><i class="bi bi-hand-index"></i><p>Choose a teacher.</p></div>{% endif %}</div>
+</div>
+<script>document.querySelectorAll('.av input').forEach(function(i){var l=i.nextElementSibling;function s(){l.textContent=i.checked?'unavailable':'available';}i.addEventListener('change',s);s();});</script>
+{% endblock %}

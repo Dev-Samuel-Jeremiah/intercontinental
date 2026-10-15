@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Vaccinations{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health</div>
+  <h1 class="fin-title"><em>Vaccinations</em></h1>
+  <p class="fin-sub">Vaccination history for every child, with reminders to families before the next dose is due. Parents can add records with a photo of the card; check and verify them here.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Due soon or overdue</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for j in due %}<tr><td class="name"><a href="{% url 'welfare:medical' j.student_id %}">{{ j.student.full_name }}</a><br><small class="hint">{{ j.student.class_assigned|default:"" }}</small></td><td>{{ j.name }} {{ j.dose }}</td><td>{% if j.next_due < today %}<span class="chip red">{{ j.next_due|date:"j M" }}</span>{% else %}{{ j.next_due|date:"j M" }}{% endif %}{% if j.reminded_at %}<br><small class="hint">family reminded</small>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing due.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Added by parents — to verify</h3></div><div class="panel-b">{% for j in unverified %}<p style="margin:.2rem 0"><a href="{% url 'welfare:medical' j.student_id %}">{{ j.student.full_name }}</a> — {{ j.name }} {{ j.dose }}{% if j.given_on %} ({{ j.given_on|date:"j M Y" }}){% endif %}</p>{% empty %}<p class="empty">Nothing to check.</p>{% endfor %}</div></div>
+  </div>
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add a record</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Vaccine</label><select name="vaccine">{% for k, v in vaccines %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div><div><label>Other name</label><input name="other_name" maxlength="80"></div></div>
+    <div class="row2"><div><label>Dose</label><input name="dose" maxlength="30"></div><div><label>Given on</label><input type="date" name="given_on"></div></div>
+    <div class="row2"><div><label>Next dose due</label><input type="date" name="next_due"></div><div><label>Card</label><input type="file" name="proof"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Behaviour points{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Behaviour <em>points</em></h1>
+  <p class="fin-sub">Praise often; record concerns fairly. Families see today's entries in their daily summary, and praise adds a house point.</p>
+</div>
+<div style="display:flex;gap:.3rem;flex-wrap:wrap">{% for c in classes %}<a class="fin-btn fin-btn-sm{% if cls and c.pk == cls.pk %} fin-btn-gold{% endif %}" href="?class={{ c.pk }}">{{ c.name }}</a>{% endfor %}</div></div>
+{% include "teaching/_nav.html" %}
+{% if cls %}
+<form method="post" class="fin-grid">{% csrf_token %}<input type="hidden" name="class_id" value="{{ cls.pk }}">
+  <div class="panel"><div class="panel-h"><h3>{{ cls.name }} — last 30 days</h3></div><div class="panel-b">
+    <label class="pill"><input type="checkbox" onclick="document.querySelectorAll('.pick').forEach(x=>x.checked=this.checked)"> Select all</label>
+    <table class="tbl" data-no-export><tbody>{% for r in summary %}<tr><td><label class="pill" style="margin:0"><input class="pick" type="checkbox" name="students" value="{{ r.student.pk }}"> {{ r.student.full_name }}</label></td><td><span class="chip green">+{{ r.plus }}</span> <span class="chip red">−{{ r.minus }}</span></td><td><b>{{ r.net }}</b></td></tr>{% endfor %}</tbody></table>
+  </div></div>
+  <div class="panel fin-form" style="padding:1.2rem">
+    <h3 style="margin:0 0 .6rem">For the students ticked</h3>
+    <div><label>Praise</label><div>{% for k, l in positive %}<label class="pill"><input type="radio" name="category" value="{{ k }}" required> {{ l }}</label>{% endfor %}</div></div>
+    <div><label>Concern</label><div>{% for k, l in negative %}<label class="pill"><input type="radio" name="category" value="{{ k }}"> {{ l }}</label>{% endfor %}</div></div>
+    <div><label>Note (optional)</label><input name="note" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Record</button>
+    <h3 style="margin:1.2rem 0 .4rem">Recent</h3>
+    {% for b in recent %}<p style="margin:.2rem 0;font-size:.85rem">{% if b.points > 0 %}<span class="chip green">+1</span>{% else %}<span class="chip red">−1</span>{% endif %} {{ b.student.full_name }} — {{ b.get_category_display }} <small class="hint">{{ b.date|date:"j M" }}{% if b.staff %}, {{ b.staff.full_name }}{% endif %}</small></p>{% empty %}<p class="empty">Nothing yet.</p>{% endfor %}
+  </div>
+</form>
+{% else %}<div class="panel"><div class="panel-b"><p class="empty">You have no classes yet.</p></div></div>{% endif %}
+{% endblock %}

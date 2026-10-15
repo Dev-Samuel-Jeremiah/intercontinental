@@ -1,0 +1,57 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Clock in{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .clk{max-width:440px;margin:0 auto;text-align:center}
+  .clk-btn{width:190px;height:190px;border-radius:50%;border:0;margin:1.2rem auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.3rem;cursor:pointer;font:inherit;font-size:1.25rem;font-weight:800;color:#0a1f44;background:radial-gradient(circle at 30% 25%,#fff1a8,var(--champagne));box-shadow:0 0 0 10px rgba(244,210,31,.12),0 24px 50px -22px rgba(244,210,31,.9);transition:transform .15s}
+  .clk-btn:active{transform:scale(.96)}
+  .clk-btn[disabled]{opacity:.5;cursor:wait}
+  .clk-btn i{font-size:2.6rem}
+  .clk-msg{min-height:3em;font-size:.9rem}
+</style>
+<div class="clk">
+  <div class="fin-eyebrow">Staff</div>
+  <h1 class="fin-title" style="margin:.2rem 0">Clock <em id="dir-word">{{ next_direction }}</em></h1>
+  {% if not cfg.phone_clock_in %}
+    <div class="panel" style="margin-top:1rem"><div class="empty"><i class="bi bi-phone"></i><p>Phone clock-in is not switched on. Use the reception QR code{% if request.user.is_superuser %}, or switch it on in Gate &amp; safety settings{% endif %}.</p></div></div>
+  {% else %}
+    <p class="hint">You need to be within {{ cfg.clock_radius_m }} m of school. Your phone will ask to share its location.</p>
+    <button class="clk-btn" id="clk"><i class="bi bi-fingerprint"></i><span id="clk-label">Clock {{ next_direction }}</span></button>
+    <div class="clk-msg" id="msg"></div>
+  {% endif %}
+  <div class="panel" style="margin-top:1rem;text-align:left"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Today</h3></div><div class="panel-b" id="log">
+    {% for l in logs %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ l.get_direction_display }}</b> {{ l.scanned_at|time:"H:i" }} <span class="hint">· {{ l.get_method_display|lower }}</span></div>
+    {% empty %}<p class="hint" id="none">Not clocked in yet today.</p>{% endfor %}
+  </div></div>
+</div>
+{% if cfg.phone_clock_in %}
+<script>
+(function () {
+  var btn = document.getElementById('clk'), msg = document.getElementById('msg');
+  function show(t, ok) { msg.textContent = t; msg.style.color = ok ? 'var(--green)' : 'var(--red)'; }
+  btn.addEventListener('click', function () {
+    if (!navigator.geolocation) { show('This phone cannot share its location.', false); return; }
+    btn.disabled = true; msg.style.color = ''; msg.textContent = 'Finding where you are…';
+    navigator.geolocation.getCurrentPosition(function (p) {
+      var data = new FormData();
+      data.append('lat', p.coords.latitude); data.append('lng', p.coords.longitude); data.append('accuracy', p.coords.accuracy);
+      data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      fetch('', {method: 'POST', body: data, credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(function (res) {
+        btn.disabled = false;
+        if (!res.ok) { show(res.error, false); return; }
+        show(res.direction + ' at ' + res.time + ' — ' + res.distance + ' m from school.', true);
+        var none = document.getElementById('none'); if (none) none.remove();
+        var row = document.createElement('div'); row.style.cssText = 'padding:.35rem 0;border-bottom:1px solid var(--rim)';
+        row.innerHTML = '<b style="color:var(--white)">' + res.direction + '</b> ' + res.time + ' <span class="hint">· phone</span>';
+        document.getElementById('log').appendChild(row);
+        var next = res.direction === 'Arrived' ? 'out' : 'in';
+        document.getElementById('dir-word').textContent = next; document.getElementById('clk-label').textContent = 'Clock ' + next;
+      }).catch(function () { btn.disabled = false; show('Could not reach the school — check your data connection.', false); });
+    }, function (e) { btn.disabled = false; show(e.code === 1 ? 'Allow location for this site to clock in.' : 'Could not find your position: ' + e.message, false); },
+    {enableHighAccuracy: true, timeout: 20000, maximumAge: 0});
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

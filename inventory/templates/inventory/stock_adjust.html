@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ tpl|title }}{% endblock %}
+{% block content %}
+{% include "inventory/_inv_styles.html" %}
+<div class="inv-page">
+  <div class="inv-header">
+    <h1>{% if "stock_adjust" == "stock_in" %}📥 Add Stock{% else %}⚖️ Adjust Stock{% endif %}</h1>
+    <p>{% if "stock_adjust" == "stock_in" %}Record new stock received for an asset{% else %}Correct stock levels due to count, damage, or transfer{% endif %}</p>
+  </div>
+  <div class="inv-card" style="max-width:600px;">
+    <div class="inv-card-header"><h2>📋 Stock Details</h2></div>
+    <div class="inv-card-body">
+      <form method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group" style="margin-bottom:16px;">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div style="color:var(--inv-danger);font-size:.82rem;margin-top:4px;">{{ field.errors|join:", " }}</div>{% endif %}
+        </div>
+        {% endfor %}
+        <div style="display:flex;gap:12px;margin-top:20px;">
+          <button type="submit" class="btn-inv btn-inv-success">✅ Confirm</button>
+          <a href="{% url 'inventory:asset_list' %}" class="btn-inv btn-inv-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

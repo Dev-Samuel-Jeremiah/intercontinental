@@ -1,0 +1,626 @@
+{% extends "dashboard/base.html" %}
+{% load timetable_tags %}
+{% block title %}Timetable Preview{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--ink);
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+    min-height: 100vh;
+}
+
+.pv-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+}
+
+@keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE HEADER ── */
+.pv-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rim2);
+    position: relative;
+}
+
+.pv-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0;
+    width: 80px; height: 2px;
+    background: var(--champagne);
+}
+
+.pv-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--champagne);
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 14px;
+    transition: color .2s;
+}
+.pv-back:hover { color: var(--champagne-lt); }
+
+.pv-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.pv-eyebrow-rule { width: 28px; height: 1px; background: var(--champagne); flex-shrink: 0; }
+.pv-eyebrow-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--champagne);
+}
+
+.pv-header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.pv-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+}
+.pv-title em { font-style: italic; color: var(--champagne); }
+
+.pv-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.pv-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--slate);
+}
+.pv-meta-item i { color: var(--champagne); }
+.pv-meta-item strong { color: var(--slate2); font-weight: 600; }
+
+.pv-meta-divider { width: 1px; height: 12px; background: var(--rim2); }
+
+.pv-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-self: center;
+}
+
+/* ── BUTTONS ── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    text-decoration: none;
+    transition: all .2s ease;
+    white-space: nowrap;
+}
+
+.btn-champagne {
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(244,210,31,.32); color: #0a1f44; }
+
+.btn-ghost {
+    background: var(--surface2);
+    color: var(--slate2);
+    border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--surface3); color: var(--white); border-color: var(--rim3); }
+
+.btn-green {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid var(--green-border);
+}
+.btn-green:hover { background: rgba(74,222,128,.16); transform: translateY(-1px); color: var(--green); }
+
+/* Published static pill */
+.published-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: var(--green-dim);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+/* ── OVERRIDE BANNER ── */
+.override-banner {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    border-radius: 14px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+    position: relative;
+    overflow: hidden;
+}
+
+.override-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber-border), transparent);
+}
+
+.override-banner-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.override-banner-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--amber-dim);
+    border: 1px solid var(--amber-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--amber);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.override-banner-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--amber);
+}
+
+.override-list { display: flex; flex-direction: column; gap: 6px; }
+
+.override-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: rgba(251,191,36,.7);
+    line-height: 1.5;
+}
+
+.override-item strong { color: var(--amber); font-weight: 700; }
+.override-item .ov-arrow { color: var(--champagne); font-size: 0.75rem; }
+
+/* ── CLASS GRID PANEL ── */
+.cls-panel {
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 22px;
+    animation: riseUp .45s ease both;
+}
+
+.cls-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+}
+
+.cls-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--rim);
+}
+
+.cls-panel-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--champagne);
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.cls-panel-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--white);
+}
+
+/* ── TIMETABLE TABLE ── */
+.tt-scroll { overflow-x: auto; }
+
+table.pv {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    min-width: 700px;
+}
+
+table.pv th,
+table.pv td { border: 1px solid var(--rim2); padding: 0; }
+
+.pv-head-period {
+    background: var(--surface3);
+    color: var(--slate2);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 11px 14px;
+    text-align: left;
+    min-width: 108px;
+    border-bottom: 2px solid var(--rim2);
+}
+
+.pv-head-day {
+    background: var(--surface3);
+    color: var(--white);
+    font-weight: 700;
+    font-size: 0.68rem;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 11px 10px;
+    min-width: 125px;
+    border-bottom: 2px solid var(--rim2);
+    line-height: 1.35;
+}
+
+.pv-head-day.has-override {
+    background: rgba(251,191,36,.1);
+    border-bottom-color: var(--amber-border);
+    color: var(--amber);
+}
+
+.pv-head-day .ov-note {
+    font-size: 0.6rem;
+    font-weight: 400;
+    color: var(--amber);
+    opacity: .8;
+    margin-top: 3px;
+}
+
+.pv-period {
+    background: var(--surface2);
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-right: 2px solid var(--rim2);
+}
+
+.pv-period-name {
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--slate2);
+    margin-bottom: 3px;
+}
+
+.pv-period-time {
+    font-size: 0.63rem;
+    color: var(--slate);
+}
+
+/* Break row */
+.pv-break {
+    background: var(--blue-dim);
+    border-top: 1px solid var(--blue-border);
+    border-bottom: 1px solid var(--blue-border);
+    color: var(--blue);
+    font-weight: 700;
+    font-size: 0.68rem;
+    text-align: center;
+    padding: 9px 8px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+/* Lesson cell */
+.pv-lesson {
+    text-align: center;
+    vertical-align: middle;
+    padding: 7px 8px;
+    background: var(--surface);
+    transition: background .15s;
+}
+.pv-lesson:hover { background: rgba(255,255,255,.025); }
+
+.pv-lesson-inner {
+    background: var(--purple-dim);
+    border: 1px solid var(--purple-border);
+    border-radius: 8px;
+    padding: 6px 8px;
+    text-align: left;
+}
+
+.pv-lesson-subj {
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 3px;
+}
+
+.pv-lesson-teacher {
+    font-size: 0.63rem;
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.pv-lesson-teacher i { color: var(--champagne); font-size: 0.6rem; }
+
+/* Empty cell */
+.pv-empty {
+    text-align: center;
+    color: var(--rim3);
+    font-size: 1rem;
+    background: var(--surface);
+    padding: 7px;
+}
+
+/* Early close */
+.pv-early {
+    background: var(--amber-dim);
+    text-align: center;
+    vertical-align: middle;
+    padding: 7px 6px;
+    font-size: 0.65rem;
+    color: var(--amber);
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+/* Special slots */
+.pv-special {
+    text-align: center;
+    vertical-align: middle;
+    padding: 6px 5px;
+}
+
+.pv-special .sp-t {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.pv-special .sp-n {
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: var(--white);
+    line-height: 1.2;
+}
+
+.pv-special.CLUB     { background: var(--amber-dim); }  .pv-special.CLUB .sp-t     { color: var(--amber);  }
+.pv-special.SPORT    { background: var(--green-dim); }  .pv-special.SPORT .sp-t    { color: var(--green);  }
+.pv-special.EXAM     { background: var(--red-dim);   }  .pv-special.EXAM .sp-t     { color: var(--red);    }
+.pv-special.ASSEMBLY { background: var(--blue-dim);  }  .pv-special.ASSEMBLY .sp-t { color: var(--blue);   }
+.pv-special.OTHER    { background: var(--purple-dim);} .pv-special.OTHER .sp-t    { color: var(--purple); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+    .pv-wrap { padding: 1.25rem 1rem 3rem; }
+    .pv-title { font-size: 2rem; }
+    .pv-header-actions { width: 100%; }
+    .pv-header-actions .btn { flex: 1; justify-content: center; }
+    .cls-panel-header { padding: 14px 16px; }
+}
+
+/* ── PRINT ── */
+@media print {
+    body { background: #fff; color: #000; }
+    .pv-wrap { padding: 0; }
+    .cls-panel { box-shadow: none; border: 1px solid #ccc; margin-bottom: 16px; }
+    .pv-head-period, .pv-head-day { background: #112850 !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+    .pv-period { background: #f8fafc !important; }
+}
+</style>
+
+<div class="pv-wrap">
+
+    <!-- ── PAGE HEADER ── -->
+    <header class="pv-header">
+        <a href="{% url 'timetable:config_detail' config.pk %}" class="pv-back">
+            <i class="bi bi-arrow-left"></i> Back to Config
+        </a>
+
+        <div class="pv-eyebrow">
+            <span class="pv-eyebrow-rule"></span>
+            <span class="pv-eyebrow-label">Timetable Management</span>
+        </div>
+
+        <div class="pv-header-row">
+            <div>
+                <h1 class="pv-title">Timetable <em>Preview</em></h1>
+                <div class="pv-meta-row">
+                    <div class="pv-meta-item">
+                        <i class="bi bi-clock-history"></i>
+                        Generated: <strong>{{ timetable.generated_at|date:"M d, Y · H:i" }}</strong>
+                    </div>
+                    <div class="pv-meta-divider"></div>
+                    <div class="pv-meta-item">
+                        <i class="bi bi-grid-3x3"></i>
+                        <strong>{{ timetable.slots.count }}</strong> lesson slots
+                    </div>
+                    {% if timetable.is_published %}
+                    <div class="pv-meta-divider"></div>
+                    <div class="pv-meta-item">
+                        <i class="bi bi-check-circle-fill" style="color:var(--green)"></i>
+                        <strong style="color:var(--green)">Published</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="pv-header-actions">
+                {% if not timetable.is_published %}
+                <a href="{% url 'timetable:publish' timetable.pk %}" class="btn btn-green">
+                    <i class="bi bi-check-circle-fill"></i> Publish Timetable
+                </a>
+                {% else %}
+                <span class="published-pill">
+                    <i class="bi bi-check-circle-fill"></i> Published
+                </span>
+                {% endif %}
+                <a href="{% url 'timetable:edit' timetable.pk %}" class="btn btn-champagne"><i class="bi bi-arrows-move"></i> Edit by dragging</a>
+                <a href="{% url 'timetable:reports' timetable.pk %}" class="btn btn-champagne"><i class="bi bi-clipboard-data"></i> Load &amp; clashes</a>
+                <a href="{% url 'timetable:print_all' timetable.pk %}" class="btn btn-champagne"><i class="bi bi-printer"></i> Print all classes</a>
+                <a href="{% url 'timetable:print_teachers' timetable.pk %}" class="btn btn-champagne"><i class="bi bi-person-badge"></i> Print teachers</a>
+                <a href="{% url 'timetable:versions' config.pk %}" class="btn btn-champagne"><i class="bi bi-clock-history"></i> Versions</a>
+                <a href="{% url 'timetable:export_excel' timetable.pk %}" class="btn btn-champagne">
+                    <i class="bi bi-file-earmark-spreadsheet"></i> Export Excel
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── OVERRIDE BANNER ── -->
+    {% if day_overrides %}
+    <div class="override-banner">
+        <div class="override-banner-header">
+            <div class="override-banner-icon"><i class="bi bi-star-fill"></i></div>
+            <span class="override-banner-title">Active Day Overrides</span>
+        </div>
+        <div class="override-list">
+            {% for code, override in day_overrides.items %}
+            <div class="override-item">
+                <strong>{{ override.get_day_display }}</strong>
+                <span>{{ override.label }} — lessons end <strong>{{ override.lessons_end_time|time12 }}</strong></span>
+                {% for ss in override.get_special_slots %}
+                    <i class="bi bi-arrow-right ov-arrow"></i>
+                    <span>{{ ss.name }} ({{ ss.start_time|time12 }}–{{ ss.end_time|time12 }})</span>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ── CLASS GRIDS ── -->
+    {% for cls, rows in class_grids.items %}
+    <div class="cls-panel" style="animation-delay:{{ forloop.counter0 }}0ms">
+
+        <div class="cls-panel-header">
+            <div class="cls-panel-icon"><i class="bi bi-people"></i></div>
+            <span class="cls-panel-title">{{ cls.name }}</span>
+        </div>
+
+        <div class="tt-scroll">
+            <table class="pv">
+                <thead>
+                    <tr>
+                        <th class="pv-head-period">Period / Time</th>
+                        {% for code, label in days %}
+                            {% with override=day_overrides|get_item:code %}
+                            <th class="pv-head-day {% if override %}has-override{% endif %}">
+                                {{ label }}
+                                {% if override %}
+                                    <div class="ov-note">
+                                        <i class="bi bi-star-fill"></i> {{ override.lessons_end_time|time12 }}
+                                    </div>
+                                {% endif %}
+                            </th>
+                            {% endwith %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        {% if row.is_break %}
+                        <tr>
+                            <td class="pv-break" colspan="{{ days|length|add:1 }}">
+                                <i class="bi bi-cup-hot"></i>&ensp;{{ row.slot.name }}&ensp;·&ensp;{{ row.slot.start_time|time12 }} – {{ row.slot.end_time|time12 }}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td class="pv-period">
+                                <div class="pv-period-name">{{ row.slot.name }}</div>
+                                <div class="pv-period-time">{{ row.slot.start_time|time12 }}–{{ row.slot.end_time|time12 }}</div>
+                            </td>
+                            {% for cell in row.day_cells %}
+                                {% if cell.cell_type == 'early_close' %}
+                                    <td class="pv-early">{{ cell.override_label }}</td>
+                                {% elif cell.cell_type == 'special' %}
+                                    <td class="pv-special {{ cell.special_slot.slot_type }}">
+                                        <div class="sp-t">{{ cell.special_slot.get_slot_type_display }}</div>
+                                        <div class="sp-n">{{ cell.special_slot.name }}</div>
+                                    </td>
+                                {% else %}
+                                    {% if cell.entry %}
+                                        <td class="pv-lesson">
+                                            <div class="pv-lesson-inner">
+                                                <div class="pv-lesson-subj">{{ cell.entry.subject.name }}</div>
+                                                <div class="pv-lesson-teacher">
+                                                    <i class="bi bi-person"></i>
+                                                    {{ cell.entry.teacher.full_name }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                    {% else %}
+                                        <td class="pv-empty">—</td>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}y

@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Data breaches{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Personal data <em>breaches</em></h1>
+  <p class="fin-sub">A lost laptop, a message to the wrong parents, results sent to the wrong family, a hacked account. Record it straight away: if people may be harmed, the Nigeria Data Protection Commission must be told within 72 hours.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-octagon"></i> Breaches</h3></div>
+    <table class="tbl"><thead><tr><th>Reference</th><th>What happened</th><th>Discovered</th><th>Status</th></tr></thead><tbody>
+    {% for b in rows %}<tr><td class="name"><a href="{% url 'security:breach' b.pk %}">{{ b.reference }}</a></td><td>{{ b.title }}<br><span class="hint">{{ b.people_affected }} people · {{ b.get_severity_display }}</span></td><td>{{ b.discovered_at|date:"j M Y H:i" }}</td>
+      <td><span class="chip {% if b.status == 'CLOSED' %}green{% elif not b.reported_at and not b.not_reported_reason %}red{% else %}amber{% endif %}">{{ b.get_status_display }}</span>{% if b.status != 'CLOSED' and not b.reported_at and not b.not_reported_reason %}<br><span class="hint">{% if b.hours_left > 0 %}{{ b.hours_left }} h left{% else %}deadline passed{% endif %}</span>{% endif %}</td></tr>
+    {% empty %}<tr><td colspan="4" class="empty"><i class="bi bi-shield-check"></i>No breaches recorded.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0">Record a breach</h3>
+    <div><label>Short title</label><input name="title" required maxlength="200" placeholder="Result slips emailed to the wrong class"></div>
+    <div><label>What happened</label><textarea name="description" rows="4" required></textarea></div>
+    <div class="row2"><div><label>When it was discovered</label><input type="datetime-local" name="discovered_at" value="{{ now }}"></div><div><label>When it happened (if known)</label><input type="datetime-local" name="occurred_at"></div></div>
+    <div><label>Data involved</label><input name="data_types" placeholder="Names, results, phone numbers, medical notes…"></div>
+    <div class="row2"><div><label>People affected (about)</label><input name="people_affected" inputmode="numeric" value="0"></div><div><label>Risk to people</label><select name="severity">{% for v, l in severities %}<option value="{{ v }}" {% if v == 'MEDIUM' %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+    <label class="pill"><input type="checkbox" name="children_involved" checked> Children's data is involved</label>
+    <div><label>What has been done so far</label><textarea name="containment" rows="2"></textarea></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Record and alert administrators</button>
+  </form>
+</div>
+{% endblock %}

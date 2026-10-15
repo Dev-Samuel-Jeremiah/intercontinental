@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Promotion — {{ school_class.name }}{% endblock %}
+{% block content %}
+<style>
+  .pt select,.pt input{padding:.4rem .55rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem}
+  .pt input{width:100%;min-width:160px}
+  .pt tr.ov td{background:var(--champagne-dim)}
+  .pt .why{font-size:.74rem;color:var(--slate);max-width:280px;white-space:normal}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Promotion · {{ session.name }}</div>
+  <h1 class="fin-title">{{ school_class.name }} → <em>{% if graduates %}graduation{% elif to_class %}{{ to_class.name }}{% else %}not set{% endif %}</em></h1>
+  <p class="fin-sub">Pass average {{ policy.pass_average|floatformat:'-1' }}, subject pass mark {{ policy.subject_pass_mark|floatformat:'-1' }}{% if policy.min_attendance %}, attendance {{ policy.min_attendance }}%{% endif %}. <a href="{% url 'curriculum:promotion' %}?session={{ session.id }}" style="color:var(--champagne-lt)">Change rules or next class</a></p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:promotion' %}?session={{ session.id }}"><i class="bi bi-arrow-left"></i> All classes</a></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-stats">
+  {% for k, label in outcomes %}<div class="fin-stat"><small>{{ label }}</small><b>{% for ck, n in counts.items %}{% if ck == k %}{{ n }}{% endif %}{% endfor %}</b></div>{% endfor %}
+</div>
+{% if not to_class and not graduates %}<div class="panel" style="border-color:var(--amber-border)"><div class="panel-b" style="color:var(--amber)"><i class="bi bi-exclamation-triangle"></i> Choose where {{ school_class.name }} goes next before applying promotions.</div></div>{% endif %}
+<form method="post">{% csrf_token %}<input type="hidden" name="session" value="{{ session.id }}">
+<div class="panel">
+  {% if decisions %}<div style="overflow-x:auto"><table class="tbl pt"><thead><tr><th>Student</th><th>Average</th><th>Passed</th><th>Attendance</th><th>Why</th><th>Decision</th><th>Reason for change</th></tr></thead><tbody>
+  {% for d in decisions %}<tr class="{% if d.overridden %}ov{% endif %}">
+    <td class="name">{{ d.student.full_name }}<div class="hint">{{ d.student.admission_number }}</div></td>
+    <td class="money">{{ d.average|floatformat:1|default:"—" }}</td>
+    <td>{{ d.subjects_passed }}/{{ d.subjects_taken }}</td>
+    <td>{% if d.attendance_rate is not None %}{{ d.attendance_rate }}%{% else %}—{% endif %}</td>
+    <td class="why">{{ d.reasons }}{% if d.overridden %}<br><span style="color:var(--champagne-lt)">Suggested: {{ d.get_suggested_display }}</span>{% endif %}</td>
+    <td>{% if d.applied_at %}<span class="chip {% if d.outcome == 'REPEAT' %}red{% elif d.outcome == 'CONDITIONAL' %}amber{% else %}green{% endif %}">{{ d.get_outcome_display }}</span><div class="hint">applied {{ d.applied_at|date:"j M" }}</div>
+      {% else %}<select name="outcome_{{ d.id }}">{% for k, label in outcomes %}{% if k != 'GRADUATE' or graduates %}{% if k != 'PROMOTE' and k != 'CONDITIONAL' or not graduates %}<option value="{{ k }}" {% if k == d.outcome %}selected{% endif %}>{{ label }}</option>{% endif %}{% endif %}{% endfor %}</select>{% endif %}</td>
+    <td>{% if not d.applied_at %}<input name="reason_{{ d.id }}" value="{{ d.override_reason }}" maxlength="255" placeholder="Only if you change it">{% else %}<span class="hint">{{ d.override_reason }}</span>{% endif %}</td>
+  </tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<div class="empty"><i class="bi bi-people"></i><p>No students in {{ school_class.name }}.</p></div>{% endif %}
+</div>
+{% if pending %}<div class="panel"><div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+  <button class="fin-btn" name="action" value="recalculate" formnovalidate><i class="bi bi-arrow-repeat"></i> Recalculate</button>
+  <button class="fin-btn" name="action" value="save"><i class="bi bi-check2"></i> Save decisions</button>
+  <span style="flex:1"></span>
+  <label class="hint" style="display:inline-flex;gap:.4rem;align-items:center"><input type="checkbox" name="notify" value="1" checked> Text each family the outcome</label>
+  <button class="fin-btn fin-btn-gold" name="action" value="apply" onclick="return confirm('Apply {{ pending }} decision(s)? Students move to their new class{% if graduates %} or graduate{% endif %}. Save any changes first.')"><i class="bi bi-send-check"></i> Apply {{ pending }}</button>
+</div></div>{% endif %}
+</form>
+{% endblock %}

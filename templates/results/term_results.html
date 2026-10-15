@@ -1,0 +1,1542 @@
+{% extends "dashboard/base.html" %}
+{% load custom_filters assessment %}
+{% load static %}
+
+{% block title %}Term Results{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root{
+  /* Report card paper colours */
+  --paper:          #f7f4ef;
+  --paper2:         #ede9e2;
+  --paper3:         #e2ddd5;
+  --paper-ink:      #1c1917;
+  --paper-ink2:     #44403c;
+  --paper-ink3:     #78716c;
+  --paper-gold:     #0a1f44;
+  --paper-gold-lt:  #f4d21f;
+  --paper-rim:      rgba(10,31,68,.18);
+  --paper-rim2:     rgba(10,31,68,.10);
+  --paper-rim3:     rgba(28,25,23,.10);
+}
+
+/* ═══════════════════════════════════════════
+   RESULT SHEET THEMES — override the paper
+   tokens per school (Settings → Result Sheet Layout)
+═══════════════════════════════════════════ */
+.report-paper[data-theme="classic_gold"]{
+  --paper:#f7f4ef; --paper2:#ede9e2; --paper-ink:#1c1917; --paper-ink2:#44403c; --paper-ink3:#78716c;
+  --paper-gold:#0a1f44; --paper-gold-lt:#f4d21f; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+}
+.report-paper[data-theme="royal_navy"]{
+  --paper:#eef2f8; --paper2:#dbe4f0; --paper-ink:#0f2247; --paper-ink2:#33456b; --paper-ink3:#61708c;
+  --paper-gold:#1d3f7a; --paper-gold-lt:#3861ab; --paper-rim:rgba(29,63,122,.18); --paper-rim2:rgba(29,63,122,.10);
+}
+.report-paper[data-theme="emerald_prestige"]{
+  --paper:#f2f7f2; --paper2:#e1ede1; --paper-ink:#0f2f1c; --paper-ink2:#2d4d3a; --paper-ink3:#5a7768;
+  --paper-gold:#1f6b3f; --paper-gold-lt:#2e9256; --paper-rim:rgba(31,107,63,.18); --paper-rim2:rgba(31,107,63,.10);
+}
+.report-paper[data-theme="burgundy_elegance"]{
+  --paper:#f8f1ef; --paper2:#efe0dc; --paper-ink:#3a0d10; --paper-ink2:#5c2a2c; --paper-ink3:#845452;
+  --paper-gold:#7a1f2b; --paper-gold-lt:#a53a45; --paper-rim:rgba(122,31,43,.18); --paper-rim2:rgba(122,31,43,.10);
+}
+.report-paper[data-theme="sapphire_scholar"]{
+  --paper:#f0f4f8; --paper2:#dde6ee; --paper-ink:#0b2942; --paper-ink2:#2c4a63; --paper-ink3:#5e7d94;
+  --paper-gold:#1a5c96; --paper-gold-lt:#3c85c4; --paper-rim:rgba(26,92,150,.18); --paper-rim2:rgba(26,92,150,.10);
+}
+.report-paper[data-theme="rose_quartz"]{
+  --paper:#faf3f2; --paper2:#f3e3e1; --paper-ink:#3d1f22; --paper-ink2:#6b3f42; --paper-ink3:#977173;
+  --paper-gold:#b76e6e; --paper-gold-lt:#d18f8a; --paper-rim:rgba(183,110,110,.20); --paper-rim2:rgba(183,110,110,.10);
+}
+.report-paper[data-theme="midnight_platinum"]{
+  --paper:#161a20; --paper2:#1f242c; --paper-ink:#eef1f5; --paper-ink2:#c3cbd4; --paper-ink3:#8894a3;
+  --paper-gold:#a9b4c2; --paper-gold-lt:#c8d1db; --paper-rim:rgba(169,180,194,.25); --paper-rim2:rgba(169,180,194,.12);
+}
+.report-paper[data-theme="forest_academia"]{
+  --paper:#f4f2ea; --paper2:#e8e4d5; --paper-ink:#22280f; --paper-ink2:#454f27; --paper-ink3:#6e7852;
+  --paper-gold:#0a1f44; --paper-gold-lt:#e0b800; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+}
+.report-paper[data-theme="coral_sunrise"]{
+  --paper:#fdf5ee; --paper2:#f8e6d5; --paper-ink:#5a2a0f; --paper-ink2:#7c4526; --paper-ink3:#a37455;
+  --paper-gold:#d9722c; --paper-gold-lt:#f0904d; --paper-rim:rgba(217,114,44,.20); --paper-rim2:rgba(217,114,44,.10);
+}
+.report-paper[data-theme="slate_minimal"]{
+  --paper:#f5f5f6; --paper2:#e6e6e8; --paper-ink:#132951; --paper-ink2:#2a4a82; --paper-ink3:#6b6e76;
+  --paper-gold:#454850; --paper-gold-lt:#65686f; --paper-rim:rgba(69,72,80,.18); --paper-rim2:rgba(69,72,80,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes aiSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ═══ PAGE WRAPPER ═══ */
+.results-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE HEADER (dark UI)
+═══════════════════════════════════════════ */
+.page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--rim2);
+  position: relative;
+  animation: riseUp .4s ease both;
+}
+.page-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+}
+.eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--champagne);
+  margin-bottom: .65rem;
+}
+.eyebrow::before {
+  content: ''; display: block;
+  width: 28px; height: 1px; background: var(--champagne);
+}
+.page-header-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem;
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem; font-weight: 700; line-height: 1.1; color: var(--white);
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+.context-badge {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: .45rem 1rem; border-radius: 999px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt); font-size: .82rem; font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════
+   PANEL (dark UI shell)
+═══════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1.5rem;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel:nth-child(1) { animation-delay: .05s; }
+.panel:nth-child(2) { animation-delay: .10s; }
+.panel:nth-child(3) { animation-delay: .15s; }
+.panel:nth-child(4) { animation-delay: .20s; }
+.panel:nth-child(5) { animation-delay: .25s; }
+
+.panel-header {
+  display: flex; align-items: center; gap: .85rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  background: var(--surface2);
+}
+.panel-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; flex-shrink: 0;
+}
+.pi-blue   { background: var(--blue-dim);        color: var(--blue);      border: 1px solid var(--blue-border);        }
+.pi-gold   { background: var(--champagne-dim);   color: var(--champagne); border: 1px solid var(--champagne-border);  }
+.pi-green  { background: var(--green-dim);       color: var(--green);     border: 1px solid var(--green-border);      }
+.pi-purple { background: var(--purple-dim);      color: var(--purple);    border: 1px solid var(--purple-border);     }
+.pi-teal   { background: var(--teal-dim);        color: var(--teal);      border: 1px solid var(--teal-border);       }
+.pi-amber  { background: var(--amber-dim);       color: var(--amber);     border: 1px solid var(--amber-border);      }
+.pi-red    { background: var(--red-dim);         color: var(--red);       border: 1px solid var(--red-border);        }
+
+.panel-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: .95rem; font-weight: 600; color: var(--white);
+}
+.panel-header .panel-meta {
+  margin-left: auto; font-size: .78rem; color: var(--slate); font-weight: 500;
+}
+.panel-body { padding: 1.4rem; }
+
+/* ═══════════════════════════════════════════
+   FILTER FORM
+═══════════════════════════════════════════ */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem; margin-bottom: 1.2rem;
+}
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-label {
+  font-size: .73rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--slate2);
+  display: flex; align-items: center; gap: .4rem;
+}
+.form-label i { color: var(--champagne); font-size: .9rem; }
+
+.custom-select {
+  width: 100%; padding: .62rem 2.4rem .62rem .9rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .9rem;
+  cursor: pointer; transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%23f4d21f' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .9rem center;
+}
+.custom-select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.custom-select option { background: var(--surface2); color: var(--white); }
+
+.filter-actions-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .8rem;
+  padding-top: 1rem; border-top: 1px solid var(--rim);
+}
+.active-filters { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.active-filters-label {
+  font-size: .72rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--slate);
+}
+.filter-chip {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .3rem .75rem; border-radius: 999px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt); font-size: .78rem; font-weight: 600;
+}
+.filter-chip button {
+  background: none; border: none; color: var(--champagne);
+  cursor: pointer; padding: 0; font-size: .85rem; line-height: 1;
+  transition: color .2s;
+}
+.filter-chip button:hover { color: var(--red); }
+
+.btn-row { display: flex; gap: .7rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .55rem 1.2rem; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 600;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn-ghost {
+  background: transparent; border: 1px solid var(--rim2); color: var(--slate2);
+}
+.btn-ghost:hover { background: var(--rim); transform: translateY(-1px); }
+.btn-primary {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.35); }
+.btn-quick {
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt); padding: .38rem .85rem; font-size: .8rem;
+}
+.btn-quick:hover { background: rgba(244,210,31,.2); transform: translateY(-1px); }
+
+/* ═══════════════════════════════════════════
+   REPORT CARD — PAPER DOCUMENT
+═══════════════════════════════════════════ */
+.report-card-outer {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+  animation-delay: .12s;
+}
+.report-card-outer::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+
+/* Dark header strip above the paper */
+.report-card-topbar {
+  display: flex; align-items: center; gap: .85rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  background: var(--surface2);
+}
+.report-card-topbar h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: .95rem; font-weight: 600; color: var(--white);
+}
+.report-card-topbar .topbar-right {
+  margin-left: auto; display: flex; align-items: center; gap: .7rem;
+}
+
+/* The "paper" itself */
+.report-paper {
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: 'Outfit', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Watermark */
+.report-watermark {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  display: flex; flex-wrap: wrap;
+  align-content: space-around; justify-content: space-around;
+  opacity: 1;
+}
+.report-watermark span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 700;
+  color: rgba(10,31,68,.07);
+  transform: rotate(-30deg);
+  white-space: nowrap; margin: 50px;
+}
+
+/* ─── LETTERHEAD ─── */
+.letterhead {
+  position: relative; z-index: 1;
+  background: var(--paper);
+  border-bottom: 3px solid var(--paper-gold);
+  padding: 0;
+}
+
+/* Top gold rule */
+.letterhead-top-rule {
+  height: 6px;
+  background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+}
+
+.letterhead-body {
+  display: grid;
+  grid-template-columns: 120px 1fr 110px;
+  align-items: center; gap: 1rem;
+  padding: 1.4rem 1.8rem;
+}
+
+/* Logo */
+.letterhead-logo {
+  display: flex; align-items: center; justify-content: center;
+}
+.letterhead-logo img { width: 96px; height: auto; border-radius: 6px; }
+.letterhead-initials {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--paper2), var(--paper));
+  border: 2px solid var(--paper-gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem; font-weight: 700; color: var(--paper-gold);
+}
+
+/* School identity */
+.letterhead-identity { text-align: center; }
+.school-name-main {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.85rem; font-weight: 700;
+  color: var(--paper-gold);
+  letter-spacing: .06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.school-motto {
+  font-family: 'IM Fell English', serif;
+  font-style: italic; font-size: .9rem;
+  color: var(--paper-ink2); margin-top: .2rem;
+}
+.school-report-label {
+  display: inline-block;
+  margin-top: .55rem;
+  font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--paper);
+  background: var(--paper-gold);
+  padding: .22rem .85rem; border-radius: 999px;
+}
+
+/* Passport */
+.letterhead-passport { display: flex; justify-content: flex-end; }
+.passport-frame {
+  width: 96px; height: 120px;
+  border: 2px solid var(--paper-gold);
+  border-radius: 6px; overflow: hidden;
+  background: var(--paper2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .2rem;
+}
+.passport-frame img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.passport-frame i { font-size: 2rem; color: var(--paper-ink3); }
+.passport-frame span {
+  font-size: .65rem; color: var(--paper-ink3); text-align: center;
+}
+
+/* ─── STUDENT INFO TABLE ─── */
+.info-band {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--paper-rim);
+}
+.info-band-cell {
+  padding: .55rem .9rem;
+  border-right: 1px solid var(--paper-rim);
+  border-bottom: 1px solid var(--paper-rim);
+}
+.info-band-cell:nth-child(3n) { border-right: none; }
+.info-band-cell-label {
+  font-size: .62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--paper-gold);
+  margin-bottom: .18rem;
+}
+.info-band-cell-value {
+  font-size: .9rem; font-weight: 600; color: var(--paper-ink);
+  line-height: 1.3;
+}
+
+/* ─── SECTION DIVIDER ─── */
+.paper-section-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .7rem;
+  padding: .55rem 1.2rem;
+  background: var(--paper-gold);
+  border-top: 1px solid rgba(10,31,68,.3);
+}
+.paper-section-head i { color: var(--paper); font-size: .9rem; }
+.paper-section-head span {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--paper);
+}
+
+/* ─── RESULTS TABLE ─── */
+.results-table-wrap {
+  position: relative; z-index: 1; overflow-x: auto;
+}
+.results-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'Outfit', sans-serif; font-size: .83rem;
+}
+.results-table thead tr { background: var(--paper2); }
+.results-table th {
+  padding: .6rem .75rem;
+  text-align: center;
+  font-size: .66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--paper-gold);
+  border-bottom: 2px solid var(--paper-rim);
+  border-right: 1px solid var(--paper-rim);
+  white-space: nowrap;
+}
+.results-table th:last-child { border-right: none; }
+.results-table th.col-subject { text-align: left; padding-left: 1rem; }
+.results-table tbody tr { border-bottom: 1px solid var(--paper-rim2); transition: background .15s; }
+.results-table tbody tr:last-child { border-bottom: none; }
+.results-table tbody tr:hover { background: rgba(10,31,68,.04); }
+.results-table td {
+  padding: .6rem .75rem; text-align: center;
+  color: var(--paper-ink2); border-right: 1px solid var(--paper-rim2);
+}
+.results-table td:last-child { border-right: none; }
+.results-table td.col-subject {
+  text-align: left; padding-left: 1rem;
+  font-weight: 600; color: var(--paper-ink);
+}
+
+/* Score styling */
+.score-num {
+  font-weight: 600; color: var(--paper-ink); font-size: .88rem;
+}
+.score-total {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 38px; padding: .18rem .55rem; border-radius: 5px;
+  font-weight: 700; font-size: .86rem;
+}
+.score-pass   { background: rgba(74,222,128,.12); color: #166534; border: 1px solid rgba(74,222,128,.3);  }
+.score-fair   { background: rgba(251,191,36,.10); color: #92400e; border: 1px solid rgba(251,191,36,.3);  }
+.score-fail   { background: rgba(248,113,113,.12); color: #991b1b; border: 1px solid rgba(248,113,113,.3); }
+
+.grade-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  font-weight: 800; font-size: .85rem; border: 2px solid;
+}
+.grade-A { background: rgba(74,222,128,.15);   color: #166534; border-color: rgba(74,222,128,.5);   }
+.grade-B { background: rgba(45,212,191,.12);   color: #0f766e; border-color: rgba(45,212,191,.45);  }
+.grade-C { background: rgba(96,165,250,.12);   color: #1d4ed8; border-color: rgba(96,165,250,.4);   }
+.grade-D { background: rgba(251,191,36,.12);   color: #92400e; border-color: rgba(251,191,36,.45);  }
+.grade-F { background: rgba(248,113,113,.12);  color: #991b1b; border-color: rgba(248,113,113,.45); }
+
+/* Remark input */
+.paper-remark-field {
+  width: 100%; min-width: 130px;
+  background: transparent; border: none; border-bottom: 1px dashed var(--paper-rim);
+  color: var(--paper-ink2); font-family: 'Outfit', sans-serif;
+  font-size: .78rem; resize: none; outline: none; line-height: 1.4;
+  padding: .18rem .3rem; transition: background .2s, border-color .2s;
+}
+.paper-remark-field:focus {
+  background: rgba(10,31,68,.06);
+  border-color: var(--paper-gold); border-radius: 4px;
+}
+.save-status {
+  display: none; font-size: .68rem; font-weight: 600; margin-left: .3rem;
+}
+
+/* ─── TOTALS BAND ─── */
+.totals-band {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap;
+  border-top: 2px solid var(--paper-gold);
+  background: var(--paper2);
+}
+.totals-cell {
+  flex: 1; min-width: 90px;
+  padding: .7rem .9rem; text-align: center;
+  border-right: 1px solid var(--paper-rim);
+}
+.totals-cell:last-child { border-right: none; }
+.totals-cell-label {
+  font-size: .62rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--paper-gold); font-weight: 700; margin-bottom: .15rem;
+}
+.totals-cell-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 700; color: var(--paper-ink);
+  line-height: 1;
+}
+.totals-cell.highlight .totals-cell-value {
+  color: var(--paper-gold);
+}
+
+/* ─── REMARKS BLOCK ─── */
+.paper-remarks-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  border-top: 1px solid var(--paper-rim);
+}
+.paper-remark-col {
+  padding: 1rem 1.2rem;
+  border-right: 1px solid var(--paper-rim);
+}
+.paper-remark-col:last-child { border-right: none; }
+.paper-remark-col-label {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--paper-gold);
+  margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem;
+}
+.paper-remark-col-label i { font-size: .85rem; }
+.paper-textarea {
+  width: 100%; min-height: 68px;
+  background: var(--paper); border: 1px solid var(--paper-rim);
+  border-radius: 6px; color: var(--paper-ink);
+  font-family: 'Outfit', sans-serif; font-size: .87rem;
+  padding: .6rem .8rem; resize: vertical; outline: none;
+  transition: border-color .2s; line-height: 1.5;
+}
+.paper-textarea:focus {
+  border-color: var(--paper-gold);
+  box-shadow: 0 0 0 2px rgba(10,31,68,.1);
+}
+
+/* ─── SIGNATURE ─── */
+.paper-signature {
+  position: relative; z-index: 1;
+  text-align: center; padding: .8rem 1.2rem 1rem;
+  border-top: 1px solid var(--paper-rim);
+}
+.sig-img { height: 24px; display: block; margin: 0 auto .25rem; }
+.sig-line {
+  width: 220px; height: 1px;
+  background: var(--paper-gold);
+  margin: .3rem auto .3rem; opacity: .5;
+}
+.sig-label {
+  font-size: .65rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--paper-ink3);
+}
+
+/* ─── NEXT TERM STRIP ─── */
+.next-term-strip {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .7rem;
+  padding: .7rem 1.4rem;
+  background: var(--paper2);
+  border-top: 2px solid var(--paper-gold);
+}
+.next-term-strip i { color: var(--paper-gold); font-size: 1rem; }
+.next-term-lbl {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--paper-ink3);
+}
+.next-term-date { font-weight: 700; color: var(--paper-ink); font-size: .9rem; }
+
+/* Bottom gold rule */
+.paper-footer-rule {
+  height: 5px;
+  background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+}
+
+/* ─── SKILLS & BEHAVIOUR ─── */
+.sb-wrapper {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--paper-rim);
+}
+.sb-grid-inner {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+}
+.sb-col {
+  border-right: 1px solid var(--paper-rim);
+}
+.sb-col:last-child { border-right: none; }
+.sb-col-head {
+  display: grid; grid-template-columns: 1fr 30px 30px 30px 30px 30px;
+  background: var(--paper2);
+  border-bottom: 1px solid var(--paper-rim);
+  padding: .45rem .8rem;
+  font-size: .62rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--paper-gold);
+}
+.sb-col-head span { text-align: center; }
+.sb-col-head span:first-child { text-align: left; }
+.sb-row {
+  display: grid; grid-template-columns: 1fr 30px 30px 30px 30px 30px;
+  align-items: center;
+  border-bottom: 1px solid var(--paper-rim2); padding: .4rem .8rem;
+  transition: background .15s;
+}
+.sb-row:last-child { border-bottom: none; }
+.sb-row:hover { background: rgba(10,31,68,.04); }
+.sb-name { font-size: .8rem; color: var(--paper-ink2); font-weight: 500; }
+.sb-check { display: flex; align-items: center; justify-content: center; }
+.sb-check input[type="checkbox"] {
+  width: 14px; height: 14px; cursor: pointer;
+  accent-color: var(--paper-gold);
+}
+
+/* Ratings key */
+.key-bar {
+  display: flex; flex-wrap: wrap; gap: .5rem;
+  padding: .7rem 1.2rem; border-top: 1px solid var(--paper-rim);
+  background: var(--paper2);
+}
+.key-item {
+  display: flex; align-items: center; gap: .4rem;
+}
+.key-num {
+  width: 20px; height: 20px; border-radius: 4px; flex-shrink: 0;
+  background: var(--paper-gold); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 800;
+}
+.key-desc { font-size: .72rem; color: var(--paper-ink3); }
+
+/* ═══════════════════════════════════════════
+   AI COMMENT PANEL (dark, inside report outer)
+═══════════════════════════════════════════ */
+.ai-panel-wrap {
+  background: var(--surface);
+  border-top: 1px solid var(--rim);
+  position: relative; z-index: 2;
+}
+
+/* panel-header reused */
+.ai-badge {
+  display: inline-flex; align-items: center;
+  padding: .18rem .55rem; border-radius: 999px;
+  background: var(--purple-dim); border: 1px solid var(--purple-border);
+  color: var(--purple); font-size: .68rem; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.ai-info-bar {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .7rem 1.4rem;
+  font-size: .82rem; line-height: 1.5; color: var(--slate2);
+  background: rgba(192,132,252,.05);
+  border-bottom: 1px solid var(--rim);
+}
+.ai-info-bar i { color: var(--purple); margin-top: .1rem; flex-shrink: 0; }
+.ai-error-bar {
+  display: flex; align-items: flex-start; gap: .6rem;
+  padding: .7rem 1.4rem; margin: .8rem 1.4rem;
+  font-size: .82rem; line-height: 1.5; color: var(--red);
+  background: var(--red-dim); border: 1px solid var(--red-border); border-radius: 10px;
+}
+.ai-error-bar i { flex-shrink: 0; margin-top: .15rem; }
+
+.btn-ai-generate {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #fff; box-shadow: 0 4px 18px rgba(168,85,247,.28);
+  padding: .5rem 1.1rem; font-size: .84rem;
+}
+.btn-ai-generate:hover {
+  transform: translateY(-2px); box-shadow: 0 6px 24px rgba(168,85,247,.42);
+}
+.btn-ai-generate:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+.ai-spinning { display: inline-block; animation: aiSpin .7s linear infinite; }
+.ai-timestamp { font-size: .72rem; color: var(--slate); font-style: italic; }
+
+.ai-results-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1rem; padding: 1.2rem;
+  animation: riseUp .3s ease both;
+}
+.ai-comment-card {
+  background: var(--surface3); border: 1px solid var(--purple-border);
+  border-radius: 12px; padding: 1rem 1.1rem;
+  display: flex; flex-direction: column; gap: .6rem; position: relative; overflow: hidden;
+}
+.ai-comment-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #a855f7, transparent); opacity: .6;
+}
+.ai-comment-card--full { grid-column: 1 / -1; }
+.ai-comment-card-header {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--purple);
+}
+.ai-comment-text {
+  font-size: .9rem; line-height: 1.65; color: var(--white);
+  font-family: 'Outfit', sans-serif; flex: 1;
+}
+.ai-copy-btn {
+  margin-left: auto;
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .25rem .65rem; border-radius: 999px;
+  background: var(--purple-dim); border: 1px solid var(--purple-border);
+  color: var(--purple); font-size: .7rem; font-weight: 600;
+  cursor: pointer; transition: background .2s, transform .15s;
+  font-family: 'Outfit', sans-serif;
+}
+.ai-copy-btn:hover { background: rgba(192,132,252,.22); transform: scale(1.04); }
+.ai-copy-btn.copied {
+  background: var(--green-dim); border-color: var(--green-border); color: var(--green);
+}
+.ai-apply-row {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding-top: .4rem;
+}
+.btn-ai-apply {
+  background: var(--purple-dim); border: 1px solid var(--purple-border);
+  color: var(--purple); padding: .5rem 1.1rem; font-size: .84rem;
+}
+.btn-ai-apply:hover { background: rgba(192,132,252,.2); transform: translateY(-1px); }
+.ai-apply-note {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .78rem; color: var(--slate); font-style: italic;
+}
+.ai-apply-note i { color: var(--champagne); }
+
+/* ═══ PRINT ═══ */
+@media print {
+  body { background: #fff; }
+  .filter-panel, .report-card-topbar, .ai-panel-wrap { display: none !important; }
+  .report-card-outer { border: none; border-radius: 0; }
+  .report-paper { box-shadow: none; }
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 860px) {
+  .results-wrap { padding: 1rem 1rem 3rem; }
+  .letterhead-body { grid-template-columns: 90px 1fr 90px; }
+  .info-band { grid-template-columns: 1fr 1fr; }
+  .info-band-cell:nth-child(3n) { border-right: 1px solid var(--paper-rim); }
+  .info-band-cell:nth-child(2n) { border-right: none; }
+  .sb-grid-inner { grid-template-columns: 1fr; }
+  .sb-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+  .paper-remarks-wrap { grid-template-columns: 1fr; }
+  .paper-remark-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+  .ai-results-grid { grid-template-columns: 1fr; }
+  .ai-comment-card--full { grid-column: 1; }
+  .filter-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .page-title { font-size: 1.85rem; }
+  .letterhead-body { grid-template-columns: 1fr; text-align: center; }
+  .letterhead-passport { justify-content: center; }
+  .letterhead-logo { justify-content: center; }
+}
+</style>
+
+<div class="results-wrap">
+
+  <!-- ══ PAGE HEADER ══ -->
+  <div class="page-header">
+    <div class="eyebrow"><i class="bi bi-award"></i> Academic Records</div>
+    <div class="page-header-row">
+      <h1 class="page-title">Term <em>Results</em></h1>
+      <span class="context-badge">
+        <i class="bi bi-journal-text"></i> Report Sheet
+      </span>
+    </div>
+  </div>
+
+  <!-- ══ FILTER PANEL ══ -->
+  <div class="panel filter-panel">
+    <div class="panel-header">
+      <div class="panel-icon pi-blue"><i class="bi bi-funnel"></i></div>
+      <h3>Filter Results</h3>
+      <span class="panel-meta">Select criteria to view specific records</span>
+      <div style="margin-left:auto;">
+        <button type="button" class="btn btn-quick" onclick="loadCurrentTerm()">
+          <i class="bi bi-calendar-check"></i> Current Term
+        </button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+
+          <div class="form-group" id="classFilterGroup">
+            <label class="form-label"><i class="bi bi-building"></i> Class</label>
+            <select name="class" class="custom-select" onchange="handleClassChange(this)">
+              <option value="">— All Classes —</option>
+              {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class %}selected{% endif %}>
+                  {{ cls.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="bi bi-person-circle"></i> Student</label>
+            <select name="student" class="custom-select">
+              <option value="">— All Students —</option>
+              {% for student in students %}
+                <option value="{{ student.id }}" {% if student.id|stringformat:"s" == selected_student %}selected{% endif %}>
+                  {{ student.full_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="bi bi-calendar-range"></i> Term</label>
+            <select name="term" class="custom-select">
+              <option value="">— All Terms —</option>
+              {% for term in terms %}
+                <option value="{{ term.id }}" {% if term.id|stringformat:"s" == selected_term %}selected{% endif %}>
+                  {{ term.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="bi bi-calendar3"></i> Session</label>
+            <select name="session" class="custom-select">
+              <option value="">— All Sessions —</option>
+              {% for session in sessions %}
+                <option value="{{ session.id }}" {% if session.id|stringformat:"s" == selected_session %}selected{% endif %}>
+                  {{ session.name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+        </div>
+
+        <div class="filter-actions-row">
+          <div class="active-filters">
+            {% if selected_class or selected_student or selected_term or selected_session %}
+              <span class="active-filters-label">Active:</span>
+              {% if selected_class %}
+              <span class="filter-chip">
+                <i class="bi bi-building"></i> {{ selected_class_name }}
+                <button type="button" onclick="removeFilter('class')"><i class="bi bi-x"></i></button>
+              </span>
+              {% endif %}
+              {% if selected_student %}
+              <span class="filter-chip">
+                <i class="bi bi-person"></i> {{ selected_student_name }}
+                <button type="button" onclick="removeFilter('student')"><i class="bi bi-x"></i></button>
+              </span>
+              {% endif %}
+              {% if selected_term %}
+              <span class="filter-chip">
+                <i class="bi bi-calendar"></i> {{ selected_term_name }}
+                <button type="button" onclick="removeFilter('term')"><i class="bi bi-x"></i></button>
+              </span>
+              {% endif %}
+              {% if selected_session %}
+              <span class="filter-chip">
+                <i class="bi bi-calendar3"></i> {{ selected_session_name }}
+                <button type="button" onclick="removeFilter('session')"><i class="bi bi-x"></i></button>
+              </span>
+              {% endif %}
+            {% endif %}
+          </div>
+          <div class="btn-row">
+            <a href="?" class="btn btn-ghost"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Apply Filters</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══ REPORT CARD ══ -->
+  <div class="report-card-outer">
+
+    <!-- Dark topbar -->
+    <div class="report-card-topbar">
+      <div class="panel-icon pi-gold"><i class="bi bi-file-earmark-text"></i></div>
+      <h3>Official Report Sheet</h3>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" onclick="window.print()" style="font-size:.82rem;padding:.4rem .9rem;">
+          <i class="bi bi-printer"></i> Print
+        </button>
+      </div>
+    </div>
+
+    <!-- ── PAPER DOCUMENT ── -->
+    <div class="report-paper" data-theme="{{ result_settings.theme|default:'classic_gold' }}">
+
+      <!-- Watermark -->
+      <div class="report-watermark">
+        {% for i in "0123456789012345678901234567890123456789012345678901234567890123456789"|make_list %}
+          <span>{{ tenant.name|upper }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Top gold rule -->
+      <div class="letterhead-top-rule"></div>
+
+      <!-- Letterhead -->
+      <div class="letterhead">
+        <div class="letterhead-body">
+          <div class="letterhead-logo">
+            {% if tenant.logo %}
+              <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}">
+            {% else %}
+              <div class="letterhead-initials">{{ tenant.name|slice:":2"|upper }}</div>
+            {% endif %}
+          </div>
+
+          <div class="letterhead-identity">
+            <div class="school-name-main">{{ tenant.name|upper }}</div>
+            {% if tenant.motto %}
+              <div class="school-motto">{{ tenant.motto }}</div>
+            {% endif %}
+            <span class="school-report-label">
+              {{ term.name }} Term &nbsp;·&nbsp; {{ session.name }} &nbsp;·&nbsp; End of Term Report
+            </span>
+          </div>
+
+          <div class="letterhead-passport">
+            {% if student and student.passport %}
+              <div class="passport-frame">
+                <img src="{{ student.passport.url }}" alt="Passport">
+              </div>
+            {% else %}
+              <div class="passport-frame">
+                <i class="bi bi-person-bounding-box"></i>
+                <span>No Photo</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Info -->
+      <div class="info-band">
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Full Name</div>
+          <div class="info-band-cell-value">{{ student.full_name }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Admission No.</div>
+          <div class="info-band-cell-value">{{ student.admission_number }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Sex</div>
+          <div class="info-band-cell-value">{{ gender }}</div>
+        </div>
+
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Class</div>
+          <div class="info-band-cell-value">{{ student.class_assigned.name }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Term</div>
+          <div class="info-band-cell-value">{{ term.name }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Session</div>
+          <div class="info-band-cell-value">{{ session.name }}</div>
+        </div>
+
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Age</div>
+          <div class="info-band-cell-value">{{ age }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Class Age Avg</div>
+          <div class="info-band-cell-value">{{ class_age_avg|default:"—" }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">No. in Class</div>
+          <div class="info-band-cell-value">{{ no_in_class }}</div>
+        </div>
+
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Days School Opened</div>
+          <div class="info-band-cell-value">{{ school_days_open }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Times Present</div>
+          <div class="info-band-cell-value">{{ total_present }}</div>
+        </div>
+        <div class="info-band-cell">
+          <div class="info-band-cell-label">Closing Date</div>
+          <div class="info-band-cell-value">{{ term.closing_date|date:"d M Y" }}</div>
+        </div>
+      </div>
+
+      <!-- Section: Subject Results -->
+      <div class="paper-section-head">
+        <i class="bi bi-table"></i>
+        <span>Academic Performance — Subject Results</span>
+      </div>
+
+      <div class="results-table-wrap">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th class="col-subject">Subject</th>
+              {% ca_scheme as ca %}
+              {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<th>{{ c.label }}{% if c.max %} <small>({{ c.max }})</small>{% endif %}</th>{% endfor %}
+              {% else %}<th>CA <small>({{ ca.ca_max }})</small></th>{% endif %}
+              {% if ca.essay_max %}<th>{{ ca.essay_label }} <small>({{ ca.essay_max }})</small></th>{% endif %}
+              <th>{{ ca.exam_label }} ({{ ca.exam_max }}%)</th>
+              <th>Total (100%)</th>
+              <th>Grade</th>
+              <th style="min-width:130px;text-align:left;padding-left:.6rem;">Remark</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tr in results %}
+            <tr>
+              <td class="col-subject">{{ tr.subject.name }}</td>
+              {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<td><span class="score-num">{{ tr|score:c.field|floatformat:"-1" }}</span></td>{% endfor %}
+              {% else %}<td><span class="score-num">{{ tr|ca_total:ca|floatformat:"-1" }}</span></td>{% endif %}
+              {% if ca.essay_max %}<td><span class="score-num">{{ tr.essay_score|floatformat:"-1" }}</span></td>{% endif %}
+              <td><span class="score-num">{{ tr.exam_score|floatformat:"-1" }}</span></td>
+              <td>
+                <span class="score-total
+                  {% if tr.percent >= 70 %}score-pass{% elif tr.percent >= 50 %}score-fair{% else %}score-fail{% endif %}">
+                  {{ tr.percent|floatformat:0 }}
+                </span>
+              </td>
+              <td>
+                <span class="grade-pill grade-{{ tr.grade }}">{{ tr.grade }}</span>{% if result_settings.show_subject_position and tr.subject_position %}<div style="font-size:.66rem;opacity:.65;margin-top:2px">{{ tr.subject_position }}</div>{% endif %}
+              </td>
+              <td style="text-align:left;padding-left:.6rem;">
+                <textarea class="paper-remark-field subject-remark"
+                  data-student="{{ student.id }}"
+                  data-subject="{{ tr.subject.id }}"
+                  data-term="{{ term.id }}"
+                  data-session="{{ session.id }}"
+                  rows="1"
+                >{{ tr.remark }}</textarea>
+                <span class="save-status subject-save-status"></span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totals Band -->
+      <div class="totals-band">
+        <div class="totals-cell">
+          <div class="totals-cell-label">Subjects Offered</div>
+          <div class="totals-cell-value">{{ results|length }}</div>
+        </div>
+        <div class="totals-cell">
+          <div class="totals-cell-label">Mark Obtained</div>
+          <div class="totals-cell-value">{{ total_obtained|floatformat:2 }}</div>
+        </div>
+        <div class="totals-cell">
+          <div class="totals-cell-label">Mark Obtainable</div>
+          <div class="totals-cell-value">{{ total_obtainable|floatformat:2 }}</div>
+        </div>
+        {% if result_settings.show_class_average %}
+        <div class="totals-cell">
+          <div class="totals-cell-label">Class Average</div>
+          <div class="totals-cell-value">
+            {% if results %}{% with first=results|first %}{{ first.class_avg|default:"—" }}{% endwith %}{% else %}—{% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="totals-cell highlight">
+          <div class="totals-cell-label">Learner's Average</div>
+          <div class="totals-cell-value">{{ overall_percentage|floatformat:2 }}%</div>
+        </div>
+        {% if result_settings.show_position and class_position %}
+        <div class="totals-cell">
+          <div class="totals-cell-label">Position</div>
+          <div class="totals-cell-value">{{ class_position }} <small style="font-size:.55em;opacity:.7">of {{ ranked_in_class }}</small></div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if verify_ref and results %}<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:6px 0 2px;font-size:10px;color:#78716c"><span style="text-align:right;line-height:1.3">Scan to check this report card<br>against the school's records</span><img src="{{ verify_qr }}" alt="Verification code" style="width:64px;height:64px"></div>{% endif %}
+      <!-- Section: Skills & Behaviour -->
+      {% if result_settings.show_skills_section or result_settings.show_behaviour_section %}
+      <div class="paper-section-head">
+        <i class="bi bi-stars"></i>
+        <span>Skills &amp; Behaviour Assessment</span>
+      </div>
+
+      <div class="sb-wrapper">
+        <div class="sb-grid-inner">
+          <!-- SKILLS -->
+          {% if result_settings.show_skills_section %}
+          <div class="sb-col">
+            <div class="sb-col-head">
+              <span>Skills</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+            {% for skill in skills %}
+              {% if skill.category == "skill" %}
+              <div class="sb-row">
+                <span class="sb-name">{{ skill.name }}</span>
+                {% for rate in ratings %}
+                <span class="sb-check">
+                  <input type="checkbox"
+                    data-skill="{{ skill.id }}"
+                    data-student="{{ student.id }}"
+                    data-term="{{ term.id }}"
+                    data-session="{{ session.id }}"
+                    data-value="{{ rate }}"
+                    data-group="skill_{{ skill.id }}"
+                    {% if assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                  >
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+          <!-- BEHAVIOUR -->
+          {% if result_settings.show_behaviour_section %}
+          <div class="sb-col">
+            <div class="sb-col-head">
+              <span>Behaviour</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+            {% for skill in skills %}
+              {% if skill.category == "behaviour" %}
+              <div class="sb-row">
+                <span class="sb-name">{{ skill.name }}</span>
+                {% for rate in ratings %}
+                <span class="sb-check">
+                  <input type="checkbox"
+                    data-skill="{{ skill.id }}"
+                    data-student="{{ student.id }}"
+                    data-term="{{ term.id }}"
+                    data-session="{{ session.id }}"
+                    data-value="{{ rate }}"
+                    data-group="skill_{{ skill.id }}"
+                    {% if assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                  >
+                </span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Key -->
+        <div class="key-bar">
+          <div class="key-item"><span class="key-num">5</span><span class="key-desc">Excellent degree of observable traits</span></div>
+          <div class="key-item"><span class="key-num">4</span><span class="key-desc">High level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">3</span><span class="key-desc">Acceptable level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">2</span><span class="key-desc">Minimal level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">1</span><span class="key-desc">No regards for observable traits</span></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Section: Remarks -->
+      <div class="paper-section-head">
+        <i class="bi bi-chat-quote"></i>
+        <span>Teacher &amp; Head of School Remarks</span>
+      </div>
+
+      <!-- AI Comment Panel (dark overlay inside paper) -->
+      {% if student and term and session %}
+      <div class="ai-panel-wrap" id="aiCommentPanel">
+        <div class="panel-header" style="border-bottom:1px solid var(--rim);">
+          <div class="panel-icon" style="background:var(--purple-dim);border:1px solid var(--purple-border);">
+            <i class="bi bi-stars" style="color:var(--purple);"></i>
+          </div>
+          <h3 style="display:flex;align-items:center;gap:.6rem;">
+            AI Comment Generator
+            <span class="ai-badge">AI</span>
+          </h3>
+          <div style="margin-left:auto;display:flex;gap:.6rem;align-items:center;">
+            <span id="aiTimestamp" class="ai-timestamp"></span>
+            <select id="aiTone" aria-label="Tone" style="padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.25);color:inherit;border:1px solid rgba(255,255,255,.12);font:inherit;font-size:.8rem">
+              <option value="warm">Warm</option><option value="formal">Formal</option><option value="encouraging">Encouraging</option><option value="concise">Concise</option>
+            </select>
+            <button class="btn btn-ai-generate" id="btnGenerateAI"
+                    data-student="{{ student.id }}"
+                    data-term="{{ term.id }}"
+                    data-session="{{ session.id }}"
+                    type="button">
+              <i class="bi bi-magic" id="aiSpinIcon"></i>
+              <span id="aiBtnLabel">Generate Comments</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="ai-info-bar" id="aiInfoBar">
+          <i class="bi bi-info-circle"></i>
+          <span>
+            Click <strong>Generate Comments</strong> to create personalised AI remarks for
+            <strong>{{ student.full_name }}</strong> based on {{ term }} performance.
+            Generated comments auto-fill the remark fields below.
+          </span>
+        </div>
+
+        <div class="ai-error-bar" id="aiErrorBar" style="display:none;">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          <span id="aiErrorMsg">An error occurred. Please try again.</span>
+        </div>
+
+        <div class="ai-results-grid" id="aiResultsGrid" style="display:none;">
+          <div class="ai-comment-card">
+            <div class="ai-comment-card-header">
+              <i class="bi bi-person-badge"></i>
+              Class Teacher's Comment
+              <button class="ai-copy-btn" data-target="teacherRemark">
+                <i class="bi bi-clipboard-check"></i> Use This
+              </button>
+            </div>
+            <p class="ai-comment-text" id="aiTeacherComment"></p>
+          </div>
+          <div class="ai-comment-card">
+            <div class="ai-comment-card-header">
+              <i class="bi bi-shield-check"></i>
+              Head of School's Comment
+              <button class="ai-copy-btn" data-target="hosRemark">
+                <i class="bi bi-clipboard-check"></i> Use This
+              </button>
+            </div>
+            <p class="ai-comment-text" id="aiHosComment"></p>
+          </div>
+          <div class="ai-comment-card ai-comment-card--full">
+            <div class="ai-comment-card-header">
+              <i class="bi bi-bar-chart-line"></i>
+              Overall Summary
+            </div>
+            <p class="ai-comment-text" id="aiOverallSummary"></p>
+          </div>
+          <div class="ai-apply-row">
+            <button class="btn btn-ai-apply" id="btnApplyAll" type="button">
+              <i class="bi bi-check2-all"></i> Apply All to Remark Fields
+            </button>
+            <span class="ai-apply-note">
+              <i class="bi bi-pencil-square"></i>
+              Comments are applied to the remark fields below. You can edit before saving.
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Remark textareas (on paper) -->
+    {% include "results/_awards.html" %}
+      <div class="paper-remarks-wrap">
+        <div class="paper-remark-col">
+          <div class="paper-remark-col-label">
+            <i class="bi bi-person-badge"></i> Class Teacher's Remark
+          </div>
+          <textarea id="teacherRemark"
+            class="paper-textarea"
+            data-student="{{ student.id }}"
+            data-term="{{ term.id }}"
+            data-session="{{ session.id }}"
+            rows="3"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+          >{{ class_teacher_remark }}</textarea>
+          <span id="saveStatus" class="save-status"></span>
+        </div>
+        <div class="paper-remark-col">
+          <div class="paper-remark-col-label">
+            <i class="bi bi-shield-check"></i> Head of School's Remark
+          </div>
+          <textarea id="hosRemark"
+            class="paper-textarea"
+            data-student="{{ student.id }}"
+            data-term="{{ term.id }}"
+            data-session="{{ session.id }}"
+            rows="3"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+          >{{ hos_remark }}</textarea>
+          <span id="hosStatus" class="save-status"></span>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="paper-signature">
+        {% if head_teacher_signature %}
+          <img src="{{ head_teacher_signature }}" class="sig-img" alt="Signature">
+        {% endif %}
+        <div class="sig-line"></div>
+        <div class="sig-label">Head Teacher's Signature &amp; School Stamp</div>
+      </div>
+
+      <!-- Next term -->
+      <div class="next-term-strip">
+        <i class="bi bi-arrow-right-circle-fill"></i>
+        <span class="next-term-lbl">Next Term Begins:</span>
+        <span class="next-term-date">{{ resumption_date_next_term|date:"d M Y" }}</span>
+      </div>
+
+      <!-- Bottom gold rule -->
+      <div class="paper-footer-rule"></div>
+
+      {% if result_settings.footer_note %}
+      <div style="text-align:center;font-size:.78rem;color:var(--muted,#888);margin-top:.6rem;">
+        {{ result_settings.footer_note }}
+      </div>
+      {% endif %}
+
+    </div><!-- /report-paper -->
+  </div><!-- /report-card-outer -->
+
+</div><!-- /results-wrap -->
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+/* ── Teacher Remark autosave ── */
+(function(){
+  const field = document.getElementById("teacherRemark");
+  const status = document.getElementById("saveStatus");
+  if (!field) return;
+  let timer, lastVal = field.value;
+  function show(msg, color){ status.style.display="inline"; status.style.color=color; status.textContent=msg; setTimeout(()=>status.style.display="none",1500); }
+  field.addEventListener("keyup", function(){
+    clearTimeout(timer);
+    if (field.value === lastVal) return;
+    timer = setTimeout(()=>{
+      fetch("{% url 'results:save_teacher_remark' %}",{
+        method:"POST",
+        headers:{"X-CSRFToken":"{{ csrf_token }}","Content-Type":"application/x-www-form-urlencoded"},
+        body:new URLSearchParams({student_id:field.dataset.student,term_id:field.dataset.term,session_id:field.dataset.session,remark:field.value})
+      }).then(r=>{if(!r.ok)throw new Error();lastVal=field.value;show("Saved","#166534");}).catch(()=>show("Failed","#991b1b"));
+    }, 800);
+  });
+})();
+
+/* ── HOS Remark autosave ── */
+(function(){
+  const field = document.getElementById("hosRemark");
+  const status = document.getElementById("hosStatus");
+  if (!field) return;
+  let timer, controller, lastVal = field.value;
+  function getCookie(name){ let v=null; if(document.cookie){ for(let c of document.cookie.split(';')){ c=c.trim(); if(c.startsWith(name+'=')){ v=decodeURIComponent(c.substring(name.length+1)); break; } } } return v; }
+  function show(msg,color){ status.style.display="inline"; status.style.color=color; status.textContent=msg; setTimeout(()=>status.style.display="none",1500); }
+  field.addEventListener("input",function(){
+    clearTimeout(timer);
+    if(field.value===lastVal) return;
+    timer=setTimeout(()=>{
+      if(controller) controller.abort();
+      controller=new AbortController();
+      show("Saving…","#92400e");
+      fetch("{% url 'results:save_hos_remark' %}",{
+        method:"POST",
+        headers:{"X-CSRFToken":getCookie("csrftoken"),"Content-Type":"application/x-www-form-urlencoded"},
+        body:new URLSearchParams({student_id:field.dataset.student,term_id:field.dataset.term,session_id:field.dataset.session,remark:field.value}),
+        signal:controller.signal
+      }).then(r=>{if(!r.ok)throw new Error();return r.json();})
+      .then(d=>{if(d.status==="success"){lastVal=field.value;show("Saved","#166534");}else throw new Error();})
+      .catch(e=>{if(e.name!=="AbortError")show("Failed","#991b1b");});
+    },800);
+  });
+})();
+
+/* ── Subject Remarks autosave ── */
+document.querySelectorAll(".subject-remark").forEach(field=>{
+  const status=field.nextElementSibling;
+  field.addEventListener("keyup",function(){
+    clearTimeout(this.saveTimer);
+    this.saveTimer=setTimeout(()=>{
+      fetch("{% url 'results:save_subject_remark' %}",{
+        method:"POST",
+        headers:{"X-CSRFToken":"{{ csrf_token }}","Content-Type":"application/x-www-form-urlencoded"},
+        body:new URLSearchParams({student_id:this.dataset.student,subject_id:this.dataset.subject,term_id:this.dataset.term,session_id:this.dataset.session,remark:this.value})
+      }).then(()=>{
+        status.style.display="inline";status.style.color="#166534";status.textContent="✓";
+        setTimeout(()=>status.style.display="none",1200);
+      }).catch(()=>{status.style.display="inline";status.style.color="#991b1b";status.textContent="✗";});
+    },700);
+  });
+});
+
+/* ── Skill Checkboxes ── */
+document.addEventListener("change",function(e){
+  if(e.target.type==="checkbox"&&e.target.dataset.group){
+    const g=e.target.dataset.group;
+    document.querySelectorAll(`input[type="checkbox"][data-group="${g}"]`).forEach(cb=>{if(cb!==e.target)cb.checked=false;});
+    fetch("{% url 'results:save_skill_assessment' %}",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","X-CSRFToken":"{{ csrf_token }}"},
+      body:JSON.stringify({student:e.target.dataset.student,skill:e.target.dataset.skill,term:e.target.dataset.term,session:e.target.dataset.session,score:e.target.dataset.value})
+    });
+  }
+});
+
+/* ── Filter helpers ── */
+function handleClassChange(select){ document.getElementById('classFilterGroup').style.opacity='.6'; document.getElementById('filterForm').submit(); }
+function loadCurrentTerm(){ const s=document.querySelector('select[name="term"]'); if(s&&s.options.length>1){s.selectedIndex=1;s.focus();} }
+function removeFilter(name){ const form=document.getElementById('filterForm'); const el=form.querySelector(`[name="${name}"]`); if(el){el.value='';form.submit();} }
+
+/* ── Select visual feedback ── */
+document.querySelectorAll('.custom-select').forEach(s=>{
+  function update(){ s.style.fontWeight=s.value?'600':'400'; s.style.color=s.value?'var(--white)':'var(--slate)'; }
+  s.addEventListener('change',update); update();
+});
+
+/* ── AI Comment Generator ── */
+(function(){
+  "use strict";
+  const btn=document.getElementById("btnGenerateAI");
+  const applyAllBtn=document.getElementById("btnApplyAll");
+  const spinIcon=document.getElementById("aiSpinIcon");
+  const btnLabel=document.getElementById("aiBtnLabel");
+  const infoBar=document.getElementById("aiInfoBar");
+  const errorBar=document.getElementById("aiErrorBar");
+  const errorMsg=document.getElementById("aiErrorMsg");
+  const resultsGrid=document.getElementById("aiResultsGrid");
+  const timestamp=document.getElementById("aiTimestamp");
+  const teacherEl=document.getElementById("aiTeacherComment");
+  const hosEl=document.getElementById("aiHosComment");
+  const summaryEl=document.getElementById("aiOverallSummary");
+  const teacherField=document.getElementById("teacherRemark");
+  const hosField=document.getElementById("hosRemark");
+
+  if(!btn) return;
+
+  const GENERATE_URL="{% url 'results:generate_ai_comment' %}";
+  const GET_URL="{% url 'results:get_ai_comment' %}";
+  const CSRF="{{ csrf_token }}";
+  const studentId=btn.dataset.student;
+  const termId=btn.dataset.term;
+  const sessionId=btn.dataset.session;
+
+  function setLoading(isLoading){
+    btn.disabled=isLoading;
+    if(isLoading){ spinIcon.classList.add("ai-spinning"); spinIcon.className="bi bi-arrow-repeat ai-spinning"; btnLabel.textContent="Generating…"; }
+    else{ spinIcon.className="bi bi-magic"; btnLabel.textContent="Regenerate"; }
+  }
+  function showError(msg){ errorMsg.textContent=msg; errorBar.style.display="flex"; infoBar.style.display="none"; resultsGrid.style.display="none"; }
+  function showResults(data){
+    errorBar.style.display="none"; infoBar.style.display="none"; resultsGrid.style.display="grid";
+    teacherEl.textContent=data.teacher_comment||"—";
+    hosEl.textContent=data.hos_comment||"—";
+    summaryEl.textContent=data.overall_summary||"—";
+    if(data.generated_at){ timestamp.textContent="Last generated: "+data.generated_at; }
+  }
+
+  (function prefillExisting(){
+    if(!studentId||!termId||!sessionId) return;
+    fetch(`${GET_URL}?student_id=${studentId}&term_id=${termId}&session_id=${sessionId}`)
+      .then(r=>r.json())
+      .then(data=>{ if(data.status==="found"){ showResults(data); btnLabel.textContent="Regenerate"; } })
+      .catch(()=>{});
+  })();
+
+  btn.addEventListener("click",function(){
+    setLoading(true); errorBar.style.display="none";
+    fetch(GENERATE_URL,{
+      method:"POST",
+      headers:{"X-CSRFToken":CSRF,"Content-Type":"application/x-www-form-urlencoded"},
+      body:new URLSearchParams({student_id:studentId,term_id:termId,session_id:sessionId,tone:(document.getElementById("aiTone")||{}).value||"warm"})
+    }).then(r=>r.json()).then(data=>{
+      setLoading(false);
+      if(data.status==="success"){ showResults(data); }
+      else{ showError(data.detail||"Comment generation failed. Please check that scores are entered and try again."); }
+    }).catch(err=>{ setLoading(false); showError("Network error — could not reach the server. Please try again."); console.error("[AI Comment]",err); });
+  });
+
+  document.querySelectorAll(".ai-copy-btn").forEach(function(copyBtn){
+    copyBtn.addEventListener("click",function(){
+      const targetId=this.dataset.target;
+      const targetField=document.getElementById(targetId);
+      const sourceId={"teacherRemark":"aiTeacherComment","hosRemark":"aiHosComment"}[targetId];
+      if(!targetField||!sourceId) return;
+      const text=document.getElementById(sourceId).textContent.trim();
+      if(!text||text==="—") return;
+      targetField.value=text;
+      targetField.style.height="auto"; targetField.style.height=targetField.scrollHeight+"px";
+      targetField.dispatchEvent(new Event("input",{bubbles:true}));
+      targetField.dispatchEvent(new Event("keyup",{bubbles:true}));
+      const original=this.innerHTML;
+      this.classList.add("copied"); this.innerHTML='<i class="bi bi-check-lg"></i> Applied';
+      const self=this;
+      setTimeout(function(){ self.classList.remove("copied"); self.innerHTML=original; },2000);
+    });
+  });
+
+  if(applyAllBtn){
+    applyAllBtn.addEventListener("click",function(){
+      document.querySelectorAll(".ai-copy-btn").forEach(function(copyBtn){ copyBtn.click(); });
+      applyAllBtn.innerHTML='<i class="bi bi-check2-all"></i> All Applied!';
+      applyAllBtn.style.background="var(--green-dim)";
+      applyAllBtn.style.borderColor="var(--green-border)";
+      applyAllBtn.style.color="var(--green)";
+      setTimeout(function(){
+        applyAllBtn.innerHTML='<i class="bi bi-check2-all"></i> Apply All to Remark Fields';
+        applyAllBtn.style.background=""; applyAllBtn.style.borderColor=""; applyAllBtn.style.color="";
+      },2500);
+    });
+  }
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% include "finance/_fin_styles.html" %}
+<style>.snav{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem;align-items:center}.snav small{color:var(--slate);font-size:.65rem;letter-spacing:1px;text-transform:uppercase;margin:0 .2rem 0 .5rem}
+.pill{display:inline-flex;gap:.35rem;align-items:center;margin:0 .6rem .3rem 0;font-size:.85rem}.pill input{width:auto}.mono{font-family:ui-monospace,Menlo,monospace}
+@media print{.no-print,.sidebar,.topbar,nav,.snav{display:none!important}}</style>
+<div class="snav no-print">
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:overview' %}"><i class="bi bi-shield-lock"></i> Overview</a>
+  <small>Sign-in</small>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:settings' %}">Rules</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:people' %}">People &amp; sessions</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:roles' %}">Roles</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:audit' %}">Audit trail</a>
+  <small>Privacy</small>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:privacy' %}">Notice &amp; DPO</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:consents' %}">Consent</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:requests' %}">Requests</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:breaches' %}">Breaches</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'security:retention' %}">Retention</a>
+  <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'security:compliance' %}"><i class="bi bi-clipboard-check"></i> Compliance report</a>
+</div>

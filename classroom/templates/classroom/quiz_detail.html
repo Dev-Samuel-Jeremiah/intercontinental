@@ -1,0 +1,87 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ quiz.title }} | Details{% endblock %}
+{% block extra_css %}
+<style>
+        #content{font-family: Arial, sans-serif;}
+        h1 { color:#1f3a5f; }
+        h2 { color:var(--blue); margin-top: 20px; }
+        .question {
+            padding: 12px;
+            background:rgba(255,255,255,.03);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .question:hover { transform: translateY(-2px); }
+        .option {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border:1px solid var(--rim2);
+            background:rgba(255,255,255,.045);
+        }
+        .option.correct {
+            background:var(--green-dim);
+            border-color:#10b981;
+            font-weight: bold;
+        }
+        .add-btn {
+            background:#2563eb;
+            color:#fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 15px;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .add-btn:hover {
+            background:#1e40af;
+            transform: translateY(-2px);
+        }
+    </style>
+{% endblock %}
+{% block content %}
+
+<h1>{{ quiz.title }}</h1>
+<p>{{ quiz.description }}</p>
+<p><strong>Duration:</strong> {{ quiz.duration_minutes }} mins</p>
+<p><strong>Pass Mark:</strong> {{ quiz.pass_mark }}%</p>
+
+<h2>Questions</h2>
+{% for question in questions %}
+    <div class="question">
+        <p>{{ forloop.counter }}. {{ question.question_text }}</p>
+
+        <div class="option {% if question.correct_option == 'A' %}correct{% endif %}">
+            {{ question.option_a }}
+            {% if question.correct_option == 'A' %}<strong>(Correct Answer)</strong>{% endif %}
+        </div>
+        <div class="option {% if question.correct_option == 'B' %}correct{% endif %}">
+            {{ question.option_b }}
+            {% if question.correct_option == 'B' %}<strong>(Correct Answer)</strong>{% endif %}
+        </div>
+        {% if question.option_c %}
+        <div class="option {% if question.correct_option == 'C' %}correct{% endif %}">
+            {{ question.option_c }}
+            {% if question.correct_option == 'C' %}<strong>(Correct Answer)</strong>{% endif %}
+        </div>
+        {% endif %}
+        {% if question.option_d %}
+        <div class="option {% if question.correct_option == 'D' %}correct{% endif %}">
+            {{ question.option_d }}
+            {% if question.correct_option == 'D' %}<strong>(Correct Answer)</strong>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% empty %}
+    <p>No questions yet.</p>
+{% endfor %}
+
+
+<a href="{% url 'classroom:add_quiz_question' quiz.id %}" class="add-btn">+ Add Question</a>
+<a href="{% url 'classroom:teacher_course_detail' course.id %}" class="add-btn">Back to Course</a>
+{% endblock %}

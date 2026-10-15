@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ sc.title }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Stock count · {{ sc.started_at|date:"j M Y" }}</div>
+  <h1 class="fin-title"><em>{{ sc.title }}</em></h1>
+  <p class="fin-sub">{% if sc.closed_at %}Closed {{ sc.closed_at|date:"j M Y" }}{% if sc.adjusted %} — the ledger was corrected{% endif %}.{% else %}Enter what is on the shelf. Save as you go; close when every item is counted.{% endif %} {{ rep.short }} short · {{ rep.over }} over · variance value ₦{{ rep.value|floatformat:2 }}</p>
+</div><button class="fin-btn fin-btn-sm no-print" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div>
+{% include "facilities/_nav.html" %}
+<form method="post" class="panel fin-form">{% csrf_token %}<div class="panel-b"><table class="tbl" data-no-export>
+  <thead><tr><th>Item</th><th class="num">Ledger</th><th>Counted</th><th class="num">Variance</th><th class="num">Value</th></tr></thead><tbody>
+  {% for r in rep.rows %}<tr><td class="name">{{ r.line.item.name }} <small class="hint">{{ r.line.item.unit }}</small></td><td class="num">{{ r.line.expected }}</td>
+    <td>{% if sc.closed_at %}{{ r.line.counted }}{% else %}<input name="c_{{ r.line.pk }}" value="{{ r.line.counted|default_if_none:'' }}" inputmode="numeric" style="width:90px">{% endif %}</td>
+    <td class="num">{% if r.variance %}<span class="chip{% if r.variance < 0 %} red{% else %} gold{% endif %}">{{ r.variance }}</span>{% elif r.variance == 0 %}0{% endif %}</td><td class="num">{% if r.value %}{{ r.value|floatformat:2 }}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">No consumable items in the inventory.</td></tr>{% endfor %}
+  </tbody></table>
+  {% if not sc.closed_at %}<div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;margin-top:.6rem"><button class="fin-btn" type="submit" name="action" value="save">Save counts</button>
+    <label class="pill"><input type="checkbox" name="adjust" checked> Correct the ledger to match</label><button class="fin-btn fin-btn-gold" type="submit" name="action" value="close" onclick="return confirm('Close this count?')">Close count</button></div>{% endif %}
+</div></form>
+{% endblock %}

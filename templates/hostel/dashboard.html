@@ -1,0 +1,1153 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Hostel Dashboard{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.page-head{
+  margin-bottom:2rem;
+}
+
+.page-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  margin-bottom:.9rem;
+  color:var(--champagne);
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:3px;
+  font-weight:700;
+}
+
+.page-eyebrow::before{
+  content:"";
+  width:42px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.page-sub{
+  margin-top:.7rem;
+  color:var(--slate2);
+  font-size:.95rem;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.8rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.8rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.page-divider{
+  position:relative;
+  border-bottom:1px solid var(--rim);
+  margin-top:1.3rem;
+  padding-bottom:1rem;
+}
+
+.page-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:2px;
+  background:var(--champagne);
+}
+
+.top-actions{
+  display:flex;
+  gap:.85rem;
+  flex-wrap:wrap;
+  margin-top:1.5rem;
+}
+
+.lux-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.65rem;
+  padding:.88rem 1.2rem;
+  border-radius:12px;
+  border:1px solid var(--rim2);
+  text-decoration:none;
+  font-size:.85rem;
+  font-weight:600;
+  transition:.25s ease;
+  cursor:pointer;
+}
+
+.lux-btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  border:none;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.lux-btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.lux-btn-ghost{
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.lux-btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+.alert-box{
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  margin-bottom:1rem;
+  font-size:.88rem;
+  font-weight:600;
+  border:1px solid;
+}
+
+.alert-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.alert-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.alert-info{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.stat-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1rem;
+  margin-bottom:1.6rem;
+}
+
+.stat-card{
+  position:relative;
+  overflow:hidden;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  padding:1.15rem;
+  animation:riseUp .45s ease both;
+}
+
+.stat-card::before,
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.stat-card:nth-child(1){animation-delay:.04s;}
+.stat-card:nth-child(2){animation-delay:.08s;}
+.stat-card:nth-child(3){animation-delay:.12s;}
+.stat-card:nth-child(4){animation-delay:.16s;}
+.stat-card:nth-child(5){animation-delay:.20s;}
+.stat-card:nth-child(6){animation-delay:.24s;}
+.stat-card:nth-child(7){animation-delay:.28s;}
+.stat-card:nth-child(8){animation-delay:.32s;}
+
+.stat-label{
+  font-size:.72rem;
+  letter-spacing:1.4px;
+  text-transform:uppercase;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.stat-value{
+  margin-top:.45rem;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2.2rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.stat-accent{
+  width:44px;
+  height:4px;
+  border-radius:999px;
+  margin-top:1rem;
+}
+
+.green{background:var(--green);}
+.blue{background:var(--blue);}
+.red{background:var(--red);}
+.amber{background:var(--amber);}
+.purple{background:var(--purple);}
+.teal{background:var(--teal);}
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:1.4rem;
+  animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(odd){animation-delay:.08s;}
+.panel:nth-child(even){animation-delay:.14s;}
+
+.panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  padding:1.15rem 1.3rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.9rem;
+}
+
+.icon-green{
+  background:var(--green-dim);
+  color:var(--green);
+  border:1px solid var(--green-border);
+}
+
+.icon-red{
+  background:var(--red-dim);
+  color:var(--red);
+  border:1px solid var(--red-border);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  color:var(--blue);
+  border:1px solid var(--blue-border);
+}
+
+.icon-amber{
+  background:var(--amber-dim);
+  color:var(--amber);
+  border:1px solid var(--amber-border);
+}
+
+.panel-header h3{
+  margin:0;
+  font-size:.98rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.2rem 1.3rem;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.3rem;
+}
+
+.grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1rem;
+}
+
+.hostel-card{
+  display:block;
+  text-decoration:none;
+  background:var(--surface2);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  padding:1rem;
+  transition:.25s ease;
+}
+
+.hostel-card:hover{
+  border-color:var(--champagne);
+  transform:translateY(-3px);
+}
+
+.hostel-name{
+  color:var(--white);
+  font-weight:700;
+  margin-bottom:.35rem;
+}
+
+.hostel-meta{
+  color:var(--slate2);
+  font-size:.8rem;
+  margin-bottom:1rem;
+}
+
+.hostel-box{
+  background:var(--surface3);
+  border-radius:12px;
+  padding:.9rem;
+}
+
+.hostel-row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:.5rem;
+  font-size:.82rem;
+}
+
+.progress{
+  height:7px;
+  background:rgba(255,255,255,.05);
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.progress div{
+  height:100%;
+  border-radius:999px;
+}
+
+.progress-note{
+  margin-top:.45rem;
+  font-size:.72rem;
+  color:var(--slate);
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl th{
+  padding:.95rem 1rem;
+  text-align:left;
+  border-bottom:1px solid var(--rim);
+  color:var(--slate2);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.tbl td{
+  padding:1rem;
+  border-bottom:1px solid var(--rim);
+  color:var(--white);
+  font-size:.86rem;
+  vertical-align:middle;
+}
+
+.tbl tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  color:#0a1f44;
+  font-size:.8rem;
+  font-weight:700;
+}
+
+.user-row{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  border:1px solid;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-purple{
+  background:var(--purple-dim);
+  border-color:var(--purple-border);
+  color:var(--purple);
+}
+
+.notice{
+  background:var(--surface2);
+  border:1px solid var(--rim);
+  border-left:3px solid var(--champagne);
+  border-radius:14px;
+  padding:1rem;
+  margin-bottom:.85rem;
+}
+
+.notice-title{
+  font-weight:700;
+  margin-bottom:.35rem;
+}
+
+.notice-text{
+  color:var(--slate2);
+  font-size:.84rem;
+  line-height:1.5;
+}
+
+.empty-state{
+  padding:2rem 1rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:70px;
+  height:70px;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 1rem;
+  font-size:1.5rem;
+  color:var(--champagne);
+}
+
+.empty-title{
+  font-size:1rem;
+  font-weight:700;
+  margin-bottom:.35rem;
+}
+
+.empty-sub{
+  color:var(--slate2);
+  font-size:.84rem;
+}
+
+.action-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.4rem;
+  border:none;
+  border-radius:10px;
+  padding:.5rem .8rem;
+  font-size:.74rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.action-green{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.action-red{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+}
+
+.action-btn:hover{
+  transform:translateY(-1px);
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:.9rem 1rem;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  outline:none;
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+@media(max-width:900px){
+  .grid-2,
+  .grid-3{
+    grid-template-columns:1fr;
+  }
+
+  .page-title{
+    font-size:2.3rem;
+  }
+
+  .your-wrap{
+    padding:1.5rem;
+  }
+}
+</style>
+
+<script>
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('active');});
+  });
+});
+</script>
+
+<div class="your-wrap">
+
+  <div class="page-head">
+    <div class="page-eyebrow">
+      Boarding Operations
+    </div>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">
+          Hostel <em>Management</em>
+        </h1>
+        <div class="page-sub">
+          Overview of boarding facilities, student movements, incidents and occupancy insights.
+        </div>
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-buildings"></i>
+        {{ total_boarders }} Active Boarders
+      </div>
+    </div>
+
+    <div class="page-divider"></div>
+
+    <div class="top-actions">
+      <a href="{% url 'hostel:assign_bed' %}" class="lux-btn lux-btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Assign Bed
+      </a>
+
+      <a href="{% url 'hostel:hostel_list' %}" class="lux-btn lux-btn-ghost">
+        <i class="bi bi-building"></i>
+        Manage Hostels
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="alert-box
+        {% if m.tags == 'success' %}alert-success
+        {% elif m.tags == 'error' %}alert-error
+        {% else %}alert-info{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Total Beds</div>
+      <div class="stat-value">{{ total_beds }}</div>
+      <div class="stat-accent green"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Occupied</div>
+      <div class="stat-value">{{ occupied_beds }}</div>
+      <div class="stat-accent blue"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Available</div>
+      <div class="stat-value">{{ available_beds }}</div>
+      <div class="stat-accent green"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Occupancy Rate</div>
+      <div class="stat-value">{{ occupancy_rate }}%</div>
+      <div class="stat-accent amber"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Boarders</div>
+      <div class="stat-value">{{ total_boarders }}</div>
+      <div class="stat-accent purple"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">On Exeat</div>
+      <div class="stat-value">{{ on_exeat }}</div>
+      <div class="stat-accent amber"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Overdue Exeats</div>
+      <div class="stat-value">{{ overdue_exeats }}</div>
+      <div class="stat-accent red"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Open Incidents</div>
+      <div class="stat-value">{{ open_incidents }}</div>
+      <div class="stat-accent red"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge icon-green">
+          <i class="bi bi-building"></i>
+        </div>
+        <h3>Hostel Buildings</h3>
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <div class="grid-3">
+
+        {% for hostel in hostels %}
+        <a href="{% url 'hostel:hostel_detail' hostel.id %}" class="hostel-card">
+
+          <div class="hostel-name">{{ hostel.name }}</div>
+          <div class="hostel-meta">{{ hostel.get_gender_display }}</div>
+
+          <div class="hostel-box">
+            <div class="hostel-row">
+              <span style="color:var(--slate2)">Occupied</span>
+              <strong>{{ hostel.occupied_beds }}/{{ hostel.total_beds }}</strong>
+            </div>
+
+            <div class="progress">
+              {% with rate=hostel.occupancy_rate %}
+              <div style="width:{{ rate }}%;
+                background:
+                {% if rate > 90 %}var(--red)
+                {% elif rate > 70 %}var(--amber)
+                {% else %}var(--green){% endif %};">
+              </div>
+              {% endwith %}
+            </div>
+
+            <div class="progress-note">
+              {{ hostel.occupancy_rate }}% occupancy
+            </div>
+          </div>
+
+        </a>
+
+        {% empty %}
+        <div class="empty-state" style="grid-column:1/-1;">
+          <div class="empty-icon">
+            <i class="bi bi-building"></i>
+          </div>
+          <div class="empty-title">No Hostels Yet</div>
+          <div class="empty-sub">
+            Create your first hostel building to begin managing boarders.
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge icon-red">
+            <i class="bi bi-alarm-fill"></i>
+          </div>
+          <h3>Overdue Exeats</h3>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        {% if overdue_exeats_qs %}
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Expected Return</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for mv in overdue_exeats_qs %}
+              <tr>
+                <td>
+                  <div class="user-row">
+                    <div class="avatar">
+                      {{ mv.boarder.student.full_name|slice:":2"|upper }}
+                    </div>
+                    <strong>{{ mv.boarder.student.full_name }}</strong>
+                  </div>
+                </td>
+
+                <td style="color:var(--red);font-weight:600;">
+                  {{ mv.expected_return|date:"d M Y H:i" }}
+                </td>
+
+                <td>
+                  <form method="POST" action="{% url 'hostel:return_exeat' mv.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="action-btn action-green">
+                      <i class="bi bi-check2-circle"></i>
+                      Mark Returned
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div class="empty-title">No Overdue Exeats</div>
+          <div class="empty-sub">
+            All students currently on exeat are within their approved return time.
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge icon-red">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
+          <h3>Open Incidents</h3>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        {% if open_incidents_qs %}
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Title</th>
+                <th>Severity</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for inc in open_incidents_qs %}
+              <tr>
+                <td>{{ inc.boarder.student.full_name }}</td>
+
+                <td>
+                  <a href="{% url 'hostel:incidents' %}" style="color:var(--champagne-lt);text-decoration:none;">
+                    {{ inc.title|truncatechars:30 }}
+                  </a>
+                </td>
+
+                <td>
+                  {% if inc.severity == 'CRITICAL' %}
+                    <span class="badge badge-red">Critical</span>
+                  {% elif inc.severity == 'HIGH' %}
+                    <span class="badge badge-amber">High</span>
+                  {% else %}
+                    <span class="badge badge-purple">{{ inc.severity }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-shield-check"></i>
+          </div>
+          <div class="empty-title">No Open Incidents</div>
+          <div class="empty-sub">
+            Boarding operations are currently running without unresolved incidents.
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid-2">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge icon-blue">
+            <i class="bi bi-person-badge-fill"></i>
+          </div>
+          <h3>Pending Visitors</h3>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        {% if pending_visitors_qs %}
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Visitor</th>
+                <th>Boarder</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for v in pending_visitors_qs %}
+              <tr>
+                <td>
+                  <strong>{{ v.visitor_name }}</strong><br>
+                  <span style="font-size:.75rem;color:var(--slate2);">
+                    {{ v.get_relationship_display }}
+                  </span>
+                </td>
+
+                <td>{{ v.boarder.student.full_name }}</td>
+
+                <td>{{ v.visit_date|date:"d M Y" }}</td>
+
+                <td style="display:flex;gap:.45rem;">
+                  <form method="POST" action="{% url 'hostel:approve_visitor' v.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+
+                    <button type="submit" class="action-btn action-green">
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                  </form>
+
+                  <form method="POST" action="{% url 'hostel:approve_visitor' v.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="deny">
+
+                    <button type="submit" class="action-btn action-red">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="empty-title">No Pending Visitors</div>
+          <div class="empty-sub">
+            Visitor requests awaiting approval will appear here.
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="icon-badge icon-amber">
+            <i class="bi bi-megaphone-fill"></i>
+          </div>
+          <h3>Active Notices</h3>
+        </div>
+
+        <a href="{% url 'hostel:notices' %}" style="color:var(--champagne-lt);font-size:.82rem;text-decoration:none;">
+          Manage →
+        </a>
+      </div>
+
+      <div class="panel-body">
+
+        {% for n in notices %}
+        <div class="notice" style="
+          border-left-color:
+          {% if n.priority == 'CRITICAL' %}var(--red)
+          {% elif n.priority == 'URGENT' %}var(--amber)
+          {% else %}var(--green){% endif %};">
+
+          <div class="notice-title">
+            {{ n.title }}
+          </div>
+
+          <div class="notice-text">
+            {{ n.content|truncatechars:80 }}
+          </div>
+
+        </div>
+
+        {% empty %}
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="bi bi-megaphone"></i>
+          </div>
+          <div class="empty-title">No Active Notices</div>
+          <div class="empty-sub">
+            Notices published for boarders and staff will appear here.
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge icon-purple">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <h3>Recent Movements</h3>
+      </div>
+    </div>
+
+    <div class="panel-body">
+      <div class="table-wrap">
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Movement</th>
+              <th>Date/Time</th>
+              <th>Authorized By</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for mv in recent_checkins %}
+            <tr>
+
+              <td>
+                <div class="user-row">
+                  <div class="avatar">
+                    {{ mv.boarder.student.full_name|slice:":2"|upper }}
+                  </div>
+                  <strong>{{ mv.boarder.student.full_name }}</strong>
+                </div>
+              </td>
+
+              <td>
+                {% if mv.movement_type == 'CHECK_IN' %}
+                  <span class="badge badge-green">Check In</span>
+
+                {% elif mv.movement_type == 'CHECK_OUT' %}
+                  <span class="badge badge-purple">Check Out</span>
+
+                {% elif mv.movement_type == 'EXEAT' %}
+                  <span class="badge badge-amber">Exeat</span>
+
+                {% elif mv.movement_type == 'RETURN' %}
+                  <span class="badge badge-blue">Return</span>
+
+                {% else %}
+                  <span class="badge badge-red">
+                    {{ mv.get_movement_type_display }}
+                  </span>
+                {% endif %}
+              </td>
+
+              <td>{{ mv.datetime|date:"d M Y H:i" }}</td>
+
+              <td>
+                {{ mv.authorized_by.get_full_name|default:mv.authorized_by.username|default:"—" }}
+              </td>
+
+              <td style="color:var(--slate2);">
+                {{ mv.reason|truncatechars:40|default:"—" }}
+              </td>
+
+            </tr>
+
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="empty-icon">
+                    <i class="bi bi-clock-history"></i>
+                  </div>
+                  <div class="empty-title">No Movements Yet</div>
+                  <div class="empty-sub">
+                    Recent boarding movements will appear here once activity begins.
+                  </div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

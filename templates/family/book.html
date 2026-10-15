@@ -1,0 +1,32 @@
+{% include "family/_top.html" %}
+  {% include "family/_back.html" %}
+  <h1>Book an <em>appointment</em></h1>
+  <p class="sub">Meet a teacher or the principal at school, by phone or by video.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if mine %}<div class="card"><h2>Your appointments</h2>
+    {% for a in mine %}<div class="row" style="justify-content:space-between;padding:.4rem 0;border-top:1px solid var(--rim2)">
+      <div><b>{{ a.date|date:"D j M" }} {{ a.start|time:"H:i" }}</b> — {{ a.staff.full_name }} about {{ a.student.full_name }}<div class="hint">{{ a.get_mode_display }}{% if a.note %} · {{ a.note }}{% endif %} · {{ a.get_status_display }}</div></div>
+      {% if a.status == 'BOOKED' %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="id" value="{{ a.pk }}"><button class="btn ghost" type="submit" onclick="return confirm('Cancel this appointment?')">Cancel</button></form>{% endif %}
+    </div>{% endfor %}</div>{% endif %}
+  <div class="card">
+    <h2>1. Who would you like to meet?</h2>
+    <form method="get" class="row">
+      {% if kids|length > 1 %}<select name="student" style="flex:1">{% for k in kids %}<option value="{{ k.pk }}" {% if k.pk == child.pk %}selected{% endif %}>{{ k.full_name }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="student" value="{{ child.pk }}">{% endif %}
+      <select name="staff" style="flex:2">{% for s in options %}<option value="{{ s.pk }}" {% if staff and s.pk == staff.pk %}selected{% endif %}>{{ s.full_name }}{% if s.role == 'ADMIN' %} (school leadership){% endif %}</option>{% empty %}<option value="">Nobody has set meeting times yet</option>{% endfor %}</select>
+      <button class="btn" type="submit">See times</button>
+    </form>
+  </div>
+  {% if staff %}
+  <div class="card">
+    <h2>2. Choose a time with {{ staff.full_name }}</h2>
+    {% if slots %}
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="book"><input type="hidden" name="student" value="{{ child.pk }}"><input type="hidden" name="staff" value="{{ staff.pk }}">
+      {% for day, times in slots %}<p style="margin:.6rem 0 .2rem"><b>{{ day|date:"l j F" }}</b></p><div class="row">{% for t in times %}<label class="opt" style="margin:0 .6rem 0 0"><input type="radio" name="slot" value="{{ day|date:'Y-m-d' }}|{{ t.start|time:'H:i' }}" required> {{ t.start|time:"H:i" }}</label>{% endfor %}</div>{% endfor %}
+      <label>How</label><select name="mode">{% for k, l in modes %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select>
+      <label>What would you like to discuss?</label><input name="reason" required maxlength="255">
+      <button type="submit">Book</button>
+    </form>
+    {% else %}<p class="hint">No free times in the next two weeks. Please send a message instead.</p>{% endif %}
+  </div>
+  {% endif %}
+{% include "family/_end.html" %}

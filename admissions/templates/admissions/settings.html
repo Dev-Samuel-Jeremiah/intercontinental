@@ -1,0 +1,84 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Admission settings{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">Admission <em>settings</em></h1>
+    <p class="adm-sub">Control the public form, admission numbers and class seats.</p>
+  </div>
+  <div class="adm-actions"><a class="adm-btn" href="{% url 'admissions:board' %}"><i class="bi bi-arrow-left"></i> Pipeline</a></div>
+</div>
+
+<div class="panel" style="margin-bottom:1.2rem">
+  <div class="panel-h"><h3><i class="bi bi-link-45deg"></i> Your application link</h3>
+    {% if settings_obj.applications_open %}<span class="chip green">Open</span>{% else %}<span class="chip red">Closed</span>{% endif %}
+  </div>
+  <div class="panel-b">
+    <p class="adm-sub" style="margin-bottom:.7rem">Share this with parents on WhatsApp, flyers or your website.</p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+      <code id="applyUrl" style="padding:.6rem .9rem;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--champagne-lt);font-family:ui-monospace,Menlo,monospace;font-size:.84rem">{{ apply_url }}</code>
+      <button class="adm-btn adm-btn-sm" type="button" onclick="navigator.clipboard.writeText(document.getElementById('applyUrl').textContent.trim()).then(()=>{this.innerHTML='<i class=\'bi bi-check2\'></i> Copied'})"><i class="bi bi-clipboard"></i> Copy</button>
+      <a class="adm-btn adm-btn-sm" href="{{ apply_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Preview</a>
+    </div>
+  </div>
+</div>
+
+<div class="adm-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-sliders"></i> Form &amp; admission numbers</h3></div>
+    <div class="panel-b">
+      <form method="post" class="adm-form">
+        {% csrf_token %}
+        <label style="display:flex;gap:.6rem;align-items:center;font-weight:500">
+          {{ form.applications_open }} {{ form.applications_open.label }}
+        </label>
+        <div><label>{{ form.session.label }}</label>{{ form.session }}</div>
+        <div><label>{{ form.application_fee.label }}</label>{{ form.application_fee }}
+          <span style="font-size:.76rem;color:var(--slate)">0 means applying is free.</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.9rem">
+          <div><label>{{ form.number_prefix.label }}</label>{{ form.number_prefix }}</div>
+          <div><label>{{ form.number_format.label }}</label>{{ form.number_format }}</div>
+          <div><label>{{ form.next_number.label }}</label>{{ form.next_number }}</div>
+        </div>
+        <p style="font-size:.78rem;color:var(--slate)">Tokens: <code>{prefix}</code> <code>{year}</code> <code>{short_year}</code> <code>{class}</code> <code>{seq}</code>. Example <code>{prefix}/{year}/{seq:04d}</code> gives <code style="color:var(--champagne-lt)">TIT/2026/0042</code>.</p>
+        <label style="display:flex;gap:.6rem;align-items:center;font-weight:500">
+          {{ form.require_documents }} {{ form.require_documents.label }}
+        </label>
+        <div><label>{{ form.instructions.label }}</label>{{ form.instructions }}</div>
+        <div><button class="adm-btn adm-btn-gold" type="submit"><i class="bi bi-save"></i> Save settings</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-door-open"></i> Seats per class</h3></div>
+    <div class="panel-b">
+      <p class="adm-sub" style="margin-bottom:.9rem">Set how many places each class has. Leave 0 for no limit.</p>
+      <table class="adm-table">
+        <thead><tr><th>Class</th><th>Enrolled</th><th>Seats left</th><th></th></tr></thead>
+        <tbody>
+          {% for q in quotas %}
+          <tr>
+            <td style="color:var(--white)">{{ q.school_class.name }}</td>
+            <td>{{ q.enrolled }}</td>
+            <td>{% if q.left is None %}<span class="chip">No limit</span>{% else %}<span class="chip {% if q.left %}green{% else %}red{% endif %}">{{ q.left }}</span>{% endif %}</td>
+            <td>
+              <form method="post" action="{% url 'admissions:set_quota' %}" style="display:flex;gap:.4rem">
+                {% csrf_token %}
+                <input type="hidden" name="class_id" value="{{ q.school_class.id }}">
+                <input type="number" name="seats" min="0" value="{{ q.left|default:0 }}" style="width:90px;padding:.4rem .6rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+                <button class="adm-btn adm-btn-sm" type="submit">Set</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty"><i class="bi bi-building"></i>Create classes first.</div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

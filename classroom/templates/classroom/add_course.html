@@ -1,0 +1,385 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Create Course{% endblock %}
+{% block extra_css %}
+<style>
+    
+
+    #content{color:var(--white);font-family:'Outfit', sans-serif;}
+
+    .your-wrap{
+        max-width:1100px;
+        margin:0 auto;
+        padding:2rem 1.5rem 4rem;
+        animation:riseUp .4s ease both;
+    }
+
+    /* ================= HEADER ================= */
+
+    .page-header{
+        margin-bottom:2rem;
+    }
+
+    .page-header-top{
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:1rem;
+        margin-bottom:1.2rem;
+    }
+
+    .eyebrow{
+        display:flex;
+        align-items:center;
+        gap:.75rem;
+        color:var(--champagne);
+        text-transform:uppercase;
+        letter-spacing:3px;
+        font-size:.72rem;
+        font-weight:600;
+    }
+
+    .eyebrow::before{
+        content:"";
+        width:42px;
+        height:1px;
+        background:var(--champagne);
+        opacity:.7;
+    }
+
+    .page-title{
+        margin:0;
+        font-family:'Cormorant Garamond', serif;
+        font-size:3rem;
+        font-weight:700;
+        color:var(--white);
+        line-height:1.05;
+    }
+
+    .page-title em{
+        color:var(--champagne);
+        font-style:italic;
+    }
+
+    .page-subtitle{
+        margin-top:.6rem;
+        color:var(--slate2);
+    }
+
+    .header-divider{
+        height:1px;
+        background:var(--rim);
+        margin-top:1.5rem;
+        position:relative;
+    }
+
+    .header-divider::after{
+        content:"";
+        position:absolute;
+        left:0;
+        width:80px;
+        height:1px;
+        background:var(--champagne);
+    }
+
+    .context-badge{
+        display:inline-flex;
+        align-items:center;
+        gap:.5rem;
+        padding:.6rem 1rem;
+        border-radius:999px;
+        background:var(--champagne-dim);
+        border:1px solid rgba(244,210,31,.22);
+        color:var(--champagne-lt);
+        font-size:.85rem;
+        white-space:nowrap;
+    }
+
+    /* ================= PANEL ================= */
+
+    .panel{
+        background:var(--surface);
+        border:1px solid var(--rim);
+        border-radius:16px;
+        overflow:hidden;
+        animation:riseUp .45s ease both;
+    }
+
+    .panel-header{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        padding:1.2rem 1.4rem;
+        border-bottom:1px solid var(--rim);
+    }
+
+    .panel-title{
+        display:flex;
+        align-items:center;
+        gap:.8rem;
+    }
+
+    .icon-badge{
+        width:32px;
+        height:32px;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:var(--blue-dim);
+        border:1px solid var(--blue-border);
+        color:var(--blue);
+    }
+
+    .panel-title h3{
+        margin:0;
+        font-size:1rem;
+        font-weight:600;
+    }
+
+    .panel-body{
+        padding:1.8rem;
+    }
+
+    /* ================= FORM ================= */
+
+    .form-group{
+        margin-bottom:1.4rem;
+    }
+
+    .form-label{
+        display:block;
+        margin-bottom:.6rem;
+        font-size:.73rem;
+        text-transform:uppercase;
+        letter-spacing:.4px;
+        color:var(--slate2);
+        font-weight:600;
+    }
+
+    input, textarea, select{
+        width:100%;
+        background:var(--surface2);
+        border:1px solid var(--rim2);
+        border-radius:10px;
+        color:var(--white);
+        padding:.9rem 1rem;
+        font-family:'Outfit', sans-serif;
+        transition:.25s ease;
+    }
+
+    textarea{
+        min-height:120px;
+        resize:vertical;
+    }
+
+    input:focus, textarea:focus, select:focus{
+        outline:none;
+        border-color:var(--champagne);
+        box-shadow:0 0 0 3px rgba(244,210,31,.1);
+    }
+
+    .form-text{
+        margin-top:.4rem;
+        font-size:.82rem;
+        color:var(--slate);
+    }
+
+    /* ================= MESSAGES ================= */
+
+    .alert{
+        padding:1rem;
+        border-radius:12px;
+        margin-bottom:1rem;
+        border:1px solid var(--rim);
+        background:var(--surface2);
+    }
+
+    /* ================= BUTTONS ================= */
+
+    .btn-row{
+        display:flex;
+        gap:1rem;
+        margin-top:1.6rem;
+        flex-wrap:wrap;
+    }
+
+    .btn{
+        border:none;
+        border-radius:12px;
+        padding:.95rem 1.2rem;
+        font-weight:600;
+        cursor:pointer;
+        text-decoration:none;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:.6rem;
+        transition:.3s ease;
+    }
+
+    .btn-create{
+        background:linear-gradient(135deg,#f4d21f,#d1ad00);
+        color:#0a1f44;
+        box-shadow:0 4px 18px rgba(244,210,31,.22);
+    }
+
+    .btn-create:hover{
+        transform:translateY(-2px);
+        box-shadow:0 10px 28px rgba(244,210,31,.28);
+    }
+
+    .btn-cancel{
+        background:var(--surface2);
+        border:1px solid var(--rim2);
+        color:var(--white);
+    }
+
+    .btn-cancel:hover{
+        background:var(--surface3);
+        transform:translateY(-2px);
+    }
+
+    /* ================= ANIMATION ================= */
+
+    @keyframes riseUp{
+        from{opacity:0;transform:translateY(18px);}
+        to{opacity:1;transform:translateY(0);}
+    }
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:768px){
+        .page-header-top{
+            flex-direction:column;
+        }
+
+        .page-title{
+            font-size:2.2rem;
+        }
+
+        .btn-row{
+            flex-direction:column;
+        }
+
+        .btn{
+            width:100%;
+        }
+    }
+
+    </style>
+{% endblock %}
+{% block content %}
+
+<div class="your-wrap">
+
+    <!-- HEADER -->
+    <div class="page-header">
+
+        <div class="page-header-top">
+
+            <div>
+
+                <div class="eyebrow">
+                    Course Studio
+                </div>
+
+                <h1 class="page-title">
+                    Create <em>Course</em>
+                </h1>
+
+                <div class="page-subtitle">
+                    Build a new learning course and assign it to a class
+                </div>
+
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-journal-plus"></i>
+                New Course
+            </div>
+
+        </div>
+
+        <div class="header-divider"></div>
+
+    </div>
+
+    <!-- PANEL -->
+    <div class="panel">
+
+        <div class="panel-header">
+
+            <div class="panel-title">
+                <div class="icon-badge">
+                    <i class="bi bi-plus-circle"></i>
+                </div>
+                <h3>Course Details</h3>
+            </div>
+
+        </div>
+
+        <div class="panel-body">
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="bi bi-info-circle"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Course Name
+                    </label>
+                    {{ form.name }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        Course Description
+                    </label>
+                    {{ form.description }}
+                </div>
+
+                {% if form.class_assigned %}
+                <div class="form-group">
+                    <label class="form-label">
+                        Assign to Class
+                    </label>
+                    {{ form.class_assigned }}
+
+                    <div class="form-text">
+                        Students in the selected class will be automatically enrolled.
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="btn-row">
+
+                    <button type="submit" class="btn btn-create">
+                        <i class="bi bi-check2-circle"></i>
+                        Create Course
+                    </button>
+
+                    <a href="{% url 'classroom:teacher_courses' %}" class="btn btn-cancel">
+                        <i class="bi bi-x-circle"></i>
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

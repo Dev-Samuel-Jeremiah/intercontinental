@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Exeats{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title"><em>Exeats</em></h1>
+  <p class="fin-sub">Parents ask on the portal; the housemaster approves; the gate signs children out and back in. Families get an email (and SMS) at each step.</p>
+</div></div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Waiting for you ({{ waiting|length }})</h3></div><div class="panel-b">
+      {% for r in waiting %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ r.boarder.student.full_name }}</b> — {{ r.leave_at|date:"D j M H:i" }} to {{ r.return_by|date:"D j M H:i" }}<div class="hint">{{ r.reason }} · collected by {{ r.pickup_person }}{% if r.pickup_phone %} ({{ r.pickup_phone }}){% endif %}{% if r.parent_approved_at %} · parent agreed{% endif %}</div>
+        <form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><input name="note" placeholder="Note (optional)" style="flex:1;min-width:140px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm" type="submit" name="action" value="decline">Decline</button></form></div>
+      {% empty %}<p class="empty">Nothing waiting.</p>{% endfor %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Approved — sign out at the gate</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in approved %}<tr><td class="name">{{ r.boarder.student.full_name }}<br><small class="hint">{{ r.leave_at|date:"D j M H:i" }} · {{ r.pickup_person }}</small></td><td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="out">Sign out</button></form></td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Out of school now</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in out %}<tr><td class="name">{{ r.boarder.student.full_name }}<br><small class="hint">due back {{ r.return_by|date:"D j M H:i" }}</small>{% if r.overdue %} <span class="chip red">Overdue</span>{% endif %}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ r.pk }}"><button class="fin-btn fin-btn-sm" type="submit" name="action" value="in">Signed back in</button></form></td></tr>{% empty %}<tr><td class="empty">Everyone is in.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="new">
+      <h3 style="margin:0 0 .6rem">Arrange an exeat (parent approves)</h3>
+      <div><label>Boarder</label><select name="boarder" required>{% for b in boarders %}<option value="{{ b.pk }}">{{ b.student.full_name }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Leaves</label><input type="datetime-local" name="leave_at" required></div><div><label>Back by</label><input type="datetime-local" name="return_by" required></div></div>
+      <div><label>Reason</label><input name="reason" required maxlength="255"></div>
+      <div class="row2"><div><label>Collected by</label><input name="pickup_person" required maxlength="160"></div><div><label>Their phone</label><input name="pickup_phone" maxlength="20"></div></div>
+      <button class="fin-btn" type="submit">Send to the parent</button>
+    </form>
+    {% if parent %}<div class="panel"><div class="panel-h"><h3>Waiting for parents</h3></div><div class="panel-b">{% for r in parent %}<p style="margin:.25rem 0">{{ r.boarder.student.full_name }} — {{ r.leave_at|date:"D j M" }}</p>{% endfor %}</div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b">{% for r in recent %}<p style="margin:.25rem 0">{{ r.boarder.student.full_name }} — {{ r.leave_at|date:"j M" }} <span class="chip">{{ r.get_status_display }}</span></p>{% empty %}<p class="empty">None.</p>{% endfor %}</div></div>
+  </div>
+</div>
+{% endblock %}

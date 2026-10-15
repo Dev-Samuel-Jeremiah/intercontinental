@@ -1,0 +1,459 @@
+{% extends "dashboard/base.html" %}
+
+{% block title %}Attendance Management{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--ink);
+    color:var(--white);
+    font-family:'Outfit',sans-serif;
+}
+
+/* Wrapper */
+.your-wrap{
+    max-width:1400px;
+    margin:0 auto;
+    padding:2rem 2.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+/* Header */
+.page-head{
+    margin-bottom:2rem;
+}
+
+.page-head-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:1rem;
+    margin-bottom:1rem;
+    flex-wrap:wrap;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.24em;
+    color:var(--champagne);
+    font-weight:600;
+}
+
+.eyebrow::before{
+    content:"";
+    width:42px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.8;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    padding:.65rem 1rem;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.2);
+    color:var(--champagne-lt);
+    font-size:.82rem;
+    font-weight:500;
+}
+
+.page-title{
+    margin:0;
+    font-family:'Cormorant Garamond',serif;
+    font-size:3rem;
+    font-weight:700;
+    line-height:1;
+    color:var(--white);
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+    font-weight:600;
+}
+
+.page-subtitle{
+    margin-top:.9rem;
+    color:var(--slate2);
+    font-size:1rem;
+    max-width:720px;
+}
+
+.page-divider{
+    position:relative;
+    height:1px;
+    background:var(--rim);
+    margin-top:1.6rem;
+}
+
+.page-divider::after{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:80px;
+    height:1px;
+    background:var(--champagne);
+}
+
+/* Grid */
+.attendance-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:1.5rem;
+}
+
+/* Panel */
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.panel:nth-child(1){
+    animation-delay:.06s;
+}
+
+.panel:nth-child(2){
+    animation-delay:.14s;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        var(--rim3),
+        transparent
+    );
+}
+
+.panel-body{
+    padding:1.8rem;
+}
+
+/* Panel Header */
+.panel-header{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    margin-bottom:1.3rem;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.95rem;
+    flex-shrink:0;
+}
+
+.icon-badge.blue{
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:var(--blue);
+}
+
+.icon-badge.green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:var(--green);
+}
+
+.panel-header h3{
+    margin:0;
+    font-size:1.08rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+/* Card Content */
+.panel-text{
+    color:var(--slate2);
+    line-height:1.7;
+    margin-bottom:1.7rem;
+    min-height:72px;
+}
+
+/* Feature list */
+.feature-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem;
+    margin-bottom:1.8rem;
+}
+
+.feature-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    padding:.5rem .8rem;
+    border-radius:999px;
+    font-size:.76rem;
+    font-weight:500;
+    border:1px solid;
+}
+
+.feature-badge.blue{
+    background:var(--blue-dim);
+    border-color:var(--blue-border);
+    color:#8fb8ff;
+}
+
+.feature-badge.green{
+    background:var(--green-dim);
+    border-color:var(--green-border);
+    color:#8ef0b1;
+}
+
+/* Buttons */
+.action-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.65rem;
+    width:100%;
+    padding:.95rem 1.2rem;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:600;
+    color:#0a1f44;
+    background:linear-gradient(135deg,#f4d21f,#d1ad00);
+    border:1px solid rgba(255,255,255,.05);
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+    transition:all .3s ease;
+}
+
+.action-btn:hover{
+    transform:translateY(-3px);
+    box-shadow:0 12px 26px rgba(244,210,31,.28);
+    color:#fff;
+}
+
+.action-btn i{
+    font-size:.95rem;
+}
+
+/* Forms */
+input,
+select,
+textarea{
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    color:var(--white);
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+    outline:none;
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+label{
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+}
+
+/* Empty States */
+.empty-state{
+    padding:2rem;
+    text-align:center;
+}
+
+.empty-icon{
+    width:68px;
+    height:68px;
+    border-radius:18px;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:0 auto 1rem;
+    font-size:1.5rem;
+    color:var(--champagne);
+}
+
+.empty-state h4{
+    margin-bottom:.45rem;
+    color:var(--white);
+}
+
+.empty-state p{
+    margin:0;
+    color:var(--slate2);
+}
+
+/* Animation */
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width:768px){
+
+    .your-wrap{
+        padding:1.5rem 1.2rem 3rem;
+    }
+
+    .page-title{
+        font-size:2.3rem;
+    }
+
+    .attendance-grid{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+
+<div class="your-wrap">
+
+    <!-- Header -->
+    <div class="page-head">
+
+        <div class="page-head-top">
+
+            <div class="eyebrow">
+                Attendance Portal
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-calendar2-check"></i>
+                2 Attendance Actions
+            </div>
+
+        </div>
+
+        <h1 class="page-title">
+            Attendance <em>Management</em>
+        </h1>
+
+        <p class="page-subtitle">
+            Manage and monitor daily student attendance records with a streamlined administrative workflow.
+        </p>
+
+        <div class="page-divider"></div>
+
+    </div>
+
+    <!-- Attendance Panels -->
+    <div class="attendance-grid">
+
+        <!-- Mark Attendance -->
+        <div class="panel">
+
+            <div class="panel-body">
+
+                <div class="panel-header">
+                    <div class="icon-badge blue">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+
+                    <h3>Mark Attendance</h3>
+                </div>
+
+                <p class="panel-text">
+                    Record student attendance quickly and accurately for each class session with an optimized digital workflow.
+                </p>
+
+                <div class="feature-list">
+                    <span class="feature-badge blue">
+                        <i class="bi bi-check2-circle"></i>
+                        Daily Records
+                    </span>
+
+                    <span class="feature-badge blue">
+                        <i class="bi bi-people"></i>
+                        Class Based
+                    </span>
+                </div>
+
+                <a href="{% url 'users:select_class_mark' %}" class="action-btn">
+                    <i class="bi bi-journal-check"></i>
+                    Mark Attendance
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- View Attendance -->
+        <div class="panel">
+
+            <div class="panel-body">
+
+                <div class="panel-header">
+                    <div class="icon-badge green">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+
+                    <h3>View Attendance</h3>
+                </div>
+
+                <p class="panel-text">
+                    Review attendance history by class, student, or date and gain insights into participation trends.
+                </p>
+
+                <div class="feature-list">
+                    <span class="feature-badge green">
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Reports
+                    </span>
+
+                    <span class="feature-badge green">
+                        <i class="bi bi-search"></i>
+                        Smart Review
+                    </span>
+                </div>
+
+                <a href="{% url 'users:select_class_view' %}" class="action-btn">
+                    <i class="bi bi-eye"></i>
+                    View Attendance
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

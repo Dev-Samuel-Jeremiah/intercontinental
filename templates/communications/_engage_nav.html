@@ -1,0 +1,13 @@
+<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:dashboard' %}"><i class="bi bi-broadcast"></i> Comm Centre</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:calendar' %}"><i class="bi bi-calendar3"></i> Calendar</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:surveys' %}"><i class="bi bi-ui-checks"></i> Surveys</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:consent_manage' %}"><i class="bi bi-pen"></i> Consent forms</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:chat' %}"><i class="bi bi-chat-left-text"></i> Chat</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:inbox' %}"><i class="bi bi-inbox"></i> Inbox</a>
+  {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:approvals' %}"><i class="bi bi-check2-circle"></i> Approvals</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:emergency' %}"><i class="bi bi-exclamation-triangle"></i> Emergency</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'communications:settings' %}"><i class="bi bi-sliders"></i> Settings</a>
+  {% endif %}
+</div>

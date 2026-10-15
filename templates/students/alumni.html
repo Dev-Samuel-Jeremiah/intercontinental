@@ -1,0 +1,61 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Alumni register{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .al-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.9rem}
+  .al{display:flex;gap:.8rem;align-items:center;padding:.9rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(255,255,255,.02);text-decoration:none;color:var(--white);transition:transform .2s,border-color .2s}
+  .al:hover{transform:translateY(-2px);border-color:var(--champagne);color:var(--white)}
+  .al img,.al .ini{width:52px;height:60px;border-radius:12px;object-fit:cover;flex:none}
+  .al .ini{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700}
+  .al b{font-size:.9rem}
+  .al .hint{line-height:1.4}
+  .alf input,.alf select{padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .alf label{font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem}
+</style>
+
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Alumni <em>register</em></h1>
+    <p class="fin-sub">Every student who graduated, with where they went next. Records are kept, never deleted.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    {% if can_manage %}<a class="fin-btn" href="{% url 'users:alumni_export' %}?year={{ year }}&q={{ q|urlencode }}"><i class="bi bi-filetype-csv"></i> Download list</a>{% endif %}
+    <a class="fin-btn" href="{% url 'users:all_students' %}"><i class="bi bi-people"></i> All students</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Graduates</small><b style="color:var(--champagne-lt)">{{ left_counts.Graduated }}</b></div>
+  <div class="fin-stat"><small>Withdrawn</small><b>{{ left_counts.Withdrawn }}</b><span class="hint">kept on record, not shown here</span></div>
+  <div class="fin-stat"><small>Showing</small><b>{{ count }}</b>{% if year %}<span class="hint">class of {{ year }}</span>{% endif %}</div>
+</div>
+
+<form method="get" class="panel alf">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div><label>Year</label>
+      <select name="year" onchange="this.form.submit()"><option value="">All years</option>
+        {% for y in years %}<option value="{{ y }}"{% if year == y|stringformat:"s" %} selected{% endif %}>Class of {{ y }}</option>{% endfor %}
+      </select></div>
+    <div style="flex:1 1 240px"><label>Search</label><input type="search" name="q" value="{{ q }}" placeholder="Name, admission no., final class or destination" style="width:100%"></div>
+    <button class="fin-btn" type="submit"><i class="bi bi-search"></i> Search</button>
+  </div>
+</form>
+
+<div class="al-grid" style="margin-top:1rem">
+  {% for s in alumni %}
+  <a class="al" href="{% url 'users:student_profile' s.id %}">
+    {% if s.passport %}<img src="{{ s.passport.url }}" alt="">{% else %}<span class="ini">{{ s.full_name|slice:":1"|upper }}</span>{% endif %}
+    <span>
+      <b>{{ s.full_name }}</b><br>
+      <span class="hint">{{ s.admission_number }}{% if s.leaving_class %} · {{ s.leaving_class }}{% endif %}</span><br>
+      <span class="hint">{% if s.left_on %}Graduated {{ s.left_on|date:"M Y" }}{% else %}Graduated{% endif %}</span>
+      {% if s.destination %}<br><span class="hint" style="color:var(--champagne-lt)"><i class="bi bi-arrow-right-short"></i>{{ s.destination }}</span>{% endif %}
+    </span>
+  </a>
+  {% empty %}
+  <div class="panel" style="grid-column:1/-1"><div class="empty"><i class="bi bi-mortarboard"></i><p>No graduates yet. When a student finishes, open their profile and set their status to Graduated — they move here instead of being deleted.</p></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

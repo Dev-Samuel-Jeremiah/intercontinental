@@ -1,0 +1,430 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Teacher Score View{% endblock %}
+
+{% block content %}
+<style>
+  :root{
+  --gray-50: #f8fafc;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-600: #475569;
+  --gray-800: #1e293b;
+}
+
+  .tsv-page { font-family: 'Segoe UI', sans-serif; color: var(--gray-800); }
+
+  .tsv-header {
+    background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    color: #0a1f44;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .tsv-header h1 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+  .tsv-header p  { margin: 4px 0 0; opacity: .8; font-size: .9rem; }
+  .breadcrumb-badge {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: .82rem;
+    white-space: nowrap;
+  }
+
+  .filter-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    border-top: 4px solid var(--primary);
+  }
+  .filter-card h2 {
+    font-size: 1rem; font-weight: 600;
+    color: var(--primary); margin: 0 0 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: end;
+  }
+  .filter-group label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--gray-600);
+    margin-bottom: 6px;
+  }
+  .filter-group select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: .9rem;
+    color: var(--gray-800);
+    background: var(--gray-50);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .filter-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(30,64,175,.12);
+  }
+  .filter-actions { display: flex; gap: 10px; align-items: end; }
+  .btn-filter {
+    padding: 10px 24px;
+    background: var(--primary);
+    color: #0a1f44;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    white-space: nowrap;
+  }
+  .btn-filter:hover { background: #1d4ed8; transform: translateY(-1px); }
+  .btn-reset {
+    padding: 10px 18px;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 8px;
+    font-size: .9rem;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .btn-reset:hover { background: var(--gray-200); }
+
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 3px solid transparent;
+    transition: transform .2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card.blue   { border-color: var(--primary); }
+  .stat-card.green  { border-color: var(--success); }
+  .stat-card.amber  { border-color: var(--accent); }
+  .stat-card.red    { border-color: var(--danger); }
+  .stat-card.purple { border-color: #7c3aed; }
+  .stat-value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--gray-600); margin-top: 4px; }
+  .blue .stat-value   { color: var(--primary); }
+  .green .stat-value  { color: var(--success); }
+  .amber .stat-value  { color: var(--accent); }
+  .red .stat-value    { color: var(--danger); }
+  .purple .stat-value { color: #7c3aed; }
+
+  .results-card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+  .results-card-header {
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--gray-200);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .results-card-header h2 { font-size: 1rem; font-weight: 600; margin: 0; }
+  .sort-controls { display: flex; gap: 6px; align-items: center; }
+  .sort-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1.5px solid var(--gray-200);
+    background: var(--gray-50);
+    font-size: .8rem;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--gray-600);
+    transition: all .2s;
+  }
+  .sort-btn.active, .sort-btn:hover {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--gray-50);
+    padding: 12px 16px;
+    text-align: left;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--gray-600);
+    border-bottom: 2px solid var(--gray-200);
+    white-space: nowrap;
+  }
+  thead th.center { text-align: center; }
+  tbody tr { border-bottom: 1px solid var(--gray-100); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--gray-50); }
+  td { padding: 14px 16px; font-size: .9rem; }
+  td.center { text-align: center; }
+
+  .student-name { font-weight: 600; color: var(--gray-800); }
+  .student-meta { font-size: .75rem; color: var(--gray-600); }
+
+  .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+  .score-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 80px;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .4s ease;
+  }
+  .score-bar-fill.high   { background: var(--success); }
+  .score-bar-fill.mid    { background: var(--accent); }
+  .score-bar-fill.low    { background: var(--danger); }
+  .score-total { font-weight: 700; font-size: 1rem; min-width: 30px; }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+  }
+  .grade-a  { background: #dcfce7; color: #15803d; }
+  .grade-b  { background: #dbeafe; color: #1d4ed8; }
+  .grade-c  { background: #fef9c3; color: #a16207; }
+  .grade-d  { background: #ffedd5; color: #c2410c; }
+  .grade-f  { background: #fee2e2; color: #dc2626; }
+
+  .pub-yes { color: var(--success); font-weight: 600; font-size: .8rem; }
+  .pub-no  { color: var(--gray-600); font-size: .8rem; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-600);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty-state h3 { font-size: 1.1rem; margin: 0 0 6px; color: var(--gray-800); }
+  .empty-state p  { font-size: .9rem; margin: 0; }
+
+  @media (max-width: 768px) {
+    .filter-grid { grid-template-columns: 1fr 1fr; }
+    .stats-bar   { grid-template-columns: repeat(3, 1fr); }
+    table { font-size: .82rem; }
+    td, thead th { padding: 10px 10px; }
+  }
+  @media (max-width: 480px) {
+    .filter-grid { grid-template-columns: 1fr; }
+    .stats-bar   { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+
+<div class="tsv-page">
+
+  <!-- ── Header ── -->
+  <div class="tsv-header">
+    <div>
+      <h1>📊 Score Viewer</h1>
+      <p>
+        {% if class_obj and subject_obj %}
+          Showing exam scores for <strong>{{ class_obj.name }}</strong> — <strong>{{ subject_obj.name }}</strong>
+          {% if term %} · {{ term.name }} · {{ session.name }}{% endif %}
+        {% else %}
+          Select filters below to view student exam scores
+        {% endif %}
+      </p>
+    </div>
+    {% if class_obj %}
+      <span class="breadcrumb-badge">{{ class_obj.name }} · {{ subject_obj.name }}</span>
+    {% endif %}
+  </div>
+
+  <!-- ── Filter Card ── -->
+  <div class="filter-card">
+    <h2>🔍 Filter Results</h2>
+    <form method="get" id="filterForm">
+      <div class="filter-grid">
+
+        <div class="filter-group">
+          <label>Class</label>
+          <select name="class" onchange="this.form.submit()">
+            <option value="">— All Classes —</option>
+            {% for cls in classes %}
+              <option value="{{ cls.id }}" {% if selected_class == cls.id|stringformat:"s" %}selected{% endif %}>
+                {{ cls.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Subject</label>
+          <select name="subject">
+            <option value="">— All Subjects —</option>
+            {% for sub in subjects %}
+              <option value="{{ sub.id }}" {% if selected_subject == sub.id|stringformat:"s" %}selected{% endif %}>
+                {{ sub.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Term</label>
+          <select name="term">
+            <option value="">— All Terms —</option>
+            {% for t in terms %}
+              <option value="{{ t.id }}" {% if selected_term == t.id|stringformat:"s" %}selected{% endif %}>
+                {{ t.name }} – {{ t.session.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Student (optional)</label>
+          <select name="student">
+            <option value="">— All Students —</option>
+            {% for stu in students %}
+              <option value="{{ stu.id }}" {% if selected_student == stu.id|stringformat:"s" %}selected{% endif %}>
+                {{ stu.full_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <input type="hidden" name="sort" value="{{ sort_by }}">
+
+        <div class="filter-actions">
+          <button type="submit" class="btn-filter">Apply Filters</button>
+          <a href="{% url 'results:teacher_score_view' %}" class="btn-reset">Reset</a>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+
+  <!-- ── Results Table ── -->
+  <div class="results-card">
+    <div class="results-card-header">
+      <h2>
+        {% if rows %}
+          {{ rows|length }} Student{% if rows|length != 1 %}s{% endif %}
+        {% else %}
+          Results
+        {% endif %}
+      </h2>
+      {% if rows %}
+      <div class="sort-controls">
+        <span style="font-size:.8rem;color:var(--gray-600);">Sort:</span>
+        <a href="?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}&student={{ selected_student }}&sort=name"
+           class="sort-btn {% if sort_by == 'name' %}active{% endif %}">A–Z</a>
+        <a href="?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}&student={{ selected_student }}&sort=score_desc"
+           class="sort-btn {% if sort_by == 'score_desc' %}active{% endif %}">Highest ↓</a>
+        <a href="?class={{ selected_class }}&subject={{ selected_subject }}&term={{ selected_term }}&student={{ selected_student }}&sort=score_asc"
+           class="sort-btn {% if sort_by == 'score_asc' %}active{% endif %}">Lowest ↑</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if rows %}
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:50px;">#</th>
+            <th>Student</th>
+            <th class="center" style="width:200px;">Exam Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td style="color:var(--gray-600);font-size:.82rem;">{{ forloop.counter }}</td>
+
+            <td>
+              <div class="student-name">{{ row.student.full_name }}</div>
+              <div class="student-meta">{{ row.student.class_assigned.name }}</div>
+            </td>
+
+            <!-- Exam Score with progress bar -->
+            <td class="center">
+              <div class="score-bar-wrap">
+                <div class="score-bar">
+                  <div class="score-bar-fill
+                    {% if row.exam >= 70 %}high
+                    {% elif row.exam >= 50 %}mid
+                    {% else %}low{% endif %}"
+                    style="width:{{ row.exam }}%">
+                  </div>
+                </div>
+                <span class="score-total">{{ row.exam }}</span>
+              </div>
+            </td>
+
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% elif selected_class and selected_subject and selected_term %}
+    <div class="empty-state">
+      <div class="icon">📭</div>
+      <h3>No results found</h3>
+      <p>No score records match the selected filters.</p>
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">📋</div>
+      <h3>Select your filters to load scores</h3>
+      <p>Choose a class, subject, and term above to view student exam scores.</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Student fields{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .sf input[type=number]{width:70px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .sf-check{display:inline-flex;gap:.35rem;align-items:center;font-size:.78rem;color:var(--slate2);margin-right:.7rem}
+  .sf-check input{width:auto}
+</style>
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Your own <em>student fields</em></h1>
+    <p class="fin-sub">Questions your school asks about every student — they appear under “More details” on each profile.</p>
+  </div>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="suggested">
+    <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-magic"></i> Add the usual Nigerian fields</button></form>
+</div>
+
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-plus-circle"></i> Add a field</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div><label>Question</label><input name="label" maxlength="80" required placeholder="e.g. Hometown"></div>
+      <div><label>Answer type</label><select name="field_type" id="ftype">{% for v, l in types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div id="fchoices" style="display:none"><label>Options, one per line</label><textarea name="choices" rows="5"></textarea></div>
+      <div><label>Hint <span class="hint">(optional)</span></label><input name="help_text" maxlength="160"></div>
+      <label class="sf-check"><input type="checkbox" name="required" value="1"> Required</label>
+      <label class="sf-check"><input type="checkbox" name="sensitive" value="1"> Sensitive — only administrators see the answer</label>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Add field</button>
+    </form>
+    <p class="hint" style="margin-top:.8rem">The usual fields are state of origin, LGA, religion, blood group, genotype, allergies and medical conditions. Religion, genotype and medical conditions are marked sensitive.</p>
+  </div></div>
+
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Fields</h3></div>
+    <div style="overflow-x:auto"><table class="tbl sf">
+      <thead><tr><th>Question</th><th>Type</th><th>Answered</th><th></th></tr></thead>
+      <tbody>{% for f in fields %}
+        <tr{% if not f.is_active %} style="opacity:.55"{% endif %}>
+          <td><b>{{ f.label }}</b>{% if f.sensitive %} <i class="bi bi-lock-fill" style="color:var(--amber)" title="Sensitive"></i>{% endif %}{% if f.help_text %}<br><span class="hint">{{ f.help_text }}</span>{% endif %}</td>
+          <td>{{ f.get_field_type_display }}{% if f.field_type == 'CHOICE' %}<br><span class="hint">{{ f.options|length }} options</span>{% endif %}</td>
+          <td>{{ f.answered }} <span class="hint">of {{ students }}</span></td>
+          <td>
+            <form method="post" style="display:flex;flex-wrap:wrap;gap:.3rem;align-items:center">{% csrf_token %}
+              <input type="hidden" name="action" value="update"><input type="hidden" name="field_id" value="{{ f.id }}">
+              <label class="sf-check"><input type="checkbox" name="is_active" value="1"{% if f.is_active %} checked{% endif %}> In use</label>
+              <label class="sf-check"><input type="checkbox" name="required" value="1"{% if f.required %} checked{% endif %}> Required</label>
+              <label class="sf-check"><input type="checkbox" name="sensitive" value="1"{% if f.sensitive %} checked{% endif %}> Sensitive</label>
+              <input type="number" name="order" value="{{ f.order }}" min="0" title="Order">
+              <button class="fin-btn fin-btn-sm" type="submit">Save</button>
+            </form>
+          </td>
+        </tr>
+      {% empty %}<tr><td colspan="4" class="empty"><i class="bi bi-card-list"></i><p>No fields yet. Add your own, or the usual Nigerian ones with one click.</p></td></tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</div>
+<script>
+  (function(){var t=document.getElementById('ftype'),c=document.getElementById('fchoices');
+  function s(){c.style.display=t.value==='CHOICE'?'':'none';} t.addEventListener('change',s); s();})();
+</script>
+{% endblock %}

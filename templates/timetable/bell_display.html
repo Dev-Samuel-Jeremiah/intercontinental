@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bell schedule | {{ school.name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0a1d40;--surface:#112850;--rim:rgba(255,255,255,.08);--champagne:#f4d21f;--champagne-lt:#ffe066;--slate:rgba(255,255,255,.45);--white:#f2f5fb;--green:#4ade80;--amber:#fbbf24;--violet:#a78bfa}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(120% 90% at 0% 0%,rgba(244,210,31,.14),transparent 55%),var(--ink);color:var(--white);font-family:'Outfit',system-ui,sans-serif;display:flex;flex-direction:column;padding:3vh 4vw;gap:3vh;overflow:hidden}
+  header{display:flex;justify-content:space-between;align-items:center;gap:2vw}
+  header .sch{display:flex;align-items:center;gap:1.2vw;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-size:clamp(14px,1.6vw,28px)}
+  header img{height:6vh}
+  #clock{font-size:clamp(28px,5vw,92px);font-weight:600;font-variant-numeric:tabular-nums}
+  main{flex:1;display:grid;grid-template-columns:1.6fr 1fr;gap:3vw;min-height:0}
+  .now{border:1px solid var(--rim);border-radius:3vh;background:rgba(255,255,255,.035);padding:4vh 3vw;display:flex;flex-direction:column;justify-content:center}
+  .lab{font-size:clamp(12px,1.3vw,24px);letter-spacing:.2em;text-transform:uppercase;color:var(--champagne)}
+  #nowName{font-family:'Cormorant Garamond',serif;font-size:clamp(48px,9vw,180px);line-height:1;margin:2vh 0}
+  #nowTime{font-size:clamp(16px,2vw,36px);color:var(--slate)}
+  .bar{height:1.4vh;border-radius:99px;background:rgba(255,255,255,.08);margin:4vh 0 2vh;overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--champagne),var(--champagne-lt));width:0}
+  #left{font-size:clamp(22px,3.4vw,64px);font-weight:600;font-variant-numeric:tabular-nums}
+  #next{margin-top:4vh;font-size:clamp(16px,2vw,38px);color:var(--slate)}
+  #next b{color:var(--white)}
+  ul{list-style:none;margin:0;padding:0;overflow:hidden;display:flex;flex-direction:column;gap:1vh}
+  li{display:flex;justify-content:space-between;gap:1vw;padding:1.3vh 1.4vw;border-radius:1.6vh;border:1px solid var(--rim);font-size:clamp(13px,1.5vw,28px)}
+  li span{font-variant-numeric:tabular-nums;color:var(--slate)}
+  li.break{color:var(--amber)}
+  li.special{color:var(--violet)}
+  li.done{opacity:.35}
+  li.cur{border-color:var(--champagne);background:rgba(244,210,31,.14);color:var(--champagne-lt)}
+  .empty{grid-column:1/-1;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,96px);color:var(--slate)}
+  @media(max-width:800px){main{grid-template-columns:1fr}body{overflow:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="sch">{% if school.logo %}<img src="{{ school.logo.url }}" alt="">{% endif %}{{ school.name }}</div>
+  <div style="text-align:right"><div id="clock">{{ now|slice:":5" }}</div><div class="lab" style="color:var(--slate)">{{ today|date:"l j F" }}</div></div>
+</header>
+<main>
+{% if periods %}
+  <section class="now" aria-live="polite">
+    <div class="lab" id="nowLabel">Now</div>
+    <div id="nowName">—</div>
+    <div id="nowTime"></div>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="left"></div>
+    <div id="next"></div>
+  </section>
+  <ul id="list">{% for p in periods %}<li class="{{ p.kind }}" data-i="{{ forloop.counter0 }}"><b>{{ p.name }}</b><span>{{ p.start }}–{{ p.end }}</span></li>{% endfor %}</ul>
+{% else %}
+  <div class="empty">{% if tt %}No lessons today{% else %}No published timetable yet{% endif %}</div>
+{% endif %}
+</main>
+<script>
+(function(){
+  const P = {{ periods_json|safe }};
+  // Use the school's clock, not the screen's: work out how far off this device is.
+  const server = '{{ now }}'.split(':').map(Number);
+  const local = new Date();
+  const offset = (server[0]*3600 + server[1]*60 + server[2]) - (local.getHours()*3600 + local.getMinutes()*60 + local.getSeconds());
+  const sec = s => { const [h,m] = s.split(':').map(Number); return h*3600 + m*60; };
+  const fmt = n => { n = Math.max(0, Math.round(n)); const m = Math.floor(n/60), s = n%60; return m >= 60 ? Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m' : m+':'+String(s).padStart(2,'0'); };
+  const loaded = Date.now();
+  const startedAt = (server[0]*3600 + server[1]*60 + server[2]) - 5;
+  function tick(){
+    const d = new Date();
+    let now = d.getHours()*3600 + d.getMinutes()*60 + d.getSeconds() + offset;
+    now = ((now % 86400) + 86400) % 86400;
+    const hh = String(Math.floor(now/3600)).padStart(2,'0'), mm = String(Math.floor(now%3600/60)).padStart(2,'0');
+    document.getElementById('clock').textContent = hh + ':' + mm;
+    if (!P.length) return;
+    let cur = -1, nxt = -1;
+    P.forEach((p, i) => { if (sec(p.start) <= now && now < sec(p.end)) cur = i; if (nxt < 0 && sec(p.start) > now) nxt = i; });
+    document.querySelectorAll('#list li').forEach((li, i) => {
+      li.classList.toggle('cur', i === cur);
+      li.classList.toggle('done', sec(P[i].end) <= now);
+    });
+    const label = document.getElementById('nowLabel'), name = document.getElementById('nowName'),
+          time = document.getElementById('nowTime'), bar = document.getElementById('bar'),
+          left = document.getElementById('left'), next = document.getElementById('next');
+    if (cur >= 0) {
+      const p = P[cur], a = sec(p.start), b = sec(p.end);
+      label.textContent = p.kind === 'break' ? 'Break' : 'Now';
+      name.textContent = p.name;
+      time.textContent = p.start + ' – ' + p.end;
+      bar.style.width = (100 * (now - a) / (b - a)) + '%';
+      left.textContent = fmt(b - now) + ' left';
+    } else if (nxt >= 0) {
+      label.textContent = 'Coming up'; name.textContent = P[nxt].name; time.textContent = P[nxt].start + ' – ' + P[nxt].end;
+      bar.style.width = '0'; left.textContent = 'Starts in ' + fmt(sec(P[nxt].start) - now);
+    } else {
+      label.textContent = 'Today'; name.textContent = 'School day over'; time.textContent = ''; bar.style.width = '100%'; left.textContent = '';
+    }
+    const after = cur >= 0 ? P.findIndex((p, i) => i > cur) : -1;
+    next.textContent = '';
+    if (after >= 0) { const b = document.createElement('b'); b.textContent = P[after].name; next.append('Next: ', b, ' at ' + P[after].start); }
+    // Pick up timetable changes and the next day's schedule.
+    if (Date.now() - loaded > 30*60*1000 || now < startedAt) location.reload();
+  }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

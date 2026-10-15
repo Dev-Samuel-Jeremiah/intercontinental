@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Stock-take{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library · stock-take {{ st.started_at|date:"j M Y" }}{% if st.branch %} · {{ st.branch }}{% endif %}</div>
+  <h1 class="fin-title"><em>{{ s.scanned }} of {{ s.expected }}</em> counted</h1>
+  <p class="fin-sub">{% if st.closed_at %}Closed {{ st.closed_at|date:"j M Y H:i" }}.{% else %}Scan each copy's barcode. Scanning several at once? Separate them with spaces or new lines.{% endif %}</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% if not st.closed_at %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <div><label>Barcode</label><textarea name="barcode" rows="2" autofocus required></textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Count</button>
+    </form>{% endif %}
+    {% if s.wrong_branch %}<div class="panel"><div class="panel-h"><h3>Found in the wrong library</h3></div><div class="panel-b">{% for c in s.wrong_branch %}<p style="margin:.2rem 0">{{ c.book.title }} [{{ c.barcode }}] — belongs to {{ c.branch|default:"no branch" }}</p>{% endfor %}</div></div>{% endif %}
+    {% if s.on_loan %}<div class="panel"><div class="panel-h"><h3>Counted but recorded as on loan</h3></div><div class="panel-b">{% for c in s.on_loan %}<p style="margin:.2rem 0">{{ c.book.title }} [{{ c.barcode }}] — check it in at the desk</p>{% endfor %}</div></div>{% endif %}
+    {% if not st.closed_at %}<form method="post" class="panel" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="close">
+      <label class="pill"><input type="checkbox" name="mark_missing" checked> Mark uncounted copies as missing</label>
+      <button class="fin-btn" type="submit" onclick="return confirm('Close this stock-take?')">Close stock-take</button>
+    </form>{% endif %}
+  </div>
+  <div class="panel"><div class="panel-h"><h3>Not counted ({{ s.missing|length }})</h3></div><div class="panel-b"><table class="tbl"><tbody>
+    {% for c in s.missing %}<tr><td class="name">{{ c.book.title }}</td><td>{{ c.barcode }}</td><td>{{ c.shelf }}</td></tr>
+    {% empty %}<tr><td class="empty">Everything has been counted.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Communication settings{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Approvals, birthdays &amp; <em>notice board</em></h1>
+  <p class="fin-sub">How messages are approved, automatic birthday greetings and the reception TV screen.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="require_approval" value="1" style="width:auto" {% if cfg.require_approval %}checked{% endif %}> Campaigns from staff who are not administrators need approval</label>
+    <h3 style="margin:1rem 0 .3rem"><i class="bi bi-cake2"></i> Birthday greetings</h3>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="birthday_students" value="1" style="width:auto" {% if cfg.birthday_students %}checked{% endif %}> Greet students (SMS and email to their parents)</label>
+    <div><label>Student message <span class="hint">{% templatetag openvariable %}student_name{% templatetag closevariable %}, {% templatetag openvariable %}class_name{% templatetag closevariable %}, {% templatetag openvariable %}school_name{% templatetag closevariable %}</span></label><textarea name="birthday_student_sms" rows="2" maxlength="320">{{ cfg.birthday_student_sms }}</textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="birthday_staff" value="1" style="width:auto" {% if cfg.birthday_staff %}checked{% endif %}> Greet staff (dates of birth from HR records)</label>
+    <div><label>Staff message <span class="hint">{% templatetag openvariable %}name{% templatetag closevariable %}, {% templatetag openvariable %}school_name{% templatetag closevariable %}</span></label><textarea name="birthday_staff_sms" rows="2" maxlength="320">{{ cfg.birthday_staff_sms }}</textarea></div>
+    <h3 style="margin:1rem 0 .3rem"><i class="bi bi-whatsapp"></i> WhatsApp</h3>
+    {% if wa_ready %}
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="whatsapp_enabled" value="1" style="width:auto" {% if cfg.whatsapp_enabled %}checked{% endif %}> Send text messages by WhatsApp first; use SMS when WhatsApp fails</label>
+    <div class="row2"><div><label>Approved template name</label><input name="whatsapp_template" value="{{ cfg.whatsapp_template }}" maxlength="80" placeholder="e.g. school_notice"></div>
+      <div><label>Template language code</label><input name="whatsapp_language" value="{{ cfg.whatsapp_language }}" maxlength="10"></div></div>
+    <p class="hint">WhatsApp only allows school-started messages through a template Meta has approved. Create a Utility template with one variable, e.g. <code>Message from your school: {% templatetag openvariable %}1{% templatetag closevariable %}</code> — the message text goes into the variable.</p>
+    {% else %}<p class="hint">WhatsApp is not set up on this platform yet (WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID).</p>{% endif %}
+    <div><label>Notice board: seconds per slide</label><input name="signage_seconds" value="{{ cfg.signage_seconds }}" inputmode="numeric"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-tv"></i> Reception TV notice board</h3></div><div class="panel-b">
+      <p>Open this link full-screen on a TV or spare computer in reception. It shows published announcements, dates coming up and today's birthdays, and refreshes itself.</p>
+      <p><a href="{{ signage_url }}" target="_blank" style="word-break:break-all">{{ signage_url }}</a></p>
+      <p class="hint">Anyone with the link can see the screen. Make a new link if it is shared by mistake.</p>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="renew"><button class="fin-btn fin-btn-sm" type="submit">Make a new link</button></form>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-cake2"></i> Birthdays today</h3></div><div class="panel-b">
+      {% if students or staff %}<ul>{% for s in students %}<li>{{ s.full_name }}{% if s.class_assigned %} — {{ s.class_assigned.name }}{% endif %}</li>{% endfor %}{% for r in staff %}<li>{{ r.staff.full_name }} (staff)</li>{% endfor %}</ul>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="birthdays"><button class="fin-btn fin-btn-sm" type="submit">Send greetings now</button></form>
+      <p class="hint">Greetings also go out each morning (send_birthday_greetings). Nobody is greeted twice.</p>
+      {% else %}<p class="empty">No birthdays today.</p>{% endif %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

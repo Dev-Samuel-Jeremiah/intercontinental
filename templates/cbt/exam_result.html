@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Exam Result{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Exam Result: {{ attempt.exam.title }}</h2>
+    <p><strong>Score:</strong> {{ attempt.score }} / {{ attempt.exam.total_marks }}</p>
+    <p><strong>Completed:</strong> {{ attempt.completed|yesno:"Yes,No" }}</p>
+
+    <h4 class="mt-4">Your Answers</h4>
+    <ul class="list-group">
+        {% for ans in attempt.answers.all %}
+        <li class="list-group-item">
+            <strong>Q{{ forloop.counter }}:</strong> {{ ans.question.question_text }}<br>
+            <strong>Your Answer:</strong> 
+            {% if ans.selected_option %}{{ ans.selected_option.text }}{% else %}Not Answered{% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

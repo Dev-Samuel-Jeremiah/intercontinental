@@ -1,0 +1,56 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Room booking{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .daynav{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+  .daynav input{padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .rm{padding:.85rem 1.2rem;border-bottom:1px solid var(--rim)}
+  .rm:last-child{border-bottom:0}
+  .rm h4{font-size:.92rem;margin:0 0 .5rem;display:flex;gap:.5rem;align-items:center}
+  .it{display:flex;align-items:center;gap:.7rem;padding:.35rem 0;font-size:.84rem;color:var(--slate2)}
+  .it .tm{font-variant-numeric:tabular-nums;color:var(--white);min-width:96px}
+  .it form{margin-left:auto}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Timetable</div>
+  <h1 class="fin-title">Room <em>booking</em></h1>
+  <p class="fin-sub">Book the hall, labs or computer room for a test, a club or a meeting. Timetabled lessons and other bookings are checked before a booking is made.</p>
+</div>
+<form class="daynav" method="get">
+  <a class="fin-btn fin-btn-sm" href="?date={{ prev|date:'Y-m-d' }}" aria-label="Previous day"><i class="bi bi-chevron-left"></i></a>
+  <input type="date" name="date" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()">
+  <a class="fin-btn fin-btn-sm" href="?date={{ next|date:'Y-m-d' }}" aria-label="Next day"><i class="bi bi-chevron-right"></i></a>
+</form></div>
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-plus"></i> Book a room for {{ day|date:"l j M" }}</h3></div><div class="panel-b">
+    {% if rooms %}
+      <form method="post" class="fin-form">{% csrf_token %}
+        <input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+        <div><label>Room</label><select name="room" required>{% for r in rooms %}<option value="{{ r.id }}">{{ r.name }} — {{ r.get_kind_display }}{% if r.capacity %} ({{ r.capacity }} seats){% endif %}</option>{% endfor %}</select></div>
+        <div class="row2"><div><label>From</label><input type="time" name="start" required value="08:00"></div><div><label>To</label><input type="time" name="end" required value="09:00"></div></div>
+        <div><label>What for</label><input name="purpose" required maxlength="160" placeholder="SS2 Chemistry practical test"></div>
+        <div><label>Repeat weekly <span class="hint">(number of weeks, 1 = just this day)</span></label><input type="number" name="repeat" min="1" max="{{ max_repeat }}" value="1"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Book</button>
+      </form>
+    {% else %}
+      <div class="empty"><i class="bi bi-door-open"></i><p>No rooms set up yet.{% if is_admin %} <a href="{% url 'timetable:rooms' %}" style="color:var(--champagne-lt)">Add rooms</a>.{% endif %}</p></div>
+    {% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bookmark-check"></i> My upcoming bookings</h3></div>
+      {% for b in mine %}<div class="rm"><div class="it"><span class="tm">{{ b.date|date:"D j M" }}</span><span><b style="color:var(--white)">{{ b.room.name }}</b> · {{ b.start_time|time:"H:i" }}–{{ b.end_time|time:"H:i" }} · {{ b.purpose }}</span>
+        <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="id" value="{{ b.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="cancel" title="Cancel booking"><i class="bi bi-x-lg"></i></button></form></div></div>
+      {% empty %}<div class="empty" style="padding:1.4rem"><p style="margin:0">No bookings coming up.</p></div>{% endfor %}
+    </div>
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-building"></i> Rooms on {{ day|date:"l j M Y" }}</h3><span class="hint"><span class="chip">lesson</span> <span class="chip gold">booking</span></span></div>
+    {% for r in plan %}<div class="rm"><h4><i class="bi bi-door-closed" style="color:var(--champagne-lt)"></i> {{ r.room.name }} <span class="hint">{{ r.room.get_kind_display }}</span></h4>
+      {% for i in r.items %}<div class="it"><span class="tm">{{ i.start|time:"H:i" }}–{{ i.end|time:"H:i" }}</span><span class="chip {% if i.kind == 'booking' %}gold{% endif %}">{{ i.what }}</span>
+        {% if i.booking %}<span class="hint">{{ i.booking.booked_by.get_full_name|default:i.booking.booked_by.username }}</span>
+          {% if is_admin or i.booking.booked_by_id == request.user.id %}<form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="id" value="{{ i.booking.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="cancel" title="Cancel booking" onclick="return confirm('Cancel this booking?')"><i class="bi bi-x-lg"></i></button></form>{% endif %}{% endif %}</div>
+      {% empty %}<div class="it" style="color:var(--green)"><i class="bi bi-check2-circle"></i> Free all day</div>{% endfor %}
+    </div>{% empty %}<div class="empty"><i class="bi bi-door-open"></i><p>No rooms yet.</p></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

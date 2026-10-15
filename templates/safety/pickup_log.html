@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Pickup log{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Pickup <em>log</em></h1>
+  <p class="fin-sub">{{ day|date:"l j F Y" }} — every child released at the gate, to whom, and how it was checked.</p>
+</div><form method="get" style="display:flex;gap:.5rem"><input type="date" name="date" value="{{ day|date:'Y-m-d' }}" onchange="this.form.submit()" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <a class="fin-btn fin-btn-gold" href="{% url 'safety:pickup_desk' %}"><i class="bi bi-door-open"></i> Pickup desk</a></form></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Collected</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Early</small><b style="color:var(--amber)">{{ early }}</b></div>
+  <div class="fin-stat"><small>Head approved</small><b style="color:{% if overrides %}var(--red){% else %}var(--green){% endif %}">{{ overrides }}</b></div>
+</div>
+<div class="panel"><div style="overflow-x:auto"><table class="tbl">
+  <thead><tr><th>Time</th><th>Child</th><th>Collected by</th><th>Checked</th><th>Released by</th><th>Family told</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td style="white-space:nowrap">{{ r.released_at|time:"H:i" }}{% if r.early %}<br><span class="chip amber">early</span>{% endif %}</td>
+      <td><a href="{% url 'users:student_profile' r.student.id %}" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a><br><span class="hint">{{ r.student.class_assigned.name|default:"" }}</span></td>
+      <td>{{ r.collector_name }}{% if r.relationship %}<br><span class="hint">{{ r.relationship }}</span>{% endif %}{% if r.reason %}<br><span class="hint">{{ r.reason }}</span>{% endif %}</td>
+      <td><span class="chip {% if r.checked_by == 'OVERRIDE' %}red{% elif r.checked_by == 'PASS' %}gold{% else %}green{% endif %}">{{ r.get_checked_by_display|lower }}</span>{% if r.override_reason %}<br><span class="hint">{{ r.override_reason }}</span>{% endif %}</td>
+      <td class="hint">{% if r.released_by.get_full_name %}{{ r.released_by.get_full_name }}{% else %}{{ r.released_by.username }}{% endif %}</td>
+      <td>{% if r.parent_notified %}<i class="bi bi-check2-circle" style="color:var(--green)"></i>{% else %}<span class="hint">—</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-door-closed"></i><p>No child was collected at the gate this day.</p></td></tr>{% endfor %}</tbody>
+</table></div></div>
+{% endblock %}

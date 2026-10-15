@@ -1,0 +1,1251 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+
+{% block title %}All Students{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+:root{
+  /* Semantic */
+  --green:         #4ade80;
+}
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.students-wrap {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+  flex-wrap: wrap;
+}
+
+/* champagne underline accent */
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+
+.page-header-left { flex: 1; min-width: 200px; }
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .85rem;
+}
+
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+
+.page-title em {
+  color: var(--champagne);
+  font-style: italic;
+}
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--slate2);
+  font-weight: 400;
+  max-width: 480px;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .85rem;
+  padding-top: .25rem;
+}
+
+.count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .35rem .9rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+}
+
+.header-actions {
+  display: flex;
+  gap: .65rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ════════════════════════════════════════════
+   BUTTONS
+════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem 1.15rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(244,210,31,.34);
+}
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover {
+  background: var(--rim2);
+  color: var(--white);
+}
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid var(--red-border);
+}
+.btn-danger:hover {
+  background: rgba(248,113,113,.18);
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--blue-dim);
+  color: var(--blue);
+  border: 1px solid var(--blue-border);
+}
+.btn-primary:hover {
+  background: rgba(96,165,250,.18);
+  transform: translateY(-1px);
+}
+
+.btn-sm {
+  padding: .38rem .8rem;
+  font-size: .78rem;
+  border-radius: 8px;
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.icon-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.panel-title h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* ════════════════════════════════════════════
+   STATS GRID
+════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  padding: 1.25rem 1.35rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  animation: riseUp .45s ease both;
+  transition: border-color .2s ease, transform .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 4%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.stat-card:hover {
+  border-color: var(--rim3);
+  transform: translateY(-3px);
+}
+
+.stat-card:nth-child(1) { animation-delay: .05s; }
+.stat-card:nth-child(2) { animation-delay: .12s; }
+.stat-card:nth-child(3) { animation-delay: .19s; }
+.stat-card:nth-child(4) { animation-delay: .26s; }
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.stat-body { flex: 1; min-width: 0; }
+
+.stat-label {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: .35rem;
+}
+
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════
+   FILTER PANEL
+════════════════════════════════════════════ */
+.filter-panel {
+  margin-bottom: 1.5rem;
+  animation-delay: .3s;
+}
+
+.filter-body { padding: 1.25rem 1.5rem; }
+
+.filter-form {
+  display: flex;
+  gap: .85rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+  flex: 1;
+  min-width: 180px;
+}
+
+.form-group label {
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+}
+
+.form-control {
+  width: 100%;
+  padding: .65rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  transition: border-color .2s ease, box-shadow .2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-control::placeholder { color: var(--slate); }
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+
+.search-wrapper {
+  position: relative;
+  flex: 2;
+  min-width: 220px;
+}
+
+.search-wrapper i {
+  position: absolute;
+  left: .9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--slate);
+  font-size: .9rem;
+  pointer-events: none;
+}
+
+.search-wrapper .form-control { padding-left: 2.4rem; }
+
+.filter-actions {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-end;
+  padding-bottom: 0;
+  flex-shrink: 0;
+}
+
+.filter-info {
+  margin-top: 1rem;
+  padding: .75rem 1.1rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.18);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  font-size: .85rem;
+  color: var(--champagne-lt);
+  flex-wrap: wrap;
+}
+
+.filter-info strong { color: var(--champagne); }
+
+/* ════════════════════════════════════════════
+   TABLE PANEL
+════════════════════════════════════════════ */
+.table-panel { animation-delay: .38s; }
+
+.table-header-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.page-badge {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--slate2);
+  padding: .28rem .75rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 999px;
+}
+
+/* ════════════════════════════════════════════
+   TABLE
+════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  border-bottom: 1px solid var(--rim2);
+}
+
+thead th {
+  padding: .85rem 1rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--slate);
+  text-align: left;
+  white-space: nowrap;
+  background: var(--surface2);
+}
+
+thead th:first-child { border-radius: 0; }
+
+tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .18s ease;
+}
+
+tbody tr:last-child { border-bottom: none; }
+
+tbody tr:hover { background: rgba(255,255,255,.025); }
+
+tbody td {
+  padding: .95rem 1rem;
+  font-size: .86rem;
+  color: var(--slate2);
+  vertical-align: middle;
+  text-align: left;
+}
+
+tbody td:first-child { color: var(--slate); font-size: .8rem; }
+
+/* ════════════════════════════════════════════
+   AVATAR / INITIALS
+════════════════════════════════════════════ */
+.student-cell {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #0a1f44;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #f4d21f, #c9a800);
+}
+
+.avatar.blue   { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.avatar.purple { background: linear-gradient(135deg, #a855f7, #6d28d9); }
+.avatar.teal   { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+.avatar.green  { background: linear-gradient(135deg, #22c55e, #15803d); }
+
+.student-name {
+  font-weight: 600;
+  color: var(--white);
+  font-size: .88rem;
+}
+
+.reg-no {
+  font-family: 'Courier New', monospace;
+  font-size: .8rem;
+  color: var(--champagne);
+  font-weight: 600;
+}
+
+/* ════════════════════════════════════════════
+   BADGES
+════════════════════════════════════════════ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .28rem .7rem;
+  border-radius: 999px;
+  font-size: .74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-green  { background: var(--green-dim);  border: 1px solid var(--green-border);  color: var(--green);  }
+.badge-amber  { background: var(--amber-dim);  border: 1px solid var(--amber-border);  color: var(--amber);  }
+.badge-red    { background: var(--red-dim);    border: 1px solid var(--red-border);    color: var(--red);    }
+.badge-blue   { background: var(--blue-dim);   border: 1px solid var(--blue-border);   color: var(--blue);   }
+.badge-purple { background: var(--purple-dim); border: 1px solid var(--purple-border); color: var(--purple); }
+.badge-teal   { background: var(--teal-dim);   border: 1px solid var(--teal-border);   color: var(--teal);   }
+
+/* ════════════════════════════════════════════
+   PASSWORD FIELD
+════════════════════════════════════════════ */
+.password-field {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 8px;
+  padding: .3rem .65rem;
+  font-family: 'Courier New', monospace;
+  font-size: .78rem;
+  color: var(--slate2);
+  max-width: 140px;
+  overflow: hidden;
+}
+
+.password-field .copy-btn {
+  color: var(--champagne);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color .15s ease;
+  font-size: .85rem;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.password-field .copy-btn:hover { color: var(--champagne-lt); }
+
+.pass-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ════════════════════════════════════════════
+   ACTION CELL
+════════════════════════════════════════════ */
+.action-cell {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+}
+
+/* ════════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.empty-icon-box {
+  width: 72px;
+  height: 72px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--slate);
+  margin-bottom: 1.25rem;
+}
+
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+
+.empty-state p {
+  font-size: .88rem;
+  color: var(--slate2);
+  margin-bottom: 1.5rem;
+  max-width: 320px;
+}
+
+/* ════════════════════════════════════════════
+   PAGINATION
+════════════════════════════════════════════ */
+.pagination-wrap {
+  padding: 1.1rem 1.5rem;
+  border-top: 1px solid var(--rim);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+
+.page-btn {
+  padding: .42rem .85rem;
+  border-radius: 8px;
+  border: 1px solid var(--rim2);
+  background: var(--surface3);
+  color: var(--slate2);
+  font-family: 'Outfit', sans-serif;
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .18s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.page-btn:hover {
+  border-color: var(--champagne);
+  color: var(--champagne);
+  background: var(--champagne-dim);
+}
+
+.page-btn.active {
+  background: var(--champagne-dim);
+  border-color: rgba(244,210,31,.3);
+  color: var(--champagne-lt);
+  font-weight: 700;
+}
+
+.page-btn:disabled, .page-btn.disabled {
+  opacity: .35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.page-dots {
+  color: var(--slate);
+  font-size: .82rem;
+  padding: 0 .25rem;
+}
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .students-wrap { padding: 1.5rem 1.25rem 3rem; }
+  .page-header { flex-direction: column; align-items: flex-start; }
+  .header-right { align-items: flex-start; }
+  .header-actions { justify-content: flex-start; }
+}
+
+@media (max-width: 768px) {
+  .students-wrap { padding: 1rem .9rem 2.5rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  .page-title { font-size: 1.8rem; }
+  .filter-form { flex-direction: column; }
+  .form-group, .search-wrapper { min-width: 0; width: 100%; flex: none; }
+  .filter-actions { flex-direction: row; width: 100%; }
+  .filter-actions .btn { flex: 1; justify-content: center; }
+
+  /* Card-layout table rows on mobile */
+  table thead { display: none; }
+  table, table tbody, table tr, table td {
+    display: block;
+    width: 100%;
+  }
+  table tr {
+    background: var(--surface3);
+    border: 1px solid var(--rim2);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: .85rem;
+  }
+  table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: .55rem 0;
+    border: none;
+    border-bottom: 1px solid var(--rim);
+    font-size: .82rem;
+    gap: .5rem;
+  }
+  table td:last-child { border-bottom: none; }
+  table td::before {
+    content: attr(data-label);
+    font-size: .69rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--slate);
+    flex-shrink: 0;
+  }
+  .student-cell { flex-direction: row; }
+  .action-cell { justify-content: flex-end; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-value { font-size: 1.7rem; }
+  .page-title { font-size: 1.5rem; }
+  .action-cell .btn span { display: none; }
+}
+
+/* ════════════════════════════════════════════
+   PRINT
+════════════════════════════════════════════ */
+@media print {
+  body { background: #fff; color: #000; }
+  .header-actions, .filter-panel, .table-header-actions, .action-cell,
+  .pagination-wrap { display: none !important; }
+}
+</style>
+
+<div class="students-wrap">
+
+  <!-- ══ PAGE HEADER ══════════════════════════════ -->
+  <header class="page-header">
+    <div class="page-header-left">
+      <div class="eyebrow">Student Registry</div>
+      <h1 class="page-title">All <em>Students</em></h1>
+      <p class="page-subtitle">View, manage and export student credentials, class assignments, and parent contact details.</p>
+    </div>
+    <div class="header-right">
+      <div class="count-pill">
+        <i class="bi bi-people-fill"></i>
+        {{ total_count }} Student{{ total_count|pluralize }} Enrolled
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'users:register_student' %}" class="btn btn-champagne">
+          <i class="bi bi-person-plus-fill"></i>
+          <span>Register Student</span>
+        </a>
+        <a href="{% url 'users:generate_student_password' %}" class="btn btn-ghost">
+          <i class="bi bi-key-fill"></i>
+          <span>Generate Passwords</span>
+        </a>
+        <button class="btn btn-ghost" onclick="window.print()">
+          <i class="bi bi-printer-fill"></i>
+          <span>Print</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ STAT CARDS ══════════════════════════════ -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--champagne-dim);">
+        <i class="bi bi-people-fill" style="color:var(--champagne);"></i>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" id="totalStudents">{{ total_count }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green-dim);">
+        <i class="bi bi-person-check-fill" style="color:var(--green);"></i>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Active</div>
+        <div class="stat-value" id="activeStudents">—</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--amber-dim);">
+        <i class="bi bi-person-x-fill" style="color:var(--amber);"></i>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Inactive</div>
+        <div class="stat-value" id="inactiveStudents">—</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--blue-dim);">
+        <i class="bi bi-mortarboard-fill" style="color:var(--blue);"></i>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Classes</div>
+        <div class="stat-value" id="totalClasses">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FILTER PANEL ═════════════════════════════ -->
+  <div class="panel filter-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--purple-dim);">
+          <i class="bi bi-funnel-fill" style="color:var(--purple);font-size:.85rem;"></i>
+        </div>
+        <h3>Filter Students</h3>
+      </div>
+    </div>
+
+    <div class="filter-body">
+      <form method="GET" class="filter-form">
+        <!-- Class dropdown -->
+        <div class="form-group" style="flex:1.2;min-width:180px;">
+          <label for="classSelect">Class</label>
+          <select id="classSelect" name="class_id" class="form-control" onchange="this.form.submit()">
+            <option value="">— All Classes —</option>
+            {% for cls in all_classes %}
+            <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class_id %}selected{% endif %}>
+              {{ cls.name }} ({{ cls.student_count }} student{{ cls.student_count|pluralize }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrapper">
+          <label style="font-size:.73rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--slate2);display:block;margin-bottom:.45rem;">Search</label>
+          <div style="position:relative;">
+            <i class="bi bi-search" style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--slate);font-size:.85rem;pointer-events:none;"></i>
+            <input type="text"
+                   name="q"
+                   class="form-control"
+                   style="padding-left:2.35rem;"
+                   placeholder="Name, reg. no., parent…"
+                   value="{{ query|default:'' }}">
+          </div>
+        </div>
+
+        <div class="filter-actions" style="padding-top:1.45rem;">
+          <button type="submit" class="btn btn-champagne">
+            <i class="bi bi-search"></i>
+            <span>Search</span>
+          </button>
+          {% if query or selected_class_id %}
+          <a href="{% url 'users:all_students' %}" class="btn btn-ghost">
+            <i class="bi bi-x-lg"></i>
+            <span>Clear</span>
+          </a>
+          {% endif %}
+        </div>
+      </form>
+
+      {% if selected_class or query %}
+      <div class="filter-info">
+        <i class="bi bi-info-circle-fill"></i>
+        Showing <strong>{{ total_count }}</strong> student{{ total_count|pluralize }}
+        {% if selected_class %} in <strong>{{ selected_class.name }}</strong>{% endif %}
+        {% if query %} matching "<strong>{{ query }}</strong>"{% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ══ TABLE PANEL ══════════════════════════════ -->
+  <div class="panel table-panel">
+    <div class="panel-header">
+      <div class="panel-title">
+        <div class="icon-badge" style="background:var(--teal-dim);">
+          <i class="bi bi-table" style="color:var(--teal);font-size:.85rem;"></i>
+        </div>
+        <h3>Student Records</h3>
+      </div>
+      <div class="table-header-actions">
+        <span class="page-badge">Page {{ students.number }} of {{ students.paginator.num_pages }}</span>
+        <a href="{% url 'users:export_students_excel' %}?q={{ query|default:'' }}&class_id={{ selected_class_id|default:'' }}"
+           class="btn btn-ghost btn-sm" title="Export to Excel">
+          <i class="bi bi-file-earmark-spreadsheet-fill" style="color:var(--green);"></i>
+          Export Excel
+        </a>
+      </div>
+    </div>
+
+    {% if can_bulk_edit %}
+    <form method="post" action="{% url 'users:bulk_edit' %}" id="bulkForm" class="bulk-bar" hidden>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.get_full_path }}">
+      <span class="bulk-count"><b id="bulkN">0</b> selected</span>
+      <select name="bulk_action" id="bulkAction" required>
+        <option value="">Change…</option>
+        <option value="class">Move to class</option>
+        <option value="house">Put in house</option>
+        <option value="term">Set term</option>
+        <option value="status">Change status</option>
+      </select>
+      <select name="bulk_value" id="bulkValue" required><option value="">—</option></select>
+      <input name="reason" id="bulkReason" placeholder="Reason (for status changes)" maxlength="255" hidden>
+      <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check2-all"></i> Apply</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="bulkClear">Clear</button>
+    </form>
+    <template id="bulkOptions">
+      <optgroup data-for="class">{% for c in all_classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</optgroup>
+      <optgroup data-for="house">{% for h in houses %}<option value="{{ h.id }}">{{ h.name }}</option>{% endfor %}<option value="none">No house</option></optgroup>
+      <optgroup data-for="term">{% for v, l in bulk_terms %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</optgroup>
+      <optgroup data-for="status">{% for v, l in bulk_statuses %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</optgroup>
+    </template>
+    {% endif %}
+
+    <div class="table-wrap">
+      <table id="studentsTable">
+        <thead>
+          <tr>
+            {% if can_bulk_edit %}<th style="width:34px"><input type="checkbox" id="bulkAll" title="Select all on this page"></th>{% endif %}
+            <th>#</th>
+            <th>Reg No.</th>
+            <th>Full Name</th>
+            <th>Class</th>
+            <th>Parent Name</th>
+            <th>Parent Email</th>
+            <th>Parent Phone</th>
+            <th>Student Password</th>
+            <th>Parent Password</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr data-status="{{ student.status }}">
+            {% if can_bulk_edit %}<td data-label="Select"><input type="checkbox" class="bulk-pick" name="student_ids" value="{{ student.id }}" form="bulkForm"></td>{% endif %}
+
+            <td data-label="#">
+              {{ forloop.counter|add:students.start_index|add:"-1" }}
+            </td>
+
+            <td data-label="Reg No.">
+              <span class="reg-no">{{ student.admission_number }}</span>
+            </td>
+
+            <td data-label="Full Name">
+              <div class="student-cell">
+                {% with initials=student.full_name|slice:":2"|upper %}
+                {% with idx=forloop.counter|divisibleby:4 %}
+                <div class="avatar {% if forloop.counter|divisibleby:4 %}teal{% elif forloop.counter|divisibleby:3 %}green{% elif forloop.counter|divisibleby:2 %}blue{% else %}purple{% endif %}">
+                  {{ initials }}
+                </div>
+                {% endwith %}
+                {% endwith %}
+                <a class="student-name" href="{% url 'users:student_profile' student.id %}" style="color:inherit;text-decoration:none">{{ student.full_name }}</a>
+              </div>
+            </td>
+
+            <td data-label="Class">
+              <span class="badge badge-teal">
+                <i class="bi bi-mortarboard-fill"></i>
+                {{ student.class_assigned.name|default:"Unassigned" }}
+              </span>
+            </td>
+
+            <td data-label="Parent Name">{{ student.parent_name|default:"—" }}</td>
+
+            <td data-label="Parent Email">
+              {% if student.parent_email %}
+              <span style="color:var(--blue);font-size:.82rem;">{{ student.parent_email }}</span>
+              {% else %}—{% endif %}
+            </td>
+
+            <td data-label="Parent Phone">{{ student.parent_phone|default:"—" }}</td>
+
+            <td data-label="Student Password">
+              <div class="password-field" id="studentPass{{ student.id }}">
+                <span class="pass-text">{{ student.user.term_password|default:"N/A" }}</span>
+                <button class="copy-btn" onclick="copyPassword('studentPass{{ student.id }}')" title="Copy student password">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
+            </td>
+
+            <td data-label="Parent Password">
+              <div class="password-field" id="parentPass{{ student.id }}">
+                <span class="pass-text">{{ student.parent_term_password|default:"N/A" }}</span>
+                <button class="copy-btn" onclick="copyPassword('parentPass{{ student.id }}')" title="Copy parent password">
+                  <i class="bi bi-copy"></i>
+                </button>
+              </div>
+            </td>
+
+            <td data-label="Status">
+              {% if student.status == 'Active' %}
+              <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> Active</span>
+              {% elif student.status == 'Suspended' %}
+              <span class="badge badge-amber"><i class="bi bi-pause-circle-fill"></i> Suspended</span>
+              {% elif student.status == 'Graduated' %}
+              <span class="badge badge-amber"><i class="bi bi-mortarboard-fill"></i> Graduated</span>
+              {% else %}
+              <span class="badge badge-red"><i class="bi bi-x-circle-fill"></i> {{ student.status }}</span>
+              {% endif %}
+            </td>
+
+            <td data-label="Actions">
+              <div class="action-cell">
+                <a href="{% url 'users:student_profile' student.id %}"
+                   class="btn btn-sm" title="Open profile" style="background:rgba(244,210,31,.12);color:var(--champagne-lt);border:1px solid rgba(244,210,31,.35)">
+                  <i class="bi bi-person-vcard"></i>
+                  <span>Profile</span>
+                </a>
+                <a href="{% url 'users:edit_student' student.id %}"
+                   class="btn btn-primary btn-sm" title="Edit Student">
+                  <i class="bi bi-pencil-fill"></i>
+                  <span>Edit</span>
+                </a>
+                <form method="post" action="{% url 'users:delete_student' student.id %}" style="display:inline"
+                      onsubmit="return confirm('Permanently delete {{ student.full_name|escapejs }} and their login? Results and attendance go with them.\n\nIf they have left, cancel and change their status to Withdrawn or Graduated on their profile instead — the record is kept.');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Delete Student">
+                    <i class="bi bi-trash3-fill"></i>
+                    <span>Delete</span>
+                  </button>
+                </form>
+              </div>
+            </td>
+
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="11">
+              <div class="empty-state">
+                <div class="empty-icon-box">
+                  <i class="bi bi-people"></i>
+                </div>
+                <h3>No Students Found</h3>
+                <p>
+                  {% if query %}
+                    Try a different search term, or clear your filters to see all students.
+                  {% else %}
+                    You haven't registered any students yet. Start building your registry.
+                  {% endif %}
+                </p>
+                <a href="{% url 'users:register_student' %}" class="btn btn-champagne">
+                  <i class="bi bi-person-plus-fill"></i>
+                  Register New Student
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if students.has_other_pages %}
+    <div class="pagination-wrap">
+      {% if students.has_previous %}
+        <a href="?q={{ query|default:'' }}&class_id={{ selected_class_id|default:'' }}&page={{ students.previous_page_number }}"
+           class="page-btn">
+          <i class="bi bi-chevron-left"></i> Prev
+        </a>
+      {% else %}
+        <span class="page-btn disabled"><i class="bi bi-chevron-left"></i> Prev</span>
+      {% endif %}
+
+      {% for num in students.paginator.page_range %}
+        {% if students.number == num %}
+          <span class="page-btn active">{{ num }}</span>
+        {% elif num > students.number|add:'-3' and num < students.number|add:'3' %}
+          <a href="?q={{ query|default:'' }}&class_id={{ selected_class_id|default:'' }}&page={{ num }}" class="page-btn">{{ num }}</a>
+        {% elif num == 1 or num == students.paginator.num_pages %}
+          <a href="?q={{ query|default:'' }}&class_id={{ selected_class_id|default:'' }}&page={{ num }}" class="page-btn">{{ num }}</a>
+          {% if num == 1 and students.number > 4 %}
+            <span class="page-dots">…</span>
+          {% elif num == students.paginator.num_pages and students.number < students.paginator.num_pages|add:'-3' %}
+            <span class="page-dots">…</span>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
+      {% if students.has_next %}
+        <a href="?q={{ query|default:'' }}&class_id={{ selected_class_id|default:'' }}&page={{ students.next_page_number }}"
+           class="page-btn">
+          Next <i class="bi bi-chevron-right"></i>
+        </a>
+      {% else %}
+        <span class="page-btn disabled">Next <i class="bi bi-chevron-right"></i></span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div><!-- /table-panel -->
+</div><!-- /students-wrap -->
+
+<script>
+/* ── Copy password ── */
+function copyPassword(elementId) {
+  const el = document.getElementById(elementId);
+  const text = el.querySelector('.pass-text').textContent.trim();
+  if (text === 'N/A') { alert('No password to copy.'); return; }
+
+  navigator.clipboard.writeText(text).then(() => {
+    const icon = el.querySelector('.copy-btn i');
+    icon.className = 'bi bi-check-lg';
+    icon.style.color = 'var(--green)';
+    setTimeout(() => {
+      icon.className = 'bi bi-copy';
+      icon.style.color = '';
+    }, 2000);
+  }).catch(() => alert('Failed to copy.'));
+}
+
+/* ── Stats from DOM ── */
+document.addEventListener('DOMContentLoaded', () => {
+  const rows = document.querySelectorAll('#studentsTable tbody tr[data-status]');
+  let active = 0, inactive = 0;
+  const classes = new Set();
+
+  rows.forEach(row => {
+    row.getAttribute('data-status') === 'ACTIVE' ? active++ : inactive++;
+    const cls = row.querySelector('td:nth-child(4)');
+    if (cls) {
+      const name = cls.textContent.trim();
+      if (name && name !== 'Unassigned') classes.add(name);
+    }
+  });
+
+  document.getElementById('activeStudents').textContent   = active;
+  document.getElementById('inactiveStudents').textContent = inactive;
+  document.getElementById('totalClasses').textContent     = classes.size || '—';
+});
+
+/* ── Print helpers ── */
+window.onbeforeprint = () => {
+  document.querySelectorAll('.header-actions,.filter-panel,.table-header-actions,.action-cell,.pagination-wrap')
+    .forEach(el => el.style.display = 'none');
+};
+window.onafterprint = () => {
+  document.querySelectorAll('.header-actions,.filter-panel,.table-header-actions,.action-cell,.pagination-wrap')
+    .forEach(el => el.style.display = '');
+};
+</script>
+
+{% if can_bulk_edit %}
+<style>
+  .bulk-bar{position:sticky;top:.6rem;z-index:30;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;padding:.65rem .8rem;margin-bottom:.8rem;border-radius:14px;border:1px solid rgba(244,210,31,.45);background:rgba(20,18,14,.92);backdrop-filter:blur(8px);box-shadow:0 18px 40px -24px rgba(0,0,0,.9);animation:bbIn .25s ease}
+  .bulk-bar[hidden]{display:none}
+  @keyframes bbIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .bulk-bar select,.bulk-bar input{padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.35);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem}
+  .bulk-bar input[hidden]{display:none}
+  .bulk-count{color:var(--slate2);font-size:.84rem;margin-right:.3rem}
+  .bulk-count b{color:var(--champagne-lt)}
+  tr.picked td{background:rgba(244,210,31,.06)}
+</style>
+<script>
+(function () {
+  var form = document.getElementById('bulkForm'); if (!form) return;
+  var picks = Array.prototype.slice.call(document.querySelectorAll('.bulk-pick'));
+  var all = document.getElementById('bulkAll'), n = document.getElementById('bulkN');
+  var action = document.getElementById('bulkAction'), value = document.getElementById('bulkValue');
+  var reason = document.getElementById('bulkReason'), tpl = document.getElementById('bulkOptions');
+  function sync() {
+    var c = picks.filter(function (p) { return p.checked; }).length;
+    n.textContent = c; form.hidden = c === 0;
+    picks.forEach(function (p) { p.closest('tr').classList.toggle('picked', p.checked); });
+    if (all) all.checked = c > 0 && c === picks.length;
+  }
+  picks.forEach(function (p) { p.addEventListener('change', sync); });
+  if (all) all.addEventListener('change', function () { picks.forEach(function (p) { p.checked = all.checked; }); sync(); });
+  document.getElementById('bulkClear').addEventListener('click', function () { picks.forEach(function (p) { p.checked = false; }); sync(); });
+  action.addEventListener('change', function () {
+    value.innerHTML = '<option value="">—</option>';
+    var group = tpl.content.querySelector('optgroup[data-for="' + action.value + '"]');
+    if (group) Array.prototype.forEach.call(group.children, function (o) { value.appendChild(o.cloneNode(true)); });
+    reason.hidden = action.value !== 'status';
+  });
+  form.addEventListener('submit', function (e) {
+    var c = n.textContent, label = action.options[action.selectedIndex].text,
+        target = value.options[value.selectedIndex] ? value.options[value.selectedIndex].text : '';
+    if (!confirm(label + ': ' + target + ' — for ' + c + ' student(s)?')) e.preventDefault();
+  });
+  sync();
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Attendance certificate{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cert-opts{display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end}
+  .cert-opts input{padding:.55rem .75rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .cert-opts label{font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem}
+  .cert{max-width:200mm;margin:1rem auto 0;background:#fff;color:#1c1917;padding:18mm 16mm;border-radius:6px;font-family:'Outfit',system-ui,sans-serif;position:relative;box-shadow:0 30px 60px -40px rgba(0,0,0,.9)}
+  .cert *{color:#1c1917}
+  .cert:before{content:'';position:absolute;inset:6mm;border:2px solid #f4d21f;border-radius:4px;pointer-events:none}
+  .cert h1{font-family:'Cormorant Garamond',serif;text-align:center;font-size:30px;margin:0;color:#1c1917}
+  .cert .sch{text-align:center;font-weight:800;letter-spacing:.06em;font-size:15px}
+  .cert .addr{text-align:center;font-size:11px;color:#57534e!important;margin-bottom:6mm}
+  .cert p{font-size:13.5px;line-height:1.7;margin:4mm 0}
+  .cert table{width:100%;border-collapse:collapse;margin:5mm 0;font-size:13px}
+  .cert td{border:1px solid #d6d3d1!important;padding:6px 9px!important;background:none!important}
+  .cert td:first-child{width:45%;color:#57534e!important}
+  .cert .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12mm}
+  .cert .sig{border-top:1px solid #57534e;width:60mm;text-align:center;font-size:11px;padding-top:2px}
+  .cert .ref{font-size:9px;color:#78716c!important;word-break:break-all;max-width:110mm}
+  @media print{body *{visibility:hidden!important}.cert,.cert *{visibility:visible!important}.cert{position:absolute;left:0;top:0;margin:0;box-shadow:none;max-width:none;width:100%}@page{size:A4;margin:10mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Attendance <em>certificate</em></h1>
+  <p class="fin-sub">{{ student.full_name }} — for a scholarship, an embassy or another school. Anyone can check it is genuine by scanning the code.</p>
+</div>{% if cert %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>{% endif %}</div>
+<form method="get" class="panel"><div class="panel-b cert-opts">
+  <div><label>From</label><input type="date" name="start" value="{{ start|date:'Y-m-d' }}"></div>
+  <div><label>To</label><input type="date" name="end" value="{{ end|date:'Y-m-d' }}"></div>
+  <div style="flex:1 1 240px"><label>Purpose (printed on it)</label><input name="purpose" value="{{ purpose }}" maxlength="120" placeholder="UK student visa application" style="width:100%"></div>
+  <button class="fin-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Update</button>
+</div></form>
+{% if problem %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>{{ problem }}</p></div></div>{% endif %}
+{% if cert %}
+<div class="cert">
+  <div class="sch">{{ school.name|upper }}</div>
+  <div class="addr">{{ school.address|default:"" }}{% if school.phone %} · {{ school.phone }}{% endif %}{% if school.email %} · {{ school.email }}{% endif %}</div>
+  <h1>Certificate of Attendance</h1>
+  <p>This is to certify that <b>{{ student.full_name }}</b> (admission number {{ student.admission_number }}){% if student.class_assigned %}, a student in <b>{{ student.class_assigned.name }}</b>,{% endif %} attended school as recorded below{% if cert.purpose %}, for the purpose of: <b>{{ cert.purpose }}</b>{% endif %}.</p>
+  <table>
+    <tr><td>Period</td><td>{{ cert.start|date:"j F Y" }} – {{ cert.end|date:"j F Y" }}</td></tr>
+    <tr><td>School days recorded</td><td>{{ cert.days }}</td></tr>
+    <tr><td>Days present</td><td><b>{{ cert.present }}</b></td></tr>
+    <tr><td>Days absent</td><td>{{ cert.absent }}{% if cert.excused %} ({{ cert.excused }} excused){% endif %}</td></tr>
+    <tr><td>Attendance rate</td><td><b>{{ cert.rate }}%</b></td></tr>
+  </table>
+  <p>Issued on {{ cert.issued_on|date:"j F Y" }}.</p>
+  <div class="foot">
+    <div><div class="sig">Head of School — signature and stamp</div></div>
+    <div style="text-align:right"><img src="{% url 'users:certificate_qr' cert.reference %}" alt="" style="width:26mm;height:26mm"><div class="ref">Scan to check this certificate<br>on the school's website</div></div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

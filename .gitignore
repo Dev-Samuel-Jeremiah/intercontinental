@@ -1,0 +1,42 @@
+# ── Secrets ── never commit these
+.env
+.env.*
+!.env.example
+
+# ── Database & backups ──
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+backups/
+*.sql
+*.dump
+
+# ── Uploaded and generated files ──
+staticfiles/
+mediafiles/
+private_media/
+student_passports/
+media/
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+venv/
+.venv/
+env/
+
+# ── Editors & OS ──
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ── Logs ──
+*.log
+logs/

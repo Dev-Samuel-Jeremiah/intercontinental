@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% load humanize %}
+{% block title %}Lost ID cards{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Lost ID <em>cards</em></h1>
+  <p class="fin-sub">A lost card is switched off at once, so nobody can use it at the gate. Issuing a new one gives it a fresh QR code. Replacement fee: ₦{{ fee|floatformat:0|intcomma }}.</p>
+</div>{% if can_manage %}<a class="fin-btn" href="{% url 'safety:settings' %}"><i class="bi bi-sliders"></i> Fee &amp; settings</a>{% endif %}</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-octagon"></i> Report a lost card</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="report">
+      <div><label>Student</label><select name="student_id" required><option value="">— choose —</option>{% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div>
+      <div><label>Note</label><input name="note" maxlength="200" placeholder="Lost on the school bus"></div>
+      <button class="fin-btn fin-btn-danger" type="submit"><i class="bi bi-slash-circle"></i> Switch the card off</button>
+    </form>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-ul"></i> Reports</h3></div>
+    <div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for r in reports %}
+      <tr><td style="white-space:nowrap">{{ r.created_at|date:"j M Y" }}</td>
+        <td><b>{{ r.card.holder_name }}</b>{% if r.note %}<br><span class="hint">{{ r.note }}</span>{% endif %}</td>
+        <td>{% if r.status == 'REPORTED' %}<span class="chip red">switched off</span>{% else %}<span class="chip green">new card {{ r.reissued_at|date:"j M" }}</span><br><span class="hint">fee: {{ r.get_fee_status_display|lower }}</span>{% endif %}</td>
+        <td style="white-space:nowrap">
+          {% if r.status == 'REPORTED' and can_manage %}
+          <form method="post" style="display:flex;gap:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="reissue"><input type="hidden" name="report_id" value="{{ r.id }}">
+            <select name="fee_mode" style="padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem">
+              <option value="WALLET">₦{{ r.fee|floatformat:0|intcomma }} from wallet</option><option value="CASH">Paid at the office</option><option value="OWED">Owed</option><option value="WAIVED">Waive the fee</option></select>
+            <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Issue new card</button></form>
+          {% elif r.fee_status == 'OWED' and can_manage %}
+          <form method="post">{% csrf_token %}<input type="hidden" name="action" value="fee_paid"><input type="hidden" name="report_id" value="{{ r.id }}"><button class="fin-btn fin-btn-sm" type="submit">Fee paid</button></form>
+          {% endif %}
+        </td></tr>
+      {% empty %}<tr><td class="empty"><i class="bi bi-person-badge"></i><p>No lost cards reported.</p></td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+{% endblock %}

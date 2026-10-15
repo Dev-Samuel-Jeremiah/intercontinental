@@ -1,0 +1,45 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Seating — {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .hallpick{display:flex;gap:.5rem;flex-wrap:wrap}
+  .hallpick label{display:flex;gap:.45rem;align-items:center;padding:.5rem .75rem;border-radius:11px;border:1px solid var(--rim2);cursor:pointer;font-size:.86rem}
+  .hallpick label:has(input:checked){border-color:var(--champagne);background:var(--champagne-dim)}
+  .hallpick input{width:auto}
+  .sheet{background:#fff;color:#1c1917;border-radius:6px;padding:10mm;margin:0 auto 1rem;max-width:277mm;font-family:Outfit,system-ui,sans-serif}
+  .sheet *{color:#1c1917}
+  .sheet h2{margin:0 0 1mm;font-size:18px}
+  .front{text-align:center;font-size:11px;letter-spacing:.2em;border:1px dashed #999;padding:1.5mm;margin:3mm 0;border-radius:4px}
+  .seats{display:grid;gap:2mm}
+  .st{border:1px solid #f4d21f;border-radius:4px;padding:1.5mm;min-height:15mm;font-size:9.5px;line-height:1.25}
+  .st b{display:block;font-size:10.5px}
+  .st .lb{float:right;font-weight:800;color:#0a1f44}
+  .st.empty{border-style:dashed;border-color:#ddd}
+  .door{columns:3;font-size:11px;column-gap:8mm}
+  .door div{break-inside:avoid;padding:.6mm 0;border-bottom:1px dotted #ccc}
+  @media print{body *{visibility:hidden!important}.sheets,.sheets *{visibility:visible!important}.sheets{position:absolute;left:0;top:0;width:100%}.sheet{page-break-after:always;max-width:none;margin:0;padding:0}@page{size:A4 landscape;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Seating plan</div>
+  <h1 class="fin-title">{{ exam.title }}</h1>
+  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, H:i" }} · {{ candidates }} candidate{{ candidates|pluralize }}. Neighbours are kept from different classes wherever possible.</p>
+</div><div style="display:flex;gap:.4rem">{% if data.total %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print charts &amp; door list</button>{% endif %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:halls' %}"><i class="bi bi-building"></i> Halls</a></div></div>
+{% include "cbt/_bank_msgs.html" %}
+<div class="panel"><div class="panel-b">
+  {% if halls %}<form method="post">{% csrf_token %}
+    <div class="hallpick">{% for h in halls %}<label><input type="checkbox" name="halls" value="{{ h.id }}" {% if h.id in used or not used %}checked{% endif %}> {{ h.name }} <span class="hint">{{ h.capacity }} seats</span></label>{% endfor %}</div>
+    <div style="display:flex;gap:.5rem;margin-top:.8rem;flex-wrap:wrap;align-items:center"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"><i class="bi bi-grid-3x3-gap"></i> {% if data.total %}Re-seat{% else %}Seat candidates{% endif %}</button>
+      {% if data.total %}<button class="fin-btn fin-btn-sm" name="action" value="clear">Clear plan</button>
+      <span class="hint">{{ data.total }} seated · {% if same_class %}<span style="color:var(--amber)">{{ same_class }} neighbouring pair{{ same_class|pluralize }} from the same class (unavoidable with these numbers)</span>{% else %}<span style="color:var(--green)">no neighbours from the same class</span>{% endif %}</span>{% endif %}</div>
+  </form>{% else %}<p class="hint" style="margin:0">Add your exam halls first. <a href="{% url 'cbt:halls' %}" style="color:var(--champagne-lt)">Add halls</a></p>{% endif %}
+</div></div>
+{% if data.total %}<div class="sheets">
+  {% for p in data.plans %}<div class="sheet"><h2>{{ school.name }} — {{ p.hall.name }}</h2><div style="font-size:12px">{{ exam.title }} · {{ exam.subject.name }} · {{ exam.start_time|date:"l j F Y, H:i" }} · {{ p.count }} candidates</div>
+    <div class="front">FRONT · INVIGILATOR</div>
+    <div class="seats" style="grid-template-columns:repeat({{ p.hall.columns }},1fr)">{% for row in p.grid %}{% for s in row %}{% if s %}<div class="st"><span class="lb">{{ s.label }}</span><b>{{ s.student.full_name }}</b>{{ s.student.admission_number }}<br><span style="color:#78716c">{{ s.student.class_assigned.name }}</span></div>{% else %}<div class="st empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
+  </div>{% endfor %}
+  <div class="sheet"><h2>Door list — {{ exam.title }}</h2><div style="font-size:12px;margin-bottom:3mm">Find your name to see your hall and seat.</div>
+    <div class="door">{% for s in data.door %}<div><b>{{ s.student.full_name }}</b> — {{ s.hall.name }}, seat {{ s.label }}</div>{% endfor %}</div></div>
+</div>{% endif %}
+{% endblock %}

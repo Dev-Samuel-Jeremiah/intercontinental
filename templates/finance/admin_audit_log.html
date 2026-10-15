@@ -1,0 +1,536 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1450px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+/* Header */
+.page-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-bottom:2rem;
+  padding-bottom:1.25rem;
+  border-bottom:1px solid var(--rim);
+  position:relative;
+}
+
+.page-head::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  margin-bottom:.9rem;
+  color:var(--champagne);
+  text-transform:uppercase;
+  letter-spacing:2px;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.eyebrow::before{
+  content:"";
+  width:34px;
+  height:1px;
+  background:var(--champagne);
+  opacity:.7;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+  font-weight:600;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  padding:.75rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.82rem;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* Panel */
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    var(--rim3),
+    transparent
+  );
+}
+
+.panel:nth-child(2){
+  animation-delay:.08s;
+}
+
+.panel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+  padding:1.15rem 1.4rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.panel-head-left{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.2);
+  color:var(--champagne);
+  font-size:.95rem;
+}
+
+.panel-head h3{
+  margin:0;
+  font-size:1rem;
+  font-weight:600;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+/* Button */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.82rem 1rem;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.84rem;
+  font-weight:600;
+  transition:.22s ease;
+  border:1px solid var(--rim2);
+  cursor:pointer;
+  font-family:'Outfit',sans-serif;
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+  border:none;
+}
+
+.btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.btn-ghost{
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+/* Table */
+.table-wrap{
+  overflow-x:auto;
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl thead th{
+  padding:1rem 1.4rem;
+  text-align:left;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-size:.72rem;
+  color:var(--slate2);
+  font-weight:700;
+  background:rgba(255,255,255,.015);
+  white-space:nowrap;
+}
+
+.tbl tbody tr{
+  border-top:1px solid var(--rim);
+  transition:.18s ease;
+}
+
+.tbl tbody tr:hover{
+  background:rgba(255,255,255,.025);
+}
+
+.tbl td{
+  padding:1rem 1.4rem;
+  vertical-align:middle;
+  color:var(--white);
+  font-size:.88rem;
+}
+
+.log-user{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.avatar{
+  width:38px;
+  height:38px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  color:#0a1f44;
+  font-size:.78rem;
+  font-weight:700;
+  letter-spacing:.5px;
+  flex-shrink:0;
+}
+
+.user-meta{
+  display:flex;
+  flex-direction:column;
+  gap:.18rem;
+}
+
+.user-meta strong{
+  color:var(--white);
+  font-weight:600;
+}
+
+.user-meta span{
+  color:var(--slate);
+  font-size:.77rem;
+}
+
+.mono{
+  font-family:monospace;
+  font-size:.78rem;
+  color:var(--slate2);
+}
+
+/* Badges */
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.38rem;
+  padding:.45rem .8rem;
+  border-radius:999px;
+  border:1px solid;
+  font-size:.74rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+/* Empty State */
+.empty-state{
+  padding:4rem 1.5rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  margin:0 auto 1rem;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--champagne);
+  font-size:1.7rem;
+}
+
+.empty-state h4{
+  margin:0 0 .4rem;
+  font-size:1rem;
+  color:var(--white);
+  font-weight:600;
+}
+
+.empty-state p{
+  margin:0;
+  color:var(--slate2);
+  font-size:.9rem;
+}
+
+/* Animation */
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@media (max-width:768px){
+  .your-wrap{
+    padding:1.3rem 1rem 3rem;
+  }
+
+  .page-title{
+    font-size:2.25rem;
+  }
+
+  .panel-head{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .tbl td,
+  .tbl th{
+    padding:.9rem 1rem;
+  }
+}
+</style>
+
+<div class="your-wrap">
+
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">
+        Finance Records
+      </div>
+
+      <h1 class="page-title">
+        Audit <em>Trail</em>
+      </h1>
+    </div>
+
+    <div class="context-badge">
+      <i class="bi bi-shield-check"></i>
+      {{ logs|length }} Record{{ logs|length|pluralize }}
+    </div>
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-head">
+      <div class="panel-head-left">
+        <div class="icon-badge">
+          <i class="bi bi-clock-history"></i>
+        </div>
+
+        <h3>Finance Audit Activities</h3>
+      </div>
+
+      <a href="{% url 'finance:admin_dashboard' %}" class="btn btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+      </a>
+    </div>
+
+    <div class="table-wrap">
+
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th>Date / Time</th>
+            <th>Action</th>
+            <th>Performed By</th>
+            <th>Description</th>
+            <th>IP Address</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for log in logs %}
+          <tr>
+
+            <td style="white-space:nowrap;">
+              <div class="user-meta">
+                <strong>{{ log.created_at|date:"d M Y" }}</strong>
+                <span>{{ log.created_at|date:"H:i" }}</span>
+              </div>
+            </td>
+
+            <td>
+              {% if 'APPROVE' in log.action or 'CREDIT' in log.action or 'PAY' in log.action %}
+                <span class="badge badge-green">
+                  <i class="bi bi-check-circle-fill"></i>
+                  {{ log.get_action_display }}
+                </span>
+
+              {% elif 'REJECT' in log.action or 'DEBIT' in log.action %}
+                <span class="badge badge-red">
+                  <i class="bi bi-x-circle-fill"></i>
+                  {{ log.get_action_display }}
+                </span>
+
+              {% elif 'WAIVE' in log.action %}
+                <span class="badge badge-blue">
+                  <i class="bi bi-stars"></i>
+                  {{ log.get_action_display }}
+                </span>
+
+              {% else %}
+                <span class="badge badge-amber">
+                  <i class="bi bi-exclamation-circle-fill"></i>
+                  {{ log.get_action_display }}
+                </span>
+              {% endif %}
+            </td>
+
+            <td>
+              <div class="log-user">
+
+                <div class="avatar">
+                  {{ log.performed_by.username|default:"SY"|slice:":2"|upper }}
+                </div>
+
+                <div class="user-meta">
+                  <strong>
+                    {{ log.performed_by.get_full_name|default:log.performed_by.username|default:"System" }}
+                  </strong>
+
+                  <span>Finance Operator</span>
+                </div>
+
+              </div>
+            </td>
+
+            <td style="max-width:430px;">
+              {{ log.description }}
+            </td>
+
+            <td>
+              <span class="mono">
+                {{ log.ip_address|default:"—" }}
+              </span>
+            </td>
+
+          </tr>
+          {% empty %}
+
+          <tr>
+            <td colspan="5">
+
+              <div class="empty-state">
+
+                <div class="empty-icon">
+                  <i class="bi bi-inboxes"></i>
+                </div>
+
+                <h4>No Audit Records</h4>
+
+                <p>
+                  Finance activity logs will appear here once actions are performed.
+                </p>
+
+              </div>
+
+            </td>
+          </tr>
+
+          {% endfor %}
+
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}

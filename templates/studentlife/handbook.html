@@ -1,0 +1,13 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Student handbook{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">School</div>
+  <h1 class="fin-title">Student <em>handbook</em></h1>
+  <p class="fin-sub">Version {{ version }}.{% if acked %} You have read this version — thank you.{% endif %}</p>
+</div>{% if admin %}<a class="fin-btn" href="{% url 'studentlife:handbook_edit' %}">Edit</a>{% endif %}</div>
+<form method="get" class="fin-form" style="display:flex;gap:.5rem;margin-bottom:1rem"><input name="q" value="{{ q }}" placeholder="Search the handbook"><button class="fin-btn" type="submit">Search</button></form>
+{% for s in sections %}<div class="panel" style="margin-bottom:.8rem"><div class="panel-h"><h3>{{ s.title }}</h3></div><div class="panel-b"><p style="margin:0">{{ s.body|linebreaksbr }}</p></div></div>{% empty %}<p class="empty">Nothing found.</p>{% endfor %}
+{% if not acked %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="ack"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> I have read and understood the handbook</button></form>{% endif %}
+{% endblock %}

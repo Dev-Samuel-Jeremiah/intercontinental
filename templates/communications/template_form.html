@@ -1,0 +1,91 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if tpl %}Edit Template{% else %}New Template{% endif %}{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fg label{font-size:.77rem;font-weight:700;color:var(--slate2);}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;font-family:inherit;width:100%;box-sizing:border-box;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--champagne);outline:none;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;border-radius:9px;font-size:.83rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.ph-badge{display:inline-flex;padding:2px 8px;border-radius:6px;background:var(--blue-dim);color:var(--blue);font-size:.72rem;font-weight:700;border:1px solid var(--blue-border);margin:2px;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">
+    {% if tpl %}Edit: {{ tpl.name }}{% else %}New Message Template{% endif %}
+  </h2>
+  </div>
+  <a href="{% url 'communications:template_list' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Back</a>
+</div>
+
+<!-- Placeholder reference -->
+<div style="background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:.82rem;color:var(--blue);">
+  <strong><i class="bi bi-info-circle"></i> Available Placeholders:</strong><br>
+  <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;">
+    <span class="ph-badge">{{student_name}}</span>
+    <span class="ph-badge">{{parent_name}}</span>
+    <span class="ph-badge">{{class_name}}</span>
+    <span class="ph-badge">{{admission_no}}</span>
+    <span class="ph-badge">{{outstanding_fee}}</span>
+    <span class="ph-badge">{{wallet_balance}}</span>
+    <span class="ph-badge">{{school_name}}</span>
+    <span class="ph-badge">{{school_phone}}</span>
+    <span class="ph-badge">{{message}}</span>
+    <span class="ph-badge">{{title}}</span>
+  </div>
+</div>
+
+<div class="card" style="max-width:860px;">
+  <form method="POST">
+    {% csrf_token %}
+
+    <div class="fg">
+      <label>Template Name *</label>
+      <input name="name" value="{% if tpl %}{{ tpl.name }}{% endif %}" required
+             placeholder="e.g. End of Term Fee Reminder">
+    </div>
+
+    <div class="fg">
+      <label>Category</label>
+      <select name="category">
+        {% for val, lbl in categories %}
+        <option value="{{ val }}"
+          {% if tpl %}{% if tpl.category == val %}selected{% endif %}{% endif %}>
+          {{ lbl }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="fg">
+      <label>Email Subject *</label>
+      <input name="subject" value="{% if tpl %}{{ tpl.subject }}{% endif %}" required
+             placeholder="Important notice from {{ tenant.name }}">
+    </div>
+
+    <div class="fg">
+      <label>Email Body (HTML supported) *</label>
+      <textarea name="body_email" rows="14" required
+                placeholder="&lt;html&gt;&lt;body&gt;&#10;&lt;p&gt;Dear {{parent_name}},&lt;/p&gt;&#10;&lt;p&gt;Your child &lt;strong&gt;{{student_name}}&lt;/strong&gt; ({{class_name}})...&lt;/p&gt;&#10;&lt;p&gt;Regards,&lt;br&gt;&lt;strong&gt;{{school_name}}&lt;/strong&gt;&lt;/p&gt;&#10;&lt;/body&gt;&lt;/html&gt;">{% if tpl %}{{ tpl.body_email }}{% endif %}</textarea>
+    </div>
+
+    <div class="fg">
+      <label>SMS Message (max 800 chars) *</label>
+      <textarea name="body_sms" rows="4" maxlength="800" required
+                placeholder="Dear {{parent_name}}, your child {{student_name}} ({{class_name}}) ... {{ tenant.name }}.">{% if tpl %}{{ tpl.body_sms }}{% endif %}</textarea>
+      <div style="font-size:.73rem;color:var(--slate2);">Keep SMS concise — standard SMS is 160 chars. Use placeholders from the list above.</div>
+    </div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+      <button type="submit" class="btn btn-g"><i class="bi bi-save"></i> Save Template</button>
+      <a href="{% url 'communications:template_list' %}" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

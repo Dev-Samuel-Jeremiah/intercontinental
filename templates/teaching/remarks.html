@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Report remarks — {{ cls.name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'teaching:comments' %}" style="color:inherit">Comment bank</a></div>
+  <h1 class="fin-title">{{ cls.name }} — {% if subject %}{{ subject.name }}{% else %}class teacher's remark{% endif %}</h1>
+  <p class="fin-sub">{{ term }} {{ term.session }}. A comment band is suggested from each student's score. Choose a comment, edit if you like, then save.</p>
+</div><button class="fin-btn" type="button" onclick="fillSuggested()">Fill empty boxes with suggestions</button></div>
+{% include "teaching/_nav.html" %}
+<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="class" value="{{ cls.pk }}">{% if subject %}<input type="hidden" name="subject" value="{{ subject.pk }}">{% endif %}
+  <table class="tbl" data-no-export><thead><tr><th>Student</th><th>Score</th><th>Comment</th></tr></thead><tbody>
+  {% for r in rows %}<tr data-band="{{ r.band|default:'' }}" data-first="{{ r.student.full_name|truncatewords:1|cut:' …' }}">
+    <td class="name">{{ r.student.full_name }}</td><td>{% if r.total is not None %}{{ r.total|floatformat:0 }}{% else %}—{% endif %}{% if r.band %}<br><small class="hint">{{ r.band|lower }}</small>{% endif %}</td>
+    <td><select class="pickc" style="margin-bottom:.3rem"><option value="">Choose a comment…</option>{% for b, label in bands %}<optgroup label="{{ label }}">{% for c in bank %}{% if c.band == b %}<option value="{{ c.pk }}">{{ c.text|truncatechars:70 }}</option>{% endif %}{% endfor %}</optgroup>{% endfor %}</select>
+      <input type="hidden" name="t_{{ r.student.pk }}" class="tpl"><textarea name="r_{{ r.student.pk }}" rows="2" maxlength="255" class="txt">{{ r.remark }}</textarea></td></tr>{% endfor %}
+  </tbody></table>
+  <button class="fin-btn fin-btn-gold" type="submit">Save remarks</button>
+</form>
+<script>
+var BANK = {{ bank_json|safe }};
+function render(text, first){ return text.split('{first}').join(first); }
+document.querySelectorAll('tr[data-first]').forEach(function(row){
+  var sel = row.querySelector('.pickc'), txt = row.querySelector('.txt'), tpl = row.querySelector('.tpl');
+  if(!sel) return;
+  sel.addEventListener('change', function(){
+    var c = BANK.find(function(x){ return String(x.id) === sel.value; });
+    if(c){ txt.value = render(c.text, row.dataset.first); tpl.value = c.id; }
+  });
+});
+function fillSuggested(){
+  document.querySelectorAll('tr[data-first]').forEach(function(row){
+    var txt = row.querySelector('.txt'), tpl = row.querySelector('.tpl');
+    if(!txt || txt.value.trim() || !row.dataset.band) return;
+    var c = BANK.find(function(x){ return x.band === row.dataset.band; });
+    if(c){ txt.value = render(c.text, row.dataset.first); tpl.value = c.id; }
+  });
+}
+</script>
+{% endblock %}

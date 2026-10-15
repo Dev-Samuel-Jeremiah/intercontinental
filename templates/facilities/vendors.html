@@ -1,0 +1,24 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Vendors{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Buying</div>
+  <h1 class="fin-title"><em>Vendors</em></h1>
+  <p class="fin-sub">Suppliers, their contracts and how well they deliver. Ratings come from completed orders.</p>
+</div></div>
+{% include "facilities/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+      {% for v in rows %}<tr{% if not v.active %} style="opacity:.55"{% endif %}><td class="name"><a href="{% url 'facilities:vendor' v.pk %}">{{ v.name }}</a><br><small class="hint">{{ v.supplies }}{% if v.phone %} · {{ v.phone }}{% endif %}</small></td><td>{% if v.score %}<span class="chip gold">★ {{ v.score }}</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No vendors yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if expiring %}<div class="panel"><div class="panel-h"><h3>Contracts ending soon</h3></div><div class="panel-b">{% for c in expiring %}<p style="margin:.15rem 0">{{ c.vendor }} — {{ c.title }} · {{ c.ends|date:"j M Y" }}</p>{% endfor %}</div></div>{% endif %}
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Add a vendor</h3>
+    {% include "facilities/_vendor_form.html" %}
+    <button class="fin-btn fin-btn-gold" type="submit">Add</button>
+  </form>
+</div>
+{% endblock %}

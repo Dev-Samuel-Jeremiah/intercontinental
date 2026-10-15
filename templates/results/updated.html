@@ -1,0 +1,354 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}Term Results{% endblock %}
+
+{% block content %}
+<style>
+:root{
+  --secondary: #e9eef5;
+  --text-dark: #1a1a1a;
+  --highlight: #2575fc;
+}
+
+body {
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+    background: #f0f2f5;
+    color: var(--text-dark);
+}
+
+/* ================= REPORT CARD ================= */
+.report-card {
+    position: relative;
+    max-width: 1024px;
+    margin: 30px auto;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease forwards;
+    opacity: 0;
+}
+
+/* ================= WATERMARK ================= */
+.report-card .watermark-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-around;
+    justify-content: space-around;
+}
+
+.report-card .watermark-text span {
+    color: rgba(31,58,95,0.03);
+    font-size: 32px;
+    font-weight: 700;
+    transform: rotate(-30deg);
+    margin: 60px;
+    white-space: nowrap;
+}
+
+/* ================= HEADER ================= */
+.header {
+    display: grid;
+    grid-template-columns: 160px auto 130px;
+    align-items: center;
+    border-bottom: 3px solid var(--primary);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.header img.logo { width: 130px; height: auto; }
+
+.header .title { text-align: center; }
+
+.header .title h2 {
+    margin: 0;
+    font-size: 26px;
+    color: var(--primary);
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.header .title p {
+    margin: 3px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.passport {
+    width: 110px;
+    height: 140px;
+    border: 2px solid var(--border);
+    object-fit: cover;
+    background: #fafafa;
+    border-radius: 6px;
+}
+
+/* ================= TABLES ================= */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+}
+
+td, th { border: 1px solid var(--border); padding: 8px; }
+
+.info-table td.label {
+    font-weight: 600;
+    background: var(--secondary);
+    color: var(--primary);
+    width: 15%;
+}
+
+.info-table td.value { width: 18%; background: #fff; }
+
+.result-table { margin-top: 16px; border-radius: 8px; overflow: hidden; }
+
+.result-table th {
+    background: linear-gradient(90deg, #ffffffff, #eaedf1ff);
+    color: #000000ff;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px;
+}
+
+.result-table td {
+    text-align: center;
+    background: #f3ececff;
+    padding: 8px;
+    transition: background 0.3s ease;
+}
+
+.result-table tr:nth-child(even) td { background: var(--accent); }
+
+.result-table td.subject { text-align: left; font-weight: 500; }
+
+.summary-table { margin-top: 16px; border-radius: 6px; overflow: hidden; }
+
+.summary-table td {
+    font-weight: 600;
+    background: var(--secondary);
+    color: var(--primary);
+    text-align: center;
+    padding: 10px;
+}
+
+/* ================= REMARKS ================= */
+.remarks { margin-top: 20px; font-size: 14px; }
+
+.remarks strong { color: var(--primary); }
+
+.signature-box {
+    margin-top: 12px;
+    text-align: center;
+    font-weight: 600;
+    color: #444;
+}
+
+.signature-line {
+    border-top: 2px solid var(--primary);
+    margin: 35px auto 6px;
+    width: 260px;
+}
+
+/* ================= QR CODE ================= */
+.qr-code {
+    width: 90px;
+    height: 90px;
+    border: 1px solid var(--border);
+    display: inline-block;
+    text-align: center;
+    font-size: 10px;
+    color: #888;
+    line-height: 90px;
+    margin-top: 10px;
+    border-radius: 6px;
+}
+
+/* ================= ANIMATIONS ================= */
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= RESPONSIVE ================= */
+@media screen and (max-width: 768px) {
+    .report-card { padding: 16px; }
+    .header { grid-template-columns: 100px auto 100px; }
+    .header .title h2 { font-size: 20px; }
+    .passport { width: 90px; height: 120px; }
+    table { font-size: 12px; }
+}
+
+@media print {
+    body { background: #fff; }
+    .report-card { box-shadow: none; border: 1px solid #000; }
+}
+</style>
+
+<h2 class="mb-4 text-center">Filter Term Results</h2>
+
+<form method="GET" class="row g-3 mb-4">
+    <div class="col-md-3">
+        <select name="class" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Select Class --</option>
+            {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if cls.id|stringformat:"s" == selected_class %}selected{% endif %}>
+                    {{ cls.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="student" class="form-select">
+            <option value="">-- Select Student --</option>
+            {% for student in students %}
+                <option value="{{ student.id }}" {% if student.id|stringformat:"s" == selected_student %}selected{% endif %}>
+                    {{ student.full_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="term" class="form-select">
+            <option value="">-- Select Term --</option>
+            {% for term in terms %}
+                <option value="{{ term.id }}" {% if term.id|stringformat:"s" == selected_term %}selected{% endif %}>
+                    {{ term.name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3 d-grid">
+        <button class="btn btn-primary">Filter</button>
+    </div>
+</form>
+
+<div class="report-card">
+
+    <!-- WATERMARK -->
+    <div class="watermark-text">
+        {% for i in "0123456789012345678901234567890123456789012345678901234567890123456789"|make_list %}
+            <span>{{ tenant.name|upper }}</span>
+        {% endfor %}
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+        {% if tenant.logo %}
+            <img src="{{ tenant.logo.url }}" class="logo" alt="{{ tenant.name }}">
+        {% else %}
+            <div class="logo d-flex align-items-center justify-content-center"
+                 style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#1f3a5f,#4a90d9);
+                        color:#fff;font-weight:800;font-size:1.4rem;">
+                {{ tenant.name|slice:":2"|upper }}
+            </div>
+        {% endif %}
+        <div class="title">
+            <h2>{{ tenant.name|upper }}</h2>
+            <p>End of Term Report Sheet</p>
+            <p><strong>{{ term.name }} Term – {{ session.name }}</strong></p>
+        </div>
+        {% if student and student.passport %}
+            <img src="{{ student.passport.url }}" class="passport">
+        {% else %}
+            <div class="passport d-flex align-items-center justify-content-center">No Image</div>
+        {% endif %}
+    </div>
+
+    <!-- STUDENT INFO -->
+    <table class="info-table">
+        <tr>
+            <td class="label">NAME</td><td class="value">{{ student.full_name }}</td>
+            <td class="label">ADMISSION NO</td><td class="value">{{ student.admission_number }}</td>
+            <td class="label">SEX</td><td class="value">{{ gender }}</td>
+        </tr>
+        <tr>
+            <td class="label">CLASS</td><td class="value">{{ student.class_assigned.name }}</td>
+            <td class="label">TERM</td><td class="value">{{ term.name }}</td>
+            <td class="label">YEAR</td><td class="value">{{ session.name }}</td>
+        </tr>
+        <tr>
+            <td class="label">AGE</td><td class="value">{{ age }}</td>
+            <td class="label">CLASS AGE AVG</td><td class="value">{{ class_age_avg|default:"-" }}</td>
+            <td class="label">NO. IN CLASS</td><td class="value">{{ no_in_class }}</td>
+        </tr>
+    </table>
+
+    <!-- RESULTS -->
+    <table class="result-table">
+        <thead>
+            <tr>
+                <th>SUBJECT</th>
+                <th>EXAMS<br>70</th>
+                <th>TOTAL<br>70</th>
+                <th>PERCENT<br>(100%)</th>
+                <th>GRADE</th>
+                <th>REMARK</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tr in results %}
+            <tr>
+                <td class="subject">{{ tr.subject.name }}</td>
+                <td>{{ tr.exam_score }}</td>
+                <td>{{ tr.exam_score }}</td>
+                <td>{{ tr.total_score|floatformat:2 }}</td>
+                <td>{{ tr.grade }}</td>
+                <td>{{ tr.remark }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- SUMMARY -->
+    <table class="summary-table">
+        <tr>
+            <td>SUBJECT OFFERED</td><td>{{ results|length }}</td>
+            <td>MARK OBTAINED</td><td>{{ total_obtained }}</td>
+            <td>MARK OBTAINABLE</td><td>{{ total_obtainable }}</td>
+            <td>% OF MARK</td><td>{{ overall_percentage }}</td>
+        </tr>
+    </table>
+
+    <!-- REMARKS -->
+    <div class="remarks">
+        <table>
+            <tr>
+                <td>
+                    <strong>CLASS TEACHER'S REMARK</strong><br><br>
+                    {{ class_teacher_remark }}
+                    <div class="signature-line"></div>
+                    <div class="signature-box">Class Teacher</div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>HEAD TEACHER'S SIGNATURE</strong>
+                    <div class="signature-line"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- QR CODE -->
+    <div class="qr-code">QR CODE</div>
+
+</div>
+{% endblock %}

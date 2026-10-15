@@ -1,0 +1,538 @@
+{% extends "dashboard/base.html" %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ════════════════════════════════════════════
+   DESIGN TOKENS
+════════════════════════════════════════════ */
+/* design tokens come from dashboard/base.html */
+
+/* ════════════════════════════════════════════
+   RESET / BASE
+════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   KEYFRAME
+════════════════════════════════════════════ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════
+   PAGE WRAP
+════════════════════════════════════════════ */
+.create-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ════════════════════════════════════════════
+   PAGE HEADER
+════════════════════════════════════════════ */
+.page-header {
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+}
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--champagne);
+  margin-bottom: .85rem;
+}
+.eyebrow::before {
+  content: '';
+  display: block;
+  width: 28px;
+  height: 1px;
+  background: var(--champagne);
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--white);
+  margin-bottom: .5rem;
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+
+.page-subtitle {
+  font-size: .88rem;
+  color: var(--slate2);
+}
+
+/* ════════════════════════════════════════════
+   PANEL
+════════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease .1s both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--rim3) 0%, transparent 3%);
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.panel > * { position: relative; z-index: 1; }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+}
+
+.icon-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+}
+
+.panel-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.form-body { padding: 1.5rem; }
+
+/* ════════════════════════════════════════════
+   FORM ELEMENTS
+════════════════════════════════════════════ */
+.field-stack { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.form-group { display: flex; flex-direction: column; gap: .45rem; }
+
+.form-group label,
+.field-label {
+  font-size: .73rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--slate2);
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
+.required-star { color: var(--champagne); margin-left: .1rem; }
+
+/* Inputs, selects, textareas injected by Django form widget */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.create-wrap input[type="text"],
+.create-wrap input[type="email"],
+.create-wrap input[type="number"],
+.create-wrap input[type="datetime-local"],
+.create-wrap input[type="date"],
+.create-wrap select,
+.create-wrap textarea {
+  width: 100%;
+  padding: .65rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  font-size: .88rem;
+  transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  -webkit-appearance: none;
+  resize: vertical;
+}
+.create-wrap textarea { min-height: 120px; }
+
+.create-wrap input:focus,
+.create-wrap select:focus,
+.create-wrap textarea:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+
+.create-wrap input::placeholder,
+.create-wrap textarea::placeholder { color: var(--slate); }
+
+.create-wrap select option { background: var(--surface2); color: var(--white); }
+
+/* Row of two or three columns */
+.field-row {
+  display: flex;
+  gap: .85rem;
+  flex-wrap: wrap;
+}
+.field-row .form-group { flex: 1; min-width: 140px; }
+
+/* ════════════════════════════════════════════
+   DIVIDER
+════════════════════════════════════════════ */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: .5rem 0;
+}
+.section-divider span {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--slate);
+  white-space: nowrap;
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rim2);
+}
+
+/* ════════════════════════════════════════════
+   TOGGLE ROW (publish immediately)
+════════════════════════════════════════════ */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .9rem 1.1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.toggle-row:hover { border-color: var(--rim3); }
+
+.toggle-row input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  padding: 0 !important;
+  accent-color: var(--champagne);
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 4px !important;
+  min-height: unset !important;
+}
+
+.toggle-row label {
+  font-size: .88rem;
+  font-weight: 600;
+  color: var(--slate2);
+  cursor: pointer;
+  margin: 0;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ════════════════════════════════════════════
+   NOTIFY BOX
+════════════════════════════════════════════ */
+.notify-box {
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: 12px;
+  padding: 1.2rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+.notify-box-title {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: .02em;
+}
+
+.notify-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+.notify-toggle-row input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  padding: 0 !important;
+  accent-color: var(--green);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+  border-radius: 4px !important;
+  min-height: unset !important;
+}
+.notify-toggle-row label {
+  font-size: .85rem;
+  font-weight: 500;
+  color: var(--green);
+  cursor: pointer;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.notify-box select,
+.notify-box .form-group select {
+  border-color: var(--green-border) !important;
+  background: rgba(74,222,128,.06) !important;
+  color: var(--white) !important;
+}
+.notify-box select:focus {
+  border-color: var(--green) !important;
+  box-shadow: 0 0 0 3px rgba(74,222,128,.10) !important;
+}
+
+.notify-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  font-size: .76rem;
+  color: rgba(74,222,128,.7);
+  line-height: 1.5;
+}
+.notify-hint i { flex-shrink: 0; margin-top: .15rem; color: var(--green); }
+
+/* ════════════════════════════════════════════
+   FORM ACTIONS
+════════════════════════════════════════════ */
+.form-actions {
+  display: flex;
+  gap: .75rem;
+  justify-content: flex-end;
+  padding: 1.1rem 1.5rem;
+  border-top: 1px solid var(--rim);
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .6rem 1.35rem;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all .22s ease;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1;
+}
+.btn-champagne {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-champagne:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.36); }
+
+.btn-ghost {
+  background: var(--surface3);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+}
+.btn-ghost:hover { background: var(--rim2); color: var(--white); }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .create-wrap { padding: 1rem .9rem 2.5rem; }
+  .page-title  { font-size: 1.8rem; }
+  .form-body   { padding: 1.1rem; }
+  .field-row   { flex-direction: column; }
+  .field-row .form-group { min-width: 0; }
+  .form-actions { justify-content: stretch; }
+  .form-actions .btn { flex: 1; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .create-wrap { padding: .75rem .65rem 2rem; }
+  .page-title  { font-size: 1.55rem; }
+}
+</style>
+
+<div class="create-wrap">
+
+  <!-- ══ PAGE HEADER ══════════════════════════════ -->
+  <header class="page-header">
+    <div class="eyebrow">School Communications</div>
+    <h1 class="page-title">Create <em>Announcement</em></h1>
+    <p class="page-subtitle">Compose a notice for students, parents, or staff and choose your delivery channel.</p>
+  </header>
+
+  <!-- ══ FORM PANEL ═══════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="icon-badge" style="background:var(--blue-dim);">
+        <i class="bi bi-megaphone-fill" style="color:var(--blue);"></i>
+      </div>
+      <h3>Announcement Details</h3>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-body">
+        <div class="field-stack">
+
+          <!-- Title -->
+          <div class="form-group">
+            <label>
+              <i class="bi bi-type-h1"></i> Title
+              <span class="required-star">*</span>
+            </label>
+            {{ form.title }}
+          </div>
+
+          <!-- Message -->
+          <div class="form-group">
+            <label>
+              <i class="bi bi-chat-text-fill"></i> Message
+              <span class="required-star">*</span>
+            </label>
+            {{ form.message }}
+          </div>
+
+          <!-- Audience + Class -->
+          <div class="field-row">
+            <div class="form-group">
+              <label><i class="bi bi-people-fill"></i> Audience</label>
+              {{ form.audience }}
+            </div>
+            <div class="form-group">
+              <label><i class="bi bi-building"></i> Class <span style="color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+              {{ form.school_class }}
+            </div>
+          </div>
+
+          <!-- Term + Session + Expires -->
+          <div class="field-row">
+            <div class="form-group">
+              <label><i class="bi bi-bookmark-fill"></i> Term</label>
+              {{ form.term }}
+            </div>
+            <div class="form-group">
+              <label><i class="bi bi-calendar3"></i> Session</label>
+              {{ form.session }}
+            </div>
+            <div class="form-group">
+              <label><i class="bi bi-clock-fill"></i> Expires At</label>
+              {{ form.expires_at }}
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="section-divider"><span>Visibility</span></div>
+
+          <!-- Publish toggle -->
+          <div class="toggle-row">
+            {{ form.published }}
+            <label for="{{ form.published.id_for_label }}">
+              Publish immediately
+            </label>
+          </div>
+
+          <!-- Divider -->
+          <div class="section-divider"><span>Notifications</span></div>
+
+          <!-- Notify box -->
+          <div class="notify-box">
+            <div class="notify-box-title">
+              <i class="bi bi-envelope-fill"></i>
+              Notify Parents via Email / SMS
+            </div>
+
+            <div class="notify-toggle-row">
+              {{ form.notify_parents }}
+              <label for="{{ form.notify_parents.id_for_label }}">
+                Send email and/or SMS notification to parents when this announcement is published
+              </label>
+            </div>
+
+            <div class="form-group">
+              <label style="color:rgba(74,222,128,.8);"><i class="bi bi-broadcast"></i> Notification Channel</label>
+              {{ form.notify_channel }}
+            </div>
+
+            <div class="notify-hint">
+              <i class="bi bi-info-circle-fill"></i>
+              Parents will receive a message containing the announcement title and a preview.
+              Only parents with a valid email or phone on file will be contacted.
+              Parents who have opted out will be skipped.
+            </div>
+          </div>
+
+        </div><!-- /field-stack -->
+      </div><!-- /form-body -->
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <a href="{% url 'announcements:announcement_list' %}" class="btn btn-ghost">
+          <i class="bi bi-x-lg"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-champagne">
+          <i class="bi bi-send-fill"></i> Save Announcement
+        </button>
+      </div>
+
+    </form>
+  </div><!-- /panel -->
+
+</div><!-- /create-wrap -->
+
+{% endblock %}

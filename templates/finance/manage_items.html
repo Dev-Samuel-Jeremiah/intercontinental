@@ -1,0 +1,438 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}School Shop Items{% endblock %}
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body, .shop-wrap * { font-family: 'Outfit', sans-serif; color: var(--white); }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.shop-wrap {
+  max-width: 1200px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 2.25rem; animation: riseUp .45s ease both; }
+.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: .7rem; }
+.eyebrow-rule { width: 32px; height: 1px; background: var(--champagne); opacity: .6; }
+.eyebrow-label {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.55rem; font-weight: 600;
+  color: var(--white); line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--champagne); }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: .4rem; }
+.context-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  border-radius: 99px; font-size: .8rem; font-weight: 600;
+  color: var(--champagne-lt); white-space: nowrap;
+}
+.header-divider {
+  margin-top: 1.2rem; height: 1px;
+  background: var(--rim2); position: relative;
+}
+.header-divider::after {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne); border-radius: 2px; margin-top: -0.5px;
+}
+
+/* ── BUTTONS ── */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  background: var(--rim); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--slate2);
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 600;
+  text-decoration: none; transition: border-color .18s, color .18s, background .18s;
+  cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--champagne-border); color: var(--champagne-lt); background: var(--champagne-dim); }
+
+.btn-submit {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 11px 24px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; border: none; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: 16px; overflow: hidden; position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 14px; border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap; gap: 8px;
+}
+.panel-title-group { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.ib-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+.ib-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border);  }
+.ib-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border);   }
+.ib-champ  { background: var(--champagne-dim); color: var(--champagne); border: 1px solid var(--champagne-border); }
+.panel-title { font-size: .9rem; font-weight: 600; color: var(--white); }
+.panel-body { padding: 22px; }
+
+/* ── FORM ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+  gap: 14px;
+}
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate2);
+}
+.fg input, .fg select {
+  padding: 10px 14px;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .87rem;
+}
+.fg input:focus, .fg select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.fg select option { background: var(--surface2); }
+.fg input[type="file"] { color: var(--slate2); }
+.fg input::placeholder { color: var(--slate); }
+.fg-hint {
+  font-size: .72rem; color: var(--slate); margin-top: 2px; font-style: normal;
+}
+.form-footer {
+  display: flex; align-items: flex-end; gap: 20px;
+  flex-wrap: wrap; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--rim);
+}
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.tbl th {
+  padding: 10px 14px; text-align: left;
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--slate); border-bottom: 1px solid var(--rim2);
+  background: var(--surface2); white-space: nowrap;
+}
+.tbl td {
+  padding: 12px 14px; border-bottom: 1px solid var(--rim);
+  color: var(--slate2); vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.025); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: .7rem; font-weight: 700; border: 1px solid;
+}
+.badge-green  { background: var(--green-dim);  border-color: var(--green-border);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    border-color: var(--red-border);    color: var(--red);    }
+.badge-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  color: var(--amber);  }
+
+/* ── ITEM THUMBNAIL ── */
+.item-thumb {
+  width: 46px; height: 46px; border-radius: 10px;
+  object-fit: cover; display: block;
+}
+.item-thumb-placeholder {
+  width: 46px; height: 46px; border-radius: 10px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--slate); font-size: 1.1rem;
+}
+
+/* ── ACTION BUTTONS ── */
+.action-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.restock-form { display: flex; gap: 6px; align-items: center; }
+.restock-input {
+  width: 62px; padding: 6px 9px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 8px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .82rem;
+}
+.restock-input:focus {
+  outline: none; border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+.btn-restock {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  border-radius: 8px; color: var(--blue);
+  font-family: 'Outfit', sans-serif; font-size: .77rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-restock:hover { background: rgba(96,165,250,.18); }
+.btn-delete {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px;
+  background: var(--red-dim); border: 1px solid var(--red-border);
+  border-radius: 8px; color: var(--red);
+  font-family: 'Outfit', sans-serif; font-size: .77rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-delete:hover { background: rgba(248,113,113,.2); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 56px 20px; text-align: center;
+}
+.empty-icon-box {
+  width: 60px; height: 60px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: var(--slate); margin-bottom: 16px;
+}
+.empty-title { font-size: .92rem; font-weight: 600; color: var(--slate2); margin-bottom: 5px; }
+.empty-sub   { font-size: .79rem; color: var(--slate); }
+</style>
+
+<div class="shop-wrap">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">
+      <div class="eyebrow-rule"></div>
+      <span class="eyebrow-label">Finance · Admin</span>
+    </div>
+    <div class="header-row">
+      <h1 class="header-title">School <em>Shop</em></h1>
+      <div class="header-right">
+        <div class="context-badge">
+          <i class="bi bi-bag-fill"></i>
+          {{ items|length }} item{{ items|length|pluralize }}
+        </div>
+        <a href="{% url 'finance:admin_dashboard' %}" class="btn-ghost">
+          <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Add Item Form -->
+  <div class="panel" style="margin-bottom:20px;animation-delay:.06s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-green"><i class="bi bi-bag-plus-fill"></i></div>
+        <h3 class="panel-title">Add Shop Item</h3>
+      </div>
+    </div>
+    <div class="panel-body">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div class="form-grid">
+          <div class="fg">
+            <label>Item Name *</label>
+            <input name="name" placeholder="e.g. Mathematics Textbook JSS1" required>
+          </div>
+          <div class="fg">
+            <label>Price (₦) *</label>
+            <input name="price" type="number" step="0.01" min="0" placeholder="0.00" required>
+          </div>
+          <div class="fg">
+            <label>Stock Quantity *</label>
+            <input name="stock_qty" type="number" min="0" placeholder="0" required>
+          </div>
+          <div class="fg">
+            <label>Type</label>
+            <select name="item_type">
+              <option value="TEXTBOOK">Textbook</option>
+              <option value="UNIFORM">Uniform</option>
+              <option value="SUPPLY">School Supply</option>
+              <option value="FOOD">Canteen food &amp; drink</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Cost price (₦) <span class="fg-hint" style="display:inline;">(what one cost the school)</span></label>
+            <input name="cost_price" type="number" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="fg">
+            <label>Warn when stock falls to</label>
+            <input name="reorder_level" type="number" min="0" value="5">
+          </div>
+          <div class="fg">
+            <label>Code <span class="fg-hint" style="display:inline;">(optional, for the till)</span></label>
+            <input name="sku" maxlength="40" placeholder="e.g. BLZ-M">
+          </div>
+          <div class="fg">
+            <label>Class <span class="fg-hint" style="display:inline;">(optional)</span></label>
+            <select name="school_class">
+              <option value="">— All Classes —</option>
+              {% for cls in classes %}<option value="{{ cls.id }}">{{ cls.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="fg">
+            <label>Inventory Asset <span class="fg-hint" style="display:inline;">(optional)</span></label>
+            <select name="inventory_asset">
+              <option value="">— Not linked —</option>
+              {% for a in assets %}<option value="{{ a.id }}">{{ a.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="fg" style="grid-column:1/-1;">
+            <label>Assign to Specific Student</label>
+            <select name="assigned_student" id="assigned_student_select">
+              <option value="">— No specific student — available to class / all —</option>
+              {% for cls in classes %}
+              <optgroup label="{{ cls.name }}">
+                {% for s in cls.student_set.all %}
+                <option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>
+                {% endfor %}
+              </optgroup>
+              {% endfor %}
+            </select>
+            <span class="fg-hint">Leave blank to make this item available to the whole class or all students.</span>
+          </div>
+        </div>
+        <div class="form-footer">
+          <div class="fg" style="min-width:220px;">
+            <label>Item Image <span class="fg-hint" style="display:inline;">(optional)</span></label>
+            <input type="file" name="image" accept="image/*">
+          </div>
+          <button type="submit" class="btn-submit">
+            <i class="bi bi-plus-lg"></i> Add Item
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Shop Items Table -->
+  <div class="panel" style="animation-delay:.14s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-amber"><i class="bi bi-shop"></i></div>
+        <h3 class="panel-title">Shop Items</h3>
+      </div>
+    </div>
+
+    {% if items %}
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr>
+            <th style="width:60px;"></th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Class</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>
+              {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="item-thumb">
+              {% else %}
+                <div class="item-thumb-placeholder">
+                  {% if item.item_type == 'TEXTBOOK' %}<i class="bi bi-book-fill"></i>
+                  {% elif item.item_type == 'UNIFORM' %}<i class="bi bi-person-fill"></i>
+                  {% elif item.item_type == 'FOOD' %}<i class="bi bi-cup-hot-fill"></i>
+                  {% else %}<i class="bi bi-bag"></i>{% endif %}
+                </div>
+              {% endif %}
+            </td>
+            <td style="font-weight:600;color:var(--white);">{{ item.name }}</td>
+            <td>{{ item.get_item_type_display }}</td>
+            <td style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--champagne-lt);">
+              ₦{{ item.price|floatformat:2 }}
+            </td>
+            <td>
+              {% if item.stock_qty == 0 %}
+                <span class="badge badge-red"><i class="bi bi-x-circle" style="font-size:.65rem;"></i> Out of Stock</span>
+              {% elif item.is_low %}
+                <span class="badge badge-amber"><i class="bi bi-exclamation-circle" style="font-size:.65rem;"></i> {{ item.stock_qty }} left</span>
+              {% else %}
+                <span class="badge badge-green"><i class="bi bi-check-circle" style="font-size:.65rem;"></i> {{ item.stock_qty }}</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--slate2);">{{ item.school_class.name|default:"All" }}</td>
+            <td>
+              <div class="action-row">
+                <!-- Restock -->
+                <form method="POST" class="restock-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="restock">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <input type="number" name="qty" min="1" value="10" class="restock-input">
+                  <button type="submit" class="btn-restock">
+                    <i class="bi bi-plus-lg"></i> Restock
+                  </button>
+                </form>
+                <!-- Delete -->
+                <form method="POST">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="btn-delete"
+                    onclick="return confirm('Remove this item from the shop?')">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box"><i class="bi bi-shop"></i></div>
+      <div class="empty-title">No Items in Shop</div>
+      <div class="empty-sub">Add your first item using the form above to start selling.</div>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

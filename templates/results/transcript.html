@@ -1,0 +1,52 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Transcript — {{ t.student.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .tx{max-width:200mm;margin:1rem auto 0;background:#fff;color:#1c1917;padding:14mm 14mm;border-radius:6px;position:relative;font-family:'Outfit',system-ui,sans-serif;box-shadow:0 30px 60px -40px rgba(0,0,0,.9)}
+  .tx *{color:#1c1917}
+  .tx:before{content:'';position:absolute;inset:5mm;border:2px solid #f4d21f;border-radius:4px;pointer-events:none}
+  .tx .sch{text-align:center;font-weight:800;letter-spacing:.08em;font-size:16px}
+  .tx .addr{text-align:center;font-size:10.5px;color:#57534e!important}
+  .tx h1{font-family:'Cormorant Garamond',serif;text-align:center;font-size:28px;margin:3mm 0 4mm}
+  .tx .who{display:grid;grid-template-columns:1fr 1fr;gap:1mm 6mm;font-size:12px;margin-bottom:4mm}
+  .tx .who span{color:#78716c!important}
+  .tx h3{font-size:13px;margin:5mm 0 1.5mm;padding-bottom:1mm;border-bottom:1px solid #f4d21f}
+  .tx table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:2mm}
+  .tx th,.tx td{border:1px solid #d6d3d1!important;padding:3px 6px!important;background:none!important;text-align:center}
+  .tx th{font-weight:700}.tx td:first-child,.tx th:first-child{text-align:left}
+  .tx .foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:8mm;font-size:10px}
+  .tx .sig{border-top:1px solid #57534e;width:58mm;text-align:center;padding-top:2px}
+  @media print{body *{visibility:hidden!important}.tx,.tx *{visibility:visible!important}.tx{position:absolute;left:0;top:0;margin:0;box-shadow:none;max-width:none;width:100%}@page{size:A4;margin:8mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Transcript</div>
+  <h1 class="fin-title">{{ t.student.full_name }}</h1>
+  <p class="fin-sub">Every published result, term by term — for university, scholarship and visa applications. The code lets anyone check it.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+  <form method="get" style="display:flex;gap:.4rem"><input name="purpose" value="{{ purpose }}" maxlength="120" placeholder="Purpose (printed)" class="fin-btn fin-btn-sm" style="text-align:left;width:200px"><button class="fin-btn fin-btn-sm">Update</button></form>
+  {% if t.sessions %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'results:progress' t.student.id %}"><i class="bi bi-graph-up"></i> Progress</a>
+</div></div>
+{% if not t.sessions %}<div class="panel"><div class="empty"><i class="bi bi-file-earmark-x"></i><p>{{ t.student.full_name }} has no published results yet.</p></div></div>{% else %}
+<div class="tx">
+  <div class="sch">{{ school.name|upper }}</div>
+  <div class="addr">{{ school.address|default:"" }}{% if school.phone %} · {{ school.phone }}{% endif %}{% if school.email %} · {{ school.email }}{% endif %}</div>
+  <h1>Academic Transcript</h1>
+  <div class="who">
+    <div><span>Name:</span> <b>{{ t.student.full_name }}</b></div><div><span>Admission no.:</span> <b>{{ t.student.admission_number }}</b></div>
+    <div><span>Date of birth:</span> {{ t.student.date_of_birth|date:"j F Y"|default:"—" }}</div><div><span>Gender:</span> {{ t.student.gender|default:"—" }}</div>
+    <div><span>Status:</span> {{ t.student.status }}{% if t.student.leaving_class %} ({{ t.student.leaving_class }}){% endif %}</div><div><span>Overall average:</span> <b>{{ t.overall }}%</b></div>
+    {% if purpose %}<div style="grid-column:1/-1"><span>Issued for:</span> {{ purpose }}</div>{% endif %}
+  </div>
+  {% for s in t.sessions %}<h3>{{ s.session.name }} — session average {{ s.average }}%</h3>
+    {% for term in s.terms %}<table><thead><tr><th>{{ term.term.name }} · {{ term.class.name }}</th><th style="width:60px">Score</th><th style="width:50px">Grade</th></tr></thead><tbody>
+      {% for r in term.rows %}<tr><td>{{ r.subject.name }}</td><td>{{ r.score|floatformat:"-1" }}</td><td>{{ r.grade }}</td></tr>{% endfor %}
+      <tr><td><b>Term average</b></td><td><b>{{ term.average }}</b></td><td></td></tr></tbody></table>{% endfor %}
+  {% endfor %}
+  <div class="foot">
+    <div><div class="sig">Principal — signature and stamp</div><div style="margin-top:2mm;color:#78716c">Issued {% now "j F Y" %}</div></div>
+    <div style="text-align:right"><img src="{% url 'results:transcript_qr' ref %}" alt="" style="width:24mm;height:24mm"><div style="color:#78716c">Scan to verify</div></div>
+  </div>
+</div>{% endif %}
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Refunds{% endblock %}
+{% load humanize %}{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Money going <em>back</em></h1>
+    <p class="fin-sub">An overpayment, a withdrawal, a cancelled trip — requested, approved, then paid, so nobody signs off their own refund.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:expenses' %}"><i class="bi bi-wallet2"></i> Expenses</a>
+    <a class="fin-btn fin-btn-gold" href="{% url 'finance:income_statement' %}"><i class="bi bi-graph-up-arrow"></i> Income &amp; expenditure</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Refunded so far</small><b style="color:var(--red)">₦{{ paid_total|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Awaiting payment</small><b style="color:var(--amber)">₦{{ awaiting|floatformat:0|intcomma }}</b></div>
+  <div class="fin-stat"><small>Families who overpaid</small><b>{{ overpaid|length }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-arrow-counterclockwise"></i> Start a refund</h3></div>
+    <div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div>
+          <label>Student</label>
+          <select name="student_id" required>
+            <option value="">— choose —</option>
+            {% for s in students %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Amount (₦)</label>
+          <input type="number" name="amount" min="0.01" step="0.01" required placeholder="15000">
+        </div>
+        <div>
+          <label>Why</label>
+          <select name="reason">
+            {% for value, label in reasons %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>How it goes back</label>
+          <select name="method">
+            {% for value, label in methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label>Detail</label>
+          <input name="detail" maxlength="300" placeholder="Paid twice on 12 Sep">
+        </div>
+        <div style="display:flex;gap:.6rem">
+          <div style="flex:1"><label>Bank</label><input name="bank_name" maxlength="80" placeholder="GTBank"></div>
+          <div style="flex:1"><label>Account number</label><input name="account_number" maxlength="20" placeholder="0123456789"></div>
+        </div>
+        <div><label>Account name</label><input name="account_name" maxlength="160" placeholder="Who the account belongs to"></div>
+        <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Request refund</button>
+        <p class="hint">A request changes no figures. The money only comes off income once it is marked paid.</p>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-exclamation-circle"></i> Families who have overpaid</h3></div>
+    <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>Student</th><th>Overpaid by</th></tr></thead>
+        <tbody>
+          {% for row in overpaid %}
+          <tr>
+            <td>{{ row.student.full_name }}<br><span class="hint">{{ row.student.admission_number }}</span></td>
+            <td class="money" style="color:var(--amber)">₦{{ row.over|floatformat:0|intcomma }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" class="empty"><i class="bi bi-check2-circle"></i><p>Nobody has paid more than their bill.</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<form method="get" class="panel" style="margin-top:1rem">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div style="flex:1 1 220px">
+      <label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">Search</label>
+      <input type="search" name="q" value="{{ q }}" placeholder="Name, reference or detail" style="width:100%;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+    </div>
+    <div>
+      <label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">Status</label>
+      <select name="status" style="padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+        <option value="">All</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fin-btn" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+  </div>
+</form>
+
+<div class="panel" style="margin-top:1rem">
+  <div class="panel-h"><h3><i class="bi bi-list-check"></i> Refunds</h3></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Date</th><th>Student</th><th>Why</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for r in refunds %}
+        <tr>
+          <td>{{ r.created_at|date:"j M Y" }}
+            {% if r.paid_on %}<br><span class="hint">paid {{ r.paid_on|date:"j M" }}</span>{% endif %}</td>
+          <td>{{ r.student.full_name }}
+            {% if r.account_number %}<br><span class="hint">{{ r.bank_name }} {{ r.account_number }}</span>{% endif %}</td>
+          <td>{{ r.get_reason_display }}
+            {% if r.detail %}<br><span class="hint">{{ r.detail }}</span>{% endif %}
+            <br><span class="hint">{{ r.get_method_display|lower }}</span></td>
+          <td class="money">₦{{ r.amount|floatformat:0|intcomma }}</td>
+          <td>
+            {% if r.status == 'PAID' %}<span class="chip green">paid</span>
+            {% elif r.status == 'APPROVED' %}<span class="chip gold">approved</span>
+            {% elif r.status == 'REJECTED' %}<span class="chip red">rejected</span>
+            {% else %}<span class="chip amber">awaiting approval</span>{% endif %}
+            {% if r.approved_by %}<br><span class="hint">by {% if r.approved_by.get_full_name %}{{ r.approved_by.get_full_name }}{% else %}{{ r.approved_by.username }}{% endif %}</span>{% endif %}
+          </td>
+          <td style="white-space:nowrap">
+            {% if r.status == 'REQUESTED' %}
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="approve"><input type="hidden" name="refund_id" value="{{ r.id }}">
+                <button class="fin-btn fin-btn-sm" type="submit">Approve</button></form>
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="reject"><input type="hidden" name="refund_id" value="{{ r.id }}">
+                <button class="fin-btn fin-btn-sm fin-btn-danger" type="submit">Reject</button></form>
+            {% elif r.status == 'APPROVED' %}
+              <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="action" value="mark_paid"><input type="hidden" name="refund_id" value="{{ r.id }}">
+                <input name="reference" placeholder="Teller ref" maxlength="60" style="width:110px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.76rem">
+                <button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Mark paid</button></form>
+            {% elif r.reference %}
+              <span class="hint">{{ r.reference }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="empty"><i class="bi bi-inbox"></i><p>No refund has been raised yet.</p></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

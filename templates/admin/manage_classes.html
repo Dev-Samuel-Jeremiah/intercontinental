@@ -1,0 +1,373 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Manage Classes{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.mc-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 100%;
+  padding: 2rem 2.5rem 4rem;
+  color: var(--white);
+  animation: riseUp .4s ease both;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+.page-header::after {
+  content: "";
+  position: absolute; bottom: -1px; left: 0;
+  width: 80px; height: 1px;
+  background: var(--champagne);
+}
+.page-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .5rem;
+}
+.page-eyebrow::before {
+  content: ""; width: 16px; height: 1px; background: var(--champagne);
+}
+.page-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2.1rem; font-weight: 500; line-height: 1.1;
+  color: var(--white);
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .55rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  font-size: .78rem; font-weight: 600;
+  color: var(--slate2); text-decoration: none;
+  transition: all .17s;
+  white-space: nowrap;
+}
+.btn-back:hover {
+  background: var(--surface2);
+  border-color: var(--rim3);
+  color: var(--white);
+}
+.btn-back i { font-size: .9rem; }
+
+/* ── TWO-COLUMN LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+@media(max-width:1100px) { .layout { grid-template-columns: 1fr; } }
+@media(max-width:600px)  { .mc-wrap { padding: 1.25rem 1rem 3rem; } }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+.panel::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel-head {
+  padding: 1.1rem 1.4rem .85rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-head-left {
+  display: flex; align-items: center; gap: .65rem;
+}
+.panel-head-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .88rem; flex-shrink: 0;
+}
+.phi-gold { background: var(--champagne-dim); color: var(--champagne); }
+.phi-blue { background: var(--blue-dim); color: var(--blue); }
+.panel-head h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: .88rem; font-weight: 600; color: var(--white); margin: 0;
+}
+.class-count {
+  font-size: .67rem; font-weight: 600;
+  padding: .22rem .7rem; border-radius: 50px;
+  background: var(--surface3); color: var(--slate2);
+  border: 1px solid var(--rim);
+}
+
+/* ── CREATE FORM ── */
+.form-body { padding: 1.4rem; }
+
+/* Django renders form.as_p — style the p > label + input pattern */
+.form-body p {
+  display: flex; flex-direction: column;
+  gap: .4rem; margin-bottom: .9rem;
+}
+.form-body label {
+  font-size: .73rem; font-weight: 600; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate2);
+}
+.form-body input[type="text"],
+.form-body select {
+  width: 100%;
+  padding: .78rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  font-size: .88rem; color: var(--white);
+  font-family: "Outfit", inherit;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.form-body input[type="text"]::placeholder { color: rgba(255,255,255,.2); }
+.form-body input[type="text"]:focus,
+.form-body select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.form-body select option { background: var(--surface2); color: var(--white); }
+
+/* Checkbox rows inside form.as_p */
+.form-body input[type="checkbox"] {
+  width: 17px; height: 17px;
+  accent-color: var(--champagne);
+  cursor: pointer;
+  margin-right: .4rem;
+}
+
+.form-actions { padding: 0 1.4rem 1.4rem; }
+.btn-create {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  padding: .82rem 1rem;
+  background: linear-gradient(135deg, var(--champagne) 0%, #d1ad00 100%);
+  border: none; border-radius: var(--radius-sm);
+  font-size: .9rem; font-weight: 700;
+  font-family: "Outfit", inherit;
+  color: #0a1f44; cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .14s, box-shadow .14s;
+}
+.btn-create:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(244,210,31,.32);
+}
+.btn-create:active { transform: translateY(0); }
+
+/* ── CLASSES TABLE ── */
+.table-wrap { overflow-x: auto; }
+
+.classes-table {
+  width: 100%; border-collapse: collapse;
+  font-size: .84rem;
+}
+.classes-table thead tr {
+  border-bottom: 1px solid var(--rim2);
+}
+.classes-table th {
+  padding: .75rem 1.4rem;
+  text-align: left;
+  font-size: .65rem; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--slate);
+}
+.classes-table th:last-child { text-align: center; }
+
+.classes-table tbody tr {
+  border-bottom: 1px solid var(--rim);
+  transition: background .14s;
+}
+.classes-table tbody tr:last-child { border-bottom: none; }
+.classes-table tbody tr:hover { background: rgba(255,255,255,.025); }
+
+.classes-table td { padding: .9rem 1.4rem; vertical-align: middle; }
+.classes-table td:last-child { text-align: center; }
+
+/* Class name cell */
+.class-name-cell {
+  display: flex; align-items: center; gap: .75rem;
+}
+.class-avatar {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--blue-dim);
+  border: 1px solid rgba(96,168,232,.2);
+  color: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600; letter-spacing: .5px;
+}
+.class-name-text {
+  font-size: .86rem; font-weight: 600; color: var(--white);
+}
+
+/* Row number */
+.row-num {
+  font-size: .72rem; color: var(--slate);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Delete button */
+.btn-delete {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .38rem .85rem;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--red-border);
+  background: var(--red-dim);
+  color: var(--red); font-size: .73rem; font-weight: 600;
+  text-decoration: none;
+  transition: all .15s;
+}
+.btn-delete:hover {
+  background: rgba(232,112,112,.2);
+  border-color: rgba(232,112,112,.4);
+  color: #f5a0a0;
+}
+
+/* Empty state */
+.table-empty {
+  padding: 3rem 1.4rem;
+  display: flex; flex-direction: column; align-items: center; gap: .75rem;
+  text-align: center;
+}
+.empty-icon {
+  width: 50px; height: 50px; border-radius: 13px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; color: var(--slate);
+}
+.empty-title { font-size: .9rem; font-weight: 600; color: var(--slate2); }
+.empty-sub { font-size: .76rem; color: var(--slate); }
+
+/* Confirm dialog override — we use a custom attribute hook */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="mc-wrap">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div>
+      <div class="page-eyebrow">Academic Setup</div>
+      <h1 class="page-title">Manage <em>Classes</em></h1>
+    </div>
+    <a href="{% url 'dashboard:router' %}" class="btn-back">
+      <i class="bi bi-arrow-left"></i>
+      Back to Dashboard
+    </a>
+  </div>
+
+  <!-- ── MAIN LAYOUT ── -->
+  <div class="layout">
+
+    <!-- LEFT — Create Form -->
+    <div class="panel" style="animation: riseUp .45s ease both;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-head-icon phi-gold">
+            <i class="bi bi-plus-circle-fill"></i>
+          </div>
+          <h3>Create New Class</h3>
+        </div>
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="form-body">
+          {{ form.as_p }}
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-create">
+            <i class="bi bi-building-add"></i>
+            Create Class
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RIGHT — Existing Classes -->
+    <div class="panel" style="animation: riseUp .5s .08s ease both;">
+      <div class="panel-head">
+        <div class="panel-head-left">
+          <div class="panel-head-icon phi-blue">
+            <i class="bi bi-grid-1x2-fill"></i>
+          </div>
+          <h3>Existing Classes</h3>
+        </div>
+        <span class="class-count">
+          {{ classes|length }} Class{{ classes|length|pluralize:"es" }}
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="classes-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Class Name</th>
+              <th style="text-align:center;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cls in classes %}
+            <tr>
+              <td><span class="row-num">{{ forloop.counter }}</span></td>
+              <td>
+                <div class="class-name-cell">
+                  <div class="class-avatar">{{ cls.name|slice:":2"|upper }}</div>
+                  <span class="class-name-text">{{ cls.name }}</span>
+                </div>
+              </td>
+              <td>
+                <a href="{% url 'users:delete_class' cls.id %}"
+                   class="btn-delete"
+                   onclick="return confirm('Delete {{ cls.name }}? This action cannot be undone.')">
+                  <i class="bi bi-trash3"></i>
+                  Delete
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3">
+                <div class="table-empty">
+                  <div class="empty-icon"><i class="bi bi-grid-1x2"></i></div>
+                  <div class="empty-title">No classes yet</div>
+                  <div class="empty-sub">Create your first class using the form on the left.</div>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

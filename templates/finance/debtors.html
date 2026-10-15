@@ -1,0 +1,84 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Debtors{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">Who still <em>owes</em></h1>
+    <p class="fin-sub">{{ term }}{% if session %} · {{ session }}{% endif %} — log every call so nobody is chased twice or forgotten.</p>
+  </div>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+    <a class="fin-btn" href="{% url 'finance:payment_plans' %}"><i class="bi bi-calendar2-check"></i> Payment plans</a>
+    <a class="fin-btn" href="{% url 'communications:fee_reminders' %}"><i class="bi bi-send"></i> Send fee reminders</a>
+  </div>
+</div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Families owing</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Total outstanding</small><b style="color:var(--red)">₦{{ total_owed|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Promised, now due</small><b style="color:var(--amber)">{{ promised_today|length }}</b></div>
+  <div class="fin-stat"><small>Never contacted</small><b>{{ never_contacted|length }}</b></div>
+</div>
+
+<form method="get" class="panel">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div style="flex:1 1 220px"><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">Search</label>
+      <input type="search" name="q" value="{{ search }}" placeholder="Name, admission no. or phone" style="width:100%;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)"></div>
+    <div><label style="font-size:.74rem;color:var(--slate);display:block;margin-bottom:.3rem">Class</label>
+      <select name="class_id" style="padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+        <option value="">All classes</option>
+        {% for c in classes %}<option value="{{ c.id }}" {% if class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select></div>
+    <button class="fin-btn" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+    {% if search or class_id %}<a class="fin-btn" href="{% url 'finance:debtors' %}">Clear</a>{% endif %}
+  </div>
+</form>
+
+<div class="panel">
+  <div class="panel-h"><h3><i class="bi bi-cash-stack"></i> Outstanding balances</h3></div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Student</th><th>Class</th><th>Parent</th><th>Owing</th><th>Last contact</th><th>Log a follow-up</th></tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td class="name">{{ row.student.full_name }}<br><span class="hint">{{ row.student.admission_number }}</span></td>
+          <td>{{ row.student.class_assigned.name|default:"—" }}</td>
+          <td>{{ row.student.parent_name|default:"—" }}<br>
+            {% if row.student.parent_phone %}<a href="tel:{{ row.student.parent_phone }}" style="color:var(--champagne-lt);font-size:.8rem">{{ row.student.parent_phone }}</a>{% endif %}</td>
+          <td class="money" style="color:var(--red)">₦{{ row.billing.balance|floatformat:0 }}
+            {% if row.billing.discount %}<br><span class="chip green">₦{{ row.billing.discount|floatformat:0 }} off</span>{% endif %}</td>
+          <td>
+            {% if row.last %}
+              <a href="{% url 'finance:debtor_history' row.student.id %}" style="color:var(--white)">{{ row.last.get_outcome_display }}</a><br>
+              <span class="hint">{{ row.last.created_at|date:"j M" }}{% if row.last.promise_date %} · promised {{ row.last.promise_date|date:"j M" }}{% endif %}</span>
+            {% else %}<span class="chip">Not contacted</span>{% endif %}
+          </td>
+          <td>
+            <form method="post" style="display:grid;gap:.35rem;min-width:240px">
+              {% csrf_token %}
+              <input type="hidden" name="student_id" value="{{ row.student.id }}">
+              <div style="display:flex;gap:.3rem">
+                <select name="method" style="flex:1;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.78rem">
+                  {% for v, l in methods %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+                </select>
+                <select name="outcome" style="flex:1;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.78rem">
+                  {% for v, l in outcomes %}<option value="{{ v }}">{{ l }}</option>{% endfor %}
+                </select>
+              </div>
+              <div style="display:flex;gap:.3rem">
+                <input type="date" name="promise_date" title="Promised to pay on" style="flex:1;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font-size:.78rem">
+                <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-journal-plus"></i> Save</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="bi bi-emoji-smile"></i>Nobody owes anything for this term. </div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

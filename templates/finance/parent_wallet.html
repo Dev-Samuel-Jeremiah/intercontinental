@@ -1,0 +1,1208 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}My Wallet{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body, .wallet-wrap * {
+  font-family: 'Outfit', sans-serif;
+  color: var(--white);
+}
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wallet-wrap {
+  max-width: 1200px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── MESSAGES ── */
+.msg-stack { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+.msg-item {
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-size: .83rem;
+  font-weight: 600;
+  border-left: 3px solid;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.msg-success { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+.msg-error   { background: var(--red-dim);   border-color: var(--red);   color: var(--red);   }
+.msg-info    { background: var(--blue-dim);  border-color: var(--blue);  color: var(--blue);  }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 2.25rem; animation: riseUp .45s ease both; }
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: .7rem;
+}
+.eyebrow-rule {
+  width: 32px; height: 1px;
+  background: var(--champagne);
+  opacity: .6;
+}
+.eyebrow-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--champagne);
+}
+.header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.55rem;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--champagne); }
+.context-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-border);
+  border-radius: 99px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--champagne-lt);
+  white-space: nowrap;
+  margin-top: .4rem;
+}
+.header-divider {
+  margin-top: 1.2rem;
+  height: 1px;
+  background: var(--rim2);
+  position: relative;
+}
+.header-divider::after {
+  content: '';
+  position: absolute;
+  left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+  border-radius: 2px;
+  margin-top: -0.5px;
+}
+
+/* ── PANELS ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.panel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.icon-badge {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+.ib-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+.ib-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border);   }
+.ib-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border);    }
+.ib-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border);  }
+.ib-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+.ib-teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border);   }
+.ib-champ  { background: var(--champagne-dim); color: var(--champagne); border: 1px solid var(--champagne-border); }
+.panel-title { font-size: .9rem; font-weight: 600; color: var(--white); }
+.panel-body { padding: 20px 22px; }
+
+/* ── WALLET HERO ── */
+.wallet-hero {
+  background: linear-gradient(135deg, #0a1d40 0%, #0f244b 40%, #112850 100%);
+  border: 1px solid var(--champagne-border);
+  border-radius: 20px;
+  padding: 28px 32px;
+  margin-bottom: 1.75rem;
+  position: relative;
+  overflow: hidden;
+  animation: riseUp .4s ease both;
+}
+.wallet-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,210,31,.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wallet-hero::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--champagne-border), transparent);
+}
+.hero-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.hero-label {
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--champagne);
+  opacity: .75;
+  margin-bottom: 6px;
+}
+.hero-balance {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3.2rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.hero-meta {
+  font-size: .82rem;
+  color: var(--slate2);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--champagne);
+  opacity: .5;
+  display: inline-block;
+}
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn-champ {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: .83rem;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s;
+  text-decoration: none;
+}
+.btn-champ:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 20px;
+  background: var(--rim);
+  color: var(--slate2);
+  border: 1px solid var(--rim2);
+  border-radius: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: .83rem;
+  cursor: pointer;
+  transition: border-color .18s, color .18s, background .18s;
+  text-decoration: none;
+}
+.btn-ghost:hover { border-color: var(--champagne-border); color: var(--champagne-lt); background: var(--champagne-dim); }
+
+/* ── STATS GRID ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+  gap: 14px;
+  margin-bottom: 1.75rem;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+  animation: riseUp .45s ease both;
+}
+.stat-card:hover { border-color: var(--rim3); }
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.stat-accent {
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+  border-radius: 0 2px 2px 0;
+}
+.stat-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 8px;
+  padding-left: 8px;
+}
+.stat-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.95rem;
+  font-weight: 700;
+  line-height: 1;
+  padding-left: 8px;
+}
+
+/* ── CHILDREN TABS ── */
+.children-section { margin-bottom: 1.5rem; animation: riseUp .45s ease both; }
+.children-label {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--slate);
+  margin-bottom: 10px;
+}
+.children-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+.child-tab {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 16px;
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--slate2);
+  font-size: .84rem;
+  font-weight: 500;
+  transition: all .2s;
+}
+.child-tab:hover { border-color: var(--champagne-border); color: var(--white); background: var(--surface2); }
+.child-tab.active { border-color: var(--champagne-border); background: var(--champagne-dim); color: var(--champagne-lt); }
+.child-avatar {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: .8rem;
+  flex-shrink: 0;
+}
+.child-tab.active .child-avatar { background: linear-gradient(135deg, #f4d21f, #d1ad00); color: #0a1f44; }
+.child-tab:not(.active) .child-avatar { background: var(--surface3); color: var(--slate2); }
+.child-sub { font-size: .7rem; color: var(--slate); margin-top: 1px; }
+.child-debt { font-size: .69rem; font-weight: 700; color: var(--red); margin-top: 1px; }
+
+/* ── VIEWING BAR ── */
+.viewing-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: var(--champagne-dim);
+  border: 1px solid var(--champagne-border);
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: .83rem;
+  color: var(--champagne-lt);
+  font-weight: 500;
+  animation: riseUp .45s ease both;
+}
+.viewing-bar strong { font-weight: 700; color: var(--white); }
+.viewing-sep { width: 4px; height: 4px; border-radius: 50%; background: var(--champagne); opacity: .5; display: inline-block; }
+
+/* ── TWO-COL GRID ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 1.75rem; }
+@media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── FEE CARDS ── */
+.fee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.fee-card {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 12px;
+  padding: 16px;
+  transition: border-color .2s;
+}
+.fee-card:hover { border-color: var(--champagne-border); }
+.fee-name { font-weight: 600; font-size: .87rem; color: var(--white); margin-bottom: 5px; }
+.fee-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--champagne-lt);
+  line-height: 1;
+}
+.fee-meta { font-size: .72rem; color: var(--slate); margin-top: 4px; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: .7rem;
+  font-weight: 700;
+  border: 1px solid;
+}
+.badge-green  { background: var(--green-dim);  border-color: var(--green-border);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    border-color: var(--red-border);    color: var(--red);    }
+.badge-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  color: var(--amber);  }
+.badge-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   color: var(--blue);   }
+.badge-champ  { background: var(--champagne-dim); border-color: var(--champagne-border); color: var(--champagne-lt); }
+
+/* ── PAY BUTTON IN FEES ── */
+.fee-pay-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 8px 12px;
+  margin-top: 10px;
+  background: var(--green-dim);
+  border: 1px solid var(--green-border);
+  border-radius: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: .78rem; font-weight: 700;
+  color: var(--green);
+  cursor: pointer;
+  transition: background .18s;
+}
+.fee-pay-btn:hover { background: rgba(74,222,128,.17); }
+.fee-fund-hint {
+  display: flex; align-items: center; justify-content: center;
+  gap: 5px;
+  margin-top: 10px; padding: 8px 12px;
+  background: var(--surface3);
+  border-radius: 9px;
+  font-size: .73rem; color: var(--slate);
+  text-align: center;
+}
+.fee-fund-hint a { color: var(--blue); text-decoration: none; font-weight: 600; }
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.tbl th {
+  padding: 9px 12px;
+  text-align: left;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--slate);
+  border-bottom: 1px solid var(--rim2);
+}
+.tbl td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rim);
+  color: var(--slate2);
+  vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.025); }
+.ref { font-family: monospace; font-size: .77rem; color: var(--blue); }
+.tbl-link { color: var(--blue); font-size: .76rem; font-weight: 600; text-decoration: none; transition: color .15s; }
+.tbl-link:hover { color: var(--champagne-lt); }
+.tbl-strong { font-weight: 700; color: var(--white); }
+
+/* ── SHOP ── */
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 14px; }
+.item-card {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.item-card:hover { transform: translateY(-3px); border-color: var(--champagne-border); box-shadow: 0 8px 28px rgba(0,0,0,.3); }
+.item-img {
+  width: 100%; height: 110px;
+  object-fit: cover;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+  color: var(--slate);
+}
+.item-body { padding: 12px; }
+.item-name { font-weight: 600; font-size: .85rem; color: var(--white); margin-bottom: 4px; }
+.item-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--champagne-lt);
+}
+.item-stock { font-size: .71rem; margin-top: 3px; }
+.item-assign { font-size: .71rem; color: var(--blue); font-weight: 600; margin-top: 3px; }
+.qty-row {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 8px; margin-top: 10px;
+}
+.qty-label { font-size: .72rem; color: var(--slate); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.qty-input {
+  width: 58px; padding: 5px 8px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 7px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .83rem;
+}
+.qty-input:focus { outline: none; border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1); }
+.buy-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 8px 10px;
+  background: var(--green-dim); border: 1px solid var(--green-border);
+  border-radius: 9px; color: var(--green);
+  font-family: 'Outfit', sans-serif; font-size: .78rem; font-weight: 700;
+  cursor: pointer; transition: background .18s;
+}
+.buy-btn:hover { background: rgba(74,222,128,.18); }
+.buy-btn-dis {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 8px 10px;
+  background: var(--surface3); border: 1px solid var(--rim);
+  border-radius: 9px; color: var(--slate);
+  font-family: 'Outfit', sans-serif; font-size: .78rem; font-weight: 600;
+  cursor: not-allowed;
+}
+
+/* ── HOSTEL ── */
+.hostel-info {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 14px;
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  border-radius: 10px; margin-bottom: 14px;
+  font-size: .82rem; color: var(--blue);
+}
+.hostel-bill-box {
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: 12px; padding: 16px;
+}
+.bill-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: .82rem; color: var(--slate2);
+  border-bottom: 1px solid var(--rim);
+}
+.bill-row:last-child { border-bottom: none; }
+.bill-row.total { font-weight: 700; color: var(--white); padding-top: 10px; margin-top: 4px; }
+.hostel-pay-row {
+  display: flex; gap: 10px; align-items: center;
+  margin-top: 14px;
+}
+.hostel-input {
+  flex: 1; padding: 10px 14px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .88rem;
+}
+.hostel-input:focus { outline: none; border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.1); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 36px 20px; text-align: center;
+}
+.empty-icon-box {
+  width: 56px; height: 56px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: var(--slate);
+  margin-bottom: 14px;
+}
+.empty-title { font-size: .9rem; font-weight: 600; color: var(--slate2); margin-bottom: 4px; }
+.empty-sub   { font-size: .78rem; color: var(--slate); }
+.empty-sub a  { color: var(--blue); text-decoration: none; font-weight: 600; }
+
+/* ── SHOP INFO BAR ── */
+.shop-info {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 10px 14px; margin-bottom: 14px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 10px; font-size: .78rem; color: var(--slate2);
+  line-height: 1.5;
+}
+
+/* ── PENDING TOPUP TABLE ── */
+.panel-link { font-size: .78rem; font-weight: 600; color: var(--blue); text-decoration: none; }
+.panel-link:hover { color: var(--champagne-lt); }
+
+/* ── MODAL ── */
+.modal-ov {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.65); z-index: 9999;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-ov.active { display: flex; }
+.modal-box {
+  background: var(--surface);
+  border: 1px solid var(--rim3);
+  border-radius: 18px; padding: 28px;
+  max-width: 480px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  animation: riseUp .3s ease both;
+}
+.modal-title {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.modal-title-text {
+  font-size: 1.1rem; font-weight: 700; color: var(--white);
+  display: flex; align-items: center; gap: 8px;
+}
+.modal-title-text i { color: var(--champagne); }
+.modal-sub {
+  font-size: .8rem; color: var(--slate2); margin-bottom: 20px; line-height: 1.5;
+}
+.close-btn {
+  background: var(--rim); border: 1px solid var(--rim2);
+  border-radius: 8px; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; cursor: pointer; color: var(--slate2);
+  transition: background .15s, color .15s;
+  font-family: 'Outfit', sans-serif;
+}
+.close-btn:hover { background: var(--red-dim); color: var(--red); border-color: var(--red-border); }
+.fg { margin-bottom: 14px; }
+.fg label {
+  display: block; margin-bottom: 5px;
+  font-size: .73rem; font-weight: 700; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate2);
+}
+.fg input, .fg select {
+  width: 100%; padding: 10px 14px;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .88rem;
+}
+.fg input:focus, .fg select:focus {
+  outline: none;
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.fg select option { background: var(--surface2); }
+.fg input[type="file"] { color: var(--slate2); }
+.bank-box {
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;
+  font-size: .79rem; color: var(--champagne-lt); line-height: 1.7;
+}
+.bank-box strong { color: var(--champagne); }
+.btn-submit {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; border: none; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: .9rem;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .18s, box-shadow .18s;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(244,210,31,.32); }
+
+/* ── MAIN LAYOUT PANELS ── */
+.layout-grid { display: flex; flex-direction: column; gap: 20px; }
+</style>
+
+<div class="wallet-wrap">
+
+{% if messages %}
+<div class="msg-stack">
+  {% for m in messages %}
+  <div class="msg-item {% if m.tags == 'success' %}msg-success{% elif m.tags == 'error' %}msg-error{% else %}msg-info{% endif %}">
+    <i class="bi {% if m.tags == 'success' %}bi-check-circle-fill{% elif m.tags == 'error' %}bi-x-circle-fill{% else %}bi-info-circle-fill{% endif %}"></i>
+    {{ m }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="eyebrow">
+    <div class="eyebrow-rule"></div>
+    <span class="eyebrow-label">Finance Portal</span>
+  </div>
+  <div class="header-row">
+    <h1 class="header-title">Family <em>Wallet</em></h1>
+    <div class="context-badge">
+      <i class="bi bi-wallet2"></i>
+      ₦{{ wallet.balance|floatformat:2 }} available
+    </div>
+  </div>
+  <div class="header-divider"></div>
+</div>
+
+<!-- Wallet Hero -->
+<div class="wallet-hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-label">Family Wallet Balance</div>
+      <div class="hero-balance">₦{{ wallet.balance|floatformat:2 }}</div>
+      <div class="hero-meta">
+        <i class="bi bi-person-fill" style="color:var(--champagne);font-size:.8rem;"></i>
+        {{ student.parent_name|default:"Parent" }}
+        <span class="hero-dot"></span>
+        {% for ch in children %}{{ ch.full_name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="hero-actions">
+      <button class="btn-champ" onclick="document.getElementById('topupModal').classList.add('active')">
+        <i class="bi bi-plus-circle-fill"></i> Fund Wallet
+      </button>
+      <a href="{% url 'finance:transaction_history' %}" class="btn-ghost">
+        <i class="bi bi-clock-history"></i> History
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Children Tabs -->
+{% if children|length > 1 %}
+<div class="children-section">
+  <div class="children-label">Select child to manage</div>
+  <div class="children-tabs">
+    {% for ch in children %}
+    <a href="?child={{ ch.id }}" class="child-tab {% if ch.id == student.id %}active{% endif %}">
+      <div class="child-avatar">{{ ch.full_name|slice:":2"|upper }}</div>
+      <div>
+        <div>{{ ch.full_name }}</div>
+        <div class="child-sub">{{ ch.class_assigned.name|default:"—" }}</div>
+        {% for cd in all_children_data %}{% if cd.student.id == ch.id %}
+          {% if cd.total_owed > 0 %}<div class="child-debt">₦{{ cd.total_owed|floatformat:0 }} owed</div>{% endif %}
+        {% endif %}{% endfor %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Viewing Bar -->
+<div class="viewing-bar">
+  <i class="bi bi-person-fill" style="color:var(--champagne);"></i>
+  Viewing: <strong>{{ student.full_name }}</strong>
+  <span class="viewing-sep"></span>
+  {{ student.class_assigned.name|default:"No class" }}
+  <span class="viewing-sep"></span>
+  Adm: {{ student.admission_number }}
+</div>
+
+<!-- Stats Grid -->
+<div class="stat-grid">
+  <div class="stat-card" style="animation-delay:.05s">
+    <div class="stat-accent" style="background:var(--champagne);"></div>
+    <div class="stat-label">Wallet Balance</div>
+    <div class="stat-value" style="color:var(--champagne-lt);">₦{{ wallet.balance|floatformat:0 }}</div>
+  </div>
+  <div class="stat-card" style="animation-delay:.1s">
+    <div class="stat-accent" style="background:var(--blue);"></div>
+    <div class="stat-label">Total Funded</div>
+    <div class="stat-value" style="color:var(--blue);">₦{{ total_funded|floatformat:0 }}</div>
+  </div>
+  <div class="stat-card" style="animation-delay:.15s">
+    <div class="stat-accent" style="background:var(--red);"></div>
+    <div class="stat-label">Total Spent</div>
+    <div class="stat-value" style="color:var(--red);">₦{{ total_spent|floatformat:0 }}</div>
+  </div>
+  <div class="stat-card" style="animation-delay:.2s">
+    <div class="stat-accent" style="background:var(--amber);"></div>
+    <div class="stat-label">Child Balance Due</div>
+    <div class="stat-value" style="color:var(--amber);">₦{{ child_billing.balance|floatformat:0|default:"0" }}</div>
+  </div>
+</div>
+
+<!-- All Children Summary -->
+{% if children|length > 1 %}
+<div class="panel" style="margin-bottom:20px;animation-delay:.22s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-purple"><i class="bi bi-people-fill"></i></div>
+      <h3 class="panel-title">All Children — Fee Overview</h3>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Child</th><th>Class</th><th>Unpaid Fees</th><th>Amount Owed</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cd in all_children_data %}
+        <tr>
+          <td class="tbl-strong">{{ cd.student.full_name }}</td>
+          <td>{{ cd.student.class_assigned.name|default:"—" }}</td>
+          <td><span class="badge badge-amber">{{ cd.unpaid|length }} unpaid</span></td>
+          <td>
+            <span style="font-weight:700;{% if cd.total_owed > 0 %}color:var(--red);{% else %}color:var(--green);{% endif %}">
+              ₦{{ cd.total_owed|floatformat:2 }}
+            </span>
+          </td>
+          <td>
+            <a href="?child={{ cd.student.id }}" class="tbl-link">Manage →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Unpaid + Paid Fees Grid -->
+<div class="two-col" style="animation-delay:.25s">
+
+  <!-- Unpaid Fees -->
+  <div class="panel" style="animation-delay:.25s">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-red"><i class="bi bi-file-earmark-text-fill"></i></div>
+        <h3 class="panel-title">Unpaid Fees — {{ student.full_name }}</h3>
+      </div>
+    </div>
+    <div class="panel-body">
+      {% if unpaid_fees %}
+      <div class="fee-grid">
+        {% for fee in unpaid_fees %}
+        <div class="fee-card">
+          <div class="fee-name">{{ fee.name }}</div>
+          <div class="fee-amount">₦{{ fee.amount|floatformat:2 }}</div>
+          <div class="fee-meta">
+            {{ fee.term|default:"All Terms" }}
+            {% if fee.is_compulsory %}&nbsp;<span class="badge badge-red">Compulsory</span>{% endif %}
+          </div>
+          <form method="POST" action="{% url 'finance:pay_fee' %}">
+            {% csrf_token %}
+            <input type="hidden" name="fee_id" value="{{ fee.id }}">
+            <input type="hidden" name="child_id" value="{{ student.id }}">
+            {% if wallet.balance >= fee.amount %}
+            <button type="submit" class="fee-pay-btn">
+              <i class="bi bi-check-circle-fill"></i> Pay ₦{{ fee.amount|floatformat:2 }}
+            </button>
+            {% else %}
+            <div class="fee-fund-hint">
+              Need ₦{{ fee.amount|floatformat:2 }} —
+              <a href="#" onclick="document.getElementById('topupModal').classList.add('active')">Fund wallet</a>
+            </div>
+            {% endif %}
+          </form>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon-box"><i class="bi bi-check-circle-fill" style="color:var(--green);"></i></div>
+        <div class="empty-title">All fees cleared!</div>
+        <div class="empty-sub">{{ student.full_name }} has no outstanding fees.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Paid Fees -->
+  <div class="panel" style="animation-delay:.3s">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-green"><i class="bi bi-patch-check-fill"></i></div>
+        <h3 class="panel-title">Paid Fees — {{ student.full_name }}</h3>
+      </div>
+    </div>
+    <div class="panel-body" style="padding:0;">
+      {% if fees %}
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr><th>Fee</th><th>Amount</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for fp in fees %}
+            <tr>
+              <td style="color:var(--white);">{{ fp.fee_structure.name }}</td>
+              <td style="color:var(--green);font-weight:700;">₦{{ fp.amount_paid|floatformat:2 }}</td>
+              <td>
+                {% if fp.status == 'PAID' %}<span class="badge badge-green">Paid</span>
+                {% elif fp.status == 'WAIVED' %}<span class="badge badge-blue">Waived</span>
+                {% elif fp.status == 'PARTIAL' %}<span class="badge badge-amber">Partial</span>
+                {% else %}<span class="badge badge-red">Unpaid</span>{% endif %}
+              </td>
+              <td>
+                {% if fp.transaction %}
+                <a href="{% url 'finance:receipt_txn' fp.transaction.id %}" class="tbl-link">
+                  <i class="bi bi-receipt"></i> Receipt
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon-box"><i class="bi bi-receipt"></i></div>
+        <div class="empty-title">No payments yet</div>
+        <div class="empty-sub">Paid fees will appear here once processed.</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div><!-- /.two-col -->
+
+<!-- School Shop -->
+{% if items %}
+<div class="panel" style="margin-bottom:20px;animation-delay:.33s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-champ"><i class="bi bi-shop-window"></i></div>
+      <h3 class="panel-title">School Shop</h3>
+    </div>
+    <span style="font-size:.76rem;color:var(--slate);">
+      Buying for: <strong style="color:var(--champagne-lt);">{{ student.full_name }}</strong>
+    </span>
+  </div>
+  <div class="panel-body">
+    <div class="shop-info">
+      <i class="bi bi-info-circle" style="color:var(--blue);margin-top:1px;"></i>
+      <span>
+        Items shown are available for {{ student.full_name }}'s class or assigned specifically to them.
+        Price is deducted from the family wallet and inventory is updated automatically on purchase.
+      </span>
+    </div>
+    <div class="shop-grid">
+      {% for item in items %}
+      <div class="item-card">
+        {% if item.image %}
+          <img src="{{ item.image.url }}" alt="{{ item.name }}" class="item-img" style="display:block;">
+        {% else %}
+          <div class="item-img">
+            {% if item.item_type == 'TEXTBOOK' %}<i class="bi bi-book-fill"></i>
+            {% elif item.item_type == 'UNIFORM' %}<i class="bi bi-person-fill"></i>
+            {% else %}<i class="bi bi-bag-fill"></i>{% endif %}
+          </div>
+        {% endif %}
+        <div class="item-body">
+          <div class="item-name">{{ item.name }}</div>
+          <div class="item-price">₦{{ item.price|floatformat:2 }}</div>
+          <div class="item-stock">
+            {% if item.stock_qty > 5 %}<span style="color:var(--green);">{{ item.stock_qty }} in stock</span>
+            {% elif item.stock_qty > 0 %}<span style="color:var(--amber);">Only {{ item.stock_qty }} left</span>
+            {% else %}<span style="color:var(--red);">Out of stock</span>{% endif %}
+          </div>
+          {% if item.assigned_student %}
+          <div class="item-assign"><i class="bi bi-person-check-fill"></i> {{ item.assigned_student.full_name }}</div>
+          {% endif %}
+          <form method="POST" action="{% url 'finance:buy_item' %}">
+            {% csrf_token %}
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input type="hidden" name="child_id" value="{{ student.id }}">
+            <div class="qty-row">
+              <span class="qty-label">Qty:</span>
+              <input type="number" name="quantity" value="1" min="1" max="{{ item.stock_qty }}" class="qty-input">
+            </div>
+            {% if wallet.balance >= item.price and item.stock_qty > 0 %}
+            <button type="submit" class="buy-btn">
+              <i class="bi bi-cart-plus-fill"></i> Buy Now
+            </button>
+            {% else %}
+            <button type="button" disabled class="buy-btn-dis">
+              {% if item.stock_qty == 0 %}Out of Stock{% else %}Low Balance{% endif %}
+            </button>
+            {% endif %}
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Spending at school -->
+<div class="panel" style="margin-bottom:20px;animation-delay:.35s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-champ"><i class="bi bi-cup-hot"></i></div>
+      <h3 class="panel-title">Spending at School</h3>
+    </div>
+    <span style="font-size:.76rem;color:var(--slate);">Paid from the family wallet at the canteen and shop</span>
+  </div>
+  <div class="panel-body">
+    {% for row in spending %}
+    <form method="post" action="{% url 'finance:set_spending_limit' %}" style="display:flex;flex-wrap:wrap;gap:.8rem;align-items:flex-end;padding:.85rem 0;{% if not forloop.last %}border-bottom:1px solid var(--rim);{% endif %}">
+      {% csrf_token %}
+      <input type="hidden" name="child_id" value="{{ row.child.id }}">
+      <div style="flex:1 1 180px">
+        <div style="font-weight:600;color:var(--white)">{{ row.child.full_name }}</div>
+        <div style="font-size:.76rem;color:var(--slate)">Spent at the canteen today: ₦{{ row.spent_today|floatformat:2 }}{% if row.limit.daily_canteen is not None %} of ₦{{ row.limit.daily_canteen|floatformat:2 }}{% endif %}</div>
+      </div>
+      <div>
+        <label style="display:block;font-size:.72rem;color:var(--slate);margin-bottom:.25rem">Daily canteen limit (₦)</label>
+        <input type="number" name="daily_canteen" min="0" step="50" value="{% if row.limit.daily_canteen is not None %}{{ row.limit.daily_canteen|floatformat:'-2' }}{% endif %}" placeholder="No limit" style="width:130px;padding:.5rem .65rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+      </div>
+      <label style="display:flex;gap:.4rem;align-items:center;font-size:.8rem;color:var(--slate2);padding-bottom:.55rem">
+        <input type="checkbox" name="shop_allowed" value="1"{% if not row.limit or row.limit.shop_allowed %} checked{% endif %}> May buy from the shop
+      </label>
+      <button type="submit" class="btn-primary" style="padding:.5rem .95rem;border-radius:9px;border:0;cursor:pointer;font-weight:600;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44">Save</button>
+    </form>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Hostel Billing -->
+{% if boarder_profile and boarder_profile.is_boarder %}
+<div class="panel" style="margin-bottom:20px;animation-delay:.36s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-blue"><i class="bi bi-house-fill"></i></div>
+      <h3 class="panel-title">Hostel Billing</h3>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="hostel-info">
+      <i class="bi bi-info-circle-fill"></i>
+      <span>
+        <strong>{{ boarder_profile.get_student_type_display }}</strong>
+        {% if boarder_profile.hostel %} · {{ boarder_profile.hostel.name }}{% endif %}
+        {% if boarder_profile.room %} · Room {{ boarder_profile.room.room_number }}{% endif %}
+        {% if boarder_profile.bed %} · Bed {{ boarder_profile.bed.bed_number }}{% endif %}
+      </span>
+    </div>
+    {% if hostel_bill %}
+    <div class="hostel-bill-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+        <span style="font-weight:700;color:var(--white);">{{ hostel_bill.term }} / {{ hostel_bill.session }}</span>
+        <span class="badge
+          {% if hostel_bill.status == 'PAID' %}badge-green
+          {% elif hostel_bill.status == 'PARTIAL' %}badge-amber
+          {% else %}badge-red{% endif %}">
+          {{ hostel_bill.get_status_display }}
+        </span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div class="bill-row"><span>Boarding Fee</span><span>₦{{ hostel_bill.boarding_fee|floatformat:2 }}</span></div>
+        {% if hostel_bill.meal_fee %}
+        <div class="bill-row"><span>Meal Fee</span><span>₦{{ hostel_bill.meal_fee|floatformat:2 }}</span></div>
+        {% endif %}
+        {% if hostel_bill.laundry_fee %}
+        <div class="bill-row"><span>Laundry Fee</span><span>₦{{ hostel_bill.laundry_fee|floatformat:2 }}</span></div>
+        {% endif %}
+        <div class="bill-row total"><span>Total</span><strong>₦{{ hostel_bill.total_fee|floatformat:2 }}</strong></div>
+        <div class="bill-row"><span style="color:var(--green);">Paid</span><strong style="color:var(--green);">₦{{ hostel_bill.amount_paid|floatformat:2 }}</strong></div>
+        <div class="bill-row"><span style="color:var(--red);">Balance Due</span><strong style="color:var(--red);">₦{{ hostel_bill.balance_due|floatformat:2 }}</strong></div>
+      </div>
+      {% if hostel_bill.balance_due > 0 %}
+      <form method="POST" action="{% url 'finance:parent_pay_hostel' %}">
+        {% csrf_token %}
+        <input type="hidden" name="billing_id" value="{{ hostel_bill.id }}">
+        <div class="hostel-pay-row">
+          <input type="number" name="amount" min="1" step="0.01"
+                 max="{{ hostel_bill.balance_due }}" value="{{ hostel_bill.balance_due }}"
+                 class="hostel-input" placeholder="Amount to pay">
+          {% if wallet.balance >= hostel_bill.balance_due %}
+          <button type="submit" class="btn-champ">
+            <i class="bi bi-cash-coin"></i> Pay Now
+          </button>
+          {% else %}
+          <button type="button" disabled class="buy-btn-dis" style="white-space:nowrap;padding:10px 18px;">
+            Low Balance
+          </button>
+          {% endif %}
+        </div>
+        {% if wallet.balance < hostel_bill.balance_due %}
+        <div style="font-size:.76rem;color:var(--red);margin-top:6px;">
+          Wallet balance ₦{{ wallet.balance|floatformat:2 }} — please fund your wallet first.
+        </div>
+        {% endif %}
+      </form>
+      {% else %}
+      <div style="text-align:center;margin-top:14px;font-size:.83rem;color:var(--green);font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
+        <i class="bi bi-check-circle-fill"></i> Hostel fees fully paid!
+      </div>
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box"><i class="bi bi-hourglass"></i></div>
+      <div class="empty-title">No Hostel Bill Yet</div>
+      <div class="empty-sub">No hostel bill has been generated for the current term. Contact the school office.</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Recent Transactions -->
+<div class="panel" style="margin-bottom:20px;animation-delay:.38s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-teal"><i class="bi bi-clock-history"></i></div>
+      <h3 class="panel-title">Family Wallet Transactions</h3>
+    </div>
+    <a href="{% url 'finance:transaction_history' %}" class="panel-link">View All →</a>
+  </div>
+  {% if txns %}
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead>
+        <tr><th>Date</th><th>Description</th><th>Reference</th><th>Amount</th><th>Balance</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for txn in txns %}
+        <tr>
+          <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y H:i" }}</td>
+          <td style="color:var(--slate2);">{{ txn.description|truncatechars:45 }}</td>
+          <td><span class="ref">{{ txn.reference }}</span></td>
+          <td style="font-weight:700;{% if txn.txn_type == 'CREDIT' %}color:var(--green);{% else %}color:var(--red);{% endif %}">
+            {% if txn.txn_type == 'CREDIT' %}+{% else %}−{% endif %}₦{{ txn.amount|floatformat:2 }}
+          </td>
+          <td style="color:var(--slate);">₦{{ txn.balance_after|floatformat:2 }}</td>
+          <td>
+            <a href="{% url 'finance:receipt_txn' txn.id %}" class="tbl-link">
+              <i class="bi bi-receipt"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon-box"><i class="bi bi-inbox"></i></div>
+    <div class="empty-title">No Transactions</div>
+    <div class="empty-sub">Your wallet transaction history will appear here.</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Pending Top-Ups -->
+{% if topups %}
+<div class="panel" style="animation-delay:.42s">
+  <div class="panel-header">
+    <div class="panel-title-group">
+      <div class="icon-badge ib-amber"><i class="bi bi-hourglass-split"></i></div>
+      <h3 class="panel-title">Pending Top-Up Requests</h3>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="tbl">
+      <thead>
+        <tr><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th>Note</th></tr>
+      </thead>
+      <tbody>
+        {% for t in topups %}
+        <tr>
+          <td style="color:var(--slate);">{{ t.requested_at|date:"d M Y" }}</td>
+          <td style="color:var(--green);font-weight:700;">₦{{ t.amount|floatformat:2 }}</td>
+          <td style="color:var(--slate2);">{{ t.get_method_display }}</td>
+          <td>
+            {% if t.status == 'PENDING' %}<span class="badge badge-amber">Pending</span>
+            {% elif t.status == 'APPROVED' %}<span class="badge badge-green">Approved</span>
+            {% else %}<span class="badge badge-red">Rejected</span>{% endif %}
+          </td>
+          <td style="font-size:.78rem;color:var(--slate);">{{ t.note|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+</div><!-- /.wallet-wrap -->
+
+<!-- Fund Wallet Modal -->
+<div class="modal-ov" id="topupModal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <div class="modal-title-text">
+        <i class="bi bi-wallet2"></i> Fund Family Wallet
+      </div>
+      <button class="close-btn" onclick="document.getElementById('topupModal').classList.remove('active')">×</button>
+    </div>
+    <p class="modal-sub">
+      The funded amount will be shared by <strong style="color:var(--white);">all your children</strong> at this school.
+      Submit your proof and the school office will approve within 24 hours.
+    </p>
+    <form method="POST" action="{% url 'finance:request_topup' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="fg">
+        <label>Amount (₦) *</label>
+        <input type="number" name="amount" min="100" step="50" placeholder="e.g. 50,000" required>
+      </div>
+      <div class="fg">
+        <label>Payment Method *</label>
+        <select name="method">
+          <option value="CASH">Cash Payment at School</option>
+          <option value="BANK_TRANSFER">Bank Transfer</option>
+          <option value="POS">POS / Card</option>
+          <option value="ONLINE">Online Payment</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Bank / Teller Reference (optional)</label>
+        <input type="text" name="reference" placeholder="Transaction reference or teller no.">
+      </div>
+      <div class="fg">
+        <label>Payment Proof / Receipt Photo (optional)</label>
+        <input type="file" name="payment_proof" accept="image/*">
+      </div>
+      <div class="bank-box">
+        <strong><i class="bi bi-bank"></i> Paying by bank transfer?</strong><br>
+        Pay only into {{ tenant.name }}'s official bank account — contact the school office to confirm the account details.<br>
+        Use your child's admission number as narration.
+      </div>
+      <button type="submit" class="btn-submit">
+        <i class="bi bi-send-fill"></i> Submit Top-Up Request
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.modal-ov').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); });
+});
+</script>
+{% endblock %}

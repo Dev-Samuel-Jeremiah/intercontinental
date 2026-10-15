@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Library reports{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library · last {{ days }} days</div>
+  <h1 class="fin-title"><em>Reports &amp; settings</em></h1>
+  <p class="fin-sub">What is being read, by whom, and how the collection is holding up.</p>
+</div><form method="get" class="no-print"><select name="days" onchange="this.form.submit()"><option value="30" {% if days == 30 %}selected{% endif %}>30 days</option><option value="90" {% if days == 90 %}selected{% endif %}>90 days</option><option value="365" {% if days == 365 %}selected{% endif %}>A year</option></select></form></div>
+{% include "library/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Loans</small><b>{{ r.loans }}</b></div>
+  <div class="fin-stat"><small>Readers</small><b>{{ r.readers_count }}</b></div>
+  <div class="fin-stat"><small>Returned late</small><b>{{ r.returned_late }}</b></div>
+  <div class="fin-stat"><small>Overdue now</small><b>{{ r.overdue_now }}</b></div>
+  <div class="fin-stat"><small>Copies / titles</small><b>{{ r.copies }} / {{ r.books }}</b></div>
+  <div class="fin-stat"><small>Never borrowed</small><b>{{ r.never }}</b></div>
+  <div class="fin-stat"><small>Fines charged</small><b>₦{{ r.fines|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Collected</small><b>₦{{ r.collected|floatformat:0 }}</b></div>
+</div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Most borrowed</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for b in r.top %}<tr><td class="name">{{ b.title }}<br><small class="hint">{{ b.authors }}</small></td><td class="num">{{ b.n }}</td></tr>{% empty %}<tr><td class="empty">No loans yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Most active readers</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for s in r.readers %}<tr><td class="name">{{ s.full_name }}<br><small class="hint">{{ s.class_assigned|default:"" }}</small></td><td class="num">{{ s.n }}</td></tr>{% empty %}<tr><td class="empty">No loans yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Loans by class and subject</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for c in r.by_class %}<tr><td class="name">{{ c.student__class_assigned__name|default:"No class" }}</td><td class="num">{{ c.n }}</td></tr>{% endfor %}
+      {% for c in r.by_subject %}<tr><td class="name hint">{{ c.copy__book__subject }}</td><td class="num">{{ c.n }}</td></tr>{% endfor %}
+    </tbody></table>
+    {% if r.months %}<p class="hint" style="margin-top:.5rem">By month: {% for m, n in r.months %}{{ m }}: {{ n }}{% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    {% if r.downloads %}<p class="hint">Most opened e-resources: {% for e in r.downloads %}{{ e.title }} ({{ e.downloads }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    </div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="settings">
+      <h3 style="margin:0 0 .6rem">Rules</h3>
+      <div class="row2"><div><label>Loan days</label><input name="loan_days" value="{{ cfg.loan_days }}" inputmode="numeric"></div><div><label>Renewals allowed</label><input name="max_renewals" value="{{ cfg.max_renewals }}" inputmode="numeric"></div></div>
+      <div class="row2"><div><label>Books per student</label><input name="student_max_loans" value="{{ cfg.student_max_loans }}" inputmode="numeric"></div><div><label>Books per staff</label><input name="staff_max_loans" value="{{ cfg.staff_max_loans }}" inputmode="numeric"></div></div>
+      <div class="row2"><div><label>Fine per day (₦)</label><input name="fine_per_day" value="{{ cfg.fine_per_day }}" inputmode="decimal"></div><div><label>Most per book (0 = no cap)</label><input name="fine_cap" value="{{ cfg.fine_cap }}" inputmode="decimal"></div></div>
+      <div class="row2"><div><label>Grace days</label><input name="grace_days" value="{{ cfg.grace_days }}" inputmode="numeric"></div><div><label>Remind days before due</label><input name="remind_days_before" value="{{ cfg.remind_days_before }}" inputmode="numeric"></div></div>
+      <div class="row2"><div><label>Keep reserved books (days)</label><input name="hold_days" value="{{ cfg.hold_days }}" inputmode="numeric"></div><div><label>&nbsp;</label><label class="pill"><input type="checkbox" name="block_when_owing" {% if cfg.block_when_owing %}checked{% endif %}> No loans while owing</label></div></div>
+      <div><label>Opening hours</label><textarea name="opening_hours" rows="3">{{ cfg.opening_hours }}</textarea></div>
+      <div><label>Library staff (besides admins and librarians)</label><select name="managers" multiple size="5">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk in mgrs %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+    </form>
+    <div class="panel"><div class="panel-h"><h3>Branches</h3></div><div class="panel-b">
+      {% for br in branches %}<form method="post" style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0">{% csrf_token %}<input type="hidden" name="action" value="branch_toggle"><input type="hidden" name="id" value="{{ br.pk }}"><span>{{ br.name }}{% if br.location %} <small class="hint">{{ br.location }}</small>{% endif %}{% if not br.active %} <span class="chip">Closed</span>{% endif %}</span><button class="fin-btn fin-btn-sm" type="submit">{% if br.active %}Close{% else %}Reopen{% endif %}</button></form>{% empty %}<p class="hint">One library. Add branches for separate campuses or a junior library.</p>{% endfor %}
+      <form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.5rem">{% csrf_token %}<input type="hidden" name="action" value="branch"><input name="name" placeholder="Branch name" required><input name="location" placeholder="Where"><button class="fin-btn fin-btn-sm" type="submit">Add</button></form>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

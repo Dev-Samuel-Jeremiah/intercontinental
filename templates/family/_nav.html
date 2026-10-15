@@ -1,0 +1,7 @@
+<div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
+  <a class="fin-btn fin-btn-sm" href="{% url 'family:tickets' %}"><i class="bi bi-chat-square-text"></i> Feedback</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'family:staff_appointments' %}"><i class="bi bi-calendar-check"></i> My appointments</a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'family:volunteer_manage' %}"><i class="bi bi-hand-thumbs-up"></i> Volunteers</a>
+  {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}<a class="fin-btn fin-btn-sm" href="{% url 'family:pta_manage' %}"><i class="bi bi-people"></i> PTA</a>{% endif %}
+  {% if user.is_superuser or user.staff.role == 'ADMIN' %}<a class="fin-btn fin-btn-sm" href="{% url 'family:manage' %}"><i class="bi bi-emoji-smile"></i> Satisfaction &amp; settings</a>{% endif %}
+</div>

@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Loans{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Loans</em></h1>
+  <p class="fin-sub">Overdue borrowers get a reminder (and their family a text) once a book is late. Mark a book lost to charge its replacement cost.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div style="display:flex;gap:.4rem;margin-bottom:1rem">
+  <a class="fin-btn fin-btn-sm{% if show == 'overdue' %} fin-btn-gold{% endif %}" href="?show=overdue">Overdue</a>
+  <a class="fin-btn fin-btn-sm{% if show == 'out' %} fin-btn-gold{% endif %}" href="?show=out">All out</a>
+  <a class="fin-btn fin-btn-sm{% if show == 'rentals' %} fin-btn-gold{% endif %}" href="?show=rentals">Textbook rentals</a>
+  <a class="fin-btn fin-btn-sm{% if show == 'all' %} fin-btn-gold{% endif %}" href="?show=all">History</a>
+</div>
+<div class="panel"><div class="panel-b"><table class="tbl">
+  <thead><tr><th>Book</th><th>Borrower</th><th>Lent</th><th>Due</th><th class="num">Fine so far</th><th></th></tr></thead><tbody>
+  {% for l in rows %}<tr><td class="name">{{ l.copy.book.title }}<br><small class="hint">{{ l.copy.barcode }}{% if l.rental_term %} · rental{% endif %}</small></td>
+    <td>{{ l.borrower_name }}<br><small class="hint">{% if l.student %}{{ l.student.class_assigned|default:"" }}{% else %}Staff{% endif %}</small></td>
+    <td>{{ l.issued_at|date:"j M" }}</td>
+    <td>{% if l.lost %}<span class="chip red">Lost</span>{% elif l.returned_at %}back {{ l.returned_at|date:"j M" }}{% elif l.due_on < today %}<span class="chip red">{{ l.due_on|date:"j M" }}</span>{% else %}{{ l.due_on|date:"j M" }}{% endif %}</td>
+    <td class="num">{% if l.fine %}₦{{ l.fine|floatformat:2 }}{% endif %}</td>
+    <td>{% if not l.returned_at %}<form method="post" style="display:flex;gap:.25rem">{% csrf_token %}<input type="hidden" name="id" value="{{ l.pk }}">{% if not l.rental_term %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="renew">Renew</button>{% endif %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="lost" onclick="return confirm('Record this book as lost and charge its replacement cost?')">Lost</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">Nothing here.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

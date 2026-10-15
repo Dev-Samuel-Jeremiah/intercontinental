@@ -1,0 +1,9 @@
+{% extends base %}
+{% block title %}Help centre{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}<div class="fin-head"><div><div class="fin-eyebrow">Help</div><h1 class="fin-title">Help <em>centre</em></h1><p class="fin-sub">Short guides for every part of the portal. Can't find it? Ask the school's ICT office.</p></div></div>
+<form method="get" style="display:flex;gap:.5rem;margin-bottom:1.2rem" class="panel fin-form"><input name="q" value="{{ q }}" placeholder="What do you need help with?" autofocus style="flex:1"><button class="fin-btn fin-btn-gold" type="submit">Search</button></form>
+{% for cat, arts in cats.items %}<div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3 style="margin:0 0 .4rem">{{ cat }}</h3></div><div class="panel-b">
+  {% for a in arts %}<p style="margin:.3rem 0"><a href="{% url 'platform_school:help_article' a.slug %}">{{ a.title }}</a>{% if a.summary %}<br><span class="hint">{{ a.summary }}</span>{% endif %}</p>{% endfor %}
+</div></div>{% empty %}<p class="hint">{% if q %}Nothing matches "{{ q }}".{% else %}No articles yet.{% endif %}</p>{% endfor %}
+{% endblock %}

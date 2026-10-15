@@ -1,0 +1,94 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Admissions{% endblock %}
+{% block content %}
+{% include "admissions/_styles.html" %}
+
+<div class="adm-head">
+  <div>
+    <div class="adm-eyebrow">Admissions</div>
+    <h1 class="adm-title">Application <em>pipeline</em></h1>
+    <p class="adm-sub">
+      {% if settings_obj.applications_open %}
+        <span class="chip green"><i class="bi bi-broadcast"></i> Form is open</span>
+      {% else %}
+        <span class="chip red"><i class="bi bi-slash-circle"></i> Form is closed</span>
+      {% endif %}
+      Move applicants from first contact to enrolled.
+    </p>
+  </div>
+  <div class="adm-actions">
+    <a class="adm-btn" href="{% url 'admissions:analytics' %}"><i class="bi bi-graph-up"></i> Analytics</a>
+    <a class="adm-btn" href="{% url 'admissions:list' %}"><i class="bi bi-list-ul"></i> List view</a>
+    <a class="adm-btn adm-btn-gold" href="{% url 'admissions:settings' %}"><i class="bi bi-gear-fill"></i> Settings</a>
+  </div>
+</div>
+
+<div class="adm-stats">
+  <div class="adm-stat"><small>Total applications</small><b>{{ counts.TOTAL }}</b></div>
+  <div class="adm-stat"><small>Awaiting review</small><b style="color:var(--champagne-lt)">{{ counts.NEW }}</b></div>
+  <div class="adm-stat"><small>Offers sent</small><b style="color:var(--blue)">{{ counts.OFFERED }}</b></div>
+  <div class="adm-stat"><small>Enrolled</small><b style="color:var(--green)">{{ counts.ENROLLED }}</b></div>
+</div>
+
+<form method="get" class="adm-filters">
+  <div><label style="font-size:.7rem;color:var(--slate);display:block;margin-bottom:.3rem">Search</label>
+    <input type="search" name="q" value="{{ search }}" placeholder="Name, reference or phone"></div>
+  <div><label style="font-size:.7rem;color:var(--slate);display:block;margin-bottom:.3rem">Class</label>
+    <select name="class_id">
+      <option value="">All classes</option>
+      {% for c in classes %}<option value="{{ c.id }}" {% if class_id == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+    </select></div>
+  <button class="adm-btn" type="submit"><i class="bi bi-funnel"></i> Filter</button>
+  {% if search or class_id %}<a class="adm-btn" href="{% url 'admissions:board' %}">Clear</a>{% endif %}
+</form>
+
+<div class="board">
+  {% for col in columns %}
+  <section class="col">
+    <div class="col-h"><b>{{ col.label }}</b><span>{{ col.count }}</span></div>
+    <div class="col-b">
+      {% for a in col.items %}
+      <a class="appcard" href="{% url 'admissions:detail' a.pk %}">
+        <b>{{ a.full_name }}</b>
+        <small>{{ a.reference }}{% if a.applying_for %} · {{ a.applying_for.name }}{% endif %}</small>
+        <div class="meta">
+          {% if a.sibling_of %}<span class="chip gold"><i class="bi bi-people-fill"></i> Sibling</span>{% endif %}
+          {% if a.fee_amount and not a.fee_paid %}<span class="chip red">Fee unpaid</span>{% endif %}
+          {% if a.total_score %}<span class="chip blue">{{ a.total_score|floatformat:0 }} pts</span>{% endif %}
+          <span class="chip">{{ a.created_at|date:"j M" }}</span>
+        </div>
+      </a>
+      {% empty %}
+      <div class="col-empty">Nothing here yet</div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+
+{% if closed %}
+<div class="panel" style="margin-top:1.6rem">
+  <div class="panel-h"><h3><i class="bi bi-archive"></i> Not proceeding ({{ closed|length }})</h3></div>
+  <div class="panel-b" style="display:flex;gap:.6rem;flex-wrap:wrap">
+    {% for a in closed %}
+    <a class="appcard" style="width:230px" href="{% url 'admissions:detail' a.pk %}">
+      <b>{{ a.full_name }}</b><small>{{ a.reference }}</small>
+      <div class="meta"><span class="chip red">{{ a.get_status_display }}</span></div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if not counts.TOTAL %}
+<div class="panel" style="margin-top:1.4rem"><div class="empty">
+  <i class="bi bi-inbox"></i>
+  <strong style="color:var(--white);display:block;margin-bottom:.3rem">No applications yet</strong>
+  {% if settings_obj.applications_open %}
+    Share your application link: <code style="color:var(--champagne-lt)">{{ request.scheme }}://{{ request.get_host }}/apply/</code>
+  {% else %}
+    Open the form in <a href="{% url 'admissions:settings' %}" style="color:var(--champagne-lt)">Settings</a> to start receiving applications.
+  {% endif %}
+</div></div>
+{% endif %}
+{% endblock %}

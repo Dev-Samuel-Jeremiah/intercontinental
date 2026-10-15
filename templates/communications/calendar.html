@@ -1,0 +1,36 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Messages calendar{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.35rem}
+  .cal .dh{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--slate);padding:.2rem .4rem}
+  .cal .cell{min-height:96px;border:1px solid var(--rim);border-radius:12px;padding:.35rem;background:rgba(255,255,255,.02);font-size:.75rem;overflow:hidden}
+  .cal .cell.off{background:transparent;border-style:dashed;opacity:.35}
+  .cal .cell.today{border-color:var(--champagne,#f4d21f)}
+  .cal .n{font-weight:700;margin-bottom:.2rem}
+  .cal a.it{display:block;padding:.15rem .35rem;border-radius:6px;margin:.15rem 0;background:rgba(255,255,255,.06);color:inherit;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cal a.it.gold{background:rgba(244,210,31,.18)}.cal a.it.green{background:rgba(74,222,128,.14)}.cal a.it.red{background:rgba(232,112,112,.18)}.cal a.it.amber{background:rgba(251,191,36,.16)}
+  @media(max-width:700px){.cal{grid-template-columns:1fr}.cal .dh,.cal .cell.off{display:none}.cal .cell{min-height:0}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Messages <em>calendar</em></h1>
+  <p class="fin-sub">Scheduled and sent campaigns, messages waiting for approval, consent deadlines, surveys closing and emergency broadcasts.</p>
+</div>
+<div style="display:flex;gap:.4rem;align-items:center">
+  <a class="fin-btn" href="?y={{ prev.0 }}&m={{ prev.1 }}"><i class="bi bi-chevron-left"></i></a>
+  <b style="min-width:130px;text-align:center">{{ title }}</b>
+  <a class="fin-btn" href="?y={{ next.0 }}&m={{ next.1 }}"><i class="bi bi-chevron-right"></i></a>
+  <a class="fin-btn fin-btn-gold" href="{% url 'communications:campaign_create' %}">Schedule a message</a>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="cal">
+  {% for d in days %}<div class="dh">{{ d }}</div>{% endfor %}
+  {% for week in weeks %}{% for c in week %}
+  <div class="cell{% if not c.day %} off{% elif c.day == today %} today{% endif %}">{% if c.day %}<div class="n">{{ c.day|date:"j" }}<span class="hint" style="font-weight:400"> {{ c.day|date:"D" }}</span></div>
+    {% for it in c.items %}<a class="it {{ it.tone }}" href="{{ it.link }}" title="{{ it.kind }}: {{ it.title }}">{% if it.time %}{{ it.time }} {% endif %}{{ it.title }}</a>{% endfor %}{% endif %}</div>
+  {% endfor %}{% endfor %}
+</div>
+<p class="hint" style="margin-top:.8rem"><span class="chip gold">Scheduled</span> <span class="chip amber">Waiting for approval</span> <span class="chip green">Sent</span> <span class="chip red">Failed / emergency</span></p>
+{% endblock %}

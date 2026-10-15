@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Awards & leaders{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Awards &amp; <em>leaders</em></h1>
+    <p class="fin-sub">Every prize and placing on record, and the students who hold leadership roles now.</p>
+  </div>
+</div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Awards on record</small><b>{{ awards|length }}</b></div>
+  <div class="fin-stat"><small>Current leaders</small><b>{{ leaders|length }}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-award"></i> Awards</h3></div>
+    <form method="get" class="panel-b" style="display:flex;gap:.5rem;flex-wrap:wrap;padding-bottom:.4rem">
+      <select name="category" onchange="this.form.submit()" style="padding:.5rem .7rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+        <option value="">All kinds</option>{% for v, l in categories %}<option value="{{ v }}"{% if category == v %} selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select>
+      <input type="search" name="q" value="{{ q }}" placeholder="Award or student" style="flex:1;padding:.5rem .7rem;border-radius:9px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+    </form>
+    <div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for a in awards %}
+      <tr><td style="white-space:nowrap">{{ a.awarded_on|date:"j M Y" }}</td>
+        <td><b>{{ a.title }}</b>{% if a.position %} <span class="chip gold">{{ a.position }}</span>{% endif %}<br><span class="hint">{{ a.get_category_display }} · {{ a.get_level_display }}</span></td>
+        <td><a href="{% url 'users:student_profile' a.student.id %}#awards" style="color:var(--white)">{{ a.student.full_name }}</a><br><span class="hint">{{ a.student.class_assigned.name|default:"" }}</span></td></tr>
+      {% empty %}<tr><td class="empty"><i class="bi bi-award"></i><p>No awards recorded yet. Add them from a student's profile.</p></td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-star"></i> Current leaders</h3></div>
+    <div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for r in leaders %}
+      <tr><td><b>{{ r.title }}</b><br><span class="hint">{{ r.get_kind_display }}{% if r.group %} · {{ r.group }}{% endif %}</span></td>
+        <td><a href="{% url 'users:student_profile' r.student.id %}#awards" style="color:var(--white)">{{ r.student.full_name }}</a><br><span class="hint">{{ r.student.class_assigned.name|default:"" }} · since {{ r.start_date|date:"M Y" }}</span></td></tr>
+      {% empty %}<tr><td class="empty"><i class="bi bi-star"></i><p>No student holds a role at the moment.</p></td></tr>{% endfor %}
+    </tbody></table></div>
+  </div>
+</div>
+{% endblock %}

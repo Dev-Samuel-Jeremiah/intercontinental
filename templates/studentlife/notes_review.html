@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Shared notes to check{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student experience</div>
+  <h1 class="fin-title">Shared notes <em>to check</em></h1>
+  <p class="fin-sub">New notes and notes students reported. Approve to share with the year group, or hide.</p>
+</div></div>
+{% include "studentlife/_staffnav.html" %}
+{% for n in items %}<div class="panel" style="margin-bottom:.8rem"><div class="panel-h"><h3>{{ n.title }} <span class="chip">{{ n.subject.name }}</span> <span class="chip">{{ n.level }}</span>{% if n.reports %} <span class="chip red">{{ n.reports }} report{{ n.reports|pluralize }}</span>{% endif %}</h3></div><div class="panel-b">
+  <small class="hint">by {{ n.author.full_name }} ({{ n.author.class_assigned.name|default:"" }}) · {{ n.get_status_display }}</small>
+  {% if n.body %}<p>{{ n.body|linebreaksbr }}</p>{% endif %}{% if n.file %}<a href="{% url 'studentlife:note_file' n.pk %}" target="_blank"><i class="bi bi-paperclip"></i> Open file</a>{% endif %}
+  <div style="display:flex;gap:.3rem;margin-top:.5rem"><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ n.pk }}"><input type="hidden" name="action" value="approve"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Approve</button></form><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ n.pk }}"><input type="hidden" name="action" value="hide"><button class="fin-btn fin-btn-sm" type="submit">Hide</button></form></div>
+</div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">Nothing to check.</p></div></div>{% endfor %}
+{% endblock %}

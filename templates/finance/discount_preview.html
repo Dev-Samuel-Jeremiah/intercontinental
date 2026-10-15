@@ -1,0 +1,64 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Check a student's fees{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Finance</div>
+    <h1 class="fin-title">What will this family <em>actually pay?</em></h1>
+    <p class="fin-sub">Shows the fees for a student and every discount that applies to them.</p>
+  </div>
+  <a class="fin-btn" href="{% url 'finance:discounts' %}"><i class="bi bi-arrow-left"></i> Discounts</a>
+</div>
+
+<form method="get" class="panel">
+  <div class="panel-b" style="display:flex;gap:.7rem;flex-wrap:wrap;align-items:flex-end">
+    <div style="flex:1 1 280px"><label style="font-size:.76rem;color:var(--slate2);display:block;margin-bottom:.3rem">Student</label>
+      <select name="student_id" onchange="this.form.submit()" style="width:100%;padding:.65rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white)">
+        <option value="">— choose a student —</option>
+        {% for s in students %}<option value="{{ s.id }}" {% if student and student.id == s.id %}selected{% endif %}>{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}
+      </select>
+    </div>
+    <button class="fin-btn" type="submit"><i class="bi bi-search"></i> Check</button>
+  </div>
+</form>
+
+{% if result %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Fees before discount</small><b>₦{{ result.gross|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Discount</small><b style="color:var(--green)">₦{{ result.off|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Payable</small><b style="color:var(--champagne-lt)">₦{{ result.net|floatformat:0 }}</b></div>
+  <div class="fin-stat"><small>Child in family</small><b>{{ result.position }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-list-ul"></i> Fees charged</h3></div>
+    <table class="tbl">
+      <tbody>
+        {% for f in result.fees %}
+        <tr><td class="name">{{ f.name }}<br><span class="hint">{{ f.get_category_display }}</span></td><td class="money" style="text-align:right">₦{{ f.amount|floatformat:0 }}</td></tr>
+        {% empty %}
+        <tr><td><div class="empty"><i class="bi bi-receipt"></i>No fee structures match this student's class and term.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-tags"></i> Discounts applied</h3></div>
+    <table class="tbl">
+      <tbody>
+        {% for line in result.lines %}
+        <tr><td class="name">{{ line.label }}</td><td class="money" style="text-align:right;color:var(--green)">− ₦{{ line.amount|floatformat:0 }}</td></tr>
+        {% empty %}
+        <tr><td><div class="empty"><i class="bi bi-tags"></i>No discount applies to this student.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% elif student %}
+<div class="panel"><div class="empty"><i class="bi bi-info-circle"></i>No active session or term, so there is nothing to calculate yet.</div></div>
+{% endif %}
+{% endblock %}

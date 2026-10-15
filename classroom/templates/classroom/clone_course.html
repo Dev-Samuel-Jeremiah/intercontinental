@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Copy {{ course.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Copy a course</div>
+  <h1 class="fin-title">{{ course.name }}</h1>
+  <p class="fin-sub">Copies every section, lesson, material, assignment and quiz into a new course. Students, submissions and progress start fresh.</p>
+</div></div>
+<form method="post" class="fin-form panel" style="padding:1.2rem;max-width:640px">{% csrf_token %}
+  <div><label>New course name</label><input name="name" required maxlength="255" value="{{ course.name }} (new term)"></div>
+  <div><label>For class</label><select name="class"><option value="">— none —</option>{% for c in classes %}<option value="{{ c.id }}" {% if c.id == course.class_assigned_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+  <div><label>Move assignment due dates by (days)</label><input type="number" name="shift_days" value="0" min="-400" max="400"><span class="hint">e.g. 91 to move everything one term later.</span></div>
+  <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-files"></i> Copy course</button>
+</form>
+{% endblock %}

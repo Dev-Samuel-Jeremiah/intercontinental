@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Medication{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Health</div>
+  <h1 class="fin-title"><em>Medication</em></h1>
+  <p class="fin-sub">Medicines given at school, who gave them and when. Regular medicines need signed parent consent; families are told about one-off doses.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Due today</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for p in plans %}<tr><td class="name"><a href="{% url 'welfare:medical' p.student_id %}">{{ p.student.full_name }}</a><br><small class="hint">{{ p.medicine }} {{ p.dose }} · {{ p.times }}</small></td>
+        <td>{% if p.given_today %}<span class="chip ok">Given</span>{% elif not p.parent_consent %}<span class="chip red">No consent</span>{% else %}<form method="post" style="display:flex;gap:.25rem">{% csrf_token %}<input type="hidden" name="student" value="{{ p.student_id }}"><input type="hidden" name="plan" value="{{ p.pk }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Given</button><button class="fin-btn fin-btn-sm" type="submit" name="refused" value="1">Refused</button></form>{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No regular medicines today.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Log</h3></div><div class="panel-b"><table class="tbl"><tbody>
+      {% for d in doses %}<tr><td>{{ d.given_at|date:"D j M H:i" }}</td><td class="name">{{ d.student.full_name }}<br><small class="hint">{{ d.medicine }} {{ d.dose }}{% if d.reason %} · {{ d.reason }}{% endif %}</small></td><td>{% if d.refused %}<span class="chip">Refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>
+      {% empty %}<tr><td class="empty">Nothing given yet.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">One-off dose</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    <div class="row2"><div><label>Medicine</label><input name="medicine" required maxlength="120" placeholder="Paracetamol"></div><div><label>Dose</label><input name="dose" required maxlength="60" placeholder="500 mg"></div></div>
+    <div><label>Why</label><input name="reason" maxlength="160" placeholder="Headache"></div>
+    <div><label>Note</label><input name="note" maxlength="255"></div>
+    <p class="hint" style="margin:0">Only given if the family agreed to first-aid medicine on the medical profile.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Record</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Night emergency sheet{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Night emergency <em>sheet</em>{% if h %} — {{ h.name }}{% endif %}</h1>
+  <p class="fin-sub">For the night warden: every boarder, their bed, who to call, and medical needs. Printed {{ now|date:"j M Y H:i" }}. Keep it private and replace it each term.</p>
+</div><div class="no-print" style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold" onclick="window.print()">Print</button>{% include "hostel/boarding/_hostel_pick.html" %}</div></div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="panel"><div class="panel-b"><table class="tbl" style="font-size:.85rem"><thead><tr><th>Room/bed</th><th>Boarder</th><th>Emergency contact</th><th>Other contacts</th><th>Medical / allergies</th><th>Doctor</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.b.bed.room.room_number }}/{{ r.b.bed.bed_number }}</td><td class="name">{{ r.student.full_name }}<br><small class="hint">{{ r.student.class_assigned.name|default:"" }}{% if r.b.blood_group %} · {{ r.b.blood_group }}{% endif %}{% if r.b.status == 'EXEAT' %} · on exeat{% endif %}</small></td>
+  <td>{{ r.b.emergency_name|default:r.student.parent_name|default:"" }}<br><b>{{ r.b.emergency_phone|default:r.student.parent_phone|default:"" }}</b></td>
+  <td>{% for g in r.guardians %}{{ g.full_name }} {{ g.phone }}<br>{% endfor %}</td>
+  <td>{{ r.b.medical_conditions|linebreaksbr }}{% if r.b.diet != 'NONE' %}<br><small>{{ r.b.get_diet_display }} {{ r.b.diet_note }}</small>{% endif %}</td>
+  <td>{{ r.b.doctor_name }} {{ r.b.doctor_phone }}</td></tr>{% empty %}<tr><td colspan="6" class="empty">No boarders.</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Kitchen list{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Kitchen <em>list</em>{% if h %} — {{ h.name }}{% endif %}</h1>
+  <p class="fin-sub">Boarders with special diets or food allergies, and this week's menu (which families also see). Print it for the kitchen.</p>
+</div>{% include "hostel/boarding/_hostel_pick.html" %}</div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Special diets ({{ diets|length }})</h3></div><div class="panel-b"><table class="tbl"><tbody>
+    {% for b in diets %}<tr><td class="name">{{ b.student.full_name }}<br><small class="hint">Room {{ b.bed.room.room_number }}</small></td><td>{% if b.diet == 'ALLERGY' %}<span class="chip red">{{ b.get_diet_display }}</span>{% else %}<span class="chip gold">{{ b.get_diet_display }}</span>{% endif %}</td><td>{{ b.diet_note }}</td></tr>{% empty %}<tr><td class="empty">No special diets recorded.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <div class="panel"><div class="panel-h"><h3>This week's menu</h3></div><div class="panel-b">{% for day, meals in menu %}<p style="margin:.4rem 0 .1rem"><b>{{ day }}</b></p>{% for m in meals %}<div class="hint">{{ m.time|time:"H:i" }} {{ m.get_meal_type_display }}: {{ m.menu }}</div>{% endfor %}{% empty %}<p class="empty">No menu yet — add it under Meal Plans.</p>{% endfor %}</div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Support plans{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Care</div>
+  <h1 class="fin-title"><em>Support plans</em></h1>
+  <p class="fin-sub">Individual plans for students with special educational needs: what they find hard, goals and what everyone will do, reviewed on a date. Every teacher can read the plans; the owner is reminded a week before a review.</p>
+</div></div>
+{% include "welfare/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
+      {% for p in items %}<tr><td class="name"><a href="{% url 'welfare:plan' p.pk %}">{{ p.student.full_name }}</a><br><small class="hint">{{ p.student.class_assigned|default:"" }} · {{ p.title }}{% if p.owner %} · {{ p.owner.full_name }}{% endif %}</small></td><td>{% if p.review_on <= today %}<span class="chip red">Review {{ p.review_on|date:"j M" }}</span>{% else %}review {{ p.review_on|date:"j M" }}{% endif %}</td></tr>
+      {% empty %}<tr><td class="empty">No active plans.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if closed %}<div class="panel"><div class="panel-h"><h3>Closed</h3></div><div class="panel-b">{% for p in closed %}<p style="margin:.15rem 0"><a href="{% url 'welfare:plan' p.pk %}">{{ p.student.full_name }} — {{ p.title }}</a></p>{% endfor %}</div></div>{% endif %}
+  </div>
+  {% if can %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">New plan</h3>
+    <div><label>Student</label><select name="student" required>{% for s in students %}<option value="{{ s.pk }}">{{ s.full_name }}</option>{% endfor %}</select></div>
+    {% include "welfare/_plan_form.html" %}
+    <button class="fin-btn fin-btn-gold" type="submit">Create</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

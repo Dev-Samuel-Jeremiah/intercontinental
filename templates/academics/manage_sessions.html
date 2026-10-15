@@ -1,0 +1,436 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Academic Sessions{% endblock %}
+
+{% block content %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* design tokens come from dashboard/base.html */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.as-wrap {
+  font-family: "Outfit", system-ui, sans-serif;
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+  color: var(--white);
+  animation: riseUp .45s ease both;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--rim);
+  position: relative;
+}
+.page-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px; left: 0;
+  width: 80px; height: 1px;
+  background: var(--champagne);
+}
+.page-header-left {}
+.page-eyebrow {
+  font-size: .65rem; font-weight: 600; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--champagne);
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .5rem;
+}
+.page-eyebrow::before {
+  content: ""; width: 16px; height: 1px; background: var(--champagne);
+}
+.page-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2.1rem; font-weight: 500; line-height: 1.1;
+  color: var(--white);
+}
+.page-title em { font-style: italic; color: var(--champagne); }
+.session-count-badge {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .45rem 1rem;
+  background: var(--champagne-dim);
+  border: 1px solid rgba(244,210,31,.25);
+  border-radius: 50px;
+  font-size: .72rem; font-weight: 600; color: var(--champagne);
+}
+.session-count-badge i { font-size: .9rem; }
+
+/* ── PANELS ── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+.panel::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--rim3) 50%, transparent 100%);
+}
+.panel-head {
+  padding: 1.1rem 1.5rem .85rem;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; gap: .65rem;
+}
+.panel-head-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem;
+  background: var(--champagne-dim); color: var(--champagne);
+  flex-shrink: 0;
+}
+.panel-head h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: .88rem; font-weight: 600; color: var(--white); margin: 0;
+}
+
+/* ── FORM ── */
+.form-body { padding: 1.5rem; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.1rem;
+}
+.form-grid .field-full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: .4rem; }
+.field-label {
+  font-size: .73rem; font-weight: 600;
+  letter-spacing: .4px; color: var(--slate2);
+  text-transform: uppercase;
+}
+.field-input,
+.field-select {
+  width: 100%;
+  padding: .78rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  font-size: .88rem; color: var(--white);
+  font-family: "Outfit", inherit;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  appearance: none;
+}
+.field-input::placeholder { color: rgba(255,255,255,.2); }
+.field-input:focus,
+.field-select:focus {
+  border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+/* Date input calendar icon colour */
+.field-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(.5) sepia(1) saturate(2) hue-rotate(5deg);
+  cursor: pointer;
+  opacity: .6;
+}
+.field-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+
+/* Checkbox toggle */
+.check-row {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .9rem 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+.check-row:hover {
+  border-color: rgba(244,210,31,.3);
+  background: var(--surface3);
+}
+.check-row input[type="checkbox"] {
+  width: 17px; height: 17px;
+  accent-color: var(--champagne);
+  cursor: pointer; flex-shrink: 0;
+}
+.check-row-label {
+  font-size: .85rem; font-weight: 500; color: var(--slate2);
+  display: flex; align-items: center; gap: .5rem; cursor: pointer;
+}
+.check-row-label i { font-size: 1rem; color: var(--green); }
+
+.form-actions {
+  padding: 0 1.5rem 1.5rem;
+  display: flex; align-items: center; gap: .75rem;
+}
+.btn-submit {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .78rem 1.5rem;
+  background: linear-gradient(135deg, var(--champagne) 0%, #d1ad00 100%);
+  border: none; border-radius: var(--radius-sm);
+  font-size: .88rem; font-weight: 700;
+  font-family: "Outfit", inherit;
+  color: #0a1f44; cursor: pointer; letter-spacing: .3px;
+  box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .14s, box-shadow .14s;
+}
+.btn-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(244,210,31,.32);
+}
+.btn-submit:active { transform: translateY(0); }
+.btn-reset {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .78rem 1.1rem;
+  background: none;
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-sm);
+  font-size: .85rem; font-weight: 500;
+  font-family: "Outfit", inherit;
+  color: var(--slate2); cursor: pointer;
+  transition: all .15s;
+}
+.btn-reset:hover {
+  border-color: var(--rim3); color: var(--white);
+  background: var(--surface2);
+}
+
+/* ── SESSION LIST ── */
+.sessions-panel { animation: riseUp .5s .1s ease both; }
+.sessions-list { list-style: none; padding: .35rem 0; }
+
+.session-item {
+  display: flex; align-items: center; gap: 1rem;
+  padding: .9rem 1.5rem;
+  border-bottom: 1px solid var(--rim);
+  transition: background .15s;
+  position: relative;
+}
+.session-item:last-child { border-bottom: none; }
+.session-item:hover { background: rgba(255,255,255,.025); }
+
+/* Active item left accent */
+.session-item.is-active::before {
+  content: "";
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--green), rgba(94,203,142,.3));
+  border-radius: 0 2px 2px 0;
+}
+
+.session-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+  background: var(--surface3); color: var(--slate2);
+  border: 1px solid var(--rim);
+  transition: all .15s;
+}
+.session-item.is-active .session-icon {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: rgba(94,203,142,.25);
+}
+.session-item:hover .session-icon { border-color: var(--rim2); }
+
+.session-info { flex: 1; min-width: 0; }
+.session-name {
+  font-size: .88rem; font-weight: 600; color: var(--white);
+  display: flex; align-items: center; gap: .6rem;
+  margin-bottom: .2rem;
+}
+.session-name .active-badge {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .15rem .6rem;
+  background: var(--green-dim);
+  border: 1px solid rgba(94,203,142,.25);
+  border-radius: 50px;
+  font-size: .62rem; font-weight: 700; color: var(--green);
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.session-name .active-badge::before {
+  content: ""; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--green); flex-shrink: 0;
+}
+.session-dates {
+  font-size: .71rem; color: var(--slate);
+  display: flex; align-items: center; gap: .35rem;
+}
+.session-dates i { font-size: .8rem; }
+
+.session-actions { display: flex; gap: .5rem; align-items: center; }
+.btn-manage {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .42rem .9rem;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  border-radius: var(--radius-xs);
+  font-size: .74rem; font-weight: 600;
+  color: var(--slate2); text-decoration: none;
+  transition: all .15s; white-space: nowrap;
+}
+.btn-manage:hover {
+  background: var(--champagne-dim);
+  border-color: rgba(244,210,31,.35);
+  color: var(--champagne);
+}
+.btn-manage i { font-size: .85rem; }
+
+/* Empty state */
+.sessions-empty {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .75rem; padding: 3rem 1.5rem;
+  text-align: center;
+}
+.empty-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--surface3);
+  border: 1px solid var(--rim2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: var(--slate);
+}
+.empty-title {
+  font-size: .9rem; font-weight: 600; color: var(--slate2);
+}
+.empty-sub { font-size: .78rem; color: var(--slate); }
+
+/* ── ANIMATION ── */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media(max-width: 560px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .field-full { grid-column: 1; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: .75rem; }
+  .session-item { flex-wrap: wrap; }
+}
+</style>
+
+<div class="as-wrap">
+
+  <!-- ── PAGE HEADER ── -->
+  <div class="page-header">
+    <div class="page-header-left">
+      <div class="page-eyebrow">Academic Management</div>
+      <h1 class="page-title">Academic <em>Sessions</em></h1>
+    </div>
+    <div class="session-count-badge">
+      <i class="bi bi-calendar3"></i>
+      {{ sessions|length }} Session{{ sessions|length|pluralize }}
+    </div>
+  </div>
+
+  <!-- ── CREATE SESSION FORM ── -->
+  <div class="panel" style="animation: riseUp .45s ease both;">
+    <div class="panel-head">
+      <div class="panel-head-icon"><i class="bi bi-plus-circle-fill"></i></div>
+      <h3>Create New Session</h3>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-body">
+        <div class="form-grid">
+
+          <div class="field field-full">
+            <label class="field-label" for="name">Session Name</label>
+            <input class="field-input" type="text" name="name" id="name"
+                   placeholder="e.g. 2024 / 2025" required autocomplete="off">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="start_date">Start Date</label>
+            <input class="field-input" type="date" name="start_date" id="start_date">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="end_date">End Date</label>
+            <input class="field-input" type="date" name="end_date" id="end_date">
+          </div>
+
+          <div class="field field-full">
+            <label class="check-row" for="is_active">
+              <input type="checkbox" name="is_active" id="is_active">
+              <span class="check-row-label">
+                <i class="bi bi-patch-check-fill"></i>
+                Mark as Active Session
+              </span>
+            </label>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-plus-circle-fill"></i>
+          Create Session
+        </button>
+        <button type="reset" class="btn-reset">
+          <i class="bi bi-x-circle"></i>
+          Clear
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ── SESSION LIST ── -->
+  <div class="panel sessions-panel">
+    <div class="panel-head">
+      <div class="panel-head-icon" style="background:var(--green-dim); color:var(--green);">
+        <i class="bi bi-calendar3"></i>
+      </div>
+      <h3>All Sessions</h3>
+    </div>
+
+    <ul class="sessions-list">
+      {% for s in sessions %}
+      <li class="session-item {% if s.is_active %}is-active{% endif %}">
+        <div class="session-icon">
+          <i class="bi bi-{% if s.is_active %}calendar-check-fill{% else %}calendar3{% endif %}"></i>
+        </div>
+        <div class="session-info">
+          <div class="session-name">
+            {{ s.name }}
+            {% if s.is_active %}
+              <span class="active-badge">Active</span>
+            {% endif %}
+          </div>
+          <div class="session-dates">
+            {% if s.start_date or s.end_date %}
+              <i class="bi bi-calendar-range"></i>
+              {% if s.start_date %}{{ s.start_date }}{% endif %}
+              {% if s.start_date and s.end_date %} &ndash; {% endif %}
+              {% if s.end_date %}{{ s.end_date }}{% endif %}
+            {% else %}
+              <i class="bi bi-dash-circle"></i>
+              No dates set
+            {% endif %}
+          </div>
+        </div>
+        <div class="session-actions">
+          <a href="{% url 'academics:manage_terms' s.id %}" class="btn-manage">
+            <i class="bi bi-folder2-open"></i>
+            Manage Terms
+          </a>
+        </div>
+      </li>
+      {% empty %}
+      <li>
+        <div class="sessions-empty">
+          <div class="empty-icon"><i class="bi bi-calendar-x"></i></div>
+          <div class="empty-title">No sessions yet</div>
+          <div class="empty-sub">Create your first academic session using the form above.</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+</div>
+{% endblock %}

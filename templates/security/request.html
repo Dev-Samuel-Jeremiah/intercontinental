@@ -1,0 +1,57 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ dr.reference }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Data protection request</div>
+  <h1 class="fin-title">{{ dr.reference }} — <em>{{ dr.get_kind_display|lower }}</em></h1>
+  <p class="fin-sub">Received {{ dr.created_at|date:"j M Y" }} · reply by <b>{{ dr.due_on|date:"j M Y" }}</b>{% if dr.overdue %} <span class="chip red">overdue</span>{% endif %} · <span class="chip">{{ dr.get_status_display }}</span></p>
+</div><a class="fin-btn" href="{% url 'security:requests' %}">All requests</a></div>
+{% include "security/_nav.html" %}
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-person"></i> From</h3></div><div class="panel-b">
+      <p class="name">{{ dr.requester_name }}{% if dr.relationship %} <span class="hint">({{ dr.relationship }})</span>{% endif %}</p>
+      <p>{{ dr.requester_email }} {{ dr.requester_phone }}</p>
+      <p style="white-space:pre-wrap;margin-top:.6rem">{{ dr.details }}</p>
+      <p style="margin-top:.6rem">Identity: {% if dr.identity_checked %}<span class="chip green">confirmed</span>{% else %}<span class="chip amber">not yet confirmed</span>{% endif %}</p>
+      {% if dr.submitted_by %}<p class="hint">Sent from the parent portal by {{ dr.submitted_by.username }}.</p>{% endif %}
+    </div></div>
+    {% if dr.open %}
+    {% if not dr.identity_checked %}<form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="op" value="verify">
+      <h3 style="margin:0">1. Confirm who they are</h3><p class="hint">Before sharing or deleting anything, make sure the request comes from the person (or the child's parent).</p>
+      <div><label>How you checked</label><input name="how" placeholder="Met in person with ID; called the number on file…"></div><button class="fin-btn">Identity confirmed</button></form>{% endif %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="op" value="student">
+      <div><label>Pupil the request is about</label><select name="student">{% for s in students %}<option value="{{ s.pk }}" {% if dr.student_id == s.pk %}selected{% endif %}>{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select></div><button class="fin-btn fin-btn-sm">Link</button></form>
+    {% if dr.student %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-tools"></i> 2. Act on it</h3></div><div class="panel-b">
+      {% if dr.kind == 'ACCESS' or dr.kind == 'PORTABILITY' %}
+        <form method="post">{% csrf_token %}<input type="hidden" name="op" value="export"><button class="fin-btn fin-btn-gold"><i class="bi bi-file-zip"></i> {% if dr.export %}Prepare again{% else %}Prepare the data export{% endif %}</button></form>
+        {% if dr.export %}<p style="margin-top:.5rem"><a href="{% url 'security:request_file' dr.pk %}">Download the export</a> — the requester can download it from the portal once you complete the request.</p>{% endif %}
+      {% elif dr.kind == 'CORRECTION' %}
+        <p>Correct the record on <a href="{% url 'users:student_profile' dr.student.pk %}">{{ dr.student.full_name }}'s profile</a>; every change is recorded in the student's history.</p>
+      {% elif dr.kind == 'DELETION' %}
+        <p>The school must keep some records by law (results, payments). Anonymising removes names, contacts, photos, documents, medical and support notes, and keeps anonymous results and payments. The pupil must have left first.</p>
+        <form method="post" class="fin-form" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="op" value="anonymise">
+          <div><label>Type the admission number ({{ dr.student.admission_number }}) to confirm</label><input name="confirm" autocomplete="off"></div>
+          <button class="fin-btn fin-btn-danger">Anonymise the record</button></form>
+      {% else %}
+        <p>Record what you changed in how the data is used, then complete the request.</p>
+      {% endif %}
+    </div></div>
+    {% endif %}
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="op" value="close">
+      <h3 style="margin:0">3. Reply and close</h3>
+      <div><label>Reply to the requester</label><textarea name="response" rows="5" required placeholder="What you did, or why you cannot do it (e.g. records the law requires the school to keep)."></textarea></div>
+      <div style="display:flex;gap:.5rem"><button class="fin-btn fin-btn-gold" name="status" value="DONE">Complete</button><button class="fin-btn fin-btn-danger" name="status" value="REFUSED">Refuse</button></div>
+      <p class="hint">The reply is emailed to them{% if dr.requester_email %} at {{ dr.requester_email }}{% endif %}.</p>
+    </form>
+    {% else %}
+    <div class="panel"><div class="panel-h"><h3>Reply sent {{ dr.closed_at|date:"j M Y" }}</h3></div><div class="panel-b" style="white-space:pre-wrap">{{ dr.response }}</div></div>
+    {% endif %}
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal"></i> Notes</h3></div>
+    <div class="panel-b">{% for n in dr.notes %}<p style="margin:.3rem 0"><span class="hint">{{ n.at|slice:":16" }} · {{ n.by }}</span><br>{{ n.text }}</p>{% empty %}<p class="hint">No notes yet.</p>{% endfor %}
+      <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}<input type="hidden" name="op" value="note"><textarea name="text" rows="3" placeholder="Add a note"></textarea><button class="fin-btn fin-btn-sm">Add note</button></form>
+    </div></div>
+</div>
+{% endblock %}

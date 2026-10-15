@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ gb.school_class.name }} {{ gb.subject.name }} — gradebook{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'teaching:gradebooks' %}" style="color:inherit">Gradebook</a></div>
+  <h1 class="fin-title">{{ gb.school_class.name }} — {{ gb.subject.name }}</h1>
+  <p class="fin-sub">{{ gb.term }} {{ gb.term.session }} · weights: {% for k, l in used %}{{ l }} {% for kk, w in gb.weights.items %}{% if kk == k %}{{ w }}{% endif %}{% endfor %}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+</div>
+<div style="display:flex;gap:.4rem;flex-wrap:wrap"><a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="push"><button class="fin-btn fin-btn-gold" type="submit" onclick="return confirm('Write these averages into the report-card CA columns? Unpublished results only.')">Send to report card</button></form></div></div>
+{% include "teaching/_nav.html" %}
+<div class="panel" style="margin-bottom:1.2rem;overflow-x:auto"><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Student</th>{% for it in items %}<th style="text-align:center"><a href="{% url 'teaching:grade_item' it.pk %}" title="{{ it.get_category_display }} · {{ it.date|date:'j M' }}">{{ it.title|truncatechars:14 }}</a><br><small class="hint">/{{ it.max_score|floatformat:"-1" }}</small></th>{% endfor %}{% for k, l in used %}<th>{{ l }} %</th>{% endfor %}<th>Overall</th></tr></thead><tbody>
+  {% for r in rows %}<tr><td class="name">{{ r.student.full_name }}</td>
+    {% for m in r.marks %}<td style="text-align:center">{% if m.excused %}<span class="hint">ex</span>{% elif m.score is not None %}{{ m.score|floatformat:"-1" }}{% else %}<span class="hint">—</span>{% endif %}</td>{% endfor %}
+    {% for k, l in used %}<td>{% for kk, v in r.cats.items %}{% if kk == k %}{{ v|default_if_none:"—" }}{% endif %}{% endfor %}</td>{% endfor %}
+    <td><b>{{ r.overall|default_if_none:"—" }}</b></td></tr>
+  {% empty %}<tr><td class="empty">No students in this class.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="item">
+    <h3 style="margin:0 0 .6rem">New assessment</h3>
+    <div><label>Title</label><input name="title" required maxlength="120" placeholder="e.g. Test 1 — fractions"></div>
+    <div class="row2"><div><label>Category</label><select name="category">{% for k, l in categories %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div><div><label>Out of</label><input name="max_score" value="10" inputmode="decimal"></div></div>
+    <div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Add and enter marks</button>
+  </form>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="weights">
+    <h3 style="margin:0 0 .6rem">Weights and report card</h3>
+    <table class="tbl" data-no-export><thead><tr><th>Category</th><th>Weight</th><th>Report-card column</th></tr></thead><tbody>
+    {% for k, l in categories %}<tr><td>{{ l }}</td><td><input class="tiny" name="w_{{ k }}" value="{% for kk, w in gb.weights.items %}{% if kk == k %}{{ w }}{% endif %}{% endfor %}" inputmode="numeric"></td>
+      <td><select name="c_{{ k }}"><option value="">—</option>{% for c in ca_columns %}<option value="{{ c.key }}" {% for kk, col in gb.report_columns.items %}{% if kk == k and col == c.key %}selected{% endif %}{% endfor %}>{{ c.label }} (/{{ c.max }})</option>{% endfor %}</select></td></tr>{% endfor %}
+    </tbody></table>
+    <p class="hint">Weights are relative (e.g. tests 60, homework 20, classwork 20). Each category's average is scaled to its column's maximum when sent.</p>
+    <button class="fin-btn" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

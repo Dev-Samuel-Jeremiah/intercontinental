@@ -1,0 +1,45 @@
+{% extends base %}
+{% block title %}Sign-in &amp; security{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Your account</div>
+  <h1 class="fin-title">Sign-in &amp; <em>security</em></h1>
+  <p class="fin-sub">Two-step sign-in, the devices you use and where you are signed in.</p>
+</div></div>
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-shield-check"></i> Two-step sign-in</h3>
+      {% if tf %}<span class="chip green">On</span>{% else %}<span class="chip {% if required %}red{% endif %}">{% if required %}Required — not set up{% else %}Off{% endif %}</span>{% endif %}</div>
+      <div class="panel-b">
+      {% if tf %}
+        <p>You enter a code from <b>{{ tf.get_method_display|lower }}</b>{% if tf.method == 'SMS' %} ({{ tf.phone|slice:"-4:" }}){% endif %} after your password. {{ backup_left }} backup code{{ backup_left|pluralize }} left.</p>
+        {% if tf.last_used_at %}<p class="hint">Last used {{ tf.last_used_at|date:"j M Y, H:i" }}</p>{% endif %}
+        <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}
+          <div><label>Your password</label><input type="password" name="password" required autocomplete="current-password"></div>
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="fin-btn fin-btn-sm" name="op" value="codes">New backup codes</button>
+            <button class="fin-btn fin-btn-sm" name="op" value="switch">Change method</button>
+            {% if not required %}<button class="fin-btn fin-btn-sm fin-btn-danger" name="op" value="disable">Turn off</button>{% endif %}
+          </div>
+        </form>
+      {% else %}
+        <p>After your password, enter a 6-digit code from your phone. Even if someone learns your password, they cannot get in.</p>
+        <p style="margin-top:.8rem"><a class="fin-btn fin-btn-gold" href="{% url 'security:setup' %}"><i class="bi bi-phone"></i> Set up two-step sign-in</a></p>
+      {% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-key"></i> Password</h3></div><div class="panel-b">
+      <p>Last changed {{ pw_changed|date:"j M Y" }}{% if cfg.expiry_days %} — your school asks for a new one every {{ cfg.expiry_days }} days{% endif %}.</p>
+      {% if request.tenant %}<p style="margin-top:.6rem"><a class="fin-btn fin-btn-sm" href="/change-password/">Change password</a></p>{% endif %}
+    </div></div>
+  </div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-laptop"></i> Signed in now</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:sessions' %}">Manage</a></div>
+      <table class="tbl">{% for s in sessions %}<tr><td class="name">{{ s.user_agent|default:"Unknown browser"|truncatechars:60 }}</td><td>{{ s.ip|default:"" }}</td><td>{% if s.session_key == current %}<span class="chip green">This device</span>{% else %}{{ s.last_seen|timesince }} ago{% endif %}</td></tr>{% empty %}<tr><td class="hint">No sessions recorded yet.</td></tr>{% endfor %}</table>
+    </div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent sign-in activity</h3></div>
+      <table class="tbl">{% for e in recent %}<tr><td>{{ e.at|date:"j M H:i" }}</td><td>{{ e.summary }}</td><td class="hint">{{ e.ip|default:"" }}</td></tr>{% empty %}<tr><td class="hint">Nothing yet.</td></tr>{% endfor %}</table>
+    </div>
+  </div>
+</div>
+{% endblock %}

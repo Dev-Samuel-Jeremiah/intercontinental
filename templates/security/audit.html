@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Audit trail{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Audit <em>trail</em></h1>
+  <p class="fin-sub">Sign-ins, permission and role changes, deletions, exports, privacy actions, finance approvals and student record changes in one place.</p>
+</div><a class="fin-btn" href="?{{ qs }}&amp;csv=1"><i class="bi bi-download"></i> Download CSV</a></div>
+{% include "security/_nav.html" %}
+<form method="get" class="panel fin-form" style="padding:1rem;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;align-items:end">
+  <div><label>Search</label><input name="q" value="{{ f.q }}" placeholder="Name, action, record…"></div>
+  <div><label>Kind</label><select name="category"><option value="">Everything</option>{% for v, l in categories %}<option value="{{ v }}" {% if f.category == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div><label>Person</label><select name="user"><option value="">Anyone</option>{% for p in people %}<option value="{{ p.pk }}" {% if f.user_id == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.username }}</option>{% endfor %}</select></div>
+  <div><label>From</label><input type="date" name="since" value="{{ f.since|date:'Y-m-d' }}"></div>
+  <div><label>To</label><input type="date" name="until" value="{{ f.until|date:'Y-m-d' }}"></div>
+  <button class="fin-btn fin-btn-gold" type="submit">Filter</button>
+</form>
+<div class="panel"><table class="tbl"><thead><tr><th>When</th><th>Who</th><th>What</th><th>Details</th><th>IP</th></tr></thead><tbody>
+{% for r in rows %}<tr><td style="white-space:nowrap">{{ r.at|date:"j M Y H:i" }}</td><td class="name">{{ r.who }}</td><td><span class="chip">{{ r.action }}</span><br><span class="hint">{{ r.source }}</span></td><td>{{ r.summary }}</td><td class="hint">{{ r.ip }}</td></tr>
+{% empty %}<tr><td colspan="5" class="empty"><i class="bi bi-journal"></i>Nothing matches.</td></tr>{% endfor %}</tbody></table></div>
+<p class="hint">Showing the latest {{ rows|length }} entries. The CSV has up to 5,000.</p>
+<style>@media(max-width:900px){form.panel{grid-template-columns:1fr!important}}</style>
+{% endblock %}

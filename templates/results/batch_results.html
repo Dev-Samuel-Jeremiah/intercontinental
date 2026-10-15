@@ -1,0 +1,1379 @@
+{% extends "dashboard/base.html" %}
+{% load custom_filters assessment %}
+{% load static %}
+
+{% block title %}Batch Results{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Outfit:wght@300;400;500;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
+:root{
+  /* Paper (report card interior) */
+  --paper:          #f7f4ef;
+  --paper2:         #ede9e2;
+  --paper3:         #e2ddd5;
+  --paper-ink:      #1c1917;
+  --paper-ink2:     #44403c;
+  --paper-ink3:     #78716c;
+  --paper-gold:     #0a1f44;
+  --paper-gold-lt:  #f4d21f;
+  --paper-rim:      rgba(10,31,68,.18);
+  --paper-rim2:     rgba(10,31,68,.10);
+}
+
+/* ═══════════════════════════════════════════
+   RESULT SHEET THEMES — override the paper
+   tokens per school (Settings → Result Sheet Layout)
+═══════════════════════════════════════════ */
+.report-paper[data-theme="classic_gold"]{
+  --paper:#f7f4ef; --paper2:#ede9e2; --paper-ink:#1c1917; --paper-ink2:#44403c; --paper-ink3:#78716c;
+  --paper-gold:#0a1f44; --paper-gold-lt:#f4d21f; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+}
+.report-paper[data-theme="royal_navy"]{
+  --paper:#eef2f8; --paper2:#dbe4f0; --paper-ink:#0f2247; --paper-ink2:#33456b; --paper-ink3:#61708c;
+  --paper-gold:#1d3f7a; --paper-gold-lt:#3861ab; --paper-rim:rgba(29,63,122,.18); --paper-rim2:rgba(29,63,122,.10);
+}
+.report-paper[data-theme="emerald_prestige"]{
+  --paper:#f2f7f2; --paper2:#e1ede1; --paper-ink:#0f2f1c; --paper-ink2:#2d4d3a; --paper-ink3:#5a7768;
+  --paper-gold:#1f6b3f; --paper-gold-lt:#2e9256; --paper-rim:rgba(31,107,63,.18); --paper-rim2:rgba(31,107,63,.10);
+}
+.report-paper[data-theme="burgundy_elegance"]{
+  --paper:#f8f1ef; --paper2:#efe0dc; --paper-ink:#3a0d10; --paper-ink2:#5c2a2c; --paper-ink3:#845452;
+  --paper-gold:#7a1f2b; --paper-gold-lt:#a53a45; --paper-rim:rgba(122,31,43,.18); --paper-rim2:rgba(122,31,43,.10);
+}
+.report-paper[data-theme="sapphire_scholar"]{
+  --paper:#f0f4f8; --paper2:#dde6ee; --paper-ink:#0b2942; --paper-ink2:#2c4a63; --paper-ink3:#5e7d94;
+  --paper-gold:#1a5c96; --paper-gold-lt:#3c85c4; --paper-rim:rgba(26,92,150,.18); --paper-rim2:rgba(26,92,150,.10);
+}
+.report-paper[data-theme="rose_quartz"]{
+  --paper:#faf3f2; --paper2:#f3e3e1; --paper-ink:#3d1f22; --paper-ink2:#6b3f42; --paper-ink3:#977173;
+  --paper-gold:#b76e6e; --paper-gold-lt:#d18f8a; --paper-rim:rgba(183,110,110,.20); --paper-rim2:rgba(183,110,110,.10);
+}
+.report-paper[data-theme="midnight_platinum"]{
+  --paper:#161a20; --paper2:#1f242c; --paper-ink:#eef1f5; --paper-ink2:#c3cbd4; --paper-ink3:#8894a3;
+  --paper-gold:#a9b4c2; --paper-gold-lt:#c8d1db; --paper-rim:rgba(169,180,194,.25); --paper-rim2:rgba(169,180,194,.12);
+}
+.report-paper[data-theme="forest_academia"]{
+  --paper:#f4f2ea; --paper2:#e8e4d5; --paper-ink:#22280f; --paper-ink2:#454f27; --paper-ink3:#6e7852;
+  --paper-gold:#0a1f44; --paper-gold-lt:#e0b800; --paper-rim:rgba(10,31,68,.18); --paper-rim2:rgba(10,31,68,.10);
+}
+.report-paper[data-theme="coral_sunrise"]{
+  --paper:#fdf5ee; --paper2:#f8e6d5; --paper-ink:#5a2a0f; --paper-ink2:#7c4526; --paper-ink3:#a37455;
+  --paper-gold:#d9722c; --paper-gold-lt:#f0904d; --paper-rim:rgba(217,114,44,.20); --paper-rim2:rgba(217,114,44,.10);
+}
+.report-paper[data-theme="slate_minimal"]{
+  --paper:#f5f5f6; --paper2:#e6e6e8; --paper-ink:#132951; --paper-ink2:#2a4a82; --paper-ink3:#6b6e76;
+  --paper-gold:#454850; --paper-gold-lt:#65686f; --paper-rim:rgba(69,72,80,.18); --paper-rim2:rgba(69,72,80,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--white);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+}
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ PAGE WRAPPER ═══ */
+.batch-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ═══════════════════════════════════════════
+   PAGE HEADER
+═══════════════════════════════════════════ */
+.page-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 1px solid var(--rim2);
+  position: relative;
+}
+.page-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne);
+}
+.eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-size: .72rem; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--champagne);
+  margin-bottom: .65rem;
+}
+.eyebrow::before {
+  content: ''; display: block;
+  width: 28px; height: 1px; background: var(--champagne);
+}
+.page-header-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.page-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem; font-weight: 700; line-height: 1.1; color: var(--white);
+}
+.page-title em { color: var(--champagne); font-style: italic; }
+.context-badge {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: .45rem 1rem; border-radius: 999px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt); font-size: .82rem; font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════
+   PANELS
+═══════════════════════════════════════════ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 16px; overflow: hidden;
+  position: relative; margin-bottom: 1.5rem;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel-header {
+  display: flex; align-items: center; gap: .85rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--rim);
+  background: var(--surface2);
+}
+.panel-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .95rem; flex-shrink: 0;
+}
+.pi-blue   { background: var(--blue-dim);      color: var(--blue);      border: 1px solid var(--blue-border);      }
+.pi-gold   { background: var(--champagne-dim); color: var(--champagne); border: 1px solid var(--champagne-border); }
+.pi-green  { background: var(--green-dim);     color: var(--green);     border: 1px solid var(--green-border);     }
+.pi-teal   { background: var(--teal-dim);      color: var(--teal);      border: 1px solid var(--teal-border);      }
+.pi-amber  { background: var(--amber-dim);     color: var(--amber);     border: 1px solid var(--amber-border);     }
+.panel-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: .95rem; font-weight: 600; color: var(--white);
+}
+.panel-header .panel-right { margin-left: auto; display: flex; align-items: center; gap: .7rem; }
+.panel-body { padding: 1.4rem; }
+
+/* ═══════════════════════════════════════════
+   FILTER FORM
+═══════════════════════════════════════════ */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem; margin-bottom: 1.2rem;
+}
+.form-group { display: flex; flex-direction: column; gap: .4rem; }
+.form-label {
+  font-size: .73rem; font-weight: 600; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--slate2);
+  display: flex; align-items: center; gap: .4rem;
+}
+.form-label i { color: var(--champagne); font-size: .9rem; }
+.form-label .req { color: var(--red); margin-left: .1rem; }
+
+.custom-select {
+  width: 100%; padding: .62rem 2.4rem .62rem .9rem;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .9rem;
+  cursor: pointer; transition: border-color .2s, box-shadow .2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%23f4d21f' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .9rem center;
+}
+.custom-select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.10);
+}
+.custom-select option { background: var(--surface2); color: var(--white); }
+
+.filter-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem; flex-wrap: wrap;
+  padding-top: 1rem; border-top: 1px solid var(--rim);
+}
+.btn {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .55rem 1.2rem; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 600;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: transform .2s, box-shadow .2s, background .2s;
+}
+.btn-gold {
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+}
+.btn-gold:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(244,210,31,.35); color: #fff; }
+.btn-ghost {
+  background: transparent; border: 1px solid var(--rim2); color: var(--slate2);
+}
+.btn-ghost:hover { background: var(--rim); transform: translateY(-1px); }
+.btn-sm { padding: .38rem .85rem; font-size: .8rem; }
+
+/* ═══════════════════════════════════════════
+   SUMMARY STAT BAR
+═══════════════════════════════════════════ */
+.summary-bar {
+  background: var(--surface);
+  border: 1px solid var(--rim);
+  border-radius: 14px;
+  padding: 1rem 1.4rem;
+  margin-bottom: 1.25rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  animation: riseUp .45s ease both;
+  animation-delay: .06s;
+}
+.summary-bar-left h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem; font-weight: 700; color: var(--champagne-lt);
+  margin-bottom: .15rem;
+}
+.summary-bar-left p { font-size: .8rem; color: var(--slate); }
+.stat-chips { display: flex; gap: .7rem; flex-wrap: wrap; }
+.stat-chip {
+  display: flex; flex-direction: column; align-items: center;
+  padding: .55rem 1rem;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  border-radius: 10px; min-width: 70px;
+}
+.stat-chip-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem; font-weight: 700; color: var(--champagne-lt); line-height: 1;
+}
+.stat-chip-lbl {
+  font-size: .62rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--slate); margin-top: .18rem;
+}
+
+/* ═══════════════════════════════════════════
+   QUICK-JUMP NAV
+═══════════════════════════════════════════ */
+.nav-strip {
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 12px; padding: .8rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  animation: riseUp .45s ease both;
+  animation-delay: .09s;
+}
+.nav-strip-label {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--slate); white-space: nowrap; margin-right: .3rem;
+}
+.nav-pill {
+  display: inline-flex; align-items: center;
+  padding: .28rem .75rem; border-radius: 999px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt); font-size: .75rem; font-weight: 600;
+  text-decoration: none; white-space: nowrap; transition: background .15s;
+}
+.nav-pill:hover { background: rgba(244,210,31,.22); }
+
+/* ═══════════════════════════════════════════
+   TOOLBAR (expand/collapse/print)
+═══════════════════════════════════════════ */
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .8rem;
+  margin-bottom: 1.25rem;
+  animation: riseUp .45s ease both;
+  animation-delay: .11s;
+}
+.toolbar-left { font-size: .84rem; color: var(--slate); }
+.toolbar-left strong { color: var(--white); }
+.toolbar-btns { display: flex; gap: .6rem; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════
+   CARD WRAPPER (each student)
+═══════════════════════════════════════════ */
+.card-wrap {
+  margin-bottom: 2.5rem;
+  animation: riseUp .45s ease both;
+}
+
+/* Per-card topbar (dark UI) */
+.card-topbar {
+  display: flex; align-items: center; gap: .85rem;
+  padding: .85rem 1.2rem;
+  background: var(--surface2);
+  border: 1px solid var(--rim);
+  border-radius: 14px 14px 0 0;
+  border-bottom: none;
+}
+.card-topbar-num {
+  width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .72rem; font-weight: 800;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne);
+}
+.card-topbar-name {
+  font-weight: 600; color: var(--white); font-size: .9rem;
+}
+.card-topbar-adm {
+  font-size: .78rem; color: var(--slate); margin-left: .3rem;
+}
+.card-topbar-right {
+  margin-left: auto; display: flex; gap: .5rem; align-items: center;
+}
+.btn-card-nav {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .3rem .7rem; border-radius: 7px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  color: var(--slate2); font-size: .75rem; font-weight: 600;
+  cursor: pointer; transition: background .15s, color .15s;
+  font-family: 'Outfit', sans-serif;
+}
+.btn-card-nav:hover { background: var(--rim2); color: var(--white); }
+.btn-toggle {
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  color: var(--champagne-lt);
+}
+.btn-toggle:hover { background: rgba(244,210,31,.22); }
+
+/* ═══════════════════════════════════════════
+   REPORT PAPER
+═══════════════════════════════════════════ */
+.report-paper {
+  background: var(--paper);
+  color: var(--paper-ink);
+  font-family: 'Outfit', sans-serif;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(10,31,68,.22);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+}
+
+/* Watermark */
+.paper-watermark {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  display: flex; flex-wrap: wrap;
+  align-content: space-around; justify-content: space-around; opacity: 1;
+}
+.paper-watermark span {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 700;
+  color: rgba(10,31,68,.065);
+  transform: rotate(-30deg); white-space: nowrap; margin: 50px;
+}
+
+/* ── Letterhead ── */
+.letterhead-top-rule {
+  height: 6px;
+  background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+}
+.letterhead {
+  position: relative; z-index: 1;
+  border-bottom: 3px solid var(--paper-gold);
+}
+.letterhead-body {
+  display: grid; grid-template-columns: 120px 1fr 110px;
+  align-items: center; gap: 1rem; padding: 1.3rem 1.8rem;
+}
+.letterhead-logo {
+  display: flex; align-items: center; justify-content: center;
+}
+.letterhead-logo img { width: 92px; height: auto; border-radius: 6px; }
+.letterhead-initials {
+  width: 78px; height: 78px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--paper2), var(--paper));
+  border: 2px solid var(--paper-gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.85rem; font-weight: 700; color: var(--paper-gold);
+}
+.letterhead-identity { text-align: center; }
+.school-name-main {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem; font-weight: 700;
+  color: var(--paper-gold); letter-spacing: .06em; text-transform: uppercase;
+}
+.school-motto {
+  font-family: 'IM Fell English', serif;
+  font-style: italic; font-size: .88rem; color: var(--paper-ink2); margin-top: .2rem;
+}
+.school-report-label {
+  display: inline-block; margin-top: .5rem;
+  font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--paper); background: var(--paper-gold);
+  padding: .2rem .8rem; border-radius: 999px;
+}
+.passport-frame {
+  width: 96px; height: 122px;
+  border: 2px solid var(--paper-gold); border-radius: 6px; overflow: hidden;
+  background: var(--paper2);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: .2rem;
+}
+.passport-frame img { width: 100%; height: 100%; object-fit: cover; }
+.passport-frame i { font-size: 2rem; color: var(--paper-ink3); }
+.passport-frame span { font-size: .65rem; color: var(--paper-ink3); }
+
+/* ── Info band ── */
+.info-band {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--paper-rim);
+}
+.info-cell {
+  padding: .52rem .9rem;
+  border-right: 1px solid var(--paper-rim);
+  border-bottom: 1px solid var(--paper-rim);
+}
+.info-cell:nth-child(3n) { border-right: none; }
+.info-cell-label {
+  font-size: .61rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--paper-gold); margin-bottom: .15rem;
+}
+.info-cell-value {
+  font-size: .88rem; font-weight: 600; color: var(--paper-ink); line-height: 1.3;
+}
+
+/* ── Section header ── */
+.paper-section-head {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .7rem;
+  padding: .52rem 1.2rem;
+  background: var(--paper-gold);
+  border-top: 1px solid rgba(10,31,68,.3);
+}
+.paper-section-head i { color: var(--paper); font-size: .88rem; }
+.paper-section-head span {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--paper);
+}
+
+/* ── Results table ── */
+.results-table-wrap { position: relative; z-index: 1; overflow-x: auto; }
+.results-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'Outfit', sans-serif; font-size: .82rem;
+}
+.results-table thead tr { background: var(--paper2); }
+.results-table th {
+  padding: .58rem .75rem; text-align: center;
+  font-size: .64rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--paper-gold);
+  border-bottom: 2px solid var(--paper-rim);
+  border-right: 1px solid var(--paper-rim); white-space: nowrap;
+}
+.results-table th:last-child { border-right: none; }
+.results-table th.col-subj { text-align: left; padding-left: 1rem; }
+.results-table tbody tr {
+  border-bottom: 1px solid var(--paper-rim2); transition: background .15s;
+}
+.results-table tbody tr:last-child { border-bottom: none; }
+.results-table tbody tr:hover { background: rgba(10,31,68,.04); }
+.results-table td {
+  padding: .55rem .75rem; text-align: center;
+  color: var(--paper-ink2); border-right: 1px solid var(--paper-rim2);
+}
+.results-table td:last-child { border-right: none; }
+.results-table td.col-subj {
+  text-align: left; padding-left: 1rem;
+  font-weight: 600; color: var(--paper-ink);
+}
+.score-num { font-weight: 600; color: var(--paper-ink); font-size: .86rem; }
+.score-total {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 36px; padding: .16rem .5rem; border-radius: 5px;
+  font-weight: 700; font-size: .84rem;
+}
+.score-pass { background: rgba(74,222,128,.12); color: #166534; border: 1px solid rgba(74,222,128,.3); }
+.score-fair { background: rgba(251,191,36,.10); color: #92400e; border: 1px solid rgba(251,191,36,.3); }
+.score-fail { background: rgba(248,113,113,.12); color: #991b1b; border: 1px solid rgba(248,113,113,.3); }
+.grade-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  font-weight: 800; font-size: .82rem; border: 2px solid;
+}
+.grade-A { background: rgba(74,222,128,.15);  color: #166534; border-color: rgba(74,222,128,.5); }
+.grade-B { background: rgba(45,212,191,.12);  color: #0f766e; border-color: rgba(45,212,191,.45); }
+.grade-C { background: rgba(96,165,250,.12);  color: #1d4ed8; border-color: rgba(96,165,250,.4); }
+.grade-D { background: rgba(251,191,36,.12);  color: #92400e; border-color: rgba(251,191,36,.45); }
+.grade-F { background: rgba(248,113,113,.12); color: #991b1b; border-color: rgba(248,113,113,.45); }
+
+/* Remark input */
+.paper-remark-field {
+  width: 100%; min-width: 110px;
+  background: transparent; border: none;
+  border-bottom: 1px dashed var(--paper-rim);
+  color: var(--paper-ink2); font-family: 'Outfit', sans-serif;
+  font-size: .76rem; resize: none; outline: none; line-height: 1.4;
+  padding: .15rem .3rem; transition: background .2s, border-color .2s;
+}
+.paper-remark-field:focus {
+  background: rgba(10,31,68,.06); border-color: var(--paper-gold); border-radius: 4px;
+}
+.subj-save-status {
+  display: none; font-size: .67rem; font-weight: 600; margin-left: .3rem;
+}
+
+/* ── Totals band ── */
+.totals-band {
+  position: relative; z-index: 1;
+  display: flex; flex-wrap: wrap;
+  border-top: 2px solid var(--paper-gold); background: var(--paper2);
+}
+.totals-cell {
+  flex: 1; min-width: 80px;
+  padding: .65rem .85rem; text-align: center;
+  border-right: 1px solid var(--paper-rim);
+}
+.totals-cell:last-child { border-right: none; }
+.totals-cell-label {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--paper-gold); font-weight: 700; margin-bottom: .12rem;
+}
+.totals-cell-value {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; font-weight: 700; color: var(--paper-ink); line-height: 1;
+}
+.totals-cell.highlight .totals-cell-value { color: var(--paper-gold); }
+
+/* ── Remarks ── */
+.paper-remarks-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+  border-top: 1px solid var(--paper-rim);
+}
+.paper-remark-col {
+  padding: .95rem 1.2rem; border-right: 1px solid var(--paper-rim);
+}
+.paper-remark-col:last-child { border-right: none; }
+.paper-remark-col-label {
+  font-size: .67rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--paper-gold);
+  margin-bottom: .45rem; display: flex; align-items: center; gap: .4rem;
+}
+.paper-textarea {
+  width: 100%; min-height: 65px;
+  background: var(--paper); border: 1px solid var(--paper-rim);
+  border-radius: 6px; color: var(--paper-ink);
+  font-family: 'Outfit', sans-serif; font-size: .86rem;
+  padding: .55rem .8rem; resize: vertical; outline: none;
+  transition: border-color .2s; line-height: 1.5;
+}
+.paper-textarea:focus {
+  border-color: var(--paper-gold);
+  box-shadow: 0 0 0 2px rgba(10,31,68,.1);
+}
+.remark-save-status {
+  display: none; font-size: .68rem; font-weight: 600; margin-top: .3rem;
+}
+
+/* Signature */
+.paper-signature {
+  position: relative; z-index: 1;
+  text-align: center; padding: .7rem 1.2rem .95rem;
+  border-top: 1px solid var(--paper-rim);
+}
+.sig-img { height: 22px; display: block; margin: 0 auto .2rem; }
+.sig-line {
+  width: 220px; height: 1px;
+  background: var(--paper-gold); margin: .28rem auto .28rem; opacity: .5;
+}
+.sig-label {
+  font-size: .64rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--paper-ink3);
+}
+
+/* Next term strip */
+.next-term-strip {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .7rem;
+  padding: .65rem 1.4rem;
+  background: var(--paper2); border-top: 2px solid var(--paper-gold);
+}
+.next-term-strip i { color: var(--paper-gold); font-size: .95rem; }
+.next-term-lbl {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--paper-ink3);
+}
+.next-term-date { font-weight: 700; color: var(--paper-ink); font-size: .88rem; }
+
+/* ── Skills & behaviour ── */
+.sb-wrapper { position: relative; z-index: 1; border-top: 1px solid var(--paper-rim); }
+.sb-grid-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+.sb-col { border-right: 1px solid var(--paper-rim); }
+.sb-col:last-child { border-right: none; }
+.sb-col-head {
+  display: grid; grid-template-columns: 1fr 28px 28px 28px 28px 28px;
+  background: var(--paper2);
+  border-bottom: 1px solid var(--paper-rim);
+  padding: .42rem .8rem;
+  font-size: .6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--paper-gold);
+}
+.sb-col-head span { text-align: center; }
+.sb-col-head span:first-child { text-align: left; }
+.sb-row {
+  display: grid; grid-template-columns: 1fr 28px 28px 28px 28px 28px;
+  align-items: center;
+  border-bottom: 1px solid var(--paper-rim2); padding: .38rem .8rem;
+  transition: background .15s;
+}
+.sb-row:last-child { border-bottom: none; }
+.sb-row:hover { background: rgba(10,31,68,.04); }
+.sb-name { font-size: .78rem; color: var(--paper-ink2); font-weight: 500; }
+.sb-check { display: flex; align-items: center; justify-content: center; }
+.sb-check input[type="checkbox"] {
+  width: 13px; height: 13px; cursor: pointer; accent-color: var(--paper-gold);
+}
+
+/* Key bar */
+.key-bar {
+  display: flex; flex-wrap: wrap; gap: .45rem;
+  padding: .65rem 1.2rem;
+  background: var(--paper2); border-top: 1px solid var(--paper-rim);
+}
+.key-item { display: flex; align-items: center; gap: .35rem; }
+.key-num {
+  width: 19px; height: 19px; border-radius: 4px; flex-shrink: 0;
+  background: var(--paper-gold); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .66rem; font-weight: 800;
+}
+.key-desc { font-size: .7rem; color: var(--paper-ink3); }
+
+/* Bottom rule */
+.paper-footer-rule {
+  height: 5px;
+  background: linear-gradient(90deg, var(--paper-gold), var(--paper-gold-lt), var(--paper-gold));
+}
+
+/* ═══════════════════════════════════════════
+   EMPTY STATES
+═══════════════════════════════════════════ */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; padding: 4rem 2rem;
+  background: var(--surface);
+  border: 1px solid var(--rim); border-radius: 16px;
+  animation: riseUp .45s ease both;
+}
+.empty-icon-box {
+  width: 70px; height: 70px; border-radius: 16px;
+  background: var(--surface3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem; color: var(--slate);
+  margin-bottom: 1.2rem;
+  border: 1px solid var(--rim2);
+}
+.empty-state h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.4rem; font-weight: 700; color: var(--white); margin-bottom: .45rem;
+}
+.empty-state p { font-size: .88rem; color: var(--slate2); max-width: 380px; }
+
+/* ═══ PRINT ═══ */
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .card-wrap { page-break-after: always; margin-bottom: 0; }
+  .card-wrap:last-child { page-break-after: avoid; }
+  .card-topbar { display: none; }
+  .report-paper {
+    border-radius: 0; border: 1px solid #888; border-top: none;
+  }
+  .letterhead-top-rule, .paper-footer-rule { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 860px) {
+  .batch-wrap { padding: 1rem 1rem 3rem; }
+  .letterhead-body { grid-template-columns: 88px 1fr 90px; }
+  .info-band { grid-template-columns: 1fr 1fr; }
+  .info-cell:nth-child(3n) { border-right: 1px solid var(--paper-rim); }
+  .info-cell:nth-child(2n) { border-right: none; }
+  .sb-grid-inner { grid-template-columns: 1fr; }
+  .sb-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+  .paper-remarks-wrap { grid-template-columns: 1fr; }
+  .paper-remark-col { border-right: none; border-bottom: 1px solid var(--paper-rim); }
+  .filter-grid { grid-template-columns: 1fr; }
+  .page-title { font-size: 1.9rem; }
+}
+@media (max-width: 560px) {
+  .letterhead-body { grid-template-columns: 1fr; text-align: center; }
+  .letterhead-logo, .letterhead-passport { justify-content: center; }
+  .letterhead-passport { display: flex; }
+}
+</style>
+
+<div class="batch-wrap">
+
+  <!-- ══ PAGE HEADER ══ -->
+  <div class="page-header no-print">
+    <div class="eyebrow"><i class="bi bi-layers"></i> Academic Records</div>
+    <div class="page-header-row">
+      <h1 class="page-title">Batch <em>Results</em></h1>
+      <span class="context-badge">
+        <i class="bi bi-people"></i> Class Report Sheets
+      </span>
+    </div>
+  </div>
+
+  <!-- ══ FILTER PANEL ══ -->
+  <div class="panel no-print">
+    <div class="panel-header">
+      <div class="panel-icon pi-blue"><i class="bi bi-funnel"></i></div>
+      <h3>Filter Results</h3>
+      <span style="font-size:.78rem;color:var(--slate);margin-left:.4rem;">
+        Select class, term &amp; session to load all student result cards
+      </span>
+      <div class="panel-right">
+        {% if student_cards %}
+        <button class="btn btn-gold btn-sm" onclick="window.print()">
+          <i class="bi bi-printer"></i> Print All ({{ total_students }})
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    <div class="panel-body">
+      <form method="GET" id="filterForm">
+        <div class="filter-grid">
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-building"></i> Class <span class="req">*</span>
+            </label>
+            <select name="class" class="custom-select" onchange="this.form.submit()">
+              <option value="">— Select Class —</option>
+              {% for cls in classes %}
+              <option value="{{ cls.id }}" {% if selected_class == cls.id|stringformat:"s" %}selected{% endif %}>
+                {{ cls.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-calendar-range"></i> Term <span class="req">*</span>
+            </label>
+            <select name="term" class="custom-select">
+              <option value="">— Select Term —</option>
+              {% for t in terms %}
+              <option value="{{ t.id }}" {% if selected_term == t.id|stringformat:"s" %}selected{% endif %}>
+                {{ t.name }}{% if t.session %} ({{ t.session.name }}){% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-calendar3"></i> Session
+            </label>
+            <select name="session" class="custom-select">
+              <option value="">— Active Session —</option>
+              {% for sess in sessions %}
+              <option value="{{ sess.id }}" {% if selected_session == sess.id|stringformat:"s" %}selected{% endif %}>
+                {{ sess.name }}{% if sess.is_active %} ✓{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="justify-content:flex-end;">
+            <label class="form-label">&nbsp;</label>
+            <button type="submit" class="btn btn-gold" style="justify-content:center;">
+              <i class="bi bi-search"></i> Load Results
+            </button>
+          </div>
+
+        </div>
+        <div class="filter-footer">
+          <span style="font-size:.78rem;color:var(--slate);">
+            <i class="bi bi-info-circle" style="color:var(--champagne);"></i>
+            All fields with <span style="color:var(--red);">*</span> are required
+          </span>
+          <a href="?" class="btn btn-ghost btn-sm">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if student_cards %}
+
+  <!-- ══ SUMMARY BAR ══ -->
+  <div class="summary-bar no-print">
+    <div class="summary-bar-left">
+      <h3>{{ class_obj.name }} &mdash; {{ term_obj.name }} / {{ session_obj.name }}</h3>
+      <p>Scroll to browse all cards &middot; use Print All to print every card on its own page</p>
+    </div>
+    <div class="stat-chips">
+      <div class="stat-chip">
+        <span class="stat-chip-num">{{ total_students }}</span>
+        <span class="stat-chip-lbl">Students</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-num">{{ term_obj.number_of_school_days|default:"—" }}</span>
+        <span class="stat-chip-lbl">School Days</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ QUICK-JUMP NAV ══ -->
+  <div class="nav-strip no-print">
+    <span class="nav-strip-label"><i class="bi bi-compass"></i> Jump to:</span>
+    {% for card in student_cards %}
+    <a class="nav-pill" href="#sc_{{ card.student.id }}">
+      {{ forloop.counter }}. {{ card.student.full_name|truncatechars:20 }}
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- ══ TOOLBAR ══ -->
+  <div class="toolbar no-print">
+    <div class="toolbar-left">
+      Showing <strong>{{ total_students }}</strong> result card{{ total_students|pluralize }}
+    </div>
+    <div class="toolbar-btns">
+      <button class="btn btn-ghost btn-sm" onclick="expandAll()">
+        <i class="bi bi-arrows-angle-expand"></i> Expand All
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="collapseAll()">
+        <i class="bi bi-arrows-angle-contract"></i> Collapse All
+      </button>
+      <button class="btn btn-gold btn-sm" onclick="window.print()">
+        <i class="bi bi-printer"></i> Print All
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       STUDENT CARDS LOOP
+  ══════════════════════════════════════════ -->
+  {% for card in student_cards %}
+
+  <div class="card-wrap" id="sc_{{ card.student.id }}">
+
+    <!-- Per-card dark topbar (screen only) -->
+    <div class="card-topbar no-print">
+      <div class="card-topbar-num">{{ forloop.counter }}</div>
+      <span class="card-topbar-name">{{ card.student.full_name }}</span>
+      <span class="card-topbar-adm">· {{ card.student.admission_number }}</span>
+      <span style="font-size:.75rem;color:var(--slate);margin-left:.5rem;">
+        {{ forloop.counter }} of {{ total_students }}
+      </span>
+      <div class="card-topbar-right">
+        {% if not forloop.first %}
+        <button class="btn-card-nav" onclick="prevCard('{{ card.student.id }}')">
+          <i class="bi bi-arrow-up"></i> Prev
+        </button>
+        {% endif %}
+        <button class="btn-card-nav btn-toggle"
+                id="toggle_btn_{{ card.student.id }}"
+                onclick="toggleCard('{{ card.student.id }}')">
+          <i class="bi bi-dash-lg"></i> Collapse
+        </button>
+        {% if not forloop.last %}
+        <button class="btn-card-nav" onclick="nextCard('{{ card.student.id }}')">
+          Next <i class="bi bi-arrow-down"></i>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- REPORT PAPER -->
+    <div class="report-paper" id="card_{{ card.student.id }}" data-theme="{{ result_settings.theme|default:'classic_gold' }}">
+
+      <!-- Watermark -->
+      <div class="paper-watermark">
+        {% for i in "0123456789012345678901234567890123456789012345678901234567890123456789"|make_list %}
+          <span>{{ tenant.name|upper }}</span>
+        {% endfor %}
+      </div>
+
+      <!-- Letterhead top rule -->
+      <div class="letterhead-top-rule"></div>
+
+      <!-- Letterhead -->
+      <div class="letterhead">
+        <div class="letterhead-body">
+          <div class="letterhead-logo">
+            {% if tenant.logo %}
+              <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}">
+            {% else %}
+              <div class="letterhead-initials">{{ tenant.name|slice:":2"|upper }}</div>
+            {% endif %}
+          </div>
+          <div class="letterhead-identity">
+            <div class="school-name-main">{{ tenant.name|upper }}</div>
+            {% if tenant.motto %}
+              <div class="school-motto">{{ tenant.motto }}</div>
+            {% endif %}
+            <span class="school-report-label">
+              {{ card.term.name }} Term &nbsp;·&nbsp; {{ card.session.name }} &nbsp;·&nbsp; End of Term Report
+            </span>
+          </div>
+          <div class="letterhead-passport" style="display:flex;justify-content:flex-end;">
+            {% if card.student.passport %}
+              <div class="passport-frame">
+                <img src="{{ card.student.passport.url }}" alt="Photo">
+              </div>
+            {% else %}
+              <div class="passport-frame">
+                <i class="bi bi-person-bounding-box"></i>
+                <span>No Photo</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Info -->
+      <div class="info-band">
+        <div class="info-cell"><div class="info-cell-label">Full Name</div><div class="info-cell-value">{{ card.student.full_name }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Admission No.</div><div class="info-cell-value">{{ card.student.admission_number }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Sex</div><div class="info-cell-value">{{ card.gender|default:"—" }}</div></div>
+
+        <div class="info-cell"><div class="info-cell-label">Class</div><div class="info-cell-value">{{ card.student.class_assigned.name }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Term</div><div class="info-cell-value">{{ card.term.name }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Session</div><div class="info-cell-value">{{ card.session.name }}</div></div>
+
+        <div class="info-cell"><div class="info-cell-label">Age</div><div class="info-cell-value">{{ card.age|default:"—" }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Class Age Avg</div><div class="info-cell-value">{{ card.class_age_avg|default:"—" }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">No. in Class</div><div class="info-cell-value">{{ card.no_in_class }}</div></div>
+
+        <div class="info-cell"><div class="info-cell-label">Days School Opened</div><div class="info-cell-value">{{ card.school_days_open }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Times Present</div><div class="info-cell-value">{{ card.total_present }}</div></div>
+        <div class="info-cell"><div class="info-cell-label">Closing Date</div><div class="info-cell-value">{{ card.term.closing_date|date:"d M Y" }}</div></div>
+      </div>
+
+      <!-- Results section -->
+      <div class="paper-section-head">
+        <i class="bi bi-table"></i>
+        <span>Academic Performance — Subject Results</span>
+      </div>
+
+      <div class="results-table-wrap">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th class="col-subj">Subject</th>
+              {% ca_scheme as ca %}
+              {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<th>{{ c.label }}{% if c.max %} <small>({{ c.max }})</small>{% endif %}</th>{% endfor %}
+              {% else %}<th>CA <small>({{ ca.ca_max }})</small></th>{% endif %}
+              {% if ca.essay_max %}<th>{{ ca.essay_label }} <small>({{ ca.essay_max }})</small></th>{% endif %}
+              <th>{{ ca.exam_label }} ({{ ca.exam_max }}%)</th>
+              <th>Total (100%)</th>
+              <th>Grade</th>
+              <th style="text-align:left;padding-left:.6rem;min-width:120px;">Remark</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for tr in card.results %}
+            <tr>
+              <td class="col-subj">{{ tr.subject.name }}</td>
+              {% if result_settings.show_ca_breakdown %}{% for c in ca.ca_columns %}<td><span class="score-num">{{ tr|score:c.field|floatformat:"-1" }}</span></td>{% endfor %}
+              {% else %}<td><span class="score-num">{{ tr|ca_total:ca|floatformat:"-1" }}</span></td>{% endif %}
+              {% if ca.essay_max %}<td><span class="score-num">{{ tr.essay_score|floatformat:"-1" }}</span></td>{% endif %}
+              <td><span class="score-num">{{ tr.exam_score|floatformat:"-1" }}</span></td>
+              <td>
+                <span class="score-total
+                  {% if tr.percent >= 70 %}score-pass{% elif tr.percent >= 50 %}score-fair{% else %}score-fail{% endif %}">
+                  {{ tr.percent|floatformat:0 }}
+                </span>
+              </td>
+              <td>
+                <span class="grade-pill grade-{{ tr.grade }}">{{ tr.grade }}</span>{% if result_settings.show_subject_position and tr.subject_position %}<div style="font-size:.66rem;opacity:.65;margin-top:2px">{{ tr.subject_position }}</div>{% endif %}
+              </td>
+              <td style="text-align:left;padding-left:.6rem;">
+                <textarea class="paper-remark-field subject-remark"
+                  data-student="{{ card.student.id }}"
+                  data-subject="{{ tr.subject.id }}"
+                  data-term="{{ card.term.id }}"
+                  data-session="{{ card.session.id }}"
+                  rows="1"
+                >{{ tr.remark }}</textarea>
+                <span class="subj-save-status"></span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Totals -->
+      <div class="totals-band">
+        <div class="totals-cell">
+          <div class="totals-cell-label">Subjects Offered</div>
+          <div class="totals-cell-value">{{ card.results|length }}</div>
+        </div>
+        <div class="totals-cell">
+          <div class="totals-cell-label">Mark Obtained</div>
+          <div class="totals-cell-value">{{ card.total_obtained|floatformat:2 }}</div>
+        </div>
+        <div class="totals-cell">
+          <div class="totals-cell-label">Mark Obtainable</div>
+          <div class="totals-cell-value">{{ card.total_obtainable|floatformat:2 }}</div>
+        </div>
+        {% if result_settings.show_class_average %}
+        <div class="totals-cell">
+          <div class="totals-cell-label">Class Average</div>
+          <div class="totals-cell-value">
+            {% if card.results %}{% with first=card.results|first %}{{ first.class_avg|default:"—" }}{% endwith %}{% else %}—{% endif %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="totals-cell highlight">
+          <div class="totals-cell-label">Learner's Average</div>
+          <div class="totals-cell-value">{{ card.overall_percentage|floatformat:2 }}%</div>
+        </div>
+        {% if result_settings.show_position and card.class_position %}
+        <div class="totals-cell">
+          <div class="totals-cell-label">Position</div>
+          <div class="totals-cell-value">{{ card.class_position }} <small style="font-size:.55em;opacity:.7">of {{ card.ranked_in_class }}</small></div>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if card.verify_ref and card.results %}<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:6px 0 2px;font-size:10px;color:#78716c"><span style="text-align:right;line-height:1.3">Scan to check this report card<br>against the school's records</span><img src="{{ card.verify_qr }}" alt="Verification code" style="width:64px;height:64px"></div>{% endif %}
+      <!-- Skills & Behaviour -->
+      {% if result_settings.show_skills_section or result_settings.show_behaviour_section %}
+      <div class="paper-section-head">
+        <i class="bi bi-stars"></i>
+        <span>Skills &amp; Behaviour Assessment</span>
+      </div>
+
+      <div class="sb-wrapper">
+        <div class="sb-grid-inner">
+          {% if result_settings.show_skills_section %}
+          <div class="sb-col">
+            <div class="sb-col-head">
+              <span>Skills</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+            {% for skill in card.skills %}
+            {% if skill.category == "skill" %}
+            <div class="sb-row">
+              <span class="sb-name">{{ skill.name }}</span>
+              {% for rate in card.ratings %}
+              <span class="sb-check">
+                <input type="checkbox"
+                  class="skill-cb"
+                  data-skill="{{ skill.id }}"
+                  data-student="{{ card.student.id }}"
+                  data-term="{{ card.term.id }}"
+                  data-session="{{ card.session.id }}"
+                  data-value="{{ rate }}"
+                  data-group="skill_{{ skill.id }}_{{ card.student.id }}"
+                  {% if card.assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                >
+              </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if result_settings.show_behaviour_section %}
+          <div class="sb-col">
+            <div class="sb-col-head">
+              <span>Behaviour</span>
+              <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            </div>
+            {% for skill in card.skills %}
+            {% if skill.category == "behaviour" %}
+            <div class="sb-row">
+              <span class="sb-name">{{ skill.name }}</span>
+              {% for rate in card.ratings %}
+              <span class="sb-check">
+                <input type="checkbox"
+                  class="skill-cb"
+                  data-skill="{{ skill.id }}"
+                  data-student="{{ card.student.id }}"
+                  data-term="{{ card.term.id }}"
+                  data-session="{{ card.session.id }}"
+                  data-value="{{ rate }}"
+                  data-group="skill_{{ skill.id }}_{{ card.student.id }}"
+                  {% if card.assessment_dict|get_item:skill.id == rate %}checked{% endif %}
+                >
+              </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="key-bar">
+          <div class="key-item"><span class="key-num">5</span><span class="key-desc">Excellent degree of observable traits</span></div>
+          <div class="key-item"><span class="key-num">4</span><span class="key-desc">High level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">3</span><span class="key-desc">Acceptable level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">2</span><span class="key-desc">Minimal level of observable traits</span></div>
+          <div class="key-item"><span class="key-num">1</span><span class="key-desc">No regards for observable traits</span></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Remarks section -->
+      <div class="paper-section-head">
+        <i class="bi bi-chat-quote"></i>
+        <span>Teacher &amp; Head of School Remarks</span>
+      </div>
+
+    {% include "results/_awards.html" with awards=card.awards %}
+      <div class="paper-remarks-wrap">
+        <div class="paper-remark-col">
+          <div class="paper-remark-col-label">
+            <i class="bi bi-person-badge"></i> Class Teacher's Remark
+          </div>
+          <textarea
+            id="teacherRemark_{{ card.student.id }}"
+            data-student="{{ card.student.id }}"
+            data-term="{{ card.term.id }}"
+            data-session="{{ card.session.id }}"
+            data-type="teacher"
+            class="paper-textarea"
+            rows="3"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+          >{{ card.class_teacher_remark }}</textarea>
+          <span id="tr_status_{{ card.student.id }}" class="remark-save-status"></span>
+        </div>
+        <div class="paper-remark-col">
+          <div class="paper-remark-col-label">
+            <i class="bi bi-shield-check"></i> Head of School's Remark
+          </div>
+          <textarea
+            id="hosRemark_{{ card.student.id }}"
+            data-student="{{ card.student.id }}"
+            data-term="{{ card.term.id }}"
+            data-session="{{ card.session.id }}"
+            data-type="hos"
+            class="paper-textarea"
+            rows="3"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';"
+          >{{ card.hos_remark }}</textarea>
+          <span id="hos_status_{{ card.student.id }}" class="remark-save-status"></span>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="paper-signature">
+        {% if card.head_teacher_signature %}
+          <img src="{{ card.head_teacher_signature }}" class="sig-img" alt="Signature">
+        {% endif %}
+        <div class="sig-line"></div>
+        <div class="sig-label">Head Teacher's Signature &amp; School Stamp</div>
+      </div>
+
+      <!-- Next term -->
+      <div class="next-term-strip">
+        <i class="bi bi-arrow-right-circle-fill"></i>
+        <span class="next-term-lbl">Next Term Begins:</span>
+        <span class="next-term-date">{{ card.resumption_date_next_term|date:"d M Y"|default:"—" }}</span>
+      </div>
+
+      <!-- Footer rule -->
+      <div class="paper-footer-rule"></div>
+
+      {% if result_settings.footer_note %}
+      <div style="text-align:center;font-size:.78rem;color:var(--paper-ink3);margin-top:.6rem;position:relative;z-index:1;">
+        {{ result_settings.footer_note }}
+      </div>
+      {% endif %}
+
+    </div><!-- /.report-paper -->
+  </div><!-- /.card-wrap -->
+
+  {% endfor %}
+
+  {% elif selected_class and selected_term %}
+
+  <div class="empty-state">
+    <div class="empty-icon-box"><i class="bi bi-person-x"></i></div>
+    <h3>No Results Found</h3>
+    <p>No students have results for this class and term yet. Check that scores have been entered and try again.</p>
+  </div>
+
+  {% else %}
+
+  <div class="empty-state">
+    <div class="empty-icon-box"><i class="bi bi-layers"></i></div>
+    <h3>Select Filters Above</h3>
+    <p>Choose a class, term and session to load all student result cards at once.</p>
+  </div>
+
+  {% endif %}
+
+</div><!-- /.batch-wrap -->
+
+<script>
+const CSRF       = "{{ csrf_token }}";
+const URL_TEACHER = "{% url 'results:save_teacher_remark' %}";
+const URL_HOS     = "{% url 'results:save_hos_remark' %}";
+const URL_SUBJECT = "{% url 'results:save_subject_remark' %}";
+const URL_SKILL   = "{% url 'results:save_skill_assessment' %}";
+
+/* ── Autosave helper ── */
+function autosave(url, bodyParams, statusEl) {
+  if (statusEl) {
+    statusEl.style.display = 'inline';
+    statusEl.style.color   = '#92400e';
+    statusEl.textContent   = 'Saving…';
+  }
+  fetch(url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(bodyParams)
+  })
+  .then(r => r.json())
+  .then(() => {
+    if (statusEl) {
+      statusEl.style.display = 'inline';
+      statusEl.style.color   = '#166534';
+      statusEl.textContent   = 'Saved ✓';
+      setTimeout(() => statusEl.style.display = 'none', 1500);
+    }
+  })
+  .catch(() => {
+    if (statusEl) { statusEl.style.color = '#991b1b'; statusEl.textContent = 'Failed'; }
+  });
+}
+
+/* ── Class teacher remarks ── */
+document.querySelectorAll('textarea[data-type="teacher"]').forEach(ta => {
+  ta.addEventListener('keyup', function () {
+    clearTimeout(this._t);
+    const statusEl = document.getElementById('tr_status_' + this.dataset.student);
+    this._t = setTimeout(() => autosave(URL_TEACHER, {
+      student_id: this.dataset.student,
+      term_id:    this.dataset.term,
+      session_id: this.dataset.session,
+      remark:     this.value
+    }, statusEl), 800);
+  });
+});
+
+/* ── HOS remarks ── */
+document.querySelectorAll('textarea[data-type="hos"]').forEach(ta => {
+  ta.addEventListener('input', function () {
+    clearTimeout(this._t);
+    const statusEl = document.getElementById('hos_status_' + this.dataset.student);
+    this._t = setTimeout(() => autosave(URL_HOS, {
+      student_id: this.dataset.student,
+      term_id:    this.dataset.term,
+      session_id: this.dataset.session,
+      remark:     this.value
+    }, statusEl), 800);
+  });
+});
+
+/* ── Subject remarks ── */
+document.querySelectorAll('textarea.subject-remark').forEach(ta => {
+  const statusEl = ta.nextElementSibling;
+  ta.addEventListener('keyup', function () {
+    clearTimeout(this._t);
+    this._t = setTimeout(() => autosave(URL_SUBJECT, {
+      student_id: this.dataset.student,
+      subject_id: this.dataset.subject,
+      term_id:    this.dataset.term,
+      session_id: this.dataset.session,
+      remark:     this.value
+    }, statusEl), 700);
+  });
+});
+
+/* ── Skill / behaviour checkboxes (radio-style) ── */
+document.addEventListener('change', function (e) {
+  if (!e.target.classList.contains('skill-cb')) return;
+  const cb    = e.target;
+  const group = cb.dataset.group;
+  document.querySelectorAll(`.skill-cb[data-group="${group}"]`).forEach(c => {
+    if (c !== cb) c.checked = false;
+  });
+  if (!cb.checked) return;
+  fetch(URL_SKILL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({
+      student: cb.dataset.student,
+      skill:   cb.dataset.skill,
+      term:    cb.dataset.term,
+      session: cb.dataset.session,
+      score:   cb.dataset.value
+    })
+  });
+});
+
+/* ── Expand / collapse ── */
+const cardIds = [{% for card in student_cards %}'{{ card.student.id }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+
+function toggleCard(studentId) {
+  const el  = document.getElementById('card_' + studentId);
+  const btn = document.getElementById('toggle_btn_' + studentId);
+  if (!el) return;
+  const hidden = el.style.display === 'none';
+  el.style.display = hidden ? '' : 'none';
+  btn.innerHTML = hidden
+    ? '<i class="bi bi-dash-lg"></i> Collapse'
+    : '<i class="bi bi-plus-lg"></i> Expand';
+}
+function collapseAll() {
+  cardIds.forEach(id => {
+    const el  = document.getElementById('card_' + id);
+    const btn = document.getElementById('toggle_btn_' + id);
+    if (el)  el.style.display = 'none';
+    if (btn) btn.innerHTML = '<i class="bi bi-plus-lg"></i> Expand';
+  });
+}
+function expandAll() {
+  cardIds.forEach(id => {
+    const el  = document.getElementById('card_' + id);
+    const btn = document.getElementById('toggle_btn_' + id);
+    if (el)  el.style.display = '';
+    if (btn) btn.innerHTML = '<i class="bi bi-dash-lg"></i> Collapse';
+  });
+}
+function prevCard(currentId) {
+  const idx = cardIds.indexOf(currentId);
+  if (idx > 0) document.getElementById('sc_' + cardIds[idx - 1]).scrollIntoView({ behavior: 'smooth' });
+}
+function nextCard(currentId) {
+  const idx = cardIds.indexOf(currentId);
+  if (idx < cardIds.length - 1) document.getElementById('sc_' + cardIds[idx + 1]).scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ── Select visual feedback ── */
+document.querySelectorAll('.custom-select').forEach(s => {
+  function update() {
+    s.style.fontWeight = s.value ? '600' : '400';
+    s.style.color      = s.value ? 'var(--white)' : 'var(--slate)';
+  }
+  s.addEventListener('change', update); update();
+});
+</script>
+
+{% endblock %}

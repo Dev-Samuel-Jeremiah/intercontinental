@@ -1,0 +1,401 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ action }} Time Slot{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+  /* design tokens come from dashboard/base.html */
+
+  @keyframes riseUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Wrap ── */
+  .slot-wrap {
+    max-width: 580px;
+    margin: 0 auto;
+    padding: 2rem 2.5rem 4rem;
+    animation: riseUp .4s ease both;
+    font-family: 'Outfit', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── Page Header ── */
+  .page-header {
+    margin-bottom: 2rem;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.68rem;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--champagne);
+    margin-bottom: 10px;
+  }
+  .eyebrow::before {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--champagne);
+    opacity: .7;
+    flex-shrink: 0;
+  }
+  .header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--white);
+    margin: 0;
+  }
+  .page-title em {
+    font-style: italic;
+    color: var(--champagne);
+  }
+  .context-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--champagne-dim);
+    border: 1px solid rgba(244,210,31,.22);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    color: var(--champagne-lt);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .header-divider {
+    position: relative;
+    height: 1px;
+    background: var(--rim);
+    margin-top: 16px;
+  }
+  .header-divider::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 0;
+    width: 80px;
+    height: 2px;
+    background: var(--champagne);
+    border-radius: 2px;
+    margin-top: -0.5px;
+  }
+
+  /* ── Back link ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.775rem;
+    font-weight: 500;
+    color: var(--slate2);
+    text-decoration: none;
+    letter-spacing: .2px;
+    margin-bottom: 1.4rem;
+    transition: color .2s;
+  }
+  .back-link:hover { color: var(--champagne); }
+  .back-link i { font-size: .85rem; }
+
+  /* ── Panel ── */
+  .panel {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--rim);
+    border-radius: 16px;
+    overflow: hidden;
+    animation: riseUp .45s ease both;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+    pointer-events: none;
+  }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px 18px;
+    border-bottom: 1px solid var(--rim);
+  }
+  .panel-icon {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--teal-dim);
+    border: 1px solid var(--teal-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--teal);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+  .panel-header h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--white);
+    margin: 0;
+    letter-spacing: .1px;
+  }
+  .panel-body {
+    padding: 24px;
+  }
+
+  /* ── Form Fields ── */
+  .field-group {
+    margin-bottom: 18px;
+  }
+  .field-group label,
+  .field-group > span.label-text {
+    display: block;
+    font-size: 0.73rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--slate2);
+    margin-bottom: 7px;
+  }
+
+  /* Target all Django-rendered inputs/selects */
+  .slot-form input[type="text"],
+  .slot-form input[type="number"],
+  .slot-form input[type="time"],
+  .slot-form select,
+  .slot-form textarea {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    color: var(--white);
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .slot-form input[type="text"]::placeholder,
+  .slot-form input[type="number"]::placeholder,
+  .slot-form input[type="time"]::placeholder { color: var(--slate); }
+
+  .slot-form input[type="text"]:focus,
+  .slot-form input[type="number"]:focus,
+  .slot-form input[type="time"]:focus,
+  .slot-form select:focus,
+  .slot-form textarea:focus {
+    border-color: var(--champagne);
+    box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+  }
+
+  /* Select arrow */
+  .slot-form select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23f4d21f' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  .slot-form select option {
+    background: var(--surface2);
+    color: var(--white);
+  }
+
+  /* Checkbox row */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  .checkbox-row:hover { border-color: var(--rim3); }
+  .slot-form input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--champagne);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .checkbox-label-text {
+    font-size: 0.875rem;
+    color: var(--slate2);
+    font-weight: 500;
+  }
+
+  /* Error & help text */
+  .field-error {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--red);
+    font-size: 0.72rem;
+    font-weight: 500;
+    margin-top: 5px;
+  }
+  .field-help {
+    color: var(--slate);
+    font-size: 0.72rem;
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+
+  /* ── Divider ── */
+  .form-divider {
+    height: 1px;
+    background: var(--rim);
+    margin: 22px 0;
+  }
+
+  /* ── Action Buttons ── */
+  .form-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f4d21f, #d1ad00);
+    color: #0a1f44;
+    padding: 11px 26px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(244,210,31,.22);
+    transition: transform .18s, box-shadow .18s, filter .18s;
+    letter-spacing: .2px;
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(244,210,31,.32);
+    filter: brightness(1.07);
+  }
+  .btn-submit:active { transform: translateY(0); }
+
+  .btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--slate2);
+    padding: 11px 20px;
+    border: 1px solid var(--rim2);
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color .18s, color .18s, background .18s;
+    letter-spacing: .1px;
+  }
+  .btn-cancel:hover {
+    border-color: var(--rim3);
+    color: var(--white);
+    background: var(--surface3);
+  }
+</style>
+
+<div class="slot-wrap">
+
+  <!-- Back Link -->
+  <a href="{% url 'timetable:slot_list' %}" class="back-link">
+    <i class="bi bi-arrow-left"></i> Back to Time Slots
+  </a>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">Timetable Management</div>
+    <div class="header-row">
+      <h1 class="page-title">{{ action }} <em>Time Slot</em></h1>
+      <span class="context-badge">
+        <i class="bi bi-clock"></i>
+        Scheduling
+      </span>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Form Panel -->
+  <div class="panel" style="animation-delay:.07s">
+    <div class="panel-header">
+      <div class="panel-icon"><i class="bi bi-clock-history"></i></div>
+      <h3>Slot Configuration</h3>
+    </div>
+    <div class="panel-body">
+      <form method="post" class="slot-form">
+        {% csrf_token %}
+
+        {% for field in form %}
+          <div class="field-group">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              <label class="checkbox-row" for="{{ field.id_for_label }}">
+                {{ field }}
+                <span class="checkbox-label-text">{{ field.label }}</span>
+              </label>
+            {% else %}
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+
+            {% if field.errors %}
+              <p class="field-error">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                {{ field.errors.0 }}
+              </p>
+            {% endif %}
+            {% if field.help_text %}
+              <p class="field-help">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <div class="form-divider"></div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-submit">
+            <i class="bi bi-check2-circle"></i>
+            {{ action }} Slot
+          </button>
+          <a href="{% url 'timetable:slot_list' %}" class="btn-cancel">
+            <i class="bi bi-x"></i>
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

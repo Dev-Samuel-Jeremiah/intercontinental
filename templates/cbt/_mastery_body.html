@@ -1,0 +1,14 @@
+<style>
+  .ms-sub{margin-bottom:1rem}
+  .ms-row{display:grid;grid-template-columns:minmax(0,1fr) 160px 86px;gap:.7rem;align-items:center;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.88rem}
+  .ms-bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .ms-bar i{display:block;height:100%}
+  .lb{font-size:.7rem;padding:.12rem .5rem;border-radius:99px;border:1px solid rgba(255,255,255,.12);text-align:center;white-space:nowrap}
+  .lb.mastered{color:#4ade80;border-color:rgba(74,222,128,.35)} .lb.developing{color:#fbbf24;border-color:rgba(251,191,36,.35)}
+  .lb.weak{color:#e87070;border-color:rgba(232,112,112,.35)} .lb.few{color:rgba(255,255,255,.45)}
+</style>
+{% for m in mastery %}<div class="ms-sub"><h3 style="font-size:1rem;margin:.2rem 0 .4rem">{{ m.subject.name }}</h3>
+  {% for t in m.topics %}<div class="ms-row"><span>{{ t.topic }} <span style="color:rgba(255,255,255,.45);font-size:.78rem">· {{ t.right }}/{{ t.total }}</span></span>
+    <div class="ms-bar"><i style="width:{{ t.percent }}%;background:{% if t.label == 'mastered' %}#4ade80{% elif t.label == 'developing' %}#fbbf24{% elif t.label == 'weak' %}#e87070{% else %}rgba(255,255,255,.3){% endif %}"></i></div>
+    <span class="lb {{ t.label }}">{% if t.label == 'few' %}too few yet{% elif t.label == 'mastered' %}mastered{% elif t.label == 'developing' %}developing{% else %}needs work{% endif %}</span></div>{% endfor %}
+</div>{% empty %}<p style="color:rgba(255,255,255,.5);margin:0">No topic results yet — they build up from practice and from exam questions taken from the question bank.</p>{% endfor %}

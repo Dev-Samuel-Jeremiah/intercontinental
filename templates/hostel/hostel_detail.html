@@ -1,0 +1,1201 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ hostel.name }}{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--ink);
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.your-wrap{
+  max-width:1600px;
+  margin:auto;
+  padding:2rem 2.5rem 4rem;
+  animation:riseUp .4s ease both;
+}
+
+@keyframes riseUp{
+  from{
+    opacity:0;
+    transform:translateY(18px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+.page-head{
+  margin-bottom:2rem;
+}
+
+.page-eyebrow{
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  margin-bottom:.9rem;
+  color:var(--champagne);
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:3px;
+  font-weight:700;
+}
+
+.page-eyebrow::before{
+  content:"";
+  width:42px;
+  height:1px;
+  background:var(--champagne);
+}
+
+.page-title-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+
+.page-title{
+  margin:0;
+  font-family:'Cormorant Garamond',serif;
+  font-size:3rem;
+  line-height:1;
+  font-weight:700;
+  color:var(--white);
+}
+
+.page-title em{
+  color:var(--champagne);
+  font-style:italic;
+}
+
+.page-sub{
+  margin-top:.7rem;
+  color:var(--slate2);
+  font-size:.95rem;
+}
+
+.context-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:.55rem;
+  padding:.8rem 1rem;
+  border-radius:999px;
+  background:var(--champagne-dim);
+  border:1px solid rgba(244,210,31,.22);
+  color:var(--champagne-lt);
+  font-size:.8rem;
+  font-weight:700;
+  white-space:nowrap;
+}
+
+.page-divider{
+  position:relative;
+  border-bottom:1px solid var(--rim);
+  margin-top:1.3rem;
+  padding-bottom:1rem;
+}
+
+.page-divider::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-1px;
+  width:80px;
+  height:2px;
+  background:var(--champagne);
+}
+
+.top-actions{
+  display:flex;
+  gap:.85rem;
+  flex-wrap:wrap;
+  margin-top:1.5rem;
+}
+
+.lux-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:.65rem;
+  padding:.88rem 1.2rem;
+  border-radius:12px;
+  border:1px solid var(--rim2);
+  text-decoration:none;
+  font-size:.85rem;
+  font-weight:600;
+  transition:.25s ease;
+  cursor:pointer;
+}
+
+.lux-btn-primary{
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  border:none;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.lux-btn-primary:hover{
+  transform:translateY(-2px);
+}
+
+.lux-btn-ghost{
+  background:var(--surface2);
+  color:var(--white);
+}
+
+.lux-btn-ghost:hover{
+  border-color:var(--champagne);
+  color:var(--champagne-lt);
+}
+
+.panel{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  margin-bottom:1.5rem;
+  animation:riseUp .45s ease both;
+}
+
+.panel::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:1rem;
+  padding:1.15rem 1.3rem;
+  border-bottom:1px solid var(--rim);
+  flex-wrap:wrap;
+}
+
+.panel-title{
+  display:flex;
+  align-items:center;
+  gap:.85rem;
+}
+
+.panel-header h3{
+  margin:0;
+  font-size:.98rem;
+  font-weight:600;
+  color:var(--white);
+}
+
+.panel-body{
+  padding:1.2rem 1.3rem;
+}
+
+.icon-badge{
+  width:30px;
+  height:30px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.9rem;
+}
+
+.icon-green{
+  background:var(--green-dim);
+  color:var(--green);
+  border:1px solid var(--green-border);
+}
+
+.icon-blue{
+  background:var(--blue-dim);
+  color:var(--blue);
+  border:1px solid var(--blue-border);
+}
+
+.icon-red{
+  background:var(--red-dim);
+  color:var(--red);
+  border:1px solid var(--red-border);
+}
+
+.icon-amber{
+  background:var(--amber-dim);
+  color:var(--amber);
+  border:1px solid var(--amber-border);
+}
+
+.icon-purple{
+  background:var(--purple-dim);
+  color:var(--purple);
+  border:1px solid var(--purple-border);
+}
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:1rem;
+  margin-bottom:1.5rem;
+}
+
+.stat-card{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:16px;
+  padding:1.2rem;
+  overflow:hidden;
+  animation:riseUp .45s ease both;
+}
+
+.stat-card::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.stat-label{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:1.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.stat-value{
+  margin-top:.45rem;
+  font-family:'Cormorant Garamond',serif;
+  font-size:2rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.stat-line{
+  width:46px;
+  height:4px;
+  border-radius:999px;
+  margin-top:1rem;
+}
+
+.grid-2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.4rem;
+}
+
+.room-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:1rem;
+}
+
+.room-card{
+  border:1px solid var(--rim);
+  border-radius:16px;
+  overflow:hidden;
+  background:var(--surface2);
+  transition:.25s ease;
+}
+
+.room-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--champagne);
+}
+
+.room-head{
+  padding:1rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  border-bottom:1px solid var(--rim);
+}
+
+.room-head.available{
+  background:var(--green-dim);
+}
+
+.room-head.full{
+  background:var(--red-dim);
+}
+
+.room-title{
+  font-size:.95rem;
+  font-weight:700;
+  color:var(--white);
+}
+
+.room-meta{
+  margin-top:.3rem;
+  font-size:.76rem;
+  color:var(--slate2);
+}
+
+.room-body{
+  padding:1rem;
+}
+
+.bed-wrap{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.45rem;
+}
+
+.bed-pill{
+  padding:.45rem .7rem;
+  border-radius:10px;
+  font-size:.74rem;
+  font-weight:700;
+}
+
+.bed-occupied{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+}
+
+.bed-available{
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+}
+
+.bed-reserved{
+  background:var(--amber-dim);
+  border:1px solid var(--amber-border);
+  color:var(--amber);
+}
+
+.bed-other{
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  color:var(--slate2);
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.35rem .7rem;
+  border-radius:999px;
+  font-size:.72rem;
+  font-weight:700;
+  border:1px solid;
+}
+
+.badge-green{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.badge-red{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+.badge-blue{
+  background:var(--blue-dim);
+  border-color:var(--blue-border);
+  color:var(--blue);
+}
+
+.badge-amber{
+  background:var(--amber-dim);
+  border-color:var(--amber-border);
+  color:var(--amber);
+}
+
+.badge-purple{
+  background:var(--purple-dim);
+  border-color:var(--purple-border);
+  color:var(--purple);
+}
+
+.tbl{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.tbl th{
+  padding:.95rem 1rem;
+  text-align:left;
+  border-bottom:1px solid var(--rim);
+  color:var(--slate2);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.tbl td{
+  padding:1rem;
+  border-bottom:1px solid var(--rim);
+  color:var(--white);
+  font-size:.86rem;
+  vertical-align:middle;
+}
+
+.tbl tr:hover td{
+  background:rgba(255,255,255,.025);
+}
+
+.avatar{
+  width:40px;
+  height:40px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#f4d21f,#c9a800);
+  color:#0a1f44;
+  font-size:.82rem;
+  font-weight:700;
+}
+
+.user-row{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+}
+
+.notice{
+  background:var(--surface2);
+  border:1px solid var(--rim);
+  border-left:3px solid var(--champagne);
+  border-radius:14px;
+  padding:1rem;
+  margin-bottom:.9rem;
+}
+
+.notice-title{
+  font-weight:700;
+  margin-bottom:.35rem;
+}
+
+.notice-text{
+  color:var(--slate2);
+  font-size:.84rem;
+  line-height:1.5;
+}
+
+.floor-pill{
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+  background:var(--green-dim);
+  border:1px solid var(--green-border);
+  color:var(--green);
+  border-radius:12px;
+  padding:.55rem .8rem;
+}
+
+.delete-btn{
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+  border-radius:8px;
+  width:22px;
+  height:22px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.delete-btn:hover{
+  transform:scale(1.05);
+}
+
+.empty-state{
+  padding:2.2rem 1rem;
+  text-align:center;
+}
+
+.empty-icon{
+  width:72px;
+  height:72px;
+  border-radius:18px;
+  background:var(--surface3);
+  border:1px solid var(--rim);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 1rem;
+  font-size:1.6rem;
+  color:var(--champagne);
+}
+
+.empty-title{
+  font-size:1rem;
+  font-weight:700;
+  margin-bottom:.35rem;
+}
+
+.empty-sub{
+  color:var(--slate2);
+  font-size:.84rem;
+}
+
+.modal-ov{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.72);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
+}
+
+.modal-ov.active{
+  display:flex;
+}
+
+.modal-box{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--rim);
+  border-radius:20px;
+  width:100%;
+  max-width:460px;
+  overflow:hidden;
+}
+
+.modal-box::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.modal-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:1.2rem 1.3rem;
+  border-bottom:1px solid var(--rim);
+}
+
+.modal-title{
+  font-weight:700;
+  color:var(--white);
+}
+
+.modal-close{
+  width:34px;
+  height:34px;
+  border-radius:10px;
+  background:var(--surface2);
+  border:1px solid var(--rim);
+  color:var(--slate2);
+  cursor:pointer;
+}
+
+.modal-body{
+  padding:1.3rem;
+}
+
+.fg{
+  display:flex;
+  flex-direction:column;
+  gap:.45rem;
+  margin-bottom:1rem;
+}
+
+.fg label{
+  font-size:.73rem;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  color:var(--slate2);
+  font-weight:700;
+}
+
+.fg input,
+.fg select,
+.fg textarea{
+  width:100%;
+  background:var(--surface2);
+  border:1px solid var(--rim2);
+  border-radius:10px;
+  padding:.9rem 1rem;
+  color:var(--white);
+  font-family:'Outfit',sans-serif;
+}
+
+.fg input:focus,
+.fg select:focus,
+.fg textarea:focus{
+  outline:none;
+  border-color:var(--champagne);
+  box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+.submit-btn{
+  width:100%;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.6rem;
+  padding:.95rem 1rem;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#f4d21f,#d1ad00);
+  color:#0a1f44;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 4px 18px rgba(244,210,31,.22);
+  transition:.25s ease;
+}
+
+.submit-btn:hover{
+  transform:translateY(-2px);
+}
+
+.message{
+  padding:1rem 1.1rem;
+  border-radius:14px;
+  margin-bottom:1rem;
+  font-size:.88rem;
+  font-weight:600;
+  border:1px solid;
+}
+
+.message-success{
+  background:var(--green-dim);
+  border-color:var(--green-border);
+  color:var(--green);
+}
+
+.message-error{
+  background:var(--red-dim);
+  border-color:var(--red-border);
+  color:var(--red);
+}
+
+@media(max-width:900px){
+  .grid-2{
+    grid-template-columns:1fr;
+  }
+
+  .page-title{
+    font-size:2.3rem;
+  }
+
+  .your-wrap{
+    padding:1.5rem;
+  }
+}
+</style>
+
+<script>
+function openModal(id){
+  document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id){
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.modal-ov').forEach(m=>{
+    m.addEventListener('click',e=>{
+      if(e.target===m)m.classList.remove('active');
+    });
+  });
+});
+
+function showFloorModal(){
+  document.getElementById('floorModal').classList.add('active');
+}
+</script>
+
+<div class="your-wrap">
+
+  <div class="page-head">
+
+    <div class="page-eyebrow">
+      Boarding Facility
+    </div>
+
+    <div class="page-title-row">
+
+      <div>
+        <h1 class="page-title">
+          {{ hostel.name }} <em>Overview</em>
+        </h1>
+
+        <div class="page-sub">
+          {{ hostel.get_gender_display }} · {{ hostel.total_beds }} beds · {{ hostel.occupancy_rate }}% occupied
+        </div>
+      </div>
+
+      <div class="context-badge">
+        <i class="bi bi-house-door-fill"></i>
+        {{ boarders|length }} Active Boarders
+      </div>
+
+    </div>
+
+    <div class="page-divider"></div>
+
+    <div class="top-actions">
+      <a href="{% url 'hostel:room_create' hostel.id %}" class="lux-btn lux-btn-primary">
+        <i class="bi bi-plus-lg"></i>
+        Add Room
+      </a>
+
+      <a href="{% url 'hostel:hostel_edit' hostel.id %}" class="lux-btn lux-btn-ghost">
+        <i class="bi bi-pencil"></i>
+        Edit
+      </a>
+
+      <a href="{% url 'hostel:hostel_list' %}" class="lux-btn lux-btn-ghost">
+        <i class="bi bi-arrow-left"></i>
+        Back
+      </a>
+    </div>
+
+  </div>
+
+  {% if messages %}
+    {% for m in messages %}
+      <div class="message {% if m.tags == 'success' %}message-success{% else %}message-error{% endif %}">
+        {{ m }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="stats-grid">
+
+    <div class="stat-card">
+      <div class="stat-label">Total Beds</div>
+      <div class="stat-value">{{ hostel.total_beds }}</div>
+      <div class="stat-line" style="background:var(--green);"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Occupancy Rate</div>
+      <div class="stat-value">{{ hostel.occupancy_rate }}%</div>
+      <div class="stat-line" style="background:var(--amber);"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Current Boarders</div>
+      <div class="stat-value">{{ boarders|length }}</div>
+      <div class="stat-line" style="background:var(--blue);"></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Rooms</div>
+      <div class="stat-value">{{ rooms|length }}</div>
+      <div class="stat-line" style="background:var(--purple);"></div>
+    </div>
+
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="icon-badge icon-blue">
+          <i class="bi bi-layers-fill"></i>
+        </div>
+        <h3>Floor Management</h3>
+      </div>
+
+      <button onclick="showFloorModal()" class="lux-btn lux-btn-ghost" style="padding:.65rem .9rem;">
+        <i class="bi bi-plus-lg"></i>
+        Add Floor
+      </button>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% if hostel.floors.all %}
+
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap;">
+
+        {% for fl in hostel.floors.all %}
+        <div class="floor-pill">
+
+          <span>{{ fl.name }}</span>
+
+          <form method="POST" action="{% url 'hostel:manage_floors' hostel.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="floor_id" value="{{ fl.id }}">
+
+            <button type="submit" class="delete-btn" onclick="return confirm('Delete floor {{ fl.name }}?')">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+
+        </div>
+        {% endfor %}
+
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="bi bi-layers"></i>
+        </div>
+
+        <div class="empty-title">
+          No Floors Added
+        </div>
+
+        <div class="empty-sub">
+          Add floors first before creating rooms and assigning beds.
+        </div>
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="icon-badge icon-green">
+          <i class="bi bi-door-open-fill"></i>
+        </div>
+
+        <h3>Rooms & Beds</h3>
+      </div>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% if rooms %}
+
+      <div class="room-grid">
+
+        {% for room in rooms %}
+
+        <div class="room-card">
+
+          <div class="room-head {% if room.is_full %}full{% else %}available{% endif %}">
+
+            <div>
+              <div class="room-title">
+                Room {{ room.room_number }}
+              </div>
+
+              <div class="room-meta">
+                {{ room.get_room_type_display }}
+                {% if room.floor %} · {{ room.floor.name }}{% endif %}
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              <span class="badge {% if room.is_full %}badge-red{% else %}badge-green{% endif %}">
+                {{ room.occupied_count }}/{{ room.capacity }}
+              </span>
+
+              <div style="font-size:.7rem;color:var(--slate2);margin-top:.3rem;">
+                {% if room.has_ac %}A/C{% endif %}
+                {% if room.has_bathroom %} · Bath{% endif %}
+              </div>
+            </div>
+
+          </div>
+
+          <div class="room-body">
+
+            <div class="bed-wrap">
+
+              {% for bed in room.beds.all %}
+
+                <div class="bed-pill
+                  {% if bed.status == 'OCCUPIED' %}bed-occupied
+                  {% elif bed.status == 'AVAILABLE' %}bed-available
+                  {% elif bed.status == 'RESERVED' %}bed-reserved
+                  {% else %}bed-other{% endif %}">
+
+                  {{ bed.bed_number }}
+
+                  {% if bed.status == 'OCCUPIED' %}
+                    {% with occ=bed.current_occupant %}
+                      {% if occ %}
+                        — {{ occ.student.full_name|truncatechars:12 }}
+                      {% endif %}
+                    {% endwith %}
+                  {% endif %}
+
+                </div>
+
+              {% endfor %}
+
+            </div>
+
+          </div>
+
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% else %}
+
+      <div class="empty-state">
+
+        <div class="empty-icon">
+          <i class="bi bi-door-open"></i>
+        </div>
+
+        <div class="empty-title">
+          No Rooms Yet
+        </div>
+
+        <div class="empty-sub">
+          Add rooms to begin assigning beds and boarders.
+        </div>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="icon-badge icon-purple">
+          <i class="bi bi-people-fill"></i>
+        </div>
+
+        <h3>Current Boarders ({{ boarders|length }})</h3>
+      </div>
+
+    </div>
+
+    <div class="panel-body">
+
+      <div style="overflow:auto;">
+
+        <table class="tbl">
+
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Class</th>
+              <th>Room</th>
+              <th>Bed</th>
+              <th>Type</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for bp in boarders %}
+
+            <tr>
+
+              <td>
+                <div class="user-row">
+
+                  <div class="avatar">
+                    {{ bp.student.full_name|slice:":2"|upper }}
+                  </div>
+
+                  <div>
+                    <strong>{{ bp.student.full_name }}</strong><br>
+                    <span style="font-size:.72rem;color:var(--slate2);">
+                      {{ bp.student.admission_number }}
+                    </span>
+                  </div>
+
+                </div>
+              </td>
+
+              <td>{{ bp.student.class_assigned.name|default:"—" }}</td>
+
+              <td>{{ bp.room.room_number|default:"—" }}</td>
+
+              <td>{{ bp.bed.bed_number|default:"—" }}</td>
+
+              <td>
+                <span class="badge badge-blue">
+                  {{ bp.get_student_type_display }}
+                </span>
+              </td>
+
+              <td>
+                <a href="{% url 'hostel:boarder_profile' bp.student.id %}"
+                   style="color:var(--champagne-lt);font-size:.8rem;text-decoration:none;font-weight:600;">
+                  Profile →
+                </a>
+              </td>
+
+            </tr>
+
+            {% empty %}
+
+            <tr>
+              <td colspan="6">
+
+                <div class="empty-state">
+
+                  <div class="empty-icon">
+                    <i class="bi bi-people"></i>
+                  </div>
+
+                  <div class="empty-title">
+                    No Boarders Assigned
+                  </div>
+
+                  <div class="empty-sub">
+                    Assigned boarders will appear here once students are allocated beds.
+                  </div>
+
+                </div>
+
+              </td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  {% if notices %}
+
+  <div class="panel">
+
+    <div class="panel-header">
+
+      <div class="panel-title">
+        <div class="icon-badge icon-amber">
+          <i class="bi bi-megaphone-fill"></i>
+        </div>
+
+        <h3>Hostel Notices</h3>
+      </div>
+
+    </div>
+
+    <div class="panel-body">
+
+      {% for n in notices %}
+
+      <div class="notice"
+           style="border-left-color:
+           {% if n.priority == 'CRITICAL' %}var(--red)
+           {% elif n.priority == 'URGENT' %}var(--amber)
+           {% else %}var(--green){% endif %};">
+
+        <div class="notice-title">
+          {{ n.title }}
+        </div>
+
+        <div class="notice-text">
+          {{ n.content|truncatechars:120 }}
+        </div>
+
+      </div>
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+  {% endif %}
+
+</div>
+
+<!-- Add Floor Modal -->
+<div class="modal-ov" id="floorModal">
+
+  <div class="modal-box">
+
+    <div class="modal-header">
+
+      <div class="modal-title">
+        Add Floor to {{ hostel.name }}
+      </div>
+
+      <button onclick="closeModal('floorModal')" class="modal-close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+    </div>
+
+    <div class="modal-body">
+
+      <form method="POST" action="{% url 'hostel:manage_floors' hostel.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+
+        <div class="fg">
+          <label>Floor Name *</label>
+          <input name="floor_name" required placeholder="e.g. Ground Floor, 1st Floor">
+        </div>
+
+        <div class="fg">
+          <label>Floor Number (0 = Ground)</label>
+          <input type="number" name="floor_number" value="0" min="0">
+        </div>
+
+        <button type="submit" class="submit-btn">
+          <i class="bi bi-plus-lg"></i>
+          Add Floor
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock %}

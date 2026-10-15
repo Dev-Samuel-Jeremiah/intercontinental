@@ -1,0 +1,50 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Print — {{ exam.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+{% include "cbt/_math.html" %}
+<style>
+  .pp{max-width:200mm;margin:1rem auto;background:#fff;color:#1c1917;padding:14mm 16mm;border-radius:6px;font-family:'Times New Roman',Georgia,serif;font-size:12.5px;line-height:1.5;box-shadow:0 30px 60px -40px rgba(0,0,0,.9)}
+  .pp *{color:#1c1917}
+  .pp .hd{text-align:center;border-bottom:2px solid #1c1917;padding-bottom:3mm;margin-bottom:4mm}
+  .pp .hd b{font-size:16px;letter-spacing:.06em}
+  .pp .cand{display:grid;grid-template-columns:2fr 1fr 1fr;gap:3mm;margin:3mm 0 5mm;font-size:12px}
+  .pp .cand span{border-bottom:1px dotted #555;display:inline-block;min-width:40mm}
+  .pp h3{font-size:13px;margin:5mm 0 2mm;text-transform:uppercase;letter-spacing:.05em}
+  .pp ol{padding-left:6mm;margin:0}
+  .pp li{margin-bottom:3.5mm;break-inside:avoid}
+  .pp .opts{display:grid;grid-template-columns:1fr 1fr;gap:.5mm 6mm;margin-top:1mm}
+  .pp .opts.key .c{font-weight:700;text-decoration:underline}
+  .pp .lines{border-bottom:1px solid #999;height:7mm}
+  .pp .passage{border:1px solid #aaa;padding:2.5mm 3mm;margin:2mm 0 3mm;font-size:12px}
+  .pp .keygrid{display:grid;grid-template-columns:repeat(10,1fr);gap:1.5mm;font-size:12px}
+  @media print{body *{visibility:hidden!important}.pp,.pp *{visibility:visible!important}.pp{position:absolute;left:0;top:0;margin:0;box-shadow:none;max-width:none;width:100%;padding:0}@page{size:A4;margin:12mm}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Paper version</div>
+  <h1 class="fin-title">{{ exam.title }}</h1>
+  <p class="fin-sub">For candidates without a computer. Print the paper, and the answer key separately for marking.</p>
+</div><div style="display:flex;gap:.4rem">
+  <a class="fin-btn fin-btn-sm{% if not key %} fin-btn-gold{% endif %}" href="?">Question paper</a>
+  <a class="fin-btn fin-btn-sm{% if key %} fin-btn-gold{% endif %}" href="?key=1">With answer key</a>
+  <button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div></div>
+<div class="pp">
+  <div class="hd"><b>{{ school.name|upper }}</b><div>{{ exam.title }} — {{ exam.subject.name }}</div>
+    <div style="font-size:11.5px">{{ exam.get_exam_type_display }}{% if exam.term %} · {{ exam.term.name }}{% endif %}{% if exam.session %} {{ exam.session.name }}{% endif %}{% if classes %} · {{ classes }}{% endif %}{% if exam.duration_minutes %} · Time allowed: {{ exam.duration_minutes }} minutes{% endif %}</div></div>
+  {% if not key %}<div class="cand"><div>Name: <span style="min-width:70mm"></span></div><div>Class: <span style="min-width:22mm"></span></div><div>Adm. no.: <span style="min-width:22mm"></span></div></div>{% endif %}
+  {% for s in sections %}{% if s.questions %}
+    <h3>Section {{ forloop.counter }}: {{ s.part.get_part_type_display }}{% if s.part.total_marks %} ({{ s.part.total_marks }} marks){% endif %}</h3>
+    {% if s.part.part_type == 'CBT' %}<p style="margin:0 0 2mm;font-style:italic">Choose the correct option for each question.</p>{% endif %}
+    <ol>{% for q in s.questions %}<li>
+      {% if q.show_passage %}<div class="passage">{% if q.passage_title %}<b>{{ q.passage_title }}</b><br>{% endif %}{{ q.passage|linebreaksbr }}</div>{% endif %}
+      {{ q.question_text|safe }}{% if q.marks != 1 %} <i>({{ q.marks|floatformat:"-1" }} marks)</i>{% endif %}
+      {% if q.image %}<div><img src="{{ q.image.url }}" alt="" style="max-height:55mm;max-width:100%;margin-top:1mm"></div>{% endif %}
+      {% if q.letters %}<div class="opts{% if key %} key{% endif %}">{% for l, o in q.letters %}<div class="{% if o.is_correct %}c{% endif %}">{{ l }}. {{ o.text }}</div>{% endfor %}</div>
+      {% elif not key %}<div class="lines"></div><div class="lines"></div>{% if s.part.part_type == 'ESSAY' %}<div class="lines"></div><div class="lines"></div><div class="lines"></div>{% endif %}{% endif %}
+      {% if key and q.explanation %}<div style="font-size:11px;font-style:italic;margin-top:1mm">{{ q.explanation }}</div>{% endif %}
+    </li>{% endfor %}</ol>
+  {% endif %}{% endfor %}
+  {% if key %}<h3>Answer key</h3><div class="keygrid">{% for s in sections %}{% if s.part.part_type == 'CBT' %}{% for q in s.questions %}{% for l, o in q.letters %}{% if o.is_correct %}<div>{{ forloop.parentloop.counter }}. <b>{{ l }}</b></div>{% endif %}{% endfor %}{% endfor %}{% endif %}{% endfor %}</div>{% endif %}
+</div>
+{% endblock %}

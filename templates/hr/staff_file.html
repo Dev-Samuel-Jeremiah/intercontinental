@@ -1,0 +1,135 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ staff.full_name }} — HR file{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  details.panel>summary{cursor:pointer;padding:1rem 1.2rem;font-weight:600;list-style:none}
+  details.panel>summary::-webkit-details-marker{display:none}
+  details.panel>summary i{margin-right:.4rem}
+  .stack{display:grid;gap:1.2rem}
+  .tick{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .tick input[type=file]{max-width:220px;font-size:.78rem}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hr:people' %}" style="color:inherit">People &amp; HR</a></div>
+  <h1 class="fin-title">{{ staff.full_name }}</h1>
+  <p class="fin-sub">{{ rec.job_title|default:staff.get_role_display }}{% if rec.department %} · {{ rec.department.name }}{% endif %}{% if rec.left_on %} · <span class="chip red">Left {{ rec.left_on|date:"j M Y" }}</span>{% endif %}
+    {% if current %} · {{ current.get_kind_display }} contract{% if current.end %} to {{ current.end|date:"j M Y" }}{% endif %}{% endif %}</p>
+</div></div>
+{% include "hr/_nav.html" %}
+
+<div class="fin-grid">
+<div class="stack">
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="record">
+    <h3 style="margin:0 0 .6rem"><i class="bi bi-person-vcard"></i> Record</h3>
+    {% if rec.photo %}<img src="{% url 'hr:photo' staff.pk %}" alt="" style="width:80px;height:80px;border-radius:50%;object-fit:cover">{% endif %}
+    <div><label>Photo <span class="hint">JPG, PNG or WEBP, up to 10 MB</span></label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp"></div>
+    <div class="row2"><div><label>Job title</label><input name="job_title" value="{{ rec.job_title }}" maxlength="100"></div>
+      <div><label>Department</label><select name="department"><option value="">—</option>{% for d in departments %}<option value="{{ d.pk }}" {% if d.pk == rec.department_id %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Phone</label><input name="phone" value="{{ rec.phone }}" maxlength="20"></div><div><label>Extension</label><input name="extension" value="{{ rec.extension }}" maxlength="10"></div></div>
+    <div class="row2"><div><label>Date joined</label><input type="date" name="date_joined" value="{{ rec.date_joined|date:'Y-m-d' }}"></div><div><label>Date of birth</label><input type="date" name="date_of_birth" value="{{ rec.date_of_birth|date:'Y-m-d' }}"></div></div>
+    <div class="row2"><div><label>Emergency contact</label><input name="emergency_name" value="{{ rec.emergency_name }}" maxlength="120"></div><div><label>Their phone</label><input name="emergency_phone" value="{{ rec.emergency_phone }}" maxlength="20"></div></div>
+    <div><label>Home address</label><input name="address" value="{{ rec.address }}" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save record</button>
+  </form>
+
+  <details class="panel"><summary><i class="bi bi-file-earmark-text"></i> Add a contract</summary>
+    <form method="post" enctype="multipart/form-data" class="fin-form" style="padding:0 1.2rem 1.2rem">{% csrf_token %}<input type="hidden" name="action" value="contract">
+      <div><label>Kind</label><select name="kind">{% for k, l in contract_kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Starts</label><input type="date" name="start" required></div><div><label>Ends <span class="hint">empty if permanent</span></label><input type="date" name="end"></div></div>
+      <div><label>Signed copy (PDF or image)</label><input type="file" name="file"></div>
+      <div><label>Note</label><input name="note" maxlength="200"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Add contract</button>
+    </form>
+  </details>
+
+  <details class="panel"><summary><i class="bi bi-mortarboard"></i> Record training</summary>
+    <form method="post" enctype="multipart/form-data" class="fin-form" style="padding:0 1.2rem 1.2rem">{% csrf_token %}<input type="hidden" name="action" value="training">
+      <div><label>Training / workshop</label><input name="title" maxlength="160" required></div>
+      <div class="row2"><div><label>Provider</label><input name="provider" maxlength="120"></div><div><label>Date</label><input type="date" name="date" required></div></div>
+      <div class="row2"><div><label>Hours</label><input name="hours" inputmode="decimal" value="0"></div><div><label>Cost (₦)</label><input name="cost" inputmode="decimal" value="0"></div></div>
+      <div><label>Certificate</label><input type="file" name="certificate"></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Save training</button>
+    </form>
+  </details>
+
+  <details class="panel"><summary><i class="bi bi-exclamation-octagon"></i> Issue a query or warning</summary>
+    <form method="post" class="fin-form" style="padding:0 1.2rem 1.2rem">{% csrf_token %}<input type="hidden" name="action" value="issue">
+      <div class="row2"><div><label>Kind</label><select name="kind">{% for k, l in case_kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+        <div><label>Reply by</label><input type="date" name="respond_by"></div></div>
+      <div><label>What it is about</label><textarea name="allegation" rows="5" required></textarea></div>
+      <p class="hint">{{ staff.full_name }} is emailed and replies on the portal under My HR.</p>
+      <button class="fin-btn fin-btn-danger" type="submit">Issue</button>
+    </form>
+  </details>
+
+  {% if not rec.left_on %}
+  <details class="panel"><summary><i class="bi bi-box-arrow-right"></i> Start an exit</summary>
+    <form method="post" class="fin-form" style="padding:0 1.2rem 1.2rem">{% csrf_token %}<input type="hidden" name="action" value="exit">
+      <div><label>Reason</label><select name="kind">{% for k, l in exit_kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <div class="row2"><div><label>Notice given</label><input type="date" name="notice_date" value="{{ today|date:'Y-m-d' }}" required></div><div><label>Last working day</label><input type="date" name="last_day" required></div></div>
+      <div><label>Details</label><input name="reason" maxlength="255"></div>
+      <button class="fin-btn fin-btn-danger" type="submit">Start exit</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
+<div class="stack">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Onboarding — {{ done }} of {{ steps|length }}</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for s in steps %}<tr>
+      <td class="name">{{ s.task.title }}{% if s.task.needs_file %} <span class="chip gold">Document</span>{% endif %}
+        {% if s.done %}<br><small class="hint">Done {{ s.done_at|date:"j M Y" }}{% if s.note %} — {{ s.note }}{% endif %}</small>{% endif %}
+        {% if s.file %}<br><a href="{% url 'hr:document' 'onboarding' s.pk %}" target="_blank"><i class="bi bi-paperclip"></i> View document</a>{% endif %}</td>
+      <td style="text-align:right">
+        <form method="post" enctype="multipart/form-data" class="tick">{% csrf_token %}<input type="hidden" name="action" value="tick"><input type="hidden" name="step" value="{{ s.pk }}">
+          {% if s.done %}<input type="hidden" name="done" value="0"><button class="fin-btn fin-btn-sm" type="submit">Undo</button>
+          {% else %}{% if s.task.needs_file %}<input type="file" name="file">{% endif %}<input name="note" placeholder="Note" maxlength="200" style="max-width:140px"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Done</button>{% endif %}
+        </form>
+      </td></tr>{% empty %}<tr><td class="empty">No checklist items. <a href="{% url 'hr:onboarding_tasks' %}">Set them up</a>.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-file-earmark-text"></i> Contracts</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for c in contracts %}<tr><td class="name">{{ c.get_kind_display }}</td><td>{{ c.start|date:"j M Y" }} – {% if c.end %}{{ c.end|date:"j M Y" }}{% else %}open-ended{% endif %}</td>
+      <td>{% if c.end and c.end < today %}<span class="chip">Ended</span>{% elif c == current %}<span class="chip green">Current</span>{% else %}<span class="chip">Upcoming</span>{% endif %}</td>
+      <td>{% if c.file %}<a href="{% url 'hr:document' 'contract' c.pk %}" target="_blank"><i class="bi bi-paperclip"></i></a>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No contracts on file.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard2-check"></i> Appraisals</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for a in appraisals %}<tr><td class="name"><a href="{% url 'hr:appraisal' a.pk %}">{{ a.cycle.title }}</a></td><td>{{ a.get_status_display }}</td><td>{% if a.overall %}<b>{{ a.overall }}</b> / 5{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-mortarboard"></i> Training</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for t in training %}<tr><td class="name">{{ t.title }}{% if t.provider %}<br><small class="hint">{{ t.provider }}</small>{% endif %}</td><td>{{ t.date|date:"j M Y" }}</td><td>{{ t.hours }} h</td><td class="money">₦{{ t.cost|floatformat:"2g" }}</td>
+      <td>{% if t.certificate %}<a href="{% url 'hr:document' 'training' t.pk %}" target="_blank"><i class="bi bi-award"></i></a>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">No training recorded.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-octagon"></i> Disciplinary</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for c in cases %}<tr><td class="name"><a href="{% url 'hr:case' c.pk %}">{{ c.get_kind_display }}</a></td><td>{{ c.date|date:"j M Y" }}</td>
+      <td>{% if c.closed_at %}<span class="chip">{{ c.get_outcome_display }}</span>{% elif c.responded_at %}<span class="chip gold">Replied</span>{% else %}<span class="chip amber">Waiting for reply</span>{% endif %}</td></tr>
+    {% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+
+  {% if exits %}
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-box-arrow-right"></i> Exits</h3></div><div class="panel-b">
+    <table class="tbl" data-no-export><tbody>
+    {% for e in exits %}<tr><td class="name"><a href="{% url 'hr:exit' e.pk %}">{{ e.get_kind_display }}</a></td><td>Last day {{ e.last_day|date:"j M Y" }}</td><td>{% if e.completed_at %}<span class="chip">Complete</span>{% else %}<span class="chip red">In progress</span>{% endif %}</td></tr>{% endfor %}
+    </tbody></table>
+  </div></div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,858 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Fee Billing Report{% endblock %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+body{
+    background:#0f2348;
+    color:var(--white);
+    font-family:'Outfit',sans-serif;
+}
+
+@keyframes riseUp{
+    from{
+        opacity:0;
+        transform:translateY(18px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.your-wrap{
+    max-width:1700px;
+    margin:auto;
+    padding:2rem 2.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+/* HEADER */
+.page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+    position:relative;
+}
+
+.page-head::after{
+    content:"";
+    position:absolute;
+    left:0;
+    bottom:-14px;
+    width:80px;
+    height:2px;
+    background:var(--champagne);
+    border-radius:999px;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--champagne);
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    margin-bottom:12px;
+}
+
+.eyebrow::before{
+    content:"";
+    width:34px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.8;
+}
+
+.page-title{
+    font-family:'Cormorant Garamond',serif;
+    font-size:3rem;
+    line-height:.95;
+    font-weight:700;
+    color:var(--white);
+    margin:0;
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+    font-weight:600;
+}
+
+.page-sub{
+    color:var(--slate2);
+    font-size:.92rem;
+    margin-top:10px;
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.2);
+    color:var(--champagne-lt);
+    font-size:.82rem;
+    font-weight:600;
+}
+
+/* PANELS */
+.panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.panel::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--rim3),transparent);
+}
+
+.panel-header{
+    padding:18px 22px;
+    border-bottom:1px solid var(--rim);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.panel-title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.icon-badge{
+    width:30px;
+    height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:.9rem;
+}
+
+.icon-blue{
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:#93c5fd;
+}
+
+.icon-green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:#86efac;
+}
+
+.icon-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#fca5a5;
+}
+
+.panel-title h3{
+    margin:0;
+    font-size:.95rem;
+    font-weight:600;
+    color:var(--white);
+}
+
+/* BUTTONS */
+.btnx{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:12px;
+    text-decoration:none;
+    border:1px solid var(--rim2);
+    background:var(--surface2);
+    color:var(--white);
+    font-size:.84rem;
+    font-weight:600;
+    transition:.22s ease;
+}
+
+.btnx:hover{
+    transform:translateY(-2px);
+    border-color:var(--champagne);
+    color:var(--white);
+}
+
+.btn-gold{
+    background:linear-gradient(135deg,#f4d21f,#d1ad00);
+    color:#0a1f44;
+    border:none;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-gold:hover{
+    transform:translateY(-2px);
+    color:#fff;
+}
+
+.btn-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#fca5a5;
+}
+
+/* FORM */
+.filter-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+}
+
+.fg{
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+}
+
+.fg label{
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+.fg select,
+.fg input{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    border-radius:10px;
+    color:var(--white);
+    padding:12px 14px;
+    font-size:.9rem;
+    outline:none;
+}
+
+.fg select:focus,
+.fg input:focus{
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* STATS */
+.stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;
+    margin:24px 0;
+}
+
+.stat-card{
+    padding:22px;
+    border-radius:16px;
+    background:var(--surface);
+    border:1px solid var(--rim);
+    position:relative;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.stat-card::before{
+    content:"";
+    position:absolute;
+    inset:0 auto 0 0;
+    width:3px;
+}
+
+.stat-card.green::before{background:var(--green);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.red::before{background:var(--red);}
+
+.stat-label{
+    color:var(--slate2);
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    margin-bottom:10px;
+}
+
+.stat-value{
+    font-family:'Cormorant Garamond',serif;
+    font-size:2.4rem;
+    font-weight:700;
+    color:var(--white);
+}
+
+/* TABLE */
+.table-wrap{
+    overflow-x:auto;
+}
+
+.tbl{
+    width:100%;
+    border-collapse:collapse;
+    min-width:1200px;
+}
+
+.tbl th{
+    text-align:left;
+    padding:14px 16px;
+    font-size:.72rem;
+    text-transform:uppercase;
+    letter-spacing:.18em;
+    color:var(--slate2);
+    border-bottom:1px solid var(--rim);
+    white-space:nowrap;
+}
+
+.tbl td{
+    padding:15px 16px;
+    border-bottom:1px solid var(--rim);
+    color:var(--white);
+    font-size:.88rem;
+    vertical-align:middle;
+}
+
+.tbl tbody tr{
+    transition:.2s ease;
+}
+
+.tbl tbody tr:hover{
+    background:rgba(255,255,255,.025);
+}
+
+.student-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.avatar{
+    width:42px;
+    height:42px;
+    border-radius:11px;
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#fff;
+    font-size:.78rem;
+    font-weight:700;
+    flex-shrink:0;
+}
+
+.muted{
+    color:var(--slate);
+    font-size:.76rem;
+}
+
+/* BADGES */
+.badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:.72rem;
+    font-weight:700;
+}
+
+.badge-green{
+    background:var(--green-dim);
+    border:1px solid var(--green-border);
+    color:#86efac;
+}
+
+.badge-red{
+    background:var(--red-dim);
+    border:1px solid var(--red-border);
+    color:#fca5a5;
+}
+
+.badge-amber{
+    background:var(--amber-dim);
+    border:1px solid var(--amber-border);
+    color:#fcd34d;
+}
+
+.breakdown{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+.break-item{
+    padding:7px 11px;
+    border-radius:10px;
+    font-size:.73rem;
+    font-weight:600;
+}
+
+/* EMPTY */
+.empty-state{
+    padding:60px 24px;
+    text-align:center;
+}
+
+.empty-icon{
+    width:72px;
+    height:72px;
+    border-radius:18px;
+    margin:0 auto 18px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--surface3);
+    border:1px solid var(--rim);
+    color:var(--champagne);
+    font-size:1.8rem;
+}
+
+.empty-state h4{
+    color:var(--white);
+    margin-bottom:8px;
+}
+
+.empty-state p{
+    color:var(--slate2);
+    max-width:500px;
+    margin:auto;
+}
+
+@media(max-width:768px){
+
+    .your-wrap{
+        padding:1.4rem 1rem 3rem;
+    }
+
+    .page-title{
+        font-size:2.3rem;
+    }
+
+}
+</style>
+
+<div class="your-wrap">
+
+    <!-- HEADER -->
+    <div class="page-head">
+        <div>
+            <div class="eyebrow">Finance Overview</div>
+
+            <h1 class="page-title">
+                Fee <em>Billing</em> Report
+            </h1>
+
+            <div class="page-sub">
+                All active students · computed from Fee Structures &amp; Payments
+                {% if sel_session %} · {{ sel_session }}{% endif %}
+                {% if sel_term %} · {{ sel_term }}{% endif %}
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="context-badge">
+                <i class="bi bi-people"></i>
+                {{ billing_rows|length|default:"0" }} Students
+            </div>
+
+            <a href="{% url 'finance:admin_dashboard' %}" class="btnx">
+                <i class="bi bi-arrow-left"></i>
+                Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for m in messages %}
+        <div class="panel" style="margin-bottom:16px;">
+            <div style="padding:14px 18px;
+                {% if m.tags == 'success' %}
+                    border-left:3px solid var(--green);
+                    color:#86efac;
+                    background:var(--green-dim);
+                {% elif m.tags == 'error' %}
+                    border-left:3px solid var(--red);
+                    color:#fca5a5;
+                    background:var(--red-dim);
+                {% else %}
+                    border-left:3px solid var(--blue);
+                    color:#93c5fd;
+                    background:var(--blue-dim);
+                {% endif %}
+            ">
+                {{ m }}
+            </div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- FILTERS -->
+    <div class="panel" style="animation-delay:.05s;margin-bottom:24px;">
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-blue">
+                    <i class="bi bi-funnel"></i>
+                </div>
+                <h3>Filter Billing Report</h3>
+            </div>
+        </div>
+
+        <div style="padding:22px;">
+            <form method="GET">
+
+                <div class="filter-grid">
+
+                    <div class="fg">
+                        <label>Session</label>
+                        <select name="session">
+                            <option value="">Active Session</option>
+                            {% for s in sessions %}
+                            <option value="{{ s.id }}" {% if sel_session.id == s.id %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="fg">
+                        <label>Term</label>
+                        <select name="term">
+                            <option value="">Active Term</option>
+                            {% for t in terms %}
+                            <option value="{{ t.id }}" {% if sel_term.id == t.id %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="fg">
+                        <label>Class</label>
+                        <select name="class">
+                            <option value="">All Classes</option>
+                            {% for cls in classes %}
+                            <option value="{{ cls.id }}" {% if sel_class == cls.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cls.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+
+                <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;">
+                    <button type="submit" class="btnx btn-gold">
+                        <i class="bi bi-funnel-fill"></i>
+                        Apply Filters
+                    </button>
+
+                    {% if billing_rows %}
+                    <a href="?{% if sel_session %}session={{ sel_session.id }}&{% endif %}{% if sel_term %}term={{ sel_term.id }}&{% endif %}{% if sel_class %}class={{ sel_class }}&{% endif %}export=excel"
+                    class="btnx">
+                        <i class="bi bi-file-earmark-excel"></i>
+                        Export Excel
+                    </a>
+                    {% endif %}
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {% if billing_rows %}
+
+    <!-- STATS -->
+    <div class="stat-grid">
+
+        <div class="stat-card green" style="animation-delay:.1s;">
+            <div class="stat-label">Total Students</div>
+            <div class="stat-value">{{ billing_rows|length }}</div>
+        </div>
+
+        <div class="stat-card blue" style="animation-delay:.15s;">
+            <div class="stat-label">Fully Paid</div>
+            <div class="stat-value">{{ billing_rows|length }}</div>
+        </div>
+
+        <div class="stat-card red" style="animation-delay:.2s;">
+            <div class="stat-label">Outstanding</div>
+            <div class="stat-value">{{ billing_rows|length }}</div>
+        </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="panel" style="animation-delay:.25s;">
+
+        <div class="panel-header">
+            <div class="panel-title">
+                <div class="icon-badge icon-green">
+                    <i class="bi bi-table"></i>
+                </div>
+                <h3>Student Fee Status</h3>
+            </div>
+
+            <div class="context-badge">
+                {{ billing_rows|length }} student(s)
+            </div>
+        </div>
+
+        <div class="table-wrap">
+
+            <table class="tbl">
+
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Student</th>
+                        <th>Admission No.</th>
+                        <th>Class</th>
+                        <th>Parent</th>
+                        <th>Wallet</th>
+                        <th>Total Fee</th>
+                        <th>Paid</th>
+                        <th>Balance Due</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for row in billing_rows %}
+
+                    <tr>
+                        <td class="muted">{{ forloop.counter }}</td>
+
+                        <td>
+                            <div class="student-wrap">
+                                <div class="avatar">
+                                    {{ row.student.full_name|slice:":2"|upper }}
+                                </div>
+
+                                <div>
+                                    <div style="font-weight:600;">
+                                        {{ row.student.full_name }}
+                                    </div>
+
+                                    {% if row.student.parent_name %}
+                                    <div class="muted">
+                                        {{ row.student.parent_name }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="muted" style="font-family:monospace;">
+                                {{ row.student.admission_number }}
+                            </span>
+                        </td>
+
+                        <td>{{ row.student.class_assigned.name|default:"—" }}</td>
+
+                        <td>
+                            {{ row.student.parent_name|default:"—" }}
+
+                            {% if row.student.parent_phone %}
+                            <div class="muted">
+                                {{ row.student.parent_phone }}
+                            </div>
+                            {% endif %}
+                        </td>
+
+                        <td style="font-weight:700;">
+                            ₦{{ row.wallet_balance|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            ₦{{ row.total_fee|floatformat:2 }}
+                        </td>
+
+                        <td style="color:#86efac;font-weight:700;">
+                            ₦{{ row.amount_paid|floatformat:2 }}
+                        </td>
+
+                        <td style="font-weight:800;color:#fca5a5;">
+                            ₦{{ row.balance|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            {% if row.status == 'PAID' %}
+                                <span class="badge badge-green">
+                                    <i class="bi bi-check-lg"></i>
+                                    Paid
+                                </span>
+
+                            {% elif row.status == 'PARTIAL' %}
+
+                                <span class="badge badge-amber">
+                                    <i class="bi bi-dash-lg"></i>
+                                    Partial
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge badge-red">
+                                    <i class="bi bi-x-lg"></i>
+                                    Unpaid
+                                </span>
+
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+                                <a href="{% url 'finance:admin_student_wallet_id' row.student.id %}"
+                                class="btnx">
+                                    <i class="bi bi-wallet2"></i>
+                                    Wallet
+                                </a>
+
+                                <a href="{% url 'finance:admin_pay_on_behalf' %}?student_id={{ row.student.id }}"
+                                class="btnx btn-gold">
+                                    <i class="bi bi-cash-coin"></i>
+                                    Pay
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                    {% if row.fee_details %}
+                    <tr id="detail-{{ row.student.id }}" style="display:none;">
+                        <td colspan="11" style="background:rgba(255,255,255,.015);">
+
+                            <div style="padding:14px 0;">
+
+                                <div style="margin-bottom:12px;font-weight:600;color:var(--champagne-lt);">
+                                    Fee Breakdown
+                                </div>
+
+                                <div class="breakdown">
+
+                                    {% for fd in row.fee_details %}
+
+                                    <div class="break-item
+                                        {% if fd.status == 'PAID' %}
+                                            badge-green
+                                        {% elif fd.status == 'PARTIAL' %}
+                                            badge-amber
+                                        {% else %}
+                                            badge-red
+                                        {% endif %}
+                                    ">
+                                        {{ fd.fee.name }} — ₦{{ fd.fee.amount|floatformat:2 }}
+
+                                        {% if fd.status == 'PARTIAL' %}
+                                        (paid ₦{{ fd.paid|floatformat:2 }})
+                                        {% endif %}
+                                    </div>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </td>
+                    </tr>
+                    {% endif %}
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <script>
+    document.querySelectorAll('.tbl tbody tr:not([id])').forEach(row => {
+      row.style.cursor = 'pointer';
+
+      row.addEventListener('click', function(e) {
+
+        if (e.target.closest('a') || e.target.closest('button')) return;
+
+        const studentId = this.querySelector('a[href*="wallet"]')
+            ?.href
+            ?.match(/wallet\/(\d+)/)?.[1];
+
+        if (!studentId) return;
+
+        const detail = document.getElementById('detail-' + studentId);
+
+        if (detail) {
+          detail.style.display =
+            detail.style.display === 'none'
+            ? 'table-row'
+            : 'none';
+        }
+      });
+    });
+    </script>
+
+    {% elif sel_session or sel_term %}
+
+    <div class="panel empty-state">
+
+        <div class="empty-icon">
+            <i class="bi bi-table"></i>
+        </div>
+
+        <h4>No Billing Records Found</h4>
+
+        <p>
+            No students with applicable fees were found for the selected filters.
+            Make sure fee structures are configured correctly for this term and session.
+        </p>
+
+    </div>
+
+    {% else %}
+
+    <div class="panel empty-state">
+
+        <div class="empty-icon">
+            <i class="bi bi-funnel"></i>
+        </div>
+
+        <h4>Select Filters to Continue</h4>
+
+        <p>
+            Select a session and term above to load the billing report and review
+            student payment status across the school.
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

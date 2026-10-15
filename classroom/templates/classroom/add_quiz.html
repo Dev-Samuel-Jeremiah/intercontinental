@@ -1,0 +1,138 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Add Quiz | {{ course.name }}{% endblock %}
+{% block extra_css %}
+<style>
+        #content{font-family: 'Inter', sans-serif;}
+
+        /* ---------- Container ---------- */
+        .quiz-container {
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 30px 25px;
+            background:rgba(255,255,255,.03);
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            perspective: 1000px;
+        }
+
+        .quiz-container:hover {
+            transform: translateY(-3px) scale(1.01);
+        }
+
+        /* ---------- Heading ---------- */
+        .quiz-container h1 {
+            color:var(--blue);
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* ---------- Labels ---------- */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color:var(--blue);
+            font-weight: 600;
+            margin-top: 15px;
+        }
+
+        /* ---------- Inputs ---------- */
+        input[type="text"],
+        textarea,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border:1px solid var(--rim2);
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline:none;
+            border-color:#2563eb;
+            box-shadow: 0 0 10px rgba(37,99,235,0.3);
+        }
+
+        /* ---------- Buttons ---------- */
+        button {
+            display: inline-block;
+            padding: 12px 25px;
+            background:linear-gradient(135deg, #2563eb, #1e40af);
+            color:#fff;
+            font-weight: 600;
+            border:none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            background:linear-gradient(135deg, #1e40af, #1e3a8a);
+        }
+
+        /* ---------- Messages ---------- */
+        .messages p {
+            padding: 12px 15px;
+            background:var(--green-dim);
+            color:var(--green);
+            border-left:5px solid #10b981;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        /* ---------- Responsive ---------- */
+        @media(max-width:768px){
+            .quiz-container {
+                padding: 20px 15px;
+            }
+        }
+
+    </style>
+{% endblock %}
+{% block content %}
+
+<div class="quiz-container">
+    <h1>Create Quiz for {{ course.name }}</h1>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.non_field_errors }}
+
+        <div>
+            <label>Title</label>
+            {{ form.title }}
+            {{ form.title.errors }}
+        </div>
+
+        <div>
+            <label>Description</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+
+        <div>
+            <label>Duration (minutes)</label>
+            {{ form.duration_minutes }}
+            {{ form.duration_minutes.errors }}
+        </div>
+
+        <button type="submit">Create Quiz</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% include "communications/_portal_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'communications:surveys' %}"><i class="bi bi-arrow-left"></i> Surveys</a>
+  <h1>{{ s.title }}</h1>
+  <p class="sub">{% if s.description %}{{ s.description|linebreaksbr }}<br>{% endif %}Closes {{ s.closes|date:"j F Y" }}{% if s.anonymous %} · your name is not shown with your answers{% endif %}</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% if done %}
+  <div class="card"><p class="sub" style="margin:0">You have answered this survey. Thank you!</p></div>
+  {% elif not open %}
+  <div class="card"><p class="sub" style="margin:0">This survey has closed.</p></div>
+  {% else %}
+  <form method="post">{% csrf_token %}
+    {% for q in rows %}
+    <div class="card">
+      <h2>{{ forloop.counter }}. {{ q.text }}</h2>
+      {% if q.kind == 'CHOICE' %}{% for o in q.options %}<label class="opt"><input type="radio" name="q{{ q.i }}" value="{{ o }}"> {{ o }}</label>{% endfor %}
+      {% elif q.kind == 'MULTI' %}<p class="hint" style="margin:0 0 .3rem">Tick all that apply.</p>{% for o in q.options %}<label class="opt"><input type="checkbox" name="q{{ q.i }}" value="{{ o }}"> {{ o }}</label>{% endfor %}
+      {% elif q.kind == 'RATING' %}<div style="display:flex;gap:1rem;flex-wrap:wrap">{% for n in "12345" %}<label class="opt"><input type="radio" name="q{{ q.i }}" value="{{ n }}"> {{ n }} ★</label>{% endfor %}</div><p class="hint" style="margin:.3rem 0 0">1 = poor, 5 = excellent</p>
+      {% else %}<textarea name="q{{ q.i }}" rows="4" maxlength="2000"></textarea>{% endif %}
+    </div>
+    {% endfor %}
+    <button type="submit">Send my answers</button>
+  </form>
+  {% endif %}
+</div>
+</body>
+</html>

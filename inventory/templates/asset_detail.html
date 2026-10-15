@@ -1,0 +1,24 @@
+<h1>{{ asset.name }} ({{ asset.asset_code }})</h1>
+<p>Category: {{ asset.category.name }}</p>
+<p>Current Stock: {{ asset.current_stock }}</p>
+
+<h2>Stock Movements</h2>
+<ul>
+{% for move in movements %}
+    <li>{{ move.date }} - {{ move.movement_type }}: {{ move.quantity }}</li>
+{% endfor %}
+</ul>
+
+<h2>Assignments</h2>
+<ul>
+{% for assign in assignments %}
+    <li>{{ assign.assigned_to_user }} / {{ assign.location }} - Qty: {{ assign.quantity }} - Returned: {{ assign.returned }}</li>
+{% endfor %}
+</ul>
+
+<h2>Maintenance Logs</h2>
+<ul>
+{% for log in maintenance_logs %}
+    <li>{{ log.date }} - Cost: {{ log.cost }} - Issue: {{ log.issue_reported }}</li>
+{% endfor %}
+</ul>

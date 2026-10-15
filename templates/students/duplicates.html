@@ -1,0 +1,42 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Possible duplicates{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .dp{display:grid;grid-template-columns:1fr auto 1fr auto;gap:1rem;align-items:center;padding:1rem 1.1rem;border-bottom:1px solid var(--rim)}
+  @media(max-width:820px){.dp{grid-template-columns:1fr}}
+  .dp a.st{display:flex;gap:.7rem;align-items:center;text-decoration:none;color:var(--white)}
+  .dp a.st:hover b{color:var(--champagne-lt)}
+  .dp img,.dp .ini{width:46px;height:54px;border-radius:10px;object-fit:cover;flex:none}
+  .dp .ini{display:flex;align-items:center;justify-content:center;background:rgba(244,210,31,.14);color:var(--champagne-lt);font-weight:700}
+  .vs{color:var(--slate);font-size:.75rem;text-align:center}
+</style>
+<div class="fin-head">
+  <div>
+    <div class="fin-eyebrow">Students</div>
+    <h1 class="fin-title">Possible <em>duplicates</em></h1>
+    <p class="fin-sub">Records that look like the same child entered twice. Open both, keep the right one, and withdraw the other — or mark them as different.</p>
+  </div>
+  <a class="fin-btn" href="?all={% if include_left %}0{% else %}1{% endif %}"><i class="bi bi-funnel"></i> {% if include_left %}Only students on the roll{% else %}Include students who have left{% endif %}</a>
+</div>
+<div class="panel">
+  {% for p in pairs %}
+  <div class="dp">
+    <a class="st" href="{% url 'users:student_profile' p.a.id %}" target="_blank" rel="noopener">
+      {% if p.a.passport %}<img src="{{ p.a.passport.url }}" alt="">{% else %}<span class="ini">{{ p.a.full_name|slice:":1"|upper }}</span>{% endif %}
+      <span><b>{{ p.a.full_name }}</b><br><span class="hint">{{ p.a.admission_number }} · {{ p.a.class_assigned.name|default:"no class" }} · {{ p.a.status }}</span><br><span class="hint">{% if p.a.date_of_birth %}born {{ p.a.date_of_birth|date:"j M Y" }} · {% endif %}{{ p.a.parent_phone|default:"no phone" }}</span></span>
+    </a>
+    <div class="vs">{% for r in p.reasons %}<span class="chip {% if p.score >= 3 %}red{% else %}amber{% endif %}" style="display:inline-block;margin:.15rem">{{ r }}</span>{% endfor %}</div>
+    <a class="st" href="{% url 'users:student_profile' p.b.id %}" target="_blank" rel="noopener">
+      {% if p.b.passport %}<img src="{{ p.b.passport.url }}" alt="">{% else %}<span class="ini">{{ p.b.full_name|slice:":1"|upper }}</span>{% endif %}
+      <span><b>{{ p.b.full_name }}</b><br><span class="hint">{{ p.b.admission_number }} · {{ p.b.class_assigned.name|default:"no class" }} · {{ p.b.status }}</span><br><span class="hint">{% if p.b.date_of_birth %}born {{ p.b.date_of_birth|date:"j M Y" }} · {% endif %}{{ p.b.parent_phone|default:"no phone" }}</span></span>
+    </a>
+    <form method="post">{% csrf_token %}<input type="hidden" name="first" value="{{ p.a.id }}"><input type="hidden" name="second" value="{{ p.b.id }}">
+      <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-check2"></i> Different students</button></form>
+  </div>
+  {% empty %}
+  <div class="empty"><i class="bi bi-check2-circle"></i><p>No likely duplicates found.</p></div>
+  {% endfor %}
+</div>
+<p class="hint" style="margin-top:.8rem">Checks: the same names in any order; the same date of birth with a shared name; the same parent phone with the same first name. Twins share a phone and birthday but not a first name, so they are not flagged.</p>
+{% endblock %}

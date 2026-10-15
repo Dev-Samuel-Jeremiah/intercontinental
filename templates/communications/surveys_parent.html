@@ -1,0 +1,21 @@
+{% include "communications/_portal_head.html" %}
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="{% url 'users:parent_dashboard' %}"><i class="bi bi-arrow-left"></i> Back to the parent portal</a>
+  <h1>School <em>surveys</em></h1>
+  <p class="sub">Tell the school what you think. It takes a minute or two.</p>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% for s in todo %}
+  <div class="card job">
+    <h2><i class="bi bi-ui-checks" style="color:var(--champagne-lt)"></i> {{ s.title }}</h2>
+    {% if s.description %}<p>{{ s.description|truncatewords:40 }}</p>{% endif %}
+    <p>{{ s.questions|length }} question{{ s.questions|length|pluralize }} · closes {{ s.closes|date:"j F Y" }}{% if s.anonymous %} · your name is not shown with your answers{% endif %}</p>
+    <a href="{% url 'communications:survey_answer' s.pk %}">Answer now <i class="bi bi-arrow-right"></i></a>
+  </div>
+  {% empty %}
+  <div class="card"><p class="sub" style="margin:0">No surveys waiting for you. Thank you!</p></div>
+  {% endfor %}
+</div>
+</body>
+</html>

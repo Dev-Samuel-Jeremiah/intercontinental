@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ r.reference }}{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:reports' %}" style="color:inherit">Student reports</a></div>
+  <h1 class="fin-title">{{ r.reference }} — {{ r.get_kind_display }}</h1>
+  <p class="fin-sub">{{ r.created_at|date:"j M Y H:i" }} · {% if r.reporter %}from {{ r.reporter.get_full_name|default:r.reporter.username }}{% else %}anonymous{% endif %} · {{ r.get_status_display }}{% if r.urgent %} · <span class="chip red">Urgent</span>{% endif %}</p>
+</div></div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b">
+    <p>{{ r.description|linebreaksbr }}</p>
+    {% if r.where %}<p><b>Where:</b> {{ r.where }}</p>{% endif %}{% if r.when %}<p><b>When:</b> {{ r.when }}</p>{% endif %}{% if r.who %}<p><b>Who:</b> {{ r.who }}</p>{% endif %}
+    {% for m in msgs %}<div style="border-left:3px solid {% if m.internal %}var(--rim2){% elif m.from_school %}var(--champagne,#f4d21f){% else %}#60a5fa{% endif %};padding:.3rem .8rem;margin:.5rem 0"><small class="hint">{% if m.from_school %}{{ m.author.get_full_name|default:m.author.username }}{% if m.internal %} · private note{% endif %}{% else %}Reporter{% endif %}, {{ m.created_at|date:"j M H:i" }}</small><br>{{ m.body|linebreaksbr }}</div>{% endfor %}
+  </div></div>
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div><label>Reply to the reporter, or a private note</label><textarea name="body" rows="5"></textarea></div>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="internal" value="1" style="width:auto"> Private note (the reporter will not see it)</label>
+    <div><label>Status</label><select name="status"><option value="">Leave as it is</option>{% for k, l in statuses %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends "dashboard/student_base.html" %}
+{% load classroom_dict_filters %}
+
+{% block title %}{{ course.name }} | Student Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ---------- Base & Layout ---------- */
+a { text-decoration: none; }
+
+.course-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.course-container h1 {
+    color:var(--blue);
+    font-size: 2.2em;
+    margin-bottom: 10px;
+}
+
+.course-container h2 {
+    color:var(--blue);
+    margin-top: 30px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+
+.course-container h3 {
+    color:var(--blue);
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+/* ---------- Section Cards ---------- */
+.section {
+    background:rgba(255,255,255,.03);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+.section-header {
+    padding: 20px;
+    font-weight: 600;
+    font-size: 1.1em;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom:1px solid var(--rim2);
+}
+
+.section-header:hover {
+    background:rgba(255,255,255,.045);
+}
+
+.section-content {
+    display: none;
+    padding: 20px;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Items ---------- */
+.item {
+    padding: 12px 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background:rgba(255,255,255,.045);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+    background:linear-gradient(135deg, #2563eb, #1d4ed8);
+    color:#fff;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.btn:hover {
+    background:linear-gradient(135deg, #1d4ed8, #1e40af);
+}
+
+/* ---------- Status ---------- */
+.completed {
+    color:var(--green);
+    font-weight: 600;
+}
+
+.locked {
+    color:var(--slate);
+    font-style: italic;
+}
+
+.ms-2 { margin-left: 8px; }
+
+/* ---------- Back Button ---------- */
+.back-btn {
+    display: inline-block;
+    margin-top: 30px;
+    background:#6b7280;
+    color:#fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+}
+
+.back-btn:hover {
+    background:#4b5563;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="course-container">
+
+    <h1>{{ course.name }}</h1>
+    <p>{{ course.description }}</p>
+    <p><a href="{% url 'classroom:course_hub' course.id %}" style="display:inline-flex;gap:.4rem;align-items:center;padding:.5rem .9rem;border-radius:10px;border:1px solid rgba(244,210,31,.4);color:#ffe066;text-decoration:none;font-weight:600"><i class="bi bi-megaphone"></i> Announcements &amp; live classes</a>
+      <a href="{% url 'assistant:tutor' course.id %}" style="display:inline-flex;gap:.4rem;align-items:center;padding:.5rem .9rem;border-radius:10px;border:1px solid rgba(244,210,31,.4);color:#ffe066;text-decoration:none;font-weight:600;margin-left:.4rem"><i class="bi bi-robot"></i> Ask the AI tutor</a></p>
+
+    <h2>Course Sections</h2>
+
+    {% for section in course.sections.all|dictsort:"order" %}
+    <div class="section">
+
+        <div class="section-header" onclick="toggleSection({{ section.id }})">
+            <span>{{ section.title }}</span>
+            {% with sp=section_progress|get_item:section.id %}
+                {% if sp and sp.completed %}
+                    <span class="completed">Completed</span>
+                {% else %}
+                    <span>
+                        {% if sp %}
+                            {{ sp.completed_lessons }} / {{ sp.total_lessons }} Lessons
+                        {% else %}
+                            0 / 0 Lessons
+                        {% endif %}
+                    </span>
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="section-content" id="section-{{ section.id }}">
+            {% if unlocked_sections|get_item:section.id %}
+
+                <h3>Lessons</h3>
+                {% for lesson in section.lessons.all|dictsort:"order" %}
+                <div class="item">
+                    <span>{{ lesson.title }}</span>
+                    {% with watched=lesson_progress|get_item:lesson.id %}
+                        <a href="{% url 'classroom:watch_lesson' lesson.id %}" class="btn">
+                            {% if watched %}Watch Again{% else %}Watch Video{% endif %}
+                        </a>
+                        {% if watched %}
+                            <span class="completed ms-2">(Completed)</span>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                {% empty %}
+                    <p>No lessons yet.</p>
+                {% endfor %}
+
+                <h3>Materials</h3>
+                {% for material in section.materials.all %}
+                <div class="item">
+                    <span>{{ material.title }}</span>
+                    <a href="{{ material.file.url }}" class="btn" target="_blank">Download</a>
+                </div>
+                {% empty %}
+                    <p>No materials yet.</p>
+                {% endfor %}
+                <h3>Assignments</h3>
+                {% for assignment in section.assignments.all %}
+                <div class="item">
+                    <span>{{ assignment.title }}</span>
+
+                    {% with sub=assignment_submissions|get_item:assignment.id %}
+                        {% if sub and sub.submitted_at %}
+                            <a href="{% url 'classroom:view_assignment' assignment.id %}" class="btn">
+                                View Assignment
+                            </a>
+                            <span class="completed ms-2">(Submitted)</span>
+
+                            {# New Button for viewing results #}
+                            <a href="{% url 'classroom:view_assignment_result' assignment.id %}" class="btn ms-2">
+                                View Result
+                            </a>
+
+                        {% else %}
+                            <a href="{% url 'classroom:view_assignment' assignment.id %}" class="btn">
+                                Submit Assignment
+                            </a>
+                            <span class="ms-2">Due: {{ assignment.due_date }}</span>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                {% empty %}
+                <p>No assignments yet.</p>
+                {% endfor %}
+
+
+            <h3>Quizzes</h3>
+            {% for quiz in section.quizzes.all %}
+            <div class="item">
+                {% with sub=quiz_submissions|get_item:quiz.id %}
+                    {% if sub and sub.submitted_at %}
+                        <!-- Quiz already submitted -->
+                        <span>{{ quiz.title }}</span>
+                        <span>{{ quiz.duration_minutes }} mins</span>
+                        <a href="{% url 'classroom:my_quiz_results' %}" class="btn ms-2">
+                            View Result
+                        </a>
+                    {% else %}
+                        <!-- Quiz not yet submitted -->
+                        <span>{{ quiz.title }}</span>
+                        <span>{{ quiz.duration_minutes }} mins</span>
+                        <a href="{% url 'classroom:take_quiz' quiz.id %}" class="btn">
+                            Take Quiz
+                        </a>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            {% empty %}
+            <p>No quizzes yet.</p>
+            {% endfor %}
+
+
+
+            {% else %}
+                <p class="locked">
+                    This section is locked. Complete the previous section to unlock.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+        <p>No sections yet in this course.</p>
+    {% endfor %}
+
+    <a href="/" class="back-btn">Back to Home</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSection(id) {
+    const el = document.getElementById('section-' + id);
+    el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+</script>
+{% endblock %}

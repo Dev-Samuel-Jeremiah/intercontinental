@@ -1,0 +1,26 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Subject combination checker{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Careers</div>
+  <h1 class="fin-title">JAMB subject <em>combination checker</em></h1>
+  <p class="fin-sub">Pick a course and tick the subjects you offer (or will offer). This follows common UTME requirements — confirm in the current JAMB brochure, as universities differ.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="get" class="panel fin-form" style="padding:1.2rem">
+    <div><label>Course</label><select name="course"><option value="">Choose…</option>{% for c in courses %}<option {% if c.name == course %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+    <div><label>My subjects</label><div>{% for s in all_subjects %}<label class="pill"><input type="checkbox" name="s" value="{{ s }}" {% if s in chosen %}checked{% endif %}> {{ s }}</label>{% endfor %}</div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Check</button>
+  </form>
+  <div class="panel"><div class="panel-b">
+    {% if result %}
+      <h3 style="margin-top:0">{{ course }}: {% if result.ok %}<span class="chip green">Your subjects fit</span>{% else %}<span class="chip red">Not yet</span>{% endif %}</h3>
+      <p><b>UTME subjects:</b> {{ row.required|join:", " }}{% for g in row.one_of %} + one of {{ g|join:" / " }}{% endfor %}</p>
+      {% if result.missing %}<p><b>You still need:</b> {{ result.missing|join:", " }}</p>{% endif %}
+      {% for g in result.choose %}<p><b>Add one of:</b> {{ g|join:", " }}</p>{% endfor %}
+      {% if result.ok %}<p>Your four UTME subjects could be: <b>{{ result.have|join:", " }}</b>. You also need five O-level credits including English and Mathematics (most courses).</p>{% endif %}
+    {% else %}<p class="empty">Choose a course to check.</p>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

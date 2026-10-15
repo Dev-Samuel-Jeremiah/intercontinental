@@ -1,0 +1,131 @@
+{% extends "dashboard/base.html" %}
+{% block title %}New Campaign{% endblock %}
+{% block content %}
+<style>
+.card{background:rgba(255,255,255,.03);border-radius:14px;padding:22px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:18px;}
+.sec{font-size:.93rem;font-weight:800;color:var(--white);margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;flex:1;min-width:160px;}
+.fg label{font-size:.77rem;font-weight:700;color:var(--slate2);}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--rim2);border-radius:8px;font-size:.87rem;font-family:inherit;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--champagne);outline:none;}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:9px 18px;border-radius:9px;font-size:.83rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;text-decoration:none;}
+.btn-g{background:#16a34a;color:#fff;} .btn-b{background:#2563eb;color:#fff;} .btn-ghost{background:rgba(255,255,255,.045);color:var(--slate2);border:1.5px solid var(--rim2);}
+.tab-bar{display:flex;border-bottom:2px solid var(--rim2);margin-bottom:14px;gap:4px;}
+.tab{padding:8px 16px;border-radius:8px 8px 0 0;font-size:.83rem;font-weight:700;cursor:pointer;border:none;background:rgba(255,255,255,.045);color:var(--slate2);}
+.tab.active{background:#16a34a;color:#fff;}
+</style>
+{% include 'partials/compact_ui.html' %}
+
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+  <div class="cui-titles">
+    <div class="cui-eyebrow">Communications</div>
+    <h2 class="cui-title">Create Campaign</h2>
+  </div>
+  <a href="{% url 'communications:dashboard' %}" class="btn btn-ghost"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+
+<form method="POST">
+  {% csrf_token %}
+  <div class="card">
+    <div class="sec">Campaign Settings</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+      <div class="fg"><label>Campaign Title *</label><input name="title" required placeholder="e.g. End of Term Fee Reminder"></div>
+      <div class="fg"><label>Channel *</label>
+        <select name="channel" id="channelSel">
+          <option value="EMAIL">Email Only</option>
+          <option value="SMS">SMS Only</option>
+          <option value="BOTH" selected>Email + SMS</option>
+        </select>
+      </div>
+      <div class="fg"><label>Audience *</label>
+        <select name="audience" id="audienceSel">
+          <option value="ALL">All Parents</option>
+          <option value="CLASS">Specific Class</option>
+          <option value="BOARDERS">Hostel Boarders</option>
+          <option value="DEBTORS">Parents with Unpaid Fees</option>
+        </select>
+      </div>
+      <div class="fg"><label>Topic</label>
+        <select name="topic">
+          <option value="GENERAL">School news and events (parents can turn these off)</option>
+          <option value="FEES">Fees and payments</option>
+          <option value="ACADEMIC">Results and academics</option>
+          <option value="URGENT">Safety and urgent notices</option>
+        </select>
+      </div>
+      <div class="fg" id="classRow" style="display:none;"><label>Class</label>
+        <select name="school_class">
+          <option value="">— Select —</option>
+          {% for cls in classes %}<option value="{{ cls.id }}">{{ cls.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="fg"><label>Schedule (optional — leave blank to save as draft)</label>
+        <input type="datetime-local" name="scheduled_at">
+      </div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <div class="fg"><label>Load from Template (optional)</label>
+        <select id="tplSel">
+          <option value="">— Write from scratch —</option>
+          {% for t in templates %}<option value="{{ t.id }}" data-sub="{{ t.subject }}" data-email="{{ t.body_email|escapejs }}" data-sms="{{ t.body_sms|escapejs }}">{{ t.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="emailCard">
+    <div class="sec">📧 Email Content</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="fg"><label>Subject *</label><input name="subject" id="subjectF" required placeholder="e.g. Important Notice from {{ tenant.name }}"></div>
+      <div class="fg">
+        <label>Email Body (HTML supported) *</label>
+        <textarea name="body_email" id="emailBody" rows="10" placeholder="Dear {{parent_name}},
+
+Your child {{student_name}} ({{class_name}}) ..."></textarea>
+        <div style="font-size:.73rem;color:var(--slate2);margin-top:3px;">Placeholders: {{student_name}}, {{parent_name}}, {{class_name}}, {{outstanding_fee}}, {{wallet_balance}}, {{school_name}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="smsCard">
+    <div class="sec">📱 SMS Content</div>
+    <div class="fg">
+      <label>SMS Message (max 800 chars) *</label>
+      <textarea name="body_sms" id="smsBody" rows="4" maxlength="800"
+        placeholder="Dear {{parent_name}}, your child {{student_name}} ({{class_name}}) has an outstanding fee of {{outstanding_fee}}. Please pay promptly. {{ tenant.name }}."></textarea>
+      <div id="smsCounter" style="font-size:.73rem;color:var(--slate2);text-align:right;">0 / 800 chars</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;">
+    <button type="submit" name="action" value="draft" class="btn btn-ghost"><i class="bi bi-save"></i> Save as Draft</button>
+    <button type="submit" name="send_now" value="yes" class="btn btn-g"
+      onclick="return confirm('Send this campaign now to all matching recipients?')">
+      <i class="bi bi-send-fill"></i> Send Now
+    </button>
+  </div>
+</form>
+
+<script>
+document.getElementById('audienceSel').addEventListener('change', function() {
+  document.getElementById('classRow').style.display = (this.value === 'CLASS') ? 'flex' : 'none';
+});
+document.getElementById('channelSel').addEventListener('change', function() {
+  const ch = this.value;
+  document.getElementById('emailCard').style.display = (ch === 'SMS') ? 'none' : 'block';
+  document.getElementById('smsCard').style.display   = (ch === 'EMAIL') ? 'none' : 'block';
+});
+document.getElementById('tplSel').addEventListener('change', function() {
+  const opt = this.options[this.selectedIndex];
+  if (!opt.value) return;
+  document.getElementById('subjectF').value  = opt.dataset.sub  || '';
+  document.getElementById('emailBody').value = opt.dataset.email || '';
+  document.getElementById('smsBody').value   = opt.dataset.sms   || '';
+});
+const smsBody = document.getElementById('smsBody');
+smsBody.addEventListener('input', function() {
+  document.getElementById('smsCounter').textContent = this.value.length + ' / 800 chars';
+});
+</script>
+{% endblock %}

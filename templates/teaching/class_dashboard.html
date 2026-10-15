@@ -1,0 +1,43 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ d.cls.name }} — class dashboard{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Form class</div>
+  <h1 class="fin-title">{{ d.cls.name }}</h1>
+  <p class="fin-sub">{{ d.count }} students · today {% if d.marked %}{{ d.absent|length }} absent, {{ d.late|length }} late{% else %}<b>register not marked yet</b>{% endif %}</p>
+</div>
+{% if classes|length > 1 %}<div style="display:flex;gap:.3rem;flex-wrap:wrap">{% for c in classes %}<a class="fin-btn fin-btn-sm{% if c.pk == d.cls.pk %} fin-btn-gold{% endif %}" href="{% url 'teaching:class_dashboard_for' c.pk %}">{{ c.name }}</a>{% endfor %}</div>{% endif %}</div>
+{% include "teaching/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Absent today</small><b>{{ d.absent|length }}</b></div>
+  <div class="fin-stat"><small>Below 85% attendance (30 days)</small><b>{{ d.concerns|length }}</b></div>
+  <div class="fin-stat"><small>Wellbeing to follow up</small><b>{{ d.flagged|length }}</b></div>
+  <div class="fin-stat"><small>Birthdays this week</small><b>{{ d.birthdays|length }}</b></div>
+</div>
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    {% if d.absent or d.late %}<div class="panel"><div class="panel-h"><h3>Today</h3></div><div class="panel-b">
+      {% for s in d.absent %}<span class="chip red" style="margin:.15rem">{{ s.full_name }} — absent</span>{% endfor %}{% for s in d.late %}<span class="chip amber" style="margin:.15rem">{{ s.full_name }} — late</span>{% endfor %}
+    </div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>Attendance concerns</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for s, rate in d.concerns %}<tr><td class="name">{{ s.full_name }}</td><td><b>{{ rate }}%</b></td></tr>{% empty %}<tr><td class="empty">Everyone is above 85%.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Behaviour this week</h3></div><div class="panel-b">
+      {% if d.stars %}<p><b>Stars:</b> {% for b in d.stars %}{{ b.student.full_name }} (+{{ b.plus }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% if d.watch %}<p><b>Keep an eye on:</b> {% for b in d.watch %}{{ b.student.full_name }} (−{{ b.minus }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% if not d.stars and not d.watch %}<p class="empty">Nothing recorded this week.</p>{% endif %}
+      <a class="fin-btn fin-btn-sm" href="{% url 'teaching:behaviour' %}?class={{ d.cls.pk }}">Give points</a>
+    </div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    {% if d.flagged %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-h"><h3>Wellbeing</h3></div><div class="panel-b">{% for c in d.flagged %}<p style="margin:.3rem 0">{{ c.student.full_name }} — {{ c.get_mood_display }}{% if c.wants_talk %}, asked to talk{% endif %} ({{ c.date|date:"D j M" }})</p>{% endfor %}<a class="fin-btn fin-btn-sm" href="{% url 'studentlife:wellbeing' %}">Follow up</a></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3>Birthdays this week</h3></div><div class="panel-b">{% for s, day in d.birthdays %}<p style="margin:.3rem 0">🎂 {{ s.full_name }} — {{ day|date:"l j M" }}</p>{% empty %}<p class="empty">None this week.</p>{% endfor %}</div></div>
+    <div class="panel"><div class="panel-h"><h3>Homework due this week</h3></div><div class="panel-b">{% for h in d.homework %}<p style="margin:.3rem 0">{{ h.due_on|date:"D j" }} — {{ h.subject.name }}: {{ h.title }}</p>{% empty %}<p class="empty">None set.</p>{% endfor %}</div></div>
+    <div class="panel"><div class="panel-b" style="display:flex;gap:.4rem;flex-wrap:wrap">
+      <a class="fin-btn fin-btn-sm" href="{% url 'teaching:remarks' %}?class={{ d.cls.pk }}">Write report remarks</a>
+      <a class="fin-btn fin-btn-sm" href="{% url 'teaching:picker' %}?class={{ d.cls.pk }}">Name picker</a>
+      <a class="fin-btn fin-btn-sm" href="{% url 'studentlife:class_goals' %}">Class goals</a>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

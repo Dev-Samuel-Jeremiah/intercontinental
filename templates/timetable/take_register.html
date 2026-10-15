@@ -1,0 +1,44 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Register — {{ slot.subject.name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .rg-row{display:flex;justify-content:space-between;gap:.6rem;align-items:center;padding:.55rem .7rem;border-radius:12px;border:1px solid var(--rim);margin-bottom:.35rem}
+  .rg-row b{color:var(--white);font-size:.92rem}
+  .seg{display:inline-flex;border:1px solid var(--rim2);border-radius:10px;overflow:hidden;flex:none}
+  .seg label{margin:0;cursor:pointer}
+  .seg input{display:none}
+  .seg span{display:inline-block;padding:.45rem .8rem;font-size:.8rem;font-weight:700;color:var(--slate2)}
+  .seg input:checked+span.p{background:var(--green-dim);color:var(--green)}
+  .seg input:checked+span.l{background:var(--amber-dim);color:var(--amber)}
+  .seg input:checked+span.a{background:var(--red-dim);color:var(--red)}
+  .late{width:60px;padding:.35rem .4rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem;display:none}
+  .rg-row.is-late .late{display:inline-block}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{{ slot.school_class.name }} · {{ slot.time_slot.name }}</div>
+  <h1 class="fin-title">{{ slot.subject.name }}</h1>
+  <p class="fin-sub">{{ day|date:"l j F" }} · {{ slot.time_slot.start_time|time:"H:i" }}–{{ slot.time_slot.end_time|time:"H:i" }} · {{ slot.teacher.full_name }}{% if register.taken_at %} · last saved {{ register.taken_at|time:"H:i" }}{% endif %}</p>
+</div><button type="button" class="fin-btn" id="all-present"><i class="bi bi-check-all"></i> Everyone here</button></div>
+<form method="post" class="panel"><div class="panel-b">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
+  {% for r in rows %}
+  <div class="rg-row{% if r.status == 'L' %} is-late{% endif %}">
+    <div><b>{{ r.student.full_name }}</b>{% if r.away_today %}<div class="hint" style="color:var(--red)">absent from school today</div>{% elif r.left_early %}<div class="hint" style="color:var(--amber)">left school early</div>{% endif %}</div>
+    <div style="display:flex;gap:.4rem;align-items:center">
+      <input type="number" class="late" name="late_{{ r.student.id }}" min="1" max="120" value="{{ r.minutes_late|default:'' }}" placeholder="min">
+      <div class="seg">
+        <label><input type="radio" name="s_{{ r.student.id }}" value="P"{% if r.status == 'P' %} checked{% endif %}><span class="p">Here</span></label>
+        <label><input type="radio" name="s_{{ r.student.id }}" value="L"{% if r.status == 'L' %} checked{% endif %}><span class="l">Late</span></label>
+        <label><input type="radio" name="s_{{ r.student.id }}" value="A"{% if r.status == 'A' %} checked{% endif %}><span class="a">Absent</span></label>
+      </div>
+    </div>
+  </div>
+  {% empty %}<div class="empty"><i class="bi bi-people"></i><p>No students on the roll in this class.</p></div>{% endfor %}
+  <input name="note" maxlength="255" placeholder="Note (optional)" value="{{ register.note }}" style="width:100%;margin-top:.6rem;padding:.6rem .75rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.8rem;padding:.8rem 1.3rem"><i class="bi bi-check2"></i> Save register</button>
+</div></form>
+<script>
+  (function(){document.querySelectorAll('.rg-row').forEach(function(row){row.querySelectorAll('input[type=radio]').forEach(function(r){r.addEventListener('change',function(){row.classList.toggle('is-late',r.value==='L'&&r.checked);});});});
+  document.getElementById('all-present').addEventListener('click',function(){document.querySelectorAll('input[type=radio][value=P]').forEach(function(r){r.checked=true;r.closest('.rg-row').classList.remove('is-late');});});})();
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lesson notes{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Academics</div>
+  <h1 class="fin-title">My lesson <em>notes</em></h1>
+  <p class="fin-sub">Write your notes for each week and send them to your head of department.</p>
+</div><a class="fin-btn fin-btn-gold" href="{% url 'curriculum:note_new' %}"><i class="bi bi-plus-lg"></i> New lesson note</a></div>
+{% include "curriculum/_nav.html" %}
+{% if returned %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-b" style="color:var(--red)"><i class="bi bi-arrow-return-left"></i> {{ returned }} note{{ returned|pluralize }} sent back for changes.</div></div>{% endif %}
+<div class="panel">{% if notes %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Week</th><th>Lesson</th><th>Class</th><th>Status</th><th></th></tr></thead><tbody>
+  {% for n in notes %}<tr><td>{{ n.term.name }} · wk {{ n.week }}</td><td class="name">{{ n.title }}<div class="hint">{{ n.subject.name }}</div></td><td>{{ n.school_class.name }}</td>
+    <td>{% include "curriculum/_status.html" %}</td>
+    <td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:note' n.id %}">Open</a></td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty"><i class="bi bi-journal-richtext"></i><p>You haven't written any lesson notes yet.</p></div>{% endif %}</div>
+{% endblock %}

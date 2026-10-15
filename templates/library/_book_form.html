@@ -1,0 +1,22 @@
+<div class="row2"><div><label>ISBN</label><div style="display:flex;gap:.3rem"><input name="isbn" id="isbn" value="{{ b.isbn|default:'' }}" maxlength="17"><button class="fin-btn fin-btn-sm" type="button" onclick="lookIsbn()">Look up</button></div><small class="hint" id="isbn-msg"></small></div>
+<div><label>Year</label><input name="year" id="f-year" value="{{ b.year|default_if_none:'' }}" inputmode="numeric"></div></div>
+<div><label>Title</label><input name="title" id="f-title" required maxlength="255" value="{{ b.title|default:'' }}"></div>
+<div class="row2"><div><label>Author(s)</label><input name="authors" id="f-authors" maxlength="255" value="{{ b.authors|default:'' }}"></div><div><label>Publisher</label><input name="publisher" id="f-publisher" maxlength="160" value="{{ b.publisher|default:'' }}"></div></div>
+<div class="row2"><div><label>Subject</label><input name="subject" id="f-subject" maxlength="80" value="{{ b.subject|default:'' }}" list="subj"></div><div><label>Level</label><select name="level">{% for k, v in levels %}<option value="{{ k }}" {% if k == b.level %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div></div>
+<div class="row2"><div><label>Edition</label><input name="edition" maxlength="40" value="{{ b.edition|default:'' }}"></div><div><label>Replacement cost</label><input name="price" inputmode="decimal" value="{{ b.price|default:'0' }}"></div></div>
+<div><label>Keywords</label><input name="keywords" maxlength="255" value="{{ b.keywords|default:'' }}" placeholder="adventure, friendship, Nigeria"></div>
+<div><label>Short description</label><textarea name="description" rows="2">{{ b.description|default:'' }}</textarea></div>
+<input type="hidden" name="cover_url" id="f-cover" value="{{ b.cover_url|default:'' }}">
+<div class="row2"><div><label class="pill"><input type="checkbox" name="is_textbook" {% if b.is_textbook %}checked{% endif %}> Textbook for termly rental</label></div><div><label>Rental fee per term</label><input name="rental_fee" inputmode="decimal" value="{{ b.rental_fee|default:'0' }}"></div></div>
+<script>
+function lookIsbn(){
+  var v=document.getElementById('isbn').value, m=document.getElementById('isbn-msg'); m.textContent='Looking up…';
+  fetch("{% url 'library:isbn' %}?isbn="+encodeURIComponent(v)).then(function(r){return r.json()}).then(function(j){
+    if(!j.ok){m.textContent=j.error;return;}
+    var b=j.book; [['title','title'],['authors','authors'],['publisher','publisher'],['year','year'],['subject','subject'],['cover','cover_url']].forEach(function(p){
+      var el=document.getElementById('f-'+p[0]); if(el && b[p[1]]) el.value=b[p[1]];});
+    document.getElementById('isbn').value=b.isbn;
+    m.textContent=j.existing?'This book is already in the catalogue.':'Found — check the details.';
+  }).catch(function(){m.textContent='Lookup failed — type the details in.';});
+}
+</script>

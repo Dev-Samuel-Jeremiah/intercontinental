@@ -1,0 +1,37 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Library visits{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Visits</em></h1>
+  <p class="fin-sub">Scan students in as they arrive, or record a whole-class visit. {{ stats.total }} visit{{ stats.total|pluralize }} in the last {{ days }} days.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-grid">
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>By class</h3><form method="get"><select name="days" onchange="this.form.submit()"><option value="7" {% if days == 7 %}selected{% endif %}>7 days</option><option value="30" {% if days == 30 %}selected{% endif %}>30 days</option><option value="90" {% if days == 90 %}selected{% endif %}>90 days</option></select></form></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for name, n in stats.by_class %}<tr><td class="name">{{ name }}</td><td class="num">{{ n }}</td></tr>{% empty %}<tr><td class="empty">No visits yet.</td></tr>{% endfor %}
+    </tbody></table>
+    {% if stats.by_hour %}<p class="hint" style="margin-top:.6rem">Busiest hours: {% for h, n in stats.by_hour %}{{ h }}:00 ({{ n }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for v in recent %}<tr><td>{{ v.at|date:"D j M H:i" }}</td><td class="name">{% if v.student %}{{ v.student.full_name }}{% else %}{{ v.school_class }} ({{ v.headcount }}){% endif %}</td><td>{{ v.get_purpose_display }}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+  </div>
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <h3 style="margin:0 0 .6rem">Sign a student in</h3>
+      <div><label>ID card or admission number</label><input name="code" autofocus autocomplete="off"></div>
+      <div class="row2"><div><label>Purpose</label><select name="purpose">{% for k, v in purposes %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>{% if branches %}<div><label>Branch</label><select name="branch">{% for br in branches %}<option value="{{ br.pk }}">{{ br }}</option>{% endfor %}</select></div>{% endif %}</div>
+      <button class="fin-btn fin-btn-gold" type="submit">Sign in</button>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+      <h3 style="margin:0 0 .6rem">Class visit</h3>
+      <div class="row2"><div><label>Class</label><select name="school_class">{% for k in classes %}<option value="{{ k.pk }}">{{ k.name }}</option>{% endfor %}</select></div><div><label>How many</label><input name="headcount" inputmode="numeric" value="30"></div></div>
+      <div class="row2"><div><label>Purpose</label><select name="purpose">{% for k, v in purposes %}<option value="{{ k }}" {% if k == 'LESSON' %}selected{% endif %}>{{ v }}</option>{% endfor %}</select></div>{% if branches %}<div><label>Branch</label><select name="branch">{% for br in branches %}<option value="{{ br.pk }}">{{ br }}</option>{% endfor %}</select></div>{% endif %}</div>
+      <button class="fin-btn" type="submit">Record</button>
+    </form>
+    {% if hours %}<div class="panel"><div class="panel-h"><h3>Opening hours</h3></div><div class="panel-b">{{ hours|linebreaksbr }}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

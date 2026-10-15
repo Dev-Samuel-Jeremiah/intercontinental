@@ -1,0 +1,364 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Add Assignment | {{ section.title }}{% endblock %}
+
+{% block extra_css %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+#content{color:var(--white);font-family:'Outfit', sans-serif;}
+
+.your-wrap{
+    max-width:900px;
+    margin:0 auto;
+    padding:2rem 1.5rem 4rem;
+    animation:riseUp .4s ease both;
+}
+
+/* ================= HEADER ================= */
+
+.page-header{
+    margin-bottom:2rem;
+}
+
+.page-header-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:1rem;
+    margin-bottom:1.2rem;
+}
+
+.eyebrow{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    color:var(--champagne);
+    text-transform:uppercase;
+    letter-spacing:3px;
+    font-size:.72rem;
+    font-weight:600;
+}
+
+.eyebrow::before{
+    content:"";
+    width:42px;
+    height:1px;
+    background:var(--champagne);
+    opacity:.7;
+}
+
+.page-title{
+    margin:0;
+    font-family:'Cormorant Garamond', serif;
+    font-size:3rem;
+    font-weight:700;
+    line-height:1.05;
+}
+
+.page-title em{
+    color:var(--champagne);
+    font-style:italic;
+}
+
+.page-subtitle{
+    margin-top:.6rem;
+    color:var(--slate2);
+}
+
+.context-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:.5rem;
+    padding:.6rem 1rem;
+    border-radius:999px;
+    background:var(--champagne-dim);
+    border:1px solid rgba(244,210,31,.22);
+    color:var(--champagne-lt);
+    font-size:.85rem;
+    white-space:nowrap;
+}
+
+.header-divider{
+    height:1px;
+    background:var(--rim);
+    margin-top:1.5rem;
+    position:relative;
+}
+
+.header-divider::after{
+    content:"";
+    position:absolute;
+    left:0;
+    width:80px;
+    height:1px;
+    background:var(--champagne);
+}
+
+/* ================= PANEL ================= */
+
+.panel{
+    background:var(--surface);
+    border:1px solid var(--rim);
+    border-radius:16px;
+    overflow:hidden;
+    animation:riseUp .45s ease both;
+}
+
+.panel-header{
+    padding:1.2rem 1.4rem;
+    border-bottom:1px solid var(--rim);
+    display:flex;
+    align-items:center;
+    gap:.8rem;
+}
+
+.icon-badge{
+    width:34px;
+    height:34px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--blue-dim);
+    border:1px solid var(--blue-border);
+    color:var(--blue);
+}
+
+.panel-header h3{
+    margin:0;
+    font-size:1rem;
+}
+
+/* ================= BODY ================= */
+
+.panel-body{
+    padding:1.8rem;
+}
+
+/* ================= FORM ================= */
+
+.field{
+    margin-bottom:1.4rem;
+}
+
+label{
+    display:block;
+    margin-bottom:.6rem;
+    font-size:.73rem;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    color:var(--slate2);
+    font-weight:600;
+}
+
+input, textarea, select{
+    width:100%;
+    padding:.9rem 1rem;
+    border-radius:10px;
+    background:var(--surface2);
+    border:1px solid var(--rim2);
+    color:var(--white);
+    font-family:'Outfit', sans-serif;
+    transition:.25s ease;
+}
+
+textarea{
+    min-height:120px;
+    resize:vertical;
+}
+
+input:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--champagne);
+    box-shadow:0 0 0 3px rgba(244,210,31,.1);
+}
+
+/* ================= ERRORS ================= */
+
+.errorlist{
+    margin:.4rem 0 0;
+    padding:0;
+    list-style:none;
+    color:var(--red);
+    font-size:.85rem;
+}
+
+/* ================= MESSAGES ================= */
+
+.message{
+    padding:1rem;
+    border-radius:12px;
+    margin-bottom:1rem;
+    background:var(--surface2);
+    border:1px solid var(--rim);
+}
+
+.message.success{
+    border-color:rgba(53,197,139,.24);
+    color:var(--green);
+    background:var(--green-dim);
+}
+
+.message.error{
+    border-color:rgba(239,107,115,.24);
+    color:var(--red);
+    background:var(--red-dim);
+}
+
+/* ================= BUTTON ================= */
+
+.btn-submit{
+    margin-top:1rem;
+    display:inline-flex;
+    align-items:center;
+    gap:.6rem;
+    padding:.95rem 1.2rem;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#f4d21f,#d1ad00);
+    color:#0a1f44;
+    font-weight:600;
+    cursor:pointer;
+    transition:.3s ease;
+    box-shadow:0 4px 18px rgba(244,210,31,.22);
+}
+
+.btn-submit:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 28px rgba(244,210,31,.28);
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes riseUp{
+    from{opacity:0;transform:translateY(18px);}
+    to{opacity:1;transform:translateY(0);}
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:768px){
+    .page-header-top{
+        flex-direction:column;
+    }
+
+    .page-title{
+        font-size:2.2rem;
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="your-wrap">
+
+    <!-- HEADER -->
+    <div class="page-header">
+
+        <div class="page-header-top">
+
+            <div>
+
+                <div class="eyebrow">
+                    Assignment Studio
+                </div>
+
+                <h1 class="page-title">
+                    Add <em>Assignment</em>
+                </h1>
+
+                <div class="page-subtitle">
+                    Create an assignment for <strong>{{ section.title }}</strong> ({{ course.name }})
+                </div>
+
+            </div>
+
+            <div class="context-badge">
+                <i class="bi bi-journal-plus"></i>
+                New Task
+            </div>
+
+        </div>
+
+        <div class="header-divider"></div>
+
+    </div>
+
+    <!-- PANEL -->
+    <div class="panel">
+
+        <div class="panel-header">
+            <div class="icon-badge">
+                <i class="bi bi-pencil-square"></i>
+            </div>
+            <h3>Assignment Details</h3>
+        </div>
+
+        <div class="panel-body">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                        <i class="bi bi-info-circle"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="field">
+                    <label for="{{ form.title.id_for_label }}">Title</label>
+                    {{ form.title }}
+                    {{ form.title.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.description.id_for_label }}">Description</label>
+                    {{ form.description }}
+                    {{ form.description.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.due_date.id_for_label }}">Due Date</label>
+                    {{ form.due_date }}
+                    {{ form.due_date.errors }}
+                </div>
+
+                <div class="field">
+                    <label style="display:flex;gap:.5rem;align-items:center">{{ form.allow_late }} Accept late work</label>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.5rem">
+                      <div><label for="{{ form.grace_minutes.id_for_label }}">Grace (minutes)</label>{{ form.grace_minutes }}</div>
+                      <div><label for="{{ form.late_penalty_per_day.id_for_label }}">% off per late day</label>{{ form.late_penalty_per_day }}</div>
+                      <div><label for="{{ form.max_late_days.id_for_label }}">Close after (days)</label>{{ form.max_late_days }}</div>
+                    </div>
+                    <small style="opacity:.6">Within the grace period counts as on time. Each started day after takes the penalty off the mark.</small>
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    <i class="bi bi-check2-circle"></i>
+                    Add Assignment
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

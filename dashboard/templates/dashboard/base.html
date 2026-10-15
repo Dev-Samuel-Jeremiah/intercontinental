@@ -1,0 +1,2182 @@
+{% load static %}{% load tenant_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#081a3a">
+  <title>{% block title %}Portal{% endblock %} | {{ tenant.name }}</title>
+  <link rel="icon" href="{% if brand.favicon %}{{ brand.favicon.url }}{% elif tenant.logo %}{{ tenant.logo.url }}{% else %}{% static 'images/logo.png' %}{% endif %}" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       DESIGN TOKENS — shared by every portal page.
+       Names are kept stable: child templates rely on them.
+    ═══════════════════════════════════════════════════════ */
+    :root {
+      /* Surfaces */
+      --ink:       #081a3a;
+      --ink2:      #0b1e42;
+      --surface:   #0f244b;
+      --surface2:  #132a54;
+      --surface3:  #1a3462;
+      --surface4:  #213e70;
+
+      /* Borders */
+      --rim:  rgba(255,255,255,.06);
+      --rim2: rgba(255,255,255,.10);
+      --rim3: rgba(255,255,255,.16);
+      --border: var(--rim2);
+
+      /* Brand — champagne gold */
+      --champagne:        #f4d21f;
+      --champagne-lt:     #ffe580;
+      --champagne-dk:     #c9a800;
+      --champagne-dim:    rgba(244,210,31,.12);
+      --champagne-glow:   rgba(244,210,31,.22);
+      --champagne-border: rgba(244,210,31,.30);
+      --champagne-bdr:    rgba(244,210,31,.30);
+      --gold-dim:         rgba(244,210,31,.12);
+      --primary:          var(--champagne);
+      --primary-light:    var(--champagne-lt);
+      --accent:           var(--champagne);
+
+      /* Text */
+      --slate:  rgba(242,245,251,.42);
+      --slate2: rgba(242,245,251,.64);
+      --white:  #f2f5fb;
+
+      /* Semantic */
+      --green:  #5ecb8e; --green-dim:  rgba(94,203,142,.12);  --green-border:  rgba(94,203,142,.28);
+      --red:    #e87070; --red-dim:    rgba(232,112,112,.11); --red-border:    rgba(232,112,112,.28);
+      --blue:   #60a8e8; --blue-dim:   rgba(96,168,232,.12);  --blue-border:   rgba(96,168,232,.28);
+      --amber:  #f59e0b; --amber-dim:  rgba(245,158,11,.12);  --amber-border:  rgba(245,158,11,.28);
+      --purple: #a890f0; --purple-dim: rgba(168,144,240,.12); --purple-border: rgba(168,144,240,.28);
+      --teal:   #2dd4bf; --teal-dim:   rgba(45,212,191,.12);  --teal-border:   rgba(45,212,191,.28);
+      --success: var(--green); --danger: var(--red);
+
+      /* Shape & motion */
+      --sb-width:     268px;
+      --sb-collapsed: 72px;
+      --top-h:        64px;
+      --radius:       16px;
+      --radius-sm:    11px;
+      --radius-xs:    8px;
+      --shadow:       0 18px 40px -18px rgba(0,0,0,.7);
+      --shadow-lg:    0 30px 70px -20px rgba(0,0,0,.8), 0 0 0 1px var(--rim);
+      --ease:         cubic-bezier(.22,1,.36,1);
+      --serif:        "Cormorant Garamond", Georgia, serif;
+      --sans:         "Outfit", system-ui, -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
+    html, body {
+      min-height: 100%;
+      font-family: var(--sans);
+      background: var(--ink);
+      color: var(--white);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      background:
+        radial-gradient(1100px 600px at 85% -10%, rgba(244,210,31,.10), transparent 60%),
+        radial-gradient(900px 600px at -10% 110%, rgba(30,80,190,.07), transparent 60%),
+        var(--ink);
+      background-attachment: fixed;
+      line-height: 1.55;
+    }
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; height: auto; }
+    ::selection { background: var(--champagne); color: #0a1f44; }
+    :focus-visible { outline: 2px solid var(--champagne-lt); outline-offset: 2px; }
+
+    * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.10); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+    ::-webkit-scrollbar-thumb:hover { background-color: rgba(244,210,31,.35); }
+    ::-webkit-scrollbar-track { background: transparent; }
+
+    /* ═══════════════════════════════════════════════════════
+       APP SHELL
+    ═══════════════════════════════════════════════════════ */
+    .app { display: flex; min-height: 100vh; }
+    .main {
+      flex: 1; display: flex; flex-direction: column; min-width: 0;
+      margin-left: var(--sb-width);
+      transition: margin .35s var(--ease);
+    }
+    body.sb-collapsed .main { margin-left: var(--sb-collapsed); }
+
+    /* Page-load progress bar */
+    .page-progress {
+      position: fixed; top: 0; left: 0; height: 2px; width: 0; z-index: 3000;
+      background: linear-gradient(90deg, var(--champagne-dk), var(--champagne-lt));
+      box-shadow: 0 0 12px rgba(255,229,128,.7);
+      transition: width .4s var(--ease), opacity .4s;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SIDEBAR
+    ═══════════════════════════════════════════════════════ */
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; z-index: 1001;
+      width: var(--sb-width);
+      display: flex; flex-direction: column;
+      background: linear-gradient(180deg, rgba(15,36,73,.96), rgba(10,28,61,.98));
+      border-right: 1px solid var(--rim);
+      backdrop-filter: blur(20px);
+      transition: width .35s var(--ease), transform .35s var(--ease);
+    }
+    .sidebar::before {
+      content: ""; position: absolute; top: 0; right: -1px; bottom: 0; width: 1px; pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(244,210,31,.35) 30%, rgba(244,210,31,.2) 70%, transparent);
+    }
+    body.sb-collapsed .sidebar { width: var(--sb-collapsed); }
+
+    .brand {
+      display: flex; align-items: center; gap: .8rem;
+      padding: 1.15rem 1.1rem 1rem; flex-shrink: 0; position: relative;
+    }
+    .brand-logo {
+      width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0; overflow: hidden;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(255,229,128,.22), rgba(244,210,31,.06));
+      border: 1px solid var(--champagne-border);
+      box-shadow: 0 8px 22px -8px rgba(244,210,31,.45);
+      font-family: var(--serif); font-size: 1rem; font-weight: 700; color: var(--champagne-lt);
+    }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .brand-text { overflow: hidden; min-width: 0; }
+    .brand-name { font-size: .92rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.1px; }
+    .brand-sub { font-size: .62rem; font-weight: 600; color: var(--champagne); white-space: nowrap; letter-spacing: 1.4px; text-transform: uppercase; opacity: .85; }
+
+    .toggle-btn {
+      position: absolute; right: -13px; top: 24px; z-index: 10;
+      width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; cursor: pointer;
+      background: var(--surface3); border: 1px solid var(--rim3);
+      color: var(--champagne); font-size: .72rem;
+      box-shadow: 0 4px 14px rgba(0,0,0,.5);
+      transition: transform .35s var(--ease), background .2s, color .2s;
+    }
+    .toggle-btn:hover { background: var(--champagne); color: #0a1f44; }
+    body.sb-collapsed .toggle-btn { transform: rotate(180deg); }
+
+    /* Sidebar search */
+    .sb-search { position: relative; margin: 0 .85rem .6rem; flex-shrink: 0; }
+    .sb-search i { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: var(--slate); font-size: .8rem; pointer-events: none; }
+    .sb-search input {
+      width: 100%; padding: .58rem .75rem .58rem 2.1rem; border-radius: 10px;
+      background: rgba(255,255,255,.035); border: 1px solid var(--rim);
+      color: var(--white); font: inherit; font-size: .8rem; outline: none;
+      transition: border-color .2s, background .2s;
+    }
+    .sb-search input::placeholder { color: var(--slate); }
+    .sb-search input:focus { border-color: var(--champagne-border); background: rgba(244,210,31,.05); }
+    body.sb-collapsed .sb-search { display: none; }
+    .sb-empty { display: none; padding: 1rem 1.2rem; font-size: .78rem; color: var(--slate); }
+
+    .nav-scroll {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: .15rem 0 1.5rem;
+      mask-image: linear-gradient(180deg, transparent 0, #000 12px, #000 calc(100% - 24px), transparent);
+      -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 12px, #000 calc(100% - 24px), transparent);
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+
+    .nav-group { margin-top: .15rem; }
+    .nav-section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .75rem 1.25rem .35rem;
+      font-size: .6rem; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase;
+      color: var(--slate); cursor: pointer; user-select: none; transition: color .2s;
+    }
+    .nav-section-hdr:hover { color: var(--champagne-lt); }
+    .nav-section-hdr .sec-icon { font-size: .62rem; transition: transform .3s var(--ease); }
+    .nav-group.closed .sec-icon { transform: rotate(-90deg); }
+    .group-items { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s var(--ease); }
+    .group-items > * { min-height: 0; }
+    .group-items { overflow: hidden; }
+    .nav-group.closed .group-items { grid-template-rows: 0fr; }
+    .group-inner { min-height: 0; overflow: hidden; }
+    body.sb-collapsed .nav-section-hdr { justify-content: center; padding: .55rem 0; }
+    body.sb-collapsed .nav-section-hdr .sec-label,
+    body.sb-collapsed .nav-section-hdr .sec-icon { display: none; }
+    body.sb-collapsed .nav-section-hdr::before { content: ""; width: 18px; height: 1px; background: var(--rim2); }
+
+    .nav-item {
+      position: relative; display: flex; align-items: center; gap: .75rem;
+      margin: 1px .7rem; padding: .6rem .8rem; border-radius: 10px;
+      color: var(--slate2); font-size: .82rem; font-weight: 500; white-space: nowrap; cursor: pointer;
+      transition: background .2s, color .2s, transform .2s var(--ease);
+    }
+    .nav-item i { width: 18px; flex-shrink: 0; text-align: center; font-size: .95rem; color: var(--slate); transition: color .2s, transform .3s var(--ease); }
+    .nav-item .ni-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .nav-item .ni-badge { font-size: .62rem; font-weight: 700; padding: .12rem .5rem; border-radius: 99px; background: var(--champagne-dim); color: var(--champagne); border: 1px solid var(--champagne-border); }
+    .nav-item:hover { background: rgba(255,255,255,.045); color: var(--white); }
+    .nav-item:hover i { color: var(--champagne-lt); transform: scale(1.1); }
+    .nav-item.active {
+      color: var(--white);
+      background: linear-gradient(90deg, rgba(244,210,31,.18), rgba(244,210,31,.04));
+      box-shadow: inset 0 0 0 1px rgba(244,210,31,.16);
+    }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: -.7rem; top: 22%; bottom: 22%; width: 3px;
+      border-radius: 0 3px 3px 0; background: linear-gradient(180deg, var(--champagne-lt), var(--champagne));
+      box-shadow: 0 0 12px rgba(255,229,128,.7);
+    }
+    .nav-item.active i { color: var(--champagne-lt); }
+    .nav-item.hidden-by-search { display: none; }
+    .nav-group.hidden-by-search { display: none; }
+
+    body.sb-collapsed .nav-item { justify-content: center; padding: .7rem 0; margin: 2px .65rem; }
+    body.sb-collapsed .nav-item .ni-label,
+    body.sb-collapsed .nav-item .ni-badge { display: none; }
+    body.sb-collapsed .nav-item.active::before { left: -.65rem; }
+    .sb-tip {
+      position: fixed; z-index: 5000; pointer-events: none;
+      padding: .42rem .8rem; border-radius: 8px; white-space: nowrap;
+      background: var(--surface3); border: 1px solid var(--rim2); color: var(--white);
+      font-size: .76rem; font-weight: 600; box-shadow: var(--shadow);
+      opacity: 0; transform: translate(-6px, -50%); transition: opacity .15s, transform .2s var(--ease);
+    }
+    .sb-tip.show { opacity: 1; transform: translate(0, -50%); }
+
+    .nav-sep { height: 1px; background: var(--rim); margin: .6rem 1rem; }
+
+    .sb-user {
+      flex-shrink: 0; margin: .5rem .7rem .8rem; padding: .7rem .75rem;
+      display: flex; align-items: center; gap: .7rem;
+      border-radius: 14px; background: rgba(255,255,255,.03); border: 1px solid var(--rim);
+    }
+    .sb-avatar, .topbar-avatar {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--champagne-lt), var(--champagne-dk));
+      color: #0a1f44; font-family: var(--serif); font-size: 1rem; font-weight: 700;
+    }
+    .sb-user-info { flex: 1; min-width: 0; }
+    .sb-user-name { font-size: .8rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sb-user-role { font-size: .62rem; color: var(--champagne); text-transform: uppercase; letter-spacing: .8px; }
+    .sb-logout { color: var(--slate); font-size: .95rem; padding: .35rem .45rem; border-radius: 8px; transition: color .2s, background .2s; }
+    .sb-logout:hover { color: var(--red); background: var(--red-dim); }
+    body.sb-collapsed .sb-user { justify-content: center; padding: .6rem 0; margin: .5rem .65rem .8rem; }
+    body.sb-collapsed .sb-user-info, body.sb-collapsed .sb-logout { display: none; }
+
+    .overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(2,8,22,.6); backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none; transition: opacity .3s;
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+
+    /* ═══════════════════════════════════════════════════════
+       TOPBAR
+    ═══════════════════════════════════════════════════════ */
+    .topbar {
+      position: sticky; top: 0; z-index: 500;
+      min-height: var(--top-h);
+      display: flex; align-items: center; justify-content: space-between; gap: .9rem;
+      padding: .65rem 1.75rem;
+      background: rgba(8,26,58,.72);
+      backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+      border-bottom: 1px solid var(--rim);
+    }
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: .8rem; min-width: 0; }
+    #mobileMenuBtn {
+      display: none; width: 40px; height: 40px; border-radius: 11px; cursor: pointer;
+      background: rgba(255,255,255,.04); border: 1px solid var(--rim2);
+      color: var(--white); font-size: 1.25rem; place-items: center;
+    }
+    .topbar-breadcrumb { display: flex; align-items: center; gap: .55rem; font-size: .82rem; color: var(--slate); min-width: 0; }
+    .topbar-breadcrumb .crumb-home {
+      width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center;
+      background: var(--champagne-dim); border: 1px solid var(--champagne-border); color: var(--champagne-lt);
+    }
+    .topbar-breadcrumb .crumb-sep { color: var(--rim3); }
+    .crumb-group { white-space: nowrap; }
+    .crumb-group:empty { display: none; }
+    .topbar-breadcrumb strong { color: var(--white); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .cmd-trigger {
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .5rem .6rem .5rem .85rem; min-width: 230px; border-radius: 11px; cursor: pointer;
+      background: rgba(255,255,255,.035); border: 1px solid var(--rim2);
+      color: var(--slate); font: inherit; font-size: .8rem;
+      transition: border-color .2s, background .2s, color .2s;
+    }
+    .cmd-trigger:hover { border-color: var(--champagne-border); color: var(--slate2); background: rgba(244,210,31,.05); }
+    .cmd-trigger span { flex: 1; text-align: left; }
+    kbd {
+      font-family: var(--sans); font-size: .66rem; font-weight: 600; color: var(--slate2);
+      padding: .12rem .42rem; border-radius: 6px; background: rgba(255,255,255,.06); border: 1px solid var(--rim2);
+    }
+    .topbar-pill {
+      display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap;
+      padding: .42rem .9rem; border-radius: 99px;
+      background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+      font-size: .74rem; font-weight: 600; color: var(--champagne-lt);
+    }
+    .topbar-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(94,203,142,.2); }
+
+    .user-menu { position: relative; }
+    .user-btn {
+      display: flex; align-items: center; gap: .6rem; cursor: pointer;
+      padding: .3rem .55rem .3rem .3rem; border-radius: 13px;
+      background: transparent; border: 1px solid transparent; color: inherit; font: inherit;
+      transition: background .2s, border-color .2s;
+    }
+    .user-btn:hover, .user-menu.open .user-btn { background: rgba(255,255,255,.04); border-color: var(--rim2); }
+    .topbar-name { font-size: .82rem; font-weight: 600; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+    .topbar-role { display: block; font-size: .64rem; color: var(--slate); font-weight: 500; }
+    .user-btn .bi-chevron-down { font-size: .7rem; color: var(--slate); transition: transform .3s var(--ease); }
+    .user-menu.open .user-btn .bi-chevron-down { transform: rotate(180deg); }
+    .user-dropdown {
+      position: absolute; right: 0; top: calc(100% + 10px); width: 240px; padding: .45rem; z-index: 600;
+      border-radius: 14px; background: rgba(21,44,85,.97); border: 1px solid var(--rim2); box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      opacity: 0; transform: translateY(-8px) scale(.98); pointer-events: none; transform-origin: top right;
+      transition: opacity .2s, transform .25s var(--ease);
+    }
+    .user-menu.open .user-dropdown { opacity: 1; transform: none; pointer-events: auto; }
+    .ud-head { padding: .7rem .75rem .8rem; border-bottom: 1px solid var(--rim); margin-bottom: .35rem; }
+    .ud-head b { display: block; font-size: .86rem; }
+    .ud-head small { color: var(--slate); font-size: .74rem; }
+    .ud-item { display: flex; align-items: center; gap: .65rem; padding: .6rem .75rem; border-radius: 9px; font-size: .82rem; color: var(--slate2); transition: background .2s, color .2s; }
+    .ud-item:hover { background: rgba(255,255,255,.05); color: var(--white); }
+    .ud-item.danger:hover { background: var(--red-dim); color: var(--red); }
+    .topbar-logout { display: none; }
+
+    /* ═══════════════════════════════════════════════════════
+       STATUS BAR
+    ═══════════════════════════════════════════════════════ */
+    .trial-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap;
+      margin: 1.25rem 1.75rem 0; padding: .8rem 1rem .8rem 1.1rem; border-radius: 14px;
+      background: linear-gradient(90deg, rgba(245,158,11,.14), rgba(245,158,11,.04));
+      border: 1px solid var(--amber-border); font-size: .82rem;
+    }
+    .trial-bar span { color: var(--slate2); }
+    .trial-bar span > i { margin-right: .45rem; }
+    .trial-bar strong { color: var(--amber); }
+    .trial-bar a {
+      padding: .42rem .95rem; border-radius: 9px; font-weight: 700; font-size: .78rem; white-space: nowrap;
+      background: linear-gradient(135deg, var(--champagne-lt), var(--champagne)); color: #0a1f44;
+      transition: transform .2s var(--ease), box-shadow .2s;
+    }
+    .trial-bar a:hover { transform: translateY(-1px); box-shadow: 0 8px 20px -8px rgba(244,210,31,.7); }
+    .trial-bar.danger { background: linear-gradient(90deg, rgba(232,112,112,.14), rgba(232,112,112,.04)); border-color: var(--red-border); }
+    .trial-bar.danger strong { color: var(--red); }
+    .trial-bar.danger a { background: var(--red); color: #1a0808; }
+
+    /* ═══════════════════════════════════════════════════════
+       ALERTS / MESSAGES
+    ═══════════════════════════════════════════════════════ */
+    .dashboard-messages { display: grid; gap: .6rem; margin-bottom: 1.4rem; }
+    .alert {
+      position: relative; overflow: hidden;
+      display: flex; align-items: flex-start; gap: .7rem;
+      padding: .85rem 2.6rem .85rem 1rem; border-radius: 12px;
+      font-size: .85rem; font-weight: 500; line-height: 1.5; border: 1px solid;
+      animation: alert-in .5s var(--ease) both;
+    }
+    .alert i { font-size: 1.05rem; flex-shrink: 0; margin-top: .05rem; }
+    .alert-success { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+    .alert-error, .alert-danger { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+    .alert-warning { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+    .alert-info, .alert-debug { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
+    .alert-close {
+      position: absolute; right: .55rem; top: .55rem; width: 26px; height: 26px; border-radius: 7px;
+      display: grid; place-items: center; cursor: pointer; border: 0; background: transparent; color: inherit; opacity: .7;
+      transition: opacity .2s, background .2s;
+    }
+    .alert-close:hover { opacity: 1; background: rgba(255,255,255,.08); }
+    .alert.leaving { animation: alert-out .4s var(--ease) forwards; }
+    .alert .alert-timer { position: absolute; left: 0; bottom: 0; height: 2px; background: currentColor; opacity: .5; animation: timer 6s linear forwards; }
+    @keyframes alert-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+    @keyframes alert-out { to { opacity: 0; transform: translateY(-6px); height: 0; padding-block: 0; margin: 0; border-width: 0; } }
+    @keyframes timer { from { width: 100%; } to { width: 0; } }
+
+    /* ═══════════════════════════════════════════════════════
+       CONTENT
+    ═══════════════════════════════════════════════════════ */
+    .content-area {
+      flex: 1; width: 100%; max-width: 1440px; margin: 0 auto;
+      padding: 1.9rem 1.75rem 4rem;
+      animation: page-in .6s var(--ease) both;
+    }
+    @keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .table-responsive { overflow-x: auto; width: 100%; }
+
+    /* ═══════════════════════════════════════════════════════
+       SHARED COMPONENT DEFAULTS
+       Zero-specificity (:where) so every page's own styles win.
+    ═══════════════════════════════════════════════════════ */
+    :where(.content-area) :where(h1, h2, h3, h4) { line-height: 1.2; }
+    :where(.content-area) :where(.page-title) { font-family: var(--serif); font-size: clamp(1.7rem, 3vw, 2.3rem); font-weight: 600; letter-spacing: -.01em; }
+    :where(.content-area) :where(.page-title) em { font-style: italic; color: var(--champagne-lt); }
+    :where(.content-area) :where(.eyebrow) { font-size: .7rem; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--champagne); }
+    :where(.content-area) :where(.page-header) { margin-bottom: 1.6rem; }
+
+    :where(.content-area) :where(.panel, .card) {
+      background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.015));
+      border: 1px solid var(--rim); border-radius: var(--radius);
+      box-shadow: 0 1px 0 rgba(255,255,255,.03) inset;
+    }
+    :where(.content-area) :where(.panel-header, .panel-head, .card-header) { padding: 1rem 1.25rem; border-bottom: 1px solid var(--rim); display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+    :where(.content-area) :where(.panel-body, .card-body) { padding: 1.25rem; }
+    :where(.content-area) :where(.panel-title, .card-title) { font-size: .95rem; font-weight: 600; }
+
+    :where(.content-area) :where(.stat-card) {
+      padding: 1.2rem 1.25rem; border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015)); border: 1px solid var(--rim);
+      transition: transform .3s var(--ease), border-color .3s, box-shadow .3s;
+    }
+    :where(.content-area) :where(.stat-card):hover { transform: translateY(-3px); border-color: var(--champagne-border); box-shadow: var(--shadow); }
+    :where(.content-area) :where(.stat-value) { font-family: var(--serif); font-size: 1.9rem; font-weight: 700; font-variant-numeric: lining-nums tabular-nums; }
+    :where(.content-area) :where(.stat-label) { font-size: .72rem; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; }
+
+    :where(.content-area) :where(.btn) {
+      display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+      padding: .62rem 1.1rem; border-radius: 10px; border: 1px solid var(--rim2);
+      background: rgba(255,255,255,.04); color: var(--white);
+      font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: transform .2s var(--ease), background .2s, border-color .2s, box-shadow .2s, color .2s;
+    }
+    :where(.content-area) :where(.btn):hover { border-color: var(--champagne-border); background: rgba(244,210,31,.08); }
+    :where(.content-area) :where(.btn):active { transform: translateY(1px); }
+    :where(.content-area) :where(.btn-primary, .btn-lux, .btn-gold, .btn-champagne) {
+      background: linear-gradient(135deg, var(--champagne-lt), var(--champagne) 60%, var(--champagne-dk));
+      border-color: transparent; color: #0a1f44; box-shadow: 0 8px 22px -10px rgba(244,210,31,.7);
+    }
+    :where(.content-area) :where(.btn-primary, .btn-lux, .btn-gold, .btn-champagne):hover { color: #0a1f44; box-shadow: 0 12px 28px -10px rgba(244,210,31,.85); transform: translateY(-1px); }
+    :where(.content-area) :where(.btn-ghost) { background: transparent; }
+    :where(.content-area) :where(.btn-danger) { background: var(--red-dim); border-color: var(--red-border); color: var(--red); }
+    :where(.content-area) :where(.btn-success) { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+    :where(.content-area) :where(.btn-sm) { padding: .42rem .8rem; font-size: .78rem; border-radius: 8px; }
+
+    :where(.content-area) :where(.badge) { display: inline-flex; align-items: center; gap: .3rem; padding: .22rem .6rem; border-radius: 99px; font-size: .7rem; font-weight: 600; border: 1px solid var(--rim2); background: rgba(255,255,255,.05); color: var(--slate2); }
+    :where(.content-area) :where(.badge-green, .badge-success) { background: var(--green-dim); border-color: var(--green-border); color: var(--green); }
+    :where(.content-area) :where(.badge-red, .badge-danger)    { background: var(--red-dim);   border-color: var(--red-border);   color: var(--red); }
+    :where(.content-area) :where(.badge-amber, .badge-warning) { background: var(--amber-dim); border-color: var(--amber-border); color: var(--amber); }
+    :where(.content-area) :where(.badge-blue, .badge-info)     { background: var(--blue-dim);  border-color: var(--blue-border);  color: var(--blue); }
+    :where(.content-area) :where(.badge-purple) { background: var(--purple-dim); border-color: var(--purple-border); color: var(--purple); }
+    :where(.content-area) :where(.badge-teal)   { background: var(--teal-dim);   border-color: var(--teal-border);   color: var(--teal); }
+    :where(.content-area) :where(.badge-gold, .badge-champagne) { background: var(--champagne-dim); border-color: var(--champagne-border); color: var(--champagne-lt); }
+
+    :where(.content-area) :where(table) { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    :where(.content-area) :where(th) { text-align: left; font-size: .68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--slate); padding: .8rem 1rem; border-bottom: 1px solid var(--rim2); background: rgba(255,255,255,.02); white-space: nowrap; }
+    :where(.content-area) :where(td) { padding: .8rem 1rem; border-bottom: 1px solid var(--rim); color: var(--slate2); vertical-align: middle; }
+    :where(.content-area) :where(tbody tr) { transition: background .15s; }
+    :where(.content-area) :where(tbody tr:hover) { background: rgba(255,255,255,.025); }
+    :where(.content-area) :where(.table-wrap, .table-responsive) { overflow-x: auto; border-radius: var(--radius); }
+
+    :where(.content-area) :where(label, .form-label, .field-label) { font-size: .78rem; font-weight: 600; color: var(--slate2); }
+    :where(.content-area) :where(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=submit]):not([type=button]), select, textarea, .form-control, .form-select) {
+      padding: .68rem .9rem; border-radius: 10px;
+      background: rgba(0,0,0,.28); border: 1px solid var(--rim2); color: var(--white);
+      font: inherit; font-size: .88rem; outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    :where(.content-area) :where(input, select, textarea):focus { border-color: var(--champagne); box-shadow: 0 0 0 3px rgba(244,210,31,.15); }
+    :where(.content-area) :where(input, textarea)::placeholder { color: var(--slate); }
+    :where(.content-area) :where(select option) { background: var(--surface2); color: var(--white); }
+    :where(.content-area) :where(input[type=checkbox], input[type=radio]) { accent-color: var(--champagne); }
+    :where(.content-area) :where(.form-group) { margin-bottom: 1.1rem; }
+
+    :where(.content-area) :where(.empty-state) { text-align: center; padding: 3rem 1.5rem; color: var(--slate); }
+    :where(.content-area) :where(.empty-icon, .empty-icon-box) { width: 64px; height: 64px; margin: 0 auto 1rem; border-radius: 18px; display: grid; place-items: center; font-size: 1.6rem; background: var(--champagne-dim); border: 1px solid var(--champagne-border); color: var(--champagne-lt); }
+    :where(.content-area) :where(.empty-title) { font-size: 1.05rem; font-weight: 600; color: var(--white); margin-bottom: .3rem; }
+
+    /* Back to top */
+    .to-top {
+      position: fixed; right: 22px; bottom: 90px; z-index: 1100;
+      width: 42px; height: 42px; border-radius: 12px; cursor: pointer;
+      display: grid; place-items: center; font-size: 1rem;
+      background: rgba(21,44,85,.9); border: 1px solid var(--rim2); color: var(--champagne-lt);
+      box-shadow: var(--shadow); backdrop-filter: blur(10px);
+      opacity: 0; transform: translateY(12px); pointer-events: none;
+      transition: opacity .3s, transform .3s var(--ease), background .2s;
+    }
+    .to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+    .to-top:hover { background: var(--champagne); color: #0a1f44; }
+
+    /* ═══════════════════════════════════════════════════════
+       COMMAND PALETTE (Ctrl/⌘ + K)
+    ═══════════════════════════════════════════════════════ */
+    .cmdk {
+      position: fixed; inset: 0; z-index: 4000; display: grid; place-items: start center;
+      padding: 12vh 16px 16px; background: rgba(2,8,22,.62); backdrop-filter: blur(6px);
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .cmdk.open { opacity: 1; pointer-events: auto; }
+    .cmdk-box {
+      width: min(620px, 100%); border-radius: 18px; overflow: hidden;
+      background: rgba(18,40,79,.98); border: 1px solid var(--rim2); box-shadow: var(--shadow-lg), 0 0 80px -30px rgba(244,210,31,.4);
+      transform: translateY(-10px) scale(.98); transition: transform .3s var(--ease);
+    }
+    .cmdk.open .cmdk-box { transform: none; }
+    .cmdk-input { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.2rem; border-bottom: 1px solid var(--rim); }
+    .cmdk-input i { color: var(--champagne); font-size: 1.05rem; }
+    .cmdk-input input { flex: 1; background: none; border: 0; outline: none; color: var(--white); font: inherit; font-size: 1rem; }
+    .cmdk-input input::placeholder { color: var(--slate); }
+    .cmdk-list { max-height: min(60vh, 420px); overflow-y: auto; padding: .45rem; }
+    .cmdk-group { padding: .6rem .75rem .3rem; font-size: .62rem; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--slate); }
+    .cmdk-item { display: flex; align-items: center; gap: .75rem; padding: .65rem .75rem; border-radius: 10px; color: var(--slate2); font-size: .88rem; cursor: pointer; }
+    .cmdk-item i { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; background: rgba(255,255,255,.04); border: 1px solid var(--rim); color: var(--slate2); font-size: .9rem; flex-shrink: 0; }
+    .cmdk-item .go { margin-left: auto; opacity: 0; color: var(--champagne); font-size: .8rem; }
+    .cmdk-item.sel { background: linear-gradient(90deg, rgba(244,210,31,.16), rgba(244,210,31,.04)); color: var(--white); }
+    .cmdk-item.sel i { color: var(--champagne-lt); border-color: var(--champagne-border); background: var(--champagne-dim); }
+    .cmdk-item.sel .go { opacity: 1; }
+    .cmdk-empty { padding: 2rem; text-align: center; color: var(--slate); font-size: .88rem; }
+    .cmdk-foot { display: flex; gap: 1rem; padding: .7rem 1.1rem; border-top: 1px solid var(--rim); font-size: .72rem; color: var(--slate); }
+    .cmdk-foot span { display: inline-flex; align-items: center; gap: .35rem; }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════ */
+    @media (max-width: 1200px) { .cmd-trigger { min-width: 0; } .cmd-trigger span { display: none; } }
+    @media (max-width: 991px) {
+      .sidebar { transform: translateX(-100%); width: var(--sb-width) !important; box-shadow: none; }
+      .sidebar.visible { transform: none; box-shadow: 30px 0 80px rgba(0,0,0,.6); }
+      .main { margin-left: 0 !important; }
+      #mobileMenuBtn { display: grid; }
+      .toggle-btn { display: none; }
+      body.sb-collapsed .sb-search { display: block; }
+      body.sb-collapsed .nav-item { justify-content: flex-start; padding: .6rem .8rem; margin: 1px .7rem; }
+      body.sb-collapsed .nav-item .ni-label { display: block; }
+      body.sb-collapsed .nav-section-hdr { justify-content: space-between; padding: .75rem 1.25rem .35rem; }
+      body.sb-collapsed .nav-section-hdr .sec-label, body.sb-collapsed .nav-section-hdr .sec-icon { display: inline; }
+      body.sb-collapsed .nav-section-hdr::before { display: none; }
+      body.sb-collapsed .sb-user-info, body.sb-collapsed .sb-logout { display: block; }
+      .topbar-name-wrap { display: none; }
+    }
+    @media (max-width: 640px) {
+      .topbar { padding: .55rem .9rem; }
+      .content-area { padding: 1.1rem .9rem 3.5rem; }
+      .trial-bar { margin: 1rem .9rem 0; }
+      .topbar-pill { display: none; }
+      .cmd-trigger kbd { display: none; }
+      .cmd-trigger { padding: .55rem .7rem; }
+      .topbar-breadcrumb .crumb-home, .topbar-breadcrumb .crumb-sep, .crumb-group { display: none; }
+      .to-top { right: 14px; bottom: 76px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+    }
+    @media print {
+      .sidebar, .topbar, .overlay, .trial-bar, .to-top, .cmdk, .wa-float-btn, .page-progress { display: none !important; }
+      .main { margin: 0 !important; }
+      body { background: #fff; }
+      .content-area { padding: 0; max-width: none; animation: none; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+
+</head>
+<body>
+{% include "saas_admin/_platform_bar.html" %}
+<div class="page-progress" id="pageProgress"></div>
+<div class="app">
+
+<!-- ═════════════════════════════════════════════════════════
+     SIDEBAR
+═════════════════════════════════════════════════════════ -->
+<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+
+  <div class="brand">
+    <div class="brand-logo">
+      {% if tenant.logo %}
+        <img src="{{ tenant.logo.url }}" alt="{{ tenant.name }}">
+      {% else %}
+        {{ tenant.name|slice:":2"|upper }}
+      {% endif %}
+    </div>
+    <div class="brand-text">
+      <div class="brand-name">{{ tenant.name }}</div>
+      <div class="brand-sub">{{ brand.brand_name|default:"School Portal" }}</div>
+    </div>
+  </div>
+
+  <button class="toggle-btn" id="sidebarToggle" title="Collapse sidebar" aria-label="Collapse sidebar">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+
+  <div class="sb-search">
+    <i class="bi bi-search"></i>
+    <input type="search" id="navSearch" placeholder="Search menu…" autocomplete="off" aria-label="Search menu">
+  </div>
+
+  <div class="nav-scroll">
+
+    <!-- ── Main ── -->
+    <div class="nav-group" id="grp-main">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-main')">
+        <span class="sec-label">Main</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'dashboard:router' %}" class="nav-item" data-tooltip="Dashboard">
+          <i class="bi bi-house-fill"></i>
+          <span class="ni-label">Dashboard</span>
+        </a>
+        {% if user.is_staff_user %}
+        <a href="{% url 'idcards:my_id_card' %}" class="nav-item" data-tooltip="ID Card">
+          <i class="bi bi-person-vcard-fill"></i>
+          <span class="ni-label">My ID Card</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if user.is_superuser or user.is_staff_user %}
+
+    {% if user.is_superuser %}
+    <!-- ── School ── -->
+    <div class="nav-group" id="grp-school">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-school')">
+        <span class="sec-label">School</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="/settings/" class="nav-item" data-tooltip="Settings">
+          <i class="bi bi-gear-fill"></i>
+          <span class="ni-label">Settings</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.is_superuser %}
+    <!-- ── Academics ── -->
+    <div class="nav-group" id="grp-academics">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-academics')">
+        <span class="sec-label">Academics</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'academics:manage_sessions' %}" class="nav-item" data-tooltip="Sessions">
+          <i class="bi bi-calendar3"></i><span class="ni-label">Manage Sessions</span>
+        </a>
+        {% if active_session %}
+        <a href="{% url 'academics:manage_terms' active_session.id %}" class="nav-item" data-tooltip="Terms">
+          <i class="bi bi-bookmark-fill"></i><span class="ni-label">Manage Terms</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'users:manage_classes' %}" class="nav-item" data-tooltip="Classes">
+          <i class="bi bi-building"></i><span class="ni-label">Manage Classes</span>
+        </a>
+        <a href="{% url 'users:class_arms' %}" class="nav-item" data-tooltip="Classes &amp; Arms">
+          <i class="bi bi-diagram-2-fill"></i><span class="ni-label">Classes &amp; Arms</span>
+        </a>
+        <a href="{% url 'users:assign_subjects' %}" class="nav-item" data-tooltip="Subjects">
+          <i class="bi bi-book-fill"></i><span class="ni-label">Assign Subjects</span>
+        </a>
+        <a href="{% url 'users:student_subject_manager' %}" class="nav-item" data-tooltip="Subject Manager">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">Subject Manager</span>
+        </a>
+        <a href="{% url 'users:promote_students' %}" class="nav-item" data-tooltip="Promote">
+          <i class="bi bi-arrow-up-circle-fill"></i><span class="ni-label">Promote Students</span>
+        </a>
+        <a href="{% url 'academics:manage_public_holidays' %}" class="nav-item" data-tooltip="Holidays">
+          <i class="bi bi-calendar-x-fill"></i><span class="ni-label">Public Holidays</span>
+        </a>
+        <a href="{% url 'timetable:admin_index' %}" class="nav-item" data-tooltip="Timetable">
+          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Timetable</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.is_superuser or user.is_staff_user %}
+    <!-- ── Admissions ── -->
+    <div class="nav-group" id="grp-admissions">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-admissions')">
+        <span class="sec-label">Admissions</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'admissions:board' %}" class="nav-item" data-tooltip="Pipeline">
+          <i class="bi bi-kanban-fill"></i><span class="ni-label">Application Pipeline</span>
+        </a>
+        <a href="{% url 'admissions:list' %}" class="nav-item" data-tooltip="Applications">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">All Applications</span>
+        </a>
+        <a href="{% url 'admissions:ranking' %}" class="nav-item" data-tooltip="Applicant Ranking">
+          <i class="bi bi-list-ol"></i><span class="ni-label">Applicant Ranking</span>
+        </a>
+        <a href="{% url 'admissions:waitlist' %}" class="nav-item" data-tooltip="Waitlist">
+          <i class="bi bi-hourglass-split"></i><span class="ni-label">Waiting List</span>
+        </a>
+        <a href="{% url 'admissions:analytics' %}" class="nav-item" data-tooltip="Admission Analytics">
+          <i class="bi bi-graph-up-arrow"></i><span class="ni-label">Admission Analytics</span>
+        </a>
+        <a href="{% url 'admissions:settings' %}" class="nav-item" data-tooltip="Admission Settings">
+          <i class="bi bi-sliders"></i><span class="ni-label">Admission Settings</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.is_superuser %}
+    <!-- ── People ── -->
+    <div class="nav-group" id="grp-people">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-people')">
+        <span class="sec-label">People</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'users:manage_staff_permissions' %}" class="nav-item" data-tooltip="Permissions">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Staff Permissions</span>
+        </a>
+        <a href="{% url 'users:create_staff' %}" class="nav-item" data-tooltip="Create Staff">
+          <i class="bi bi-person-plus-fill"></i><span class="ni-label">Create Staff</span>
+        </a>
+        <a href="{% url 'users:register_student' %}" class="nav-item" data-tooltip="Register">
+          <i class="bi bi-mortarboard-fill"></i><span class="ni-label">Register Student</span>
+        </a>
+        <a href="{% url 'users:all_students' %}" class="nav-item" data-tooltip="Students">
+          <i class="bi bi-people-fill"></i><span class="ni-label">All Students</span>
+        </a>
+        <a href="{% url 'users:alumni_register' %}" class="nav-item" data-tooltip="Alumni">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Alumni Register</span>
+        </a>
+        <a href="{% url 'users:achievements' %}" class="nav-item" data-tooltip="Awards &amp; Leaders">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Awards &amp; Leaders</span>
+        </a>
+        <a href="{% url 'users:support_register' %}" class="nav-item" data-tooltip="Support Register">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Support Register</span>
+        </a>
+        <a href="{% url 'users:change_requests' %}" class="nav-item" data-tooltip="Corrections from Parents">
+          <i class="bi bi-pencil-square"></i><span class="ni-label">Corrections from Parents</span>
+        </a>
+        <a href="{% url 'users:houses' %}" class="nav-item" data-tooltip="Houses">
+          <i class="bi bi-flag-fill"></i><span class="ni-label">Houses &amp; Points</span>
+        </a>
+        <a href="{% url 'users:class_register' %}" class="nav-item" data-tooltip="Class Registers">
+          <i class="bi bi-printer-fill"></i><span class="ni-label">Class Registers</span>
+        </a>
+        <a href="{% url 'users:bulk_photos' %}" class="nav-item" data-tooltip="Passport Photos">
+          <i class="bi bi-images"></i><span class="ni-label">Passport Photos</span>
+        </a>
+        <a href="{% url 'users:duplicates' %}" class="nav-item" data-tooltip="Duplicate Records">
+          <i class="bi bi-intersect"></i><span class="ni-label">Duplicate Records</span>
+        </a>
+        <a href="{% url 'users:expiring_documents' %}" class="nav-item" data-tooltip="Expiring Documents">
+          <i class="bi bi-file-earmark-medical-fill"></i><span class="ni-label">Expiring Documents</span>
+        </a>
+        <a href="{% url 'users:student_fields' %}" class="nav-item" data-tooltip="Student Fields">
+          <i class="bi bi-ui-checks"></i><span class="ni-label">Student Fields</span>
+        </a>
+        <a href="{% url 'users:generate_student_password' %}" class="nav-item" data-tooltip="Passwords">
+          <i class="bi bi-key-fill"></i><span class="ni-label">Student Passwords</span>
+        </a>
+        <a href="{% url 'users:advanced_subject_assignment' %}" class="nav-item" data-tooltip="Subject Assignment">
+          <i class="bi bi-diagram-3-fill"></i><span class="ni-label">Subject Assignment</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Curriculum ── -->
+    <div class="nav-group" id="grp-curriculum">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-curriculum')">
+        <span class="sec-label">Curriculum</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'curriculum:home' %}" class="nav-item" data-tooltip="Coverage">
+          <i class="bi bi-bar-chart-steps"></i><span class="ni-label">Syllabus Coverage</span>
+        </a>
+        <a href="{% url 'curriculum:schemes' %}" class="nav-item" data-tooltip="Schemes">
+          <i class="bi bi-journal-text"></i><span class="ni-label">Schemes of Work</span>
+        </a>
+        <a href="{% url 'curriculum:notes' %}" class="nav-item" data-tooltip="Lesson Notes">
+          <i class="bi bi-journal-richtext"></i><span class="ni-label">Lesson Notes</span>
+        </a>
+        <a href="{% url 'curriculum:review' %}" class="nav-item" data-tooltip="Review Notes">
+          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Review Lesson Notes</span>
+        </a>
+        <a href="{% url 'curriculum:homework' %}" class="nav-item" data-tooltip="Homework">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Homework</span>
+        </a>
+        <a href="{% url 'curriculum:calendar' %}" class="nav-item" data-tooltip="Calendar">
+          <i class="bi bi-calendar3"></i><span class="ni-label">School Calendar</span>
+        </a>
+        <a href="{% url 'curriculum:allocation' %}" class="nav-item" data-tooltip="Who Teaches What">
+          <i class="bi bi-grid-3x3"></i><span class="ni-label">Who Teaches What</span>
+        </a>
+        <a href="{% url 'curriculum:streams' %}" class="nav-item" data-tooltip="Streams">
+          <i class="bi bi-signpost-split-fill"></i><span class="ni-label">Subject Streams</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'curriculum:promotion' %}" class="nav-item" data-tooltip="Promotion">
+          <i class="bi bi-arrow-up-right-circle-fill"></i><span class="ni-label">Promotion &amp; Graduation</span>
+        </a>
+        <a href="{% url 'curriculum:graduation_certificates' %}" class="nav-item" data-tooltip="Certificates">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Graduation Certificates</span>
+        </a>
+        {% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'curriculum:cover' %}" class="nav-item" data-tooltip="Cover">
+          <i class="bi bi-person-raised-hand"></i><span class="ni-label">Cover for Absent Teachers</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'curriculum:observations' %}" class="nav-item" data-tooltip="Observations">
+          <i class="bi bi-clipboard2-pulse-fill"></i><span class="ni-label">Lesson Observations</span>
+        </a>
+        <a href="{% url 'curriculum:clubs' %}" class="nav-item" data-tooltip="Clubs">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Clubs &amp; Societies</span>
+        </a>
+        <a href="{% url 'curriculum:departments' %}" class="nav-item" data-tooltip="Departments">
+          <i class="bi bi-diagram-3-fill"></i><span class="ni-label">Departments</span>
+        </a>
+      </div>
+    </div>
+
+    {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
+    <!-- ── Analytics ── -->
+    <div class="nav-group" id="grp-analytics">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-analytics')">
+        <span class="sec-label">Analytics</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'analytics:home' %}" class="nav-item" data-tooltip="School Today">
+          <i class="bi bi-speedometer2"></i><span class="ni-label">School Today</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ACCOUNT' or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'analytics:fees' %}" class="nav-item" data-tooltip="Fee Collection">
+          <i class="bi bi-cash-stack"></i><span class="ni-label">Fee Collection</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'analytics:enrolment' %}" class="nav-item" data-tooltip="Enrolment">
+          <i class="bi bi-graph-up-arrow"></i><span class="ni-label">Enrolment &amp; Leavers</span>
+        </a>
+        <a href="{% url 'analytics:demographics' %}" class="nav-item" data-tooltip="Gender & Age">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Gender &amp; Age</span>
+        </a>
+        <a href="{% url 'analytics:cohort' %}" class="nav-item" data-tooltip="Cohorts">
+          <i class="bi bi-layers-fill"></i><span class="ni-label">Cohort Comparison</span>
+        </a>
+        <a href="{% url 'analytics:kpis' %}" class="nav-item" data-tooltip="Targets">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Targets</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'analytics:board_pack' %}" class="nav-item" data-tooltip="Board Pack">
+          <i class="bi bi-file-earmark-richtext-fill"></i><span class="ni-label">Board Pack</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── AI assistants ── -->
+    <div class="nav-group" id="grp-ai">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-ai')">
+        <span class="sec-label">AI Assistants</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'assistant:home' %}" class="nav-item" data-tooltip="AI Tools">
+          <i class="bi bi-stars"></i><span class="ni-label">AI Tools</span>
+        </a>
+        <a href="{% url 'assistant:questions' %}" class="nav-item" data-tooltip="Question Generator">
+          <i class="bi bi-patch-question-fill"></i><span class="ni-label">Question Generator</span>
+        </a>
+        <a href="{% url 'assistant:new_message' %}" class="nav-item" data-tooltip="Message a Parent">
+          <i class="bi bi-envelope-paper-heart-fill"></i><span class="ni-label">Message a Parent</span>
+        </a>
+        <a href="{% url 'assistant:drafts' %}" class="nav-item" data-tooltip="Review Queue">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">AI Review Queue</span>
+        </a>
+        <a href="{% url 'assistant:at_risk' %}" class="nav-item" data-tooltip="Early Warning">
+          <i class="bi bi-exclamation-diamond-fill"></i><span class="ni-label">Early Warning</span>
+        </a>
+        <a href="{% url 'assistant:safety' %}" class="nav-item" data-tooltip="Held Posts">
+          <i class="bi bi-shield-exclamation"></i><span class="ni-label">Held Posts</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
+        <a href="{% url 'assistant:ask' %}" class="nav-item" data-tooltip="Ask About Records">
+          <i class="bi bi-chat-square-quote-fill"></i><span class="ni-label">Ask About Records</span>
+        </a>
+        {% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'assistant:settings' %}" class="nav-item" data-tooltip="AI Settings">
+          <i class="bi bi-sliders"></i><span class="ni-label">AI Settings &amp; Usage</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Timetable & rooms ── -->
+    <div class="nav-group" id="grp-timetable">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-timetable')">
+        <span class="sec-label">Timetable &amp; Rooms</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'payroll:me' %}" class="nav-item" data-tooltip="My Pay & Leave">
+          <i class="bi bi-wallet-fill"></i><span class="ni-label">My Pay &amp; Leave</span>
+        </a>
+        <a href="{% url 'timetable:teacher_timetable' %}" class="nav-item" data-tooltip="My Timetable">
+          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">My Timetable</span>
+        </a>
+        <a href="{% url 'timetable:room_bookings' %}" class="nav-item" data-tooltip="Room Booking">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Room Booking</span>
+        </a>
+        <a href="{% url 'timetable:free_finder' %}" class="nav-item" data-tooltip="Free Periods">
+          <i class="bi bi-search"></i><span class="ni-label">Free Period Finder</span>
+        </a>
+        <a href="{% url 'timetable:extras' %}" class="nav-item" data-tooltip="After-school Lessons">
+          <i class="bi bi-moon-stars-fill"></i><span class="ni-label">After-school Lessons</span>
+        </a>
+        <a href="{% url 'timetable:my_meetings' %}" class="nav-item" data-tooltip="My Parent Meetings">
+          <i class="bi bi-people"></i><span class="ni-label">My Parent Meetings</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'timetable:meetings' %}" class="nav-item" data-tooltip="Parent Meetings">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Parent–Teacher Meetings</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'timetable:calendar_sync' %}" class="nav-item" data-tooltip="Calendar Sync">
+          <i class="bi bi-calendar-plus-fill"></i><span class="ni-label">Calendar Sync</span>
+        </a>
+        <a href="{% url 'timetable:bell_display' %}" class="nav-item" data-tooltip="Bell Display" target="_blank" rel="noopener">
+          <i class="bi bi-bell-fill"></i><span class="ni-label">Bell Display Screen</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── CBT & Exams ── -->
+    <div class="nav-group" id="grp-cbt">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-cbt')">
+        <span class="sec-label">CBT &amp; Exams</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'cbt:cbt_create_exam' %}" class="nav-item" data-tooltip="Create Exam">
+          <i class="bi bi-plus-circle-fill"></i><span class="ni-label">Create Exam</span>
+        </a>
+        <a href="{% url 'cbt:admin_exam_list' %}" class="nav-item" data-tooltip="All Exams">
+          <i class="bi bi-journal-text"></i><span class="ni-label">All Exams</span>
+        </a>
+        <a href="{% url 'cbt:timetables' %}" class="nav-item" data-tooltip="Exam Timetables">
+          <i class="bi bi-calendar3-week-fill"></i><span class="ni-label">Exam Timetables</span>
+        </a>
+        <a href="{% url 'cbt:halls' %}" class="nav-item" data-tooltip="Exam Halls">
+          <i class="bi bi-building-fill"></i><span class="ni-label">Exam Halls &amp; Seating</span>
+        </a>
+        <a href="{% url 'cbt:bank' %}" class="nav-item" data-tooltip="Question Bank">
+          <i class="bi bi-collection-fill"></i><span class="ni-label">Question Bank</span>
+        </a>
+        <a href="{% url 'cbt:mastery_class' %}" class="nav-item" data-tooltip="Topic Mastery">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Topic Mastery</span>
+        </a>
+        <a href="{% url 'cbt:questions_overview' %}" class="nav-item" data-tooltip="Questions">
+          <i class="bi bi-list-ol"></i><span class="ni-label">Questions Overview</span>
+        </a>
+        {% if user.is_superuser %}
+        <a href="{% url 'cbt:exam_access_control' %}" class="nav-item" data-tooltip="Access Control">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Access Control</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'cbt:exam_results' %}" class="nav-item" data-tooltip="Score Detail">
+          <i class="bi bi-bar-chart-line-fill"></i><span class="ni-label">Exam Score Detail</span>
+        </a>
+        <a href="{% url 'results:cbt_scores_reference' %}" class="nav-item" data-tooltip="CBT Scores">
+          <i class="bi bi-cpu-fill"></i><span class="ni-label">CBT Scores Reference</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Results ── -->
+    <div class="nav-group" id="grp-results">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-results')">
+        <span class="sec-label">Results</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'results:manual_score_entry' %}" class="nav-item" data-tooltip="Score Entry">
+          <i class="bi bi-pencil-square"></i><span class="ni-label">Manual Score Entry</span>
+        </a>
+        <a href="{% url 'results:term_results' %}" class="nav-item" data-tooltip="Term Results">
+          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Term Results</span>
+        </a>
+        <a href="{% url 'results:approvals' %}" class="nav-item" data-tooltip="Approvals">
+          <i class="bi bi-check2-square"></i><span class="ni-label">Result Approvals</span>
+        </a>
+        <a href="{% url 'results:broadsheet' %}" class="nav-item" data-tooltip="Broadsheet">
+          <i class="bi bi-table"></i><span class="ni-label">Broadsheet &amp; Analysis</span>
+        </a>
+        <a href="{% url 'results:bundles' %}" class="nav-item" data-tooltip="Class Report Cards">
+          <i class="bi bi-file-earmark-zip-fill"></i><span class="ni-label">Class Report Cards (ZIP)</span>
+        </a>
+        <a href="{% url 'results:queries' %}" class="nav-item" data-tooltip="Result Questions">
+          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Result Questions</span>
+        </a>
+        <a href="{% url 'results:batch_results' %}" class="nav-item" data-tooltip="Batch Results">
+          <i class="bi bi-journals"></i><span class="ni-label">Batch Results</span>
+        </a>
+        {% if user.is_superuser %}
+        <a href="{% url 'results:grading' %}" class="nav-item" data-tooltip="Grading">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Grading &amp; Deadlines</span>
+        </a>
+        <a href="{% url 'results:assessment' %}" class="nav-item" data-tooltip="CA Structure">
+          <i class="bi bi-ui-checks-grid"></i><span class="ni-label">Assessment Structure</span>
+        </a>
+        <a href="{% url 'results:release' %}" class="nav-item" data-tooltip="Release Rules">
+          <i class="bi bi-shield-check"></i><span class="ni-label">Release Rules &amp; PINs</span>
+        </a>
+        <a href="{% url 'results:publish_results_page' %}" class="nav-item" data-tooltip="Publish">
+          <i class="bi bi-send-fill"></i><span class="ni-label">Publish Results</span>
+        </a>
+        <a href="{% url 'results:cumulative_results' %}" class="nav-item" data-tooltip="Session Results">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Session Results</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Student Attendance ── -->
+    <div class="nav-group" id="grp-attendance">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-attendance')">
+        <span class="sec-label">Student Attendance</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'results:manual_term_attendance' %}" class="nav-item" data-tooltip="Manual Entry">
+          <i class="bi bi-calendar-check-fill"></i><span class="ni-label">Manual Attendance</span>
+        </a>
+        <a href="{% url 'users:attendance_home' %}" class="nav-item" data-tooltip="View">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">View Attendance</span>
+        </a>
+        <a href="{% url 'users:attendance_summary' %}" class="nav-item" data-tooltip="Summary">
+          <i class="bi bi-graph-up"></i><span class="ni-label">Attendance Summary</span>
+        </a>
+        <a href="{% url 'timetable:my_lessons' %}" class="nav-item" data-tooltip="My Lessons">
+          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">My Lesson Registers</span>
+        </a>
+        <a href="{% url 'timetable:lessons_overview' %}" class="nav-item" data-tooltip="Lesson Attendance">
+          <i class="bi bi-grid-1x2-fill"></i><span class="ni-label">Lesson Attendance</span>
+        </a>
+        <a href="{% url 'users:attendance_heatmap' %}" class="nav-item" data-tooltip="Heatmap">
+          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Attendance Heatmap</span>
+        </a>
+        <a href="{% url 'users:absence_reasons' %}" class="nav-item" data-tooltip="Absence Reasons">
+          <i class="bi bi-chat-square-text-fill"></i><span class="ni-label">Absence Reasons</span>
+        </a>
+        <a href="{% url 'users:lateness' %}" class="nav-item" data-tooltip="Lateness">
+          <i class="bi bi-alarm-fill"></i><span class="ni-label">Late Arrivals</span>
+        </a>
+        <a href="{% url 'users:attendance_follow_up' %}" class="nav-item" data-tooltip="Follow-up">
+          <i class="bi bi-flag-fill"></i><span class="ni-label">Attendance Follow-up</span>
+        </a>
+        <a href="{% url 'idcards:gate_scan_log' %}" class="nav-item" data-tooltip="Gate Log">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Gate Scan Log</span>
+        </a>
+        <a href="{% url 'safety:pickup_desk' %}" class="nav-item" data-tooltip="Pickup Desk">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Pickup Desk</span>
+        </a>
+        <a href="{% url 'safety:pickup_log' %}" class="nav-item" data-tooltip="Pickup Log">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Pickup Log</span>
+        </a>
+        <a href="{% url 'users:attendance_settings' %}" class="nav-item" data-tooltip="Attendance Settings">
+          <i class="bi bi-sliders"></i><span class="ni-label">Attendance Settings</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Staff Attendance ── -->
+    <div class="nav-group" id="grp-staff-attendance">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-staff-attendance')">
+        <span class="sec-label">Staff Attendance</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'safety:staff_attendance' %}" class="nav-item" data-tooltip="Staff Attendance">
+          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Attendance Register</span>
+        </a>
+        <a href="{% url 'idcards:reception_qr_page' %}" class="nav-item" data-tooltip="Reception QR">
+          <i class="bi bi-qr-code"></i><span class="ni-label">Clock-in QR Poster</span>
+        </a>
+        <a href="{% url 'idcards:staff_attendance_log' %}" class="nav-item" data-tooltip="Staff Clock">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Clock In/Out Log</span>
+        </a>
+        <a href="{% url 'safety:phone_clock' %}" class="nav-item" data-tooltip="Clock In">
+          <i class="bi bi-fingerprint"></i><span class="ni-label">Clock In (Phone)</span>
+        </a>
+        <a href="{% url 'safety:staff_leave' %}" class="nav-item" data-tooltip="Staff Leave">
+          <i class="bi bi-calendar2-x-fill"></i><span class="ni-label">Staff Leave</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── ID Cards & Safety ── -->
+    <div class="nav-group" id="grp-idcards-safety">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-idcards-safety')">
+        <span class="sec-label">ID Cards &amp; Safety</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'idcards:id_card_directory' %}" class="nav-item" data-tooltip="ID Cards">
+          <i class="bi bi-person-lines-fill"></i><span class="ni-label">ID Card Directory</span>
+        </a>
+        <a href="{% url 'idcards:bulk_print_cards' %}" class="nav-item" data-tooltip="ID Cards">
+          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Print ID Cards</span>
+        </a>
+        <a href="{% url 'safety:lost_cards' %}" class="nav-item" data-tooltip="Lost ID Cards">
+          <i class="bi bi-person-x-fill"></i><span class="ni-label">Lost ID Cards</span>
+        </a>
+        <a href="{% url 'safety:visitor_desk' %}" class="nav-item" data-tooltip="Visitors">
+          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Visitor Desk</span>
+        </a>
+        <a href="{% url 'safety:roll_calls' %}" class="nav-item" data-tooltip="Emergency Roll Call">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">Emergency Roll Call</span>
+        </a>
+        <a href="{% url 'safety:settings' %}" class="nav-item" data-tooltip="Gate Settings">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Gate &amp; Safety Settings</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Courses ── -->
+    <div class="nav-group" id="grp-courses">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-courses')">
+        <span class="sec-label">Courses</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'classroom:teacher_courses' %}" class="nav-item" data-tooltip="My Courses">
+          <i class="bi bi-collection-play-fill"></i><span class="ni-label">My Courses</span>
+        </a>
+      </div>
+    </div>
+
+    {% if user.staff %}
+    <!-- ── Teaching ── -->
+    <div class="nav-group" id="grp-teaching">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-teaching')">
+        <span class="sec-label">Teaching Tools</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'teaching:home' %}" class="nav-item" data-tooltip="My Queue">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">My Queue</span>
+        </a>
+        <a href="{% url 'teaching:class_dashboard' %}" class="nav-item" data-tooltip="My Form Class">
+          <i class="bi bi-people-fill"></i><span class="ni-label">My Form Class</span>
+        </a>
+        <a href="{% url 'teaching:gradebooks' %}" class="nav-item" data-tooltip="Gradebook">
+          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">Gradebook</span>
+        </a>
+        <a href="{% url 'teaching:behaviour' %}" class="nav-item" data-tooltip="Behaviour Points">
+          <i class="bi bi-hand-thumbs-up-fill"></i><span class="ni-label">Behaviour Points</span>
+        </a>
+        <a href="{% url 'teaching:comments' %}" class="nav-item" data-tooltip="Comment Bank">
+          <i class="bi bi-chat-quote-fill"></i><span class="ni-label">Comment Bank</span>
+        </a>
+        <a href="{% url 'teaching:resources' %}" class="nav-item" data-tooltip="Resources">
+          <i class="bi bi-folder-fill"></i><span class="ni-label">Resource Library</span>
+        </a>
+        <a href="{% url 'teaching:picker' %}" class="nav-item" data-tooltip="Name Picker">
+          <i class="bi bi-shuffle"></i><span class="ni-label">Name Picker &amp; Timer</span>
+        </a>
+        <a href="{% url 'teaching:tasks' %}" class="nav-item" data-tooltip="Tasks">
+          <i class="bi bi-check2-square"></i><span class="ni-label">Tasks</span>
+        </a>
+        <a href="{% url 'teaching:duties' %}" class="nav-item" data-tooltip="Duty Roster">
+          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">Duty Roster</span>
+        </a>
+        <a href="{% url 'teaching:handovers' %}" class="nav-item" data-tooltip="Handover Notes">
+          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Handover Notes</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff or user.is_superuser %}
+    <!-- ── Security & privacy ── -->
+    <div class="nav-group" id="grp-security">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-security')">
+        <span class="sec-label">Security &amp; Privacy</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'security:me' %}" class="nav-item" data-tooltip="Sign-in &amp; Security">
+          <i class="bi bi-person-lock"></i><span class="ni-label">My Sign-in &amp; Security</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'security:overview' %}" class="nav-item" data-tooltip="Security Overview">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Security Overview</span>
+        </a>
+        <a href="{% url 'security:roles' %}" class="nav-item" data-tooltip="Roles &amp; Permissions">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Roles &amp; Permissions</span>
+        </a>
+        <a href="{% url 'security:audit' %}" class="nav-item" data-tooltip="Audit Trail">
+          <i class="bi bi-journal-text"></i><span class="ni-label">Audit Trail</span>
+        </a>
+        <a href="{% url 'security:privacy' %}" class="nav-item" data-tooltip="Privacy &amp; NDPA">
+          <i class="bi bi-file-earmark-lock2-fill"></i><span class="ni-label">Privacy &amp; NDPA</span>
+        </a>
+        <a href="{% url 'security:requests' %}" class="nav-item" data-tooltip="Data Requests">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">Data Requests</span>
+        </a>
+        <a href="{% url 'security:breaches' %}" class="nav-item" data-tooltip="Data Breaches">
+          <i class="bi bi-exclamation-octagon-fill"></i><span class="ni-label">Data Breaches</span>
+        </a>
+        <a href="{% url 'security:compliance' %}" class="nav-item" data-tooltip="Compliance Report">
+          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Compliance Report</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff or user.is_superuser %}
+    <!-- ── Administration & help ── -->
+    <div class="nav-group" id="grp-account">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-account')">
+        <span class="sec-label">Administration &amp; Help</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'platform_school:help' %}" class="nav-item" data-tooltip="Help Centre">
+          <i class="bi bi-life-preserver"></i><span class="ni-label">Help Centre</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'platform_school:campuses' %}" class="nav-item" data-tooltip="Sections">
+          <i class="bi bi-buildings-fill"></i><span class="ni-label">Sections</span>
+        </a>
+        <a href="{% url 'platform_school:branding' %}" class="nav-item" data-tooltip="Branding">
+          <i class="bi bi-palette-fill"></i><span class="ni-label">Branding</span>
+        </a>
+        <a href="{% url 'platform_school:data' %}" class="nav-item" data-tooltip="Data Export &amp; Backups">
+          <i class="bi bi-database-fill-down"></i><span class="ni-label">Data Export &amp; Backups</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff %}
+    <!-- ── Facilities ── -->
+    <div class="nav-group" id="grp-facilities">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-facilities')">
+        <span class="sec-label">Facilities &amp; Procurement</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'facilities:home' %}" class="nav-item" data-tooltip="Facilities Overview">
+          <i class="bi bi-building-gear"></i><span class="ni-label">Facilities Overview</span>
+        </a>
+        <a href="{% url 'facilities:maintenance' %}" class="nav-item" data-tooltip="Report a Fault">
+          <i class="bi bi-tools"></i><span class="ni-label">Report a Fault</span>
+        </a>
+        <a href="{% url 'facilities:requisitions' %}" class="nav-item" data-tooltip="Requisitions">
+          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Requisitions</span>
+        </a>
+        <a href="{% url 'facilities:orders' %}" class="nav-item" data-tooltip="Purchase Orders">
+          <i class="bi bi-receipt"></i><span class="ni-label">Purchase Orders</span>
+        </a>
+        <a href="{% url 'facilities:assets' %}" class="nav-item" data-tooltip="Asset Register">
+          <i class="bi bi-qr-code"></i><span class="ni-label">Asset Register</span>
+        </a>
+        <a href="{% url 'facilities:generators' %}" class="nav-item" data-tooltip="Generators &amp; Diesel">
+          <i class="bi bi-lightning-charge-fill"></i><span class="ni-label">Generators &amp; Diesel</span>
+        </a>
+        <a href="{% url 'facilities:utilities' %}" class="nav-item" data-tooltip="Utility Bills">
+          <i class="bi bi-plug-fill"></i><span class="ni-label">Utility Bills</span>
+        </a>
+        <a href="{% url 'facilities:cleaning' %}" class="nav-item" data-tooltip="Cleaning">
+          <i class="bi bi-stars"></i><span class="ni-label">Cleaning</span>
+        </a>
+        <a href="{% url 'facilities:hire' %}" class="nav-item" data-tooltip="Hall Hire">
+          <i class="bi bi-calendar2-event-fill"></i><span class="ni-label">Hall Hire</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff %}
+    <!-- ── Welfare ── -->
+    <div class="nav-group" id="grp-welfare">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-welfare')">
+        <span class="sec-label">Health &amp; Welfare</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'welfare:home' %}" class="nav-item" data-tooltip="Welfare Overview">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Welfare Overview</span>
+        </a>
+        <a href="{% url 'welfare:sick_bay' %}" class="nav-item" data-tooltip="Sick Bay">
+          <i class="bi bi-hospital-fill"></i><span class="ni-label">Sick Bay</span>
+        </a>
+        <a href="{% url 'welfare:emergency' %}" class="nav-item" data-tooltip="Emergency Contacts">
+          <i class="bi bi-telephone-fill"></i><span class="ni-label">Emergency Contacts</span>
+        </a>
+        <a href="{% url 'welfare:incidents' %}" class="nav-item" data-tooltip="Discipline Incidents">
+          <i class="bi bi-flag-fill"></i><span class="ni-label">Discipline Incidents</span>
+        </a>
+        <a href="{% url 'welfare:detentions' %}" class="nav-item" data-tooltip="Detentions">
+          <i class="bi bi-hourglass-split"></i><span class="ni-label">Detentions</span>
+        </a>
+        <a href="{% url 'welfare:accidents' %}" class="nav-item" data-tooltip="Accident Reports">
+          <i class="bi bi-bandaid-fill"></i><span class="ni-label">Accident Reports</span>
+        </a>
+        <a href="{% url 'welfare:safeguarding' %}" class="nav-item" data-tooltip="Safeguarding">
+          <i class="bi bi-shield-fill-exclamation"></i><span class="ni-label">Safeguarding</span>
+        </a>
+        <a href="{% url 'welfare:support' %}" class="nav-item" data-tooltip="Support Plans">
+          <i class="bi bi-person-heart"></i><span class="ni-label">Support Plans</span>
+        </a>
+        <a href="{% url 'welfare:sports' %}" class="nav-item" data-tooltip="Sports &amp; Fitness">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Sports &amp; Fitness</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff %}
+    <!-- ── Library ── -->
+    <div class="nav-group" id="grp-library">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-library')">
+        <span class="sec-label">Library</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'library:home' %}" class="nav-item" data-tooltip="Library">
+          <i class="bi bi-book-half"></i><span class="ni-label">Library</span>
+        </a>
+        <a href="{% url 'library:desk' %}" class="nav-item" data-tooltip="Library Desk">
+          <i class="bi bi-upc-scan"></i><span class="ni-label">Library Desk</span>
+        </a>
+        <a href="{% url 'library:catalogue' %}" class="nav-item" data-tooltip="Catalogue">
+          <i class="bi bi-journals"></i><span class="ni-label">Catalogue</span>
+        </a>
+        <a href="{% url 'library:loans' %}" class="nav-item" data-tooltip="Loans &amp; Fines">
+          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Loans &amp; Fines</span>
+        </a>
+        <a href="{% url 'library:reading' %}" class="nav-item" data-tooltip="Reading Logs">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Reading Logs</span>
+        </a>
+        <a href="{% url 'library:eresources' %}" class="nav-item" data-tooltip="E-library">
+          <i class="bi bi-file-earmark-pdf-fill"></i><span class="ni-label">E-library</span>
+        </a>
+        <a href="{% url 'library:requests' %}" class="nav-item" data-tooltip="Book Requests">
+          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Book Requests</span>
+        </a>
+        <a href="{% url 'library:search' %}" class="nav-item" data-tooltip="Find a Book">
+          <i class="bi bi-search"></i><span class="ni-label">Find a Book</span>
+        </a>
+        <a href="{% url 'library:mine' %}" class="nav-item" data-tooltip="My Library">
+          <i class="bi bi-person-lines-fill"></i><span class="ni-label">My Library</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff %}
+    <!-- ── Transport ── -->
+    <div class="nav-group" id="grp-transport">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-transport')">
+        <span class="sec-label">Transport</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'transport:home' %}" class="nav-item" data-tooltip="Routes">
+          <i class="bi bi-bus-front-fill"></i><span class="ni-label">Routes</span>
+        </a>
+        <a href="{% url 'transport:my_trips' %}" class="nav-item" data-tooltip="Bus Trips">
+          <i class="bi bi-geo-alt-fill"></i><span class="ni-label">Bus Trips</span>
+        </a>
+        <a href="{% url 'transport:fleet' %}" class="nav-item" data-tooltip="Vehicles">
+          <i class="bi bi-truck-front-fill"></i><span class="ni-label">Vehicles</span>
+        </a>
+        <a href="{% url 'transport:crew' %}" class="nav-item" data-tooltip="Drivers">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Drivers</span>
+        </a>
+        <a href="{% url 'transport:fees' %}" class="nav-item" data-tooltip="Transport Fees">
+          <i class="bi bi-cash-coin"></i><span class="ni-label">Transport Fees</span>
+        </a>
+        <a href="{% url 'transport:field_trips' %}" class="nav-item" data-tooltip="Field Trips">
+          <i class="bi bi-signpost-2-fill"></i><span class="ni-label">Field Trips</span>
+        </a>
+        <a href="{% url 'transport:changes' %}" class="nav-item" data-tooltip="Pickup Changes">
+          <i class="bi bi-arrow-repeat"></i><span class="ni-label">Pickup Changes</span>
+        </a>
+        <a href="{% url 'transport:incidents' %}" class="nav-item" data-tooltip="Incidents">
+          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Incidents</span>
+        </a>
+        <a href="{% url 'transport:reports' %}" class="nav-item" data-tooltip="Transport Reports">
+          <i class="bi bi-graph-up"></i><span class="ni-label">Transport Reports</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.staff %}
+    <!-- ── People & HR ── -->
+    <div class="nav-group" id="grp-hr">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-hr')">
+        <span class="sec-label">People &amp; HR</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'hr:directory' %}" class="nav-item" data-tooltip="Staff Directory">
+          <i class="bi bi-person-lines-fill"></i><span class="ni-label">Staff Directory</span>
+        </a>
+        <a href="{% url 'hr:my_hr' %}" class="nav-item" data-tooltip="My HR">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">My HR</span>
+        </a>
+        <a href="{% url 'studentlife:wellbeing' %}" class="nav-item" data-tooltip="Student Wellbeing">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Student Wellbeing</span>
+        </a>
+        <a href="{% url 'family:tickets' %}" class="nav-item" data-tooltip="Parent Feedback">
+          <i class="bi bi-chat-square-text-fill"></i><span class="ni-label">Parent Feedback</span>
+        </a>
+        <a href="{% url 'family:staff_appointments' %}" class="nav-item" data-tooltip="Parent Appointments">
+          <i class="bi bi-calendar-check-fill"></i><span class="ni-label">Parent Appointments</span>
+        </a>
+        <a href="{% url 'family:volunteer_manage' %}" class="nav-item" data-tooltip="Volunteers & PTA">
+          <i class="bi bi-hand-thumbs-up-fill"></i><span class="ni-label">Volunteers &amp; PTA</span>
+        </a>
+        <a href="{% url 'hr:my_reports' %}" class="nav-item" data-tooltip="My Work Reports">
+          <i class="bi bi-journal-text"></i><span class="ni-label">My Work Reports</span>
+        </a>
+        <a href="{% url 'hr:appraisals' %}" class="nav-item" data-tooltip="Appraisals">
+          <i class="bi bi-clipboard2-check-fill"></i><span class="ni-label">Appraisals</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'hr:staff_reports' %}" class="nav-item" data-tooltip="Staff Reports">
+          <i class="bi bi-file-earmark-text-fill"></i><span class="ni-label">Staff Reports</span>
+        </a>
+        <a href="{% url 'hr:people' %}" class="nav-item" data-tooltip="HR Records">
+          <i class="bi bi-people-fill"></i><span class="ni-label">HR Records</span>
+        </a>
+        <a href="{% url 'hr:vacancies' %}" class="nav-item" data-tooltip="Recruitment">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">Recruitment</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.is_superuser %}
+    <!-- ── Finance ── -->
+    <div class="nav-group" id="grp-finance">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-finance')">
+        <span class="sec-label">Finance</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'finance:admin_dashboard' %}" class="nav-item" data-tooltip="Finance Dashboard">
+          <i class="bi bi-cash-coin"></i><span class="ni-label">Finance Dashboard</span>
+        </a>
+        <a href="{% url 'finance:admin_pay_on_behalf' %}" class="nav-item" data-tooltip="Pay for Student">
+          <i class="bi bi-wallet2"></i><span class="ni-label">Pay for Student</span>
+        </a>
+        <a href="{% url 'finance:admin_billing' %}" class="nav-item" data-tooltip="Billing Report">
+          <i class="bi bi-table"></i><span class="ni-label">Billing Report</span>
+        </a>
+        <a href="{% url 'finance:admin_invoices' %}" class="nav-item" data-tooltip="Invoices">
+          <i class="bi bi-receipt"></i><span class="ni-label">Invoices</span>
+        </a>
+        <a href="{% url 'finance:debtors' %}" class="nav-item" data-tooltip="Debtors">
+          <i class="bi bi-telephone-fill"></i><span class="ni-label">Debtors &amp; Follow-up</span>
+        </a>
+        <a href="{% url 'finance:payment_plans' %}" class="nav-item" data-tooltip="Payment Plans">
+          <i class="bi bi-calendar2-check-fill"></i><span class="ni-label">Payment Plans</span>
+        </a>
+        <a href="{% url 'finance:discounts' %}" class="nav-item" data-tooltip="Discounts">
+          <i class="bi bi-tags-fill"></i><span class="ni-label">Discounts &amp; Scholarships</span>
+        </a>
+        <a href="{% url 'finance:late_fees' %}" class="nav-item" data-tooltip="Late Payment Charges">
+          <i class="bi bi-alarm-fill"></i><span class="ni-label">Late Payment Charges</span>
+        </a>
+        <a href="{% url 'finance:refunds' %}" class="nav-item" data-tooltip="Refunds">
+          <i class="bi bi-arrow-counterclockwise"></i><span class="ni-label">Refunds</span>
+        </a>
+        <a href="{% url 'finance:manage_fees' %}" class="nav-item" data-tooltip="Fee Structures">
+          <i class="bi bi-file-earmark-text-fill"></i><span class="ni-label">Fee Structures</span>
+        </a>
+        <a href="{% url 'finance:till' %}" class="nav-item" data-tooltip="Shop &amp; Canteen Till">
+          <i class="bi bi-calculator-fill"></i><span class="ni-label">Shop &amp; Canteen Till</span>
+        </a>
+        <a href="{% url 'finance:sales' %}" class="nav-item" data-tooltip="Sales Report">
+          <i class="bi bi-bar-chart-line-fill"></i><span class="ni-label">Shop Sales</span>
+        </a>
+        <a href="{% url 'finance:manage_items' %}" class="nav-item" data-tooltip="Shop Items">
+          <i class="bi bi-box-seam-fill"></i><span class="ni-label">Shop Items &amp; Stock</span>
+        </a>
+        <a href="{% url 'finance:expenses' %}" class="nav-item" data-tooltip="Expenses">
+          <i class="bi bi-receipt-cutoff"></i><span class="ni-label">Expenses</span>
+        </a>
+        <a href="{% url 'finance:vendors' %}" class="nav-item" data-tooltip="Suppliers">
+          <i class="bi bi-shop"></i><span class="ni-label">Suppliers</span>
+        </a>
+        <a href="{% url 'finance:petty_cash' %}" class="nav-item" data-tooltip="Petty Cash">
+          <i class="bi bi-wallet2"></i><span class="ni-label">Petty Cash</span>
+        </a>
+        <a href="{% url 'finance:budgets' %}" class="nav-item" data-tooltip="Budgets">
+          <i class="bi bi-sliders"></i><span class="ni-label">Budgets</span>
+        </a>
+        <a href="{% url 'finance:bank_reconciliation' %}" class="nav-item" data-tooltip="Bank Reconciliation">
+          <i class="bi bi-bank2"></i><span class="ni-label">Bank Reconciliation</span>
+        </a>
+        <a href="{% url 'finance:income_statement' %}" class="nav-item" data-tooltip="Income & Expenditure">
+          <i class="bi bi-graph-up-arrow"></i><span class="ni-label">Income &amp; Expenditure</span>
+        </a>
+        <a href="{% url 'finance:tax' %}" class="nav-item" data-tooltip="Withholding Tax & VAT">
+          <i class="bi bi-percent"></i><span class="ni-label">Withholding Tax &amp; VAT</span>
+        </a>
+        <a href="{% url 'finance:accounting_export' %}" class="nav-item" data-tooltip="Export for Accountant">
+          <i class="bi bi-journal-arrow-down"></i><span class="ni-label">Export for Accountant</span>
+        </a>
+        <a href="{% url 'payroll:dashboard' %}" class="nav-item" data-tooltip="Payroll">
+          <i class="bi bi-briefcase-fill"></i><span class="ni-label">Payroll</span>
+        </a>
+        <a href="{% url 'payroll:runs' %}" class="nav-item" data-tooltip="Payroll Runs">
+          <i class="bi bi-calculator-fill"></i><span class="ni-label">Payroll Runs</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Hostel ── -->
+    <div class="nav-group" id="grp-hostel">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-hostel')">
+        <span class="sec-label">Hostel</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'hostel:dashboard' %}" class="nav-item" data-tooltip="Hostel Dashboard">
+          <i class="bi bi-house-fill"></i><span class="ni-label">Hostel Dashboard</span>
+        </a>
+        <a href="{% url 'hostel:hostel_list' %}" class="nav-item" data-tooltip="Hostels & Rooms">
+          <i class="bi bi-building"></i><span class="ni-label">Hostels &amp; Rooms</span>
+        </a>
+        <a href="{% url 'hostel:boarder_list' %}" class="nav-item" data-tooltip="Boarders">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Boarders</span>
+        </a>
+        <a href="{% url 'hostel:assign_bed' %}" class="nav-item" data-tooltip="Assign Bed">
+          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Assign Bed</span>
+        </a>
+        <a href="{% url 'hostel:billing' %}" class="nav-item" data-tooltip="Hostel Billing">
+          <i class="bi bi-credit-card-fill"></i><span class="ni-label">Hostel Billing</span>
+        </a>
+        <a href="{% url 'hostel:visitors' %}" class="nav-item" data-tooltip="Visitor Log">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Visitor Log</span>
+        </a>
+        <a href="{% url 'hostel:incidents' %}" class="nav-item" data-tooltip="Incidents">
+          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Incidents</span>
+        </a>
+        <a href="{% url 'hostel:notices' %}" class="nav-item" data-tooltip="Notices">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">Notices</span>
+        </a>
+        <a href="{% url 'hostel:bed_map' %}" class="nav-item" data-tooltip="Bed Map">
+          <i class="bi bi-grid-3x3-gap"></i><span class="ni-label">Bed Map</span>
+        </a>
+        <a href="{% url 'hostel:roll_calls' %}" class="nav-item" data-tooltip="Roll Call & Prep">
+          <i class="bi bi-list-check"></i><span class="ni-label">Roll Call &amp; Prep</span>
+        </a>
+        <a href="{% url 'hostel:exeats' %}" class="nav-item" data-tooltip="Exeats">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Exeats</span>
+        </a>
+        <a href="{% url 'hostel:sick_bay' %}" class="nav-item" data-tooltip="Sick Bay">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Sick Bay</span>
+        </a>
+        <a href="{% url 'hostel:visiting' %}" class="nav-item" data-tooltip="Visiting Days">
+          <i class="bi bi-calendar-heart"></i><span class="ni-label">Visiting Days</span>
+        </a>
+        <a href="{% url 'hostel:meal_plans' %}" class="nav-item" data-tooltip="Meal Plans">
+          <i class="bi bi-egg-fried"></i><span class="ni-label">Meal Plans</span>
+        </a>
+        <a href="{% url 'hostel:analytics' %}" class="nav-item" data-tooltip="Analytics">
+          <i class="bi bi-bar-chart-fill"></i><span class="ni-label">Hostel Analytics</span>
+        </a>
+        <a href="{% url 'hostel:payment_reminders' %}" class="nav-item" data-tooltip="Reminders">
+          <i class="bi bi-bell-fill"></i><span class="ni-label">Payment Reminders</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Communications ── -->
+    <div class="nav-group" id="grp-comms">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-comms')">
+        <span class="sec-label">Communications</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'communications:dashboard' %}" class="nav-item" data-tooltip="Comm Centre">
+          <i class="bi bi-broadcast"></i><span class="ni-label">Comm Centre</span>
+        </a>
+        <a href="{% url 'communications:campaign_create' %}" class="nav-item" data-tooltip="New Campaign">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">New Campaign</span>
+        </a>
+        <a href="{% url 'communications:quick_message' %}" class="nav-item" data-tooltip="Quick Message">
+          <i class="bi bi-chat-dots-fill"></i><span class="ni-label">Quick Message</span>
+        </a>
+        <a href="{% url 'communications:fee_reminders' %}" class="nav-item" data-tooltip="Fee Reminders">
+          <i class="bi bi-cash-coin"></i><span class="ni-label">Fee Reminders</span>
+        </a>
+        <a href="{% url 'communications:hostel_reminders' %}" class="nav-item" data-tooltip="Hostel Reminders">
+          <i class="bi bi-house-fill"></i><span class="ni-label">Hostel Reminders</span>
+        </a>
+        <a href="{% url 'communications:result_notifications' %}" class="nav-item" data-tooltip="Results Notify">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Result Notifications</span>
+        </a>
+        <a href="{% url 'communications:login_notifications' %}" class="nav-item" data-tooltip="Login Details">
+          <i class="bi bi-key-fill"></i><span class="ni-label">Login Details Notify</span>
+        </a>
+        <a href="{% url 'communications:contact_audit' %}" class="nav-item" data-tooltip="Contact Audit">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">Contact Audit</span>
+        </a>
+        <a href="{% url 'communications:template_list' %}" class="nav-item" data-tooltip="Templates">
+          <i class="bi bi-file-text-fill"></i><span class="ni-label">Message Templates</span>
+        </a>
+        <a href="{% url 'communications:test_email' %}" class="nav-item" data-tooltip="Email Config">
+          <i class="bi bi-gear-fill"></i><span class="ni-label">Email/SMS Config</span>
+        </a>
+        <a href="{% url 'announcements:announcement_list' %}" class="nav-item" data-tooltip="Announcements">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Announcements</span>
+        </a>
+        <a href="{% url 'communications:calendar' %}" class="nav-item" data-tooltip="Messages Calendar">
+          <i class="bi bi-calendar3"></i><span class="ni-label">Messages Calendar</span>
+        </a>
+        <a href="{% url 'communications:surveys' %}" class="nav-item" data-tooltip="Surveys & Polls">
+          <i class="bi bi-ui-checks"></i><span class="ni-label">Surveys &amp; Polls</span>
+        </a>
+        <a href="{% url 'communications:consent_manage' %}" class="nav-item" data-tooltip="Consent Forms">
+          <i class="bi bi-pen-fill"></i><span class="ni-label">Consent Forms</span>
+        </a>
+        <a href="{% url 'communications:chat' %}" class="nav-item" data-tooltip="Parent Chat">
+          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Parent Chat</span>
+        </a>
+        <a href="{% url 'communications:inbox' %}" class="nav-item" data-tooltip="Replies Inbox">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">Replies Inbox</span>
+        </a>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'communications:approvals' %}" class="nav-item" data-tooltip="Approvals">
+          <i class="bi bi-check2-circle"></i><span class="ni-label">Message Approvals</span>
+        </a>
+        <a href="{% url 'communications:emergency' %}" class="nav-item" data-tooltip="Emergency Broadcast">
+          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Emergency Broadcast</span>
+        </a>
+        <a href="{% url 'communications:chat_moderate' %}" class="nav-item" data-tooltip="Chat Moderation">
+          <i class="bi bi-shield-check"></i><span class="ni-label">Chat Moderation</span>
+        </a>
+        <a href="{% url 'communications:settings' %}" class="nav-item" data-tooltip="Birthdays & Notice Board">
+          <i class="bi bi-sliders"></i><span class="ni-label">Birthdays &amp; Notice Board</span>
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Inventory ── -->
+    <div class="nav-group" id="grp-inventory">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-inventory')">
+        <span class="sec-label">Inventory</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'inventory:dashboard' %}" class="nav-item" data-tooltip="Inventory Dashboard">
+          <i class="bi bi-box-seam-fill"></i><span class="ni-label">Inventory Dashboard</span>
+        </a>
+        <a href="{% url 'inventory:manage_access' %}" class="nav-item" data-tooltip="Access Control">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Access Control</span>
+        </a>
+        <a href="{% url 'inventory:asset_list' %}" class="nav-item" data-tooltip="All Assets">
+          <i class="bi bi-archive-fill"></i><span class="ni-label">All Assets</span>
+        </a>
+        <a href="{% url 'inventory:stock_in' %}" class="nav-item" data-tooltip="Stock In">
+          <i class="bi bi-box-arrow-in-down"></i><span class="ni-label">Stock In</span>
+        </a>
+        <a href="{% url 'inventory:issue_asset' %}" class="nav-item" data-tooltip="Issue Asset">
+          <i class="bi bi-box-arrow-up"></i><span class="ni-label">Issue Asset</span>
+        </a>
+        <a href="{% url 'inventory:return_asset' %}" class="nav-item" data-tooltip="Return Asset">
+          <i class="bi bi-arrow-return-left"></i><span class="ni-label">Return Asset</span>
+        </a>
+        <a href="{% url 'inventory:stock_ledger' %}" class="nav-item" data-tooltip="Stock Ledger">
+          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">Stock Ledger</span>
+        </a>
+        <a href="{% url 'inventory:assignment_report' %}" class="nav-item" data-tooltip="Assignments">
+          <i class="bi bi-link-45deg"></i><span class="ni-label">Assignments</span>
+        </a>
+        <a href="{% url 'inventory:maintenance_report' %}" class="nav-item" data-tooltip="Maintenance">
+          <i class="bi bi-tools"></i><span class="ni-label">Maintenance</span>
+        </a>
+        <a href="{% url 'inventory:categories_page' %}" class="nav-item" data-tooltip="Categories">
+          <i class="bi bi-tags-fill"></i><span class="ni-label">Categories</span>
+        </a>
+        <a href="{% url 'inventory:locations_page' %}" class="nav-item" data-tooltip="Locations">
+          <i class="bi bi-geo-alt-fill"></i><span class="ni-label">Locations</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}{# end is_superuser blocks #}
+
+    {% endif %}{# end is_superuser or is_staff_user #}
+
+    <!-- ── Student portal ── -->
+    {% if user.is_student %}
+    <div class="nav-group" id="grp-student">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-student')">
+        <span class="sec-label">My Learning</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'classroom:student_courses' %}" class="nav-item" data-tooltip="Courses">
+          <i class="bi bi-collection-play-fill"></i><span class="ni-label">My Courses</span>
+        </a>
+        <a href="{% url 'classroom:my_quiz_results' %}" class="nav-item" data-tooltip="Quiz Results">
+          <i class="bi bi-patch-check-fill"></i><span class="ni-label">My Quiz Results</span>
+        </a>
+        <a href="{% url 'cbt:available_exams' %}" class="nav-item" data-tooltip="Exams">
+          <i class="bi bi-pencil-fill"></i><span class="ni-label">Available Exams</span>
+        </a>
+        <a href="{% url 'results:term_results' %}" class="nav-item" data-tooltip="Results">
+          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">My Term Results</span>
+        </a>
+        <a href="{% url 'cbt:practice' %}" class="nav-item" data-tooltip="Practice">
+          <i class="bi bi-controller"></i><span class="ni-label">Practice &amp; Mock Exams</span>
+        </a>
+        <a href="{% url 'curriculum:family' %}" class="nav-item" data-tooltip="Homework">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Homework &amp; Calendar</span>
+        </a>
+        <a href="{% url 'welfare:mine' %}" class="nav-item" data-tooltip="Wellbeing">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">My Wellbeing</span>
+        </a>
+        <a href="{% url 'library:mine' %}" class="nav-item" data-tooltip="Library">
+          <i class="bi bi-book-half"></i><span class="ni-label">Library &amp; Past Questions</span>
+        </a>
+        <a href="{% url 'idcards:my_id_card' %}" class="nav-item" data-tooltip="ID Card">
+          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">My ID Card</span>
+        </a>
+        <a href="{% url 'timetable:calendar_sync' %}" class="nav-item" data-tooltip="Calendar Sync">
+          <i class="bi bi-calendar-plus-fill"></i><span class="ni-label">Timetable on My Phone</span>
+        </a>
+        <a href="{% url 'assistant:essay' %}" class="nav-item" data-tooltip="Essay Feedback">
+          <i class="bi bi-pencil-square"></i><span class="ni-label">Essay Feedback</span>
+        </a>
+        <a href="{% url 'studentlife:hub' %}" class="nav-item" data-tooltip="My School Life">
+          <i class="bi bi-stars"></i><span class="ni-label">My School Life</span>
+        </a>
+        <a href="{% url 'studentlife:checkin' %}" class="nav-item" data-tooltip="Check-in">
+          <i class="bi bi-emoji-smile"></i><span class="ni-label">How I Feel</span>
+        </a>
+        <a href="{% url 'studentlife:report' %}" class="nav-item" data-tooltip="Report Bullying">
+          <i class="bi bi-shield-exclamation"></i><span class="ni-label">Report Bullying</span>
+        </a>
+        <a href="{% url 'assistant:my_plan' %}" class="nav-item" data-tooltip="Study Plan">
+          <i class="bi bi-calendar2-week-fill"></i><span class="ni-label">My Study Plan</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Parent portal ── -->
+    {% if user.is_parent %}
+    <div class="nav-group" id="grp-parent">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-parent')">
+        <span class="sec-label">My Child</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="{% url 'finance:parent_wallet' %}" class="nav-item" data-tooltip="Wallet">
+          <i class="bi bi-wallet2"></i><span class="ni-label">My Wallet</span>
+        </a>
+        <a href="{% url 'results:term_results' %}" class="nav-item" data-tooltip="Results">
+          <i class="bi bi-bar-chart-fill"></i><span class="ni-label">View Results</span>
+        </a>
+        <a href="{% url 'curriculum:family' %}" class="nav-item" data-tooltip="Homework">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Homework &amp; Calendar</span>
+        </a>
+        <a href="{% url 'announcements:announcement_list' %}" class="nav-item" data-tooltip="Announcements">
+          <i class="bi bi-bell-fill"></i><span class="ni-label">Announcements</span>
+        </a>
+        <a href="{% url 'assistant:my_plan' %}" class="nav-item" data-tooltip="Study Plan">
+          <i class="bi bi-calendar2-week-fill"></i><span class="ni-label">Study Plan</span>
+        </a>
+        <a href="{% url 'timetable:family_extras' %}" class="nav-item" data-tooltip="After-school Lessons">
+          <i class="bi bi-moon-stars-fill"></i><span class="ni-label">After-school Lessons</span>
+        </a>
+        <a href="{% url 'timetable:parent_meetings' %}" class="nav-item" data-tooltip="Meet the Teachers">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Meet the Teachers</span>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>{# end nav-scroll #}
+  <div class="sb-empty" id="navEmpty">No menu items match.</div>
+
+  <div class="sb-user">
+    <div class="sb-avatar">{{ user.username|slice:":1"|upper }}</div>
+    <div class="sb-user-info">
+      <div class="sb-user-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="sb-user-role">
+        {% if user.is_superuser %}Super Admin
+        {% elif user.is_staff_user %}Staff
+        {% elif user.is_student %}Student
+        {% elif user.is_parent %}Parent
+        {% else %}User{% endif %}
+      </div>
+    </div>
+    <a href="{% url 'users:user_logout' %}" class="sb-logout" title="Logout" aria-label="Logout">
+      <i class="bi bi-box-arrow-right"></i>
+    </a>
+  </div>
+</aside>
+
+<div class="overlay" id="overlay"></div>
+
+<!-- ═════════════════════════════════════════════════════════
+     MAIN
+═════════════════════════════════════════════════════════ -->
+<div class="main" id="main">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <button id="mobileMenuBtn" aria-label="Open menu"><i class="bi bi-list"></i></button>
+      <div class="topbar-breadcrumb">
+        <a href="{% url 'dashboard:router' %}" class="crumb-home" aria-label="Dashboard"><i class="bi bi-house-door-fill"></i></a>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-group" id="crumbGroup"></span>
+        <strong id="crumbPage">{% block breadcrumb %}{{ tenant.name }}{% endblock %}</strong>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button type="button" class="cmd-trigger" id="cmdTrigger" aria-label="Search pages">
+        <i class="bi bi-search"></i><span>Jump to a page…</span><kbd id="cmdKey">Ctrl K</kbd>
+      </button>
+      {% if active_term %}
+      <span class="topbar-pill"><span class="dot"></span>{{ active_term.name }}</span>
+      {% endif %}
+      {% if user.is_authenticated %}
+      {% include "notifications/_bell.html" %}
+      <div class="user-menu" id="userMenu">
+        <button type="button" class="user-btn" id="userBtn" aria-haspopup="true" aria-expanded="false">
+          <div class="topbar-avatar">{{ user.username|slice:":1"|upper }}</div>
+          <span class="topbar-name-wrap">
+            <span class="topbar-name">{{ user.get_full_name|default:user.username }}</span>
+            <span class="topbar-role">
+              {% if user.is_superuser %}Super Admin{% elif user.is_staff_user %}Staff{% elif user.is_student %}Student{% elif user.is_parent %}Parent{% else %}User{% endif %}
+            </span>
+          </span>
+          <i class="bi bi-chevron-down"></i>
+        </button>
+        <div class="user-dropdown" role="menu">
+          <div class="ud-head">
+            <b>{{ user.get_full_name|default:user.username }}</b>
+            <small>@{{ user.username }}</small>
+          </div>
+          <a href="{% url 'dashboard:router' %}" class="ud-item" role="menuitem"><i class="bi bi-grid-1x2"></i> Dashboard</a>
+          {% if user.is_staff_user or user.is_student %}
+          <a href="{% url 'idcards:my_id_card' %}" class="ud-item" role="menuitem"><i class="bi bi-person-vcard"></i> My ID Card</a>
+          {% endif %}
+          {% if user.is_superuser %}
+          <a href="/settings/" class="ud-item" role="menuitem"><i class="bi bi-gear"></i> School Settings</a>
+          {% endif %}
+          <a href="{% url 'users:user_logout' %}" class="ud-item danger" role="menuitem"><i class="bi bi-box-arrow-right"></i> Logout</a>
+        </div>
+      </div>
+      <a href="{% url 'users:user_logout' %}" class="topbar-logout">Logout</a>
+      {% endif %}
+    </div>
+  </header>
+
+
+  <main class="content-area" id="content">
+    {% if messages %}
+    <div class="dashboard-messages">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="status">
+        <i class="bi
+          {% if message.tags == 'success' %}bi-check-circle-fill
+          {% elif message.tags == 'error'   %}bi-exclamation-circle-fill
+          {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
+          {% else %}bi-info-circle-fill{% endif %}"></i>
+        <span>{{ message }}</span>
+        <button type="button" class="alert-close" aria-label="Dismiss"><i class="bi bi-x-lg"></i></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+</div>{# end .main #}
+</div>{# end .app #}
+
+<div class="sb-tip" id="sbTip" aria-hidden="true"></div>
+<button type="button" class="to-top" id="toTop" aria-label="Back to top"><i class="bi bi-arrow-up"></i></button>
+
+<!-- Command palette -->
+<div class="cmdk" id="cmdk" aria-hidden="true">
+  <div class="cmdk-box" role="dialog" aria-label="Jump to a page">
+    <div class="cmdk-input">
+      <i class="bi bi-search"></i>
+      <input type="text" id="cmdkInput" placeholder="Search pages — e.g. results, fees, hostel…" autocomplete="off">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function () {
+  var sidebar   = document.getElementById('sidebar');
+  var toggleBtn = document.getElementById('sidebarToggle');
+  var mobileBtn = document.getElementById('mobileMenuBtn');
+  var overlay   = document.getElementById('overlay');
+  var body      = document.body;
+  var T         = '{{ tenant.subdomain }}';
+  var SKEY      = 'sb_collapsed_' + T;
+  function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* Wrap each group's links so the open/close can animate height */
+  document.querySelectorAll('.group-items').forEach(function (g) {
+    var inner = document.createElement('div');
+    inner.className = 'group-inner';
+    while (g.firstChild) inner.appendChild(g.firstChild);
+    g.appendChild(inner);
+  });
+
+  /* Sidebar collapse (desktop) */
+  if (get(SKEY) === '1') body.classList.add('sb-collapsed');
+  if (toggleBtn) toggleBtn.addEventListener('click', function () {
+    body.classList.toggle('sb-collapsed');
+    set(SKEY, body.classList.contains('sb-collapsed') ? '1' : '0');
+  });
+
+  /* Mobile drawer */
+  function closeMobile() { sidebar.classList.remove('visible'); overlay.classList.remove('active'); }
+  if (mobileBtn) mobileBtn.addEventListener('click', function () { sidebar.classList.add('visible'); overlay.classList.add('active'); });
+  overlay.addEventListener('click', closeMobile);
+  window.addEventListener('resize', function () { if (window.innerWidth >= 992) closeMobile(); });
+
+  /* Section groups */
+  window.toggleGroup = function (id) {
+    var grp = document.getElementById(id);
+    if (!grp) return;
+    grp.classList.toggle('closed');
+    set('grp_' + id + '_' + T, grp.classList.contains('closed') ? '0' : '1');
+  };
+  document.querySelectorAll('.nav-group').forEach(function (grp) {
+    if (get('grp_' + grp.id + '_' + T) === '0') grp.classList.add('closed');
+  });
+
+  /* Active item: longest matching href wins */
+  var navScroll = document.querySelector('.nav-scroll');
+  var SCROLL_KEY = 'sb_scroll_' + T;
+  var path = window.location.pathname, best = null, bestLen = 0;
+  document.querySelectorAll('.nav-item').forEach(function (a) {
+    var href = a.getAttribute('href') || '';
+    if (href && href !== '#' && href !== '/' && path.indexOf(href) === 0 && href.length > bestLen) { best = a; bestLen = href.length; }
+    if (href === '/' && path === '/') { best = a; bestLen = 1; }
+  });
+  if (best) {
+    best.classList.add('active');
+    var g = best.closest('.nav-group');
+    if (g) g.classList.remove('closed');
+  }
+  /* Breadcrumb: if the page didn't set one, show "Section / Page" from the menu */
+  var crumbPage = document.getElementById('crumbPage'), crumbGroup = document.getElementById('crumbGroup');
+  if (best && crumbPage && crumbPage.textContent.trim() === document.querySelector('.brand-name').textContent.trim()) {
+    var grpLabel = best.closest('.nav-group') && best.closest('.nav-group').querySelector('.sec-label');
+    crumbPage.textContent = (best.querySelector('.ni-label') || best).textContent.trim();
+    if (grpLabel) crumbGroup.innerHTML = grpLabel.textContent.trim() + ' <span class="crumb-sep">/</span>';
+  }
+  var savedScroll = parseInt(get(SCROLL_KEY) || '0', 10);
+  if (navScroll && savedScroll) navScroll.scrollTop = savedScroll;
+  else if (best && navScroll) setTimeout(function () { navScroll.scrollTop = Math.max(0, best.offsetTop - navScroll.offsetHeight / 2); }, 60);
+  document.querySelectorAll('.nav-item').forEach(function (a) {
+    a.addEventListener('click', function () { if (navScroll) set(SCROLL_KEY, navScroll.scrollTop); });
+  });
+  document.querySelectorAll('a[href*="logout"]').forEach(function (a) {
+    a.addEventListener('click', function () { try { localStorage.removeItem(SCROLL_KEY); } catch (e) {} });
+  });
+
+  /* Tooltips for the collapsed sidebar */
+  var tip = document.getElementById('sbTip');
+  document.querySelectorAll('.nav-item').forEach(function (a) {
+    a.addEventListener('mouseenter', function () {
+      if (!body.classList.contains('sb-collapsed') || window.innerWidth < 992) return;
+      var r = a.getBoundingClientRect();
+      tip.textContent = a.getAttribute('data-tooltip') || a.textContent.trim();
+      tip.style.left = (r.right + 12) + 'px'; tip.style.top = (r.top + r.height / 2) + 'px';
+      tip.classList.add('show');
+    });
+    a.addEventListener('mouseleave', function () { tip.classList.remove('show'); });
+  });
+
+  /* Sidebar search filter */
+  var navSearch = document.getElementById('navSearch'), navEmpty = document.getElementById('navEmpty');
+  if (navSearch) navSearch.addEventListener('input', function () {
+    var q = navSearch.value.trim().toLowerCase(), any = false;
+    document.querySelectorAll('.nav-group').forEach(function (grp) {
+      var hits = 0;
+      grp.querySelectorAll('.nav-item').forEach(function (a) {
+        var match = !q || a.textContent.toLowerCase().indexOf(q) > -1;
+        a.classList.toggle('hidden-by-search', !match);
+        if (match) hits++;
+      });
+      grp.classList.toggle('hidden-by-search', hits === 0);
+      if (q && hits) grp.classList.remove('closed');
+      if (hits) any = true;
+    });
+    navEmpty.style.display = any ? 'none' : 'block';
+  });
+
+  /* User dropdown */
+  var userMenu = document.getElementById('userMenu'), userBtn = document.getElementById('userBtn');
+  if (userBtn) {
+    userBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = userMenu.classList.toggle('open');
+      userBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+      if (!userMenu.contains(e.target)) { userMenu.classList.remove('open'); userBtn.setAttribute('aria-expanded', 'false'); }
+    });
+  }
+
+  /* Messages: dismiss + auto-hide successes */
+  function dismiss(al) { al.classList.add('leaving'); setTimeout(function () { al.remove(); }, 420); }
+  document.querySelectorAll('.dashboard-messages .alert').forEach(function (al) {
+    var btn = al.querySelector('.alert-close');
+    if (btn) btn.addEventListener('click', function () { dismiss(al); });
+    if (al.classList.contains('alert-success') || al.classList.contains('alert-info')) {
+      var t = document.createElement('span'); t.className = 'alert-timer'; al.appendChild(t);
+      var timer = setTimeout(function () { dismiss(al); }, 6000);
+      al.addEventListener('mouseenter', function () { clearTimeout(timer); t.style.animationPlayState = 'paused'; });
+    }
+  });
+
+  /* Back to top */
+  var toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', function () { toTop.classList.toggle('show', window.scrollY > 500); }, { passive: true });
+  toTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+
+  /* Page progress bar on navigation */
+  var bar = document.getElementById('pageProgress');
+  function startProgress() { bar.style.opacity = '1'; bar.style.width = '70%'; }
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank') return;
+    var href = a.getAttribute('href');
+    if (!href || href.charAt(0) === '#' || href.indexOf('javascript:') === 0 || href.indexOf('mailto:') === 0 || a.hasAttribute('download')) return;
+    startProgress();
+  });
+  document.addEventListener('submit', function (e) { if (!e.defaultPrevented) startProgress(); });
+  window.addEventListener('pageshow', function () { bar.style.width = '0'; bar.style.opacity = '0'; });
+
+  /* Command palette */
+  var cmdk = document.getElementById('cmdk'), cmdInput = document.getElementById('cmdkInput'),
+      cmdList = document.getElementById('cmdkList'), trigger = document.getElementById('cmdTrigger'), sel = 0, shown = [];
+  var isMac = /Mac|iPhone|iPad/.test(navigator.platform || '');
+  document.getElementById('cmdKey').textContent = isMac ? '⌘ K' : 'Ctrl K';
+  var pages = [];
+  document.querySelectorAll('.nav-group').forEach(function (grp) {
+    var label = (grp.querySelector('.sec-label') || {}).textContent || '';
+    grp.querySelectorAll('.nav-item').forEach(function (a) {
+      var ic = a.querySelector('i');
+      pages.push({ group: label.trim(), label: (a.querySelector('.ni-label') || a).textContent.trim(), href: a.getAttribute('href'), icon: ic ? ic.className : 'bi bi-link-45deg' });
+    });
+  });
+  function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function render() {
+    var q = cmdInput.value.trim().toLowerCase();
+    shown = pages.filter(function (p) { return !q || (p.label + ' ' + p.group).toLowerCase().indexOf(q) > -1; });
+    if (!shown.length) { cmdList.innerHTML = '<div class="cmdk-empty">No pages match “' + esc(cmdInput.value) + '”</div>'; return; }
+    sel = Math.min(sel, shown.length - 1);
+    var html = '', last = null;
+    shown.forEach(function (p, i) {
+      if (p.group !== last) { html += '<div class="cmdk-group">' + esc(p.group) + '</div>'; last = p.group; }
+      html += '<a class="cmdk-item' + (i === sel ? ' sel' : '') + '" data-i="' + i + '" href="' + esc(p.href) + '"><i class="' + esc(p.icon) + '"></i>' + esc(p.label) + '<span class="go bi bi-arrow-return-left"></span></a>';
+    });
+    cmdList.innerHTML = html;
+    var s = cmdList.querySelector('.sel'); if (s) s.scrollIntoView({ block: 'nearest' });
+  }
+  function openCmd() { cmdk.classList.add('open'); cmdk.setAttribute('aria-hidden', 'false'); cmdInput.value = ''; sel = 0; render(); setTimeout(function () { cmdInput.focus(); }, 30); }
+  function closeCmd() { cmdk.classList.remove('open'); cmdk.setAttribute('aria-hidden', 'true'); }
+  trigger.addEventListener('click', openCmd);
+  cmdk.addEventListener('click', function (e) { if (e.target === cmdk) closeCmd(); });
+  cmdInput.addEventListener('input', function () { sel = 0; render(); });
+  cmdList.addEventListener('mousemove', function (e) {
+    var it = e.target.closest('.cmdk-item'); if (!it) return;
+    var i = +it.getAttribute('data-i'); if (i !== sel) { sel = i; cmdList.querySelectorAll('.cmdk-item').forEach(function (x) { x.classList.toggle('sel', +x.getAttribute('data-i') === sel); }); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); cmdk.classList.contains('open') ? closeCmd() : openCmd(); return; }
+    if (!cmdk.classList.contains('open')) return;
+    if (e.key === 'Escape') { closeCmd(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(sel + 1, shown.length - 1); render(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(sel - 1, 0); render(); }
+    else if (e.key === 'Enter' && shown[sel]) { e.preventDefault(); startProgress(); window.location.href = shown[sel].href; }
+  });
+})();
+</script>
+
+{% block extra_js %}{% endblock %}
+<script>
+/* Export any table (F191): every .tbl table with a few rows gets small Excel/CSV and Print buttons.
+   Pages with their own server-side export (class "exp") or tables marked data-no-export are left alone. */
+(function () {
+  if (document.querySelector('.exp')) return;
+  function cell(td) { return (td.innerText || '').replace(/\s+/g, ' ').trim(); }
+  function rows(t) {
+    return Array.prototype.map.call(t.querySelectorAll('tr'), function (tr) {
+      return Array.prototype.filter.call(tr.children, function (c) { return !c.querySelector('form,button'); }).map(cell);
+    }).filter(function (r) { return r.join('') !== ''; });
+  }
+  function save(name, mime, text) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + text], {type: mime}));
+    a.download = name; document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function csv(r) { return r.map(function (row) { return row.map(function (v) { return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }).join(','); }).join('\r\n'); }
+  function xls(r) {
+    var esc = function (v) { return v.replace(/&/g, '&amp;').replace(/</g, '&lt;'); };
+    return '<html><head><meta charset="utf-8"></head><body><table>' + r.map(function (row, i) {
+      return '<tr>' + row.map(function (v) { return (i ? '<td>' : '<th>') + esc(v) + (i ? '</td>' : '</th>'); }).join('') + '</tr>';
+    }).join('') + '</table></body></html>';
+  }
+  var title = (document.title || 'table').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'table';
+  document.querySelectorAll('table.tbl').forEach(function (t, n) {
+    if (t.dataset.noExport !== undefined || t.querySelectorAll('tbody tr').length < 2) return;
+    var bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:.3rem;justify-content:flex-end;padding:.35rem .6rem 0';
+    [['Excel', function () { save(title + (n ? '-' + n : '') + '.xls', 'application/vnd.ms-excel', xls(rows(t))); }],
+     ['CSV', function () { save(title + (n ? '-' + n : '') + '.csv', 'text/csv', csv(rows(t))); }],
+     ['Print', function () { window.print(); }]].forEach(function (b) {
+      var btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = b[0]; btn.onclick = b[1];
+      btn.style.cssText = 'font:inherit;font-size:.7rem;padding:.2rem .55rem;border-radius:7px;border:1px solid var(--rim2,#444);background:transparent;color:var(--slate2,#aaa);cursor:pointer';
+      bar.appendChild(btn);
+    });
+    var box = t.closest('[style*="overflow"]') || t;
+    box.parentNode.insertBefore(bar, box);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ b.title }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library{% if b.subject %} · {{ b.subject }}{% endif %}</div>
+  <h1 class="fin-title"><em>{{ b.title }}</em></h1>
+  <p class="fin-sub">{{ b.authors }}{% if b.publisher %} · {{ b.publisher }}{% endif %}{% if b.year %} · {{ b.year }}{% endif %} · {{ b.get_level_display }}</p>
+</div></div>
+{% include "library/_usernav.html" %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-b" style="display:flex;gap:1rem;flex-wrap:wrap">
+    {% if b.cover_url %}<img src="{{ b.cover_url }}" alt="" style="width:130px;border-radius:10px">{% endif %}
+    <div style="flex:1;min-width:200px">{% if b.description %}<p>{{ b.description|linebreaksbr }}</p>{% endif %}
+      {% for r in avail.rows %}<p style="margin:.2rem 0"><b>{{ r.branch|default:"Library" }}</b>: {{ r.in }} of {{ r.total }} on the shelf{% if r.shelves %} · shelf {{ r.shelves|join:", " }}{% endif %}</p>{% empty %}<p class="hint">No copies yet.</p>{% endfor %}
+      {% if avail.next_due %}<p class="hint">Next copy due back {{ avail.next_due|date:"j M" }}{% if avail.queue %} · {{ avail.queue }} waiting{% endif %}</p>{% endif %}</div>
+  </div></div>
+  {% if can_reserve %}<form method="post" class="panel" style="padding:1.2rem">{% csrf_token %}
+    <h3 style="margin:0 0 .6rem">Reserve</h3>
+    <p class="hint">If all copies are out, reserve it. You will get a message when it is waiting at the desk.</p>
+    <button class="fin-btn fin-btn-gold" type="submit">Reserve this book</button>
+  </form>{% endif %}
+</div>
+{% endblock %}

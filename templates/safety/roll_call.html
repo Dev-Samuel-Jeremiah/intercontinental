@@ -1,0 +1,111 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ roll.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  /* Nothing may cover the marking buttons during an emergency. */
+  #waFloatBtn,.wa-float-btn,.wa-float-wrap{display:none!important}
+  .rc-filter label{white-space:nowrap}
+  .rc-board{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;margin-bottom:1rem}
+  @media(max-width:700px){.rc-board{grid-template-columns:repeat(2,1fr)}}
+  .rc-n{padding:1rem;border-radius:16px;border:1px solid var(--rim2);text-align:center}
+  .rc-n b{display:block;font-family:'Cormorant Garamond',serif;font-size:2.4rem;line-height:1}
+  .rc-n small{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--slate2)}
+  .rc-n.un{border-color:var(--red-border);background:var(--red-dim)} .rc-n.un b{color:var(--red)}
+  .rc-n.safe b{color:var(--green)} .rc-n.hurt b{color:var(--amber)}
+  .rc-filter{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.7rem}
+  .rc-filter input{flex:1 1 220px;padding:.7rem .9rem;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit}
+  .rc-group h4{margin:1rem 0 .4rem;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--slate2)}
+  .rc-row{display:flex;justify-content:space-between;gap:.6rem;align-items:center;padding:.55rem .7rem;border-radius:12px;border:1px solid var(--rim);margin-bottom:.35rem;background:rgba(255,255,255,.015)}
+  .rc-row[data-status="SAFE"]{border-color:var(--green-border);background:var(--green-dim)}
+  .rc-row[data-status="INJURED"]{border-color:var(--amber-border);background:var(--amber-dim)}
+  .rc-row[data-status="MISSING"]{border-color:var(--red-border);background:var(--red-dim)}
+  .rc-row b{color:var(--white);font-size:.92rem}
+  .rc-btns{display:flex;gap:.3rem;flex:none}
+  .rc-btns button{border:1px solid var(--rim2);background:rgba(0,0,0,.25);color:var(--white);border-radius:10px;padding:.5rem .75rem;font:inherit;font-size:.8rem;font-weight:600;cursor:pointer}
+  .rc-btns .s{border-color:var(--green-border);color:var(--green)}
+  .rc-btns .h{border-color:var(--amber-border);color:var(--amber)}
+  .rc-btns .m{border-color:var(--red-border);color:var(--red)}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety · {{ roll.get_kind_display }}</div>
+  <h1 class="fin-title">{{ roll.title }}</h1>
+  <p class="fin-sub">Started {{ roll.started_at|time:"H:i" }}{% if roll.assembly_point %} · assemble at {{ roll.assembly_point }}{% endif %} · <span id="rc-clock"></span>{% if not roll.is_open %} · ended {{ roll.ended_at|time:"H:i" }}{% endif %}</p>
+</div>
+{% if roll.is_open %}<form method="post" onsubmit="return confirm('End the roll call? {{ counts.UNACCOUNTED }} still unaccounted for.')">{% csrf_token %}<input type="hidden" name="action" value="end">
+  <input name="note" placeholder="Note (optional)" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <button class="fin-btn fin-btn-danger" type="submit"><i class="bi bi-stop-fill"></i> End roll call</button></form>{% endif %}</div>
+
+<div class="rc-board">
+  <div class="rc-n un"><b id="n-UNACCOUNTED">{{ counts.UNACCOUNTED }}</b><small>Unaccounted</small></div>
+  <div class="rc-n safe"><b id="n-SAFE">{{ counts.SAFE }}</b><small>Safe</small></div>
+  <div class="rc-n hurt"><b id="n-INJURED">{{ counts.INJURED }}</b><small>Hurt</small></div>
+  <div class="rc-n"><b id="n-MISSING" style="color:var(--red)">{{ counts.MISSING }}</b><small>Missing</small></div>
+</div>
+<p class="hint">{{ total }} expected · {{ absent_today }} absent today and {{ left_early }} collected earlier are not on the list.{% if roll.note %} · {{ roll.note }}{% endif %}</p>
+
+<div class="rc-filter">
+  <input id="rc-find" placeholder="Find a name…" autocomplete="off">
+  <label class="hint" style="display:flex;gap:.4rem;align-items:center"><input type="checkbox" id="rc-only" checked style="width:auto"> Only unaccounted</label>
+</div>
+<div id="rc-list">
+  {% regroup people by group as groups %}
+  {% for g in groups %}<div class="rc-group"><h4>{{ g.grouper }}</h4>
+    {% for p in g.list %}
+    <div class="rc-row" data-key="{{ p.type }}-{{ p.id }}" data-status="{{ p.status }}" data-name="{{ p.name|lower }}">
+      <div><b>{{ p.name }}</b><div class="hint rc-state">{% if p.status == 'UNACCOUNTED' %}not yet seen{% else %}{{ p.status|lower }}{% endif %}</div></div>
+      {% if roll.is_open %}<div class="rc-btns" data-type="{{ p.type }}" data-id="{{ p.id }}">
+        <button class="s" data-status="SAFE"><i class="bi bi-check-lg"></i> Safe</button>
+        <button class="h" data-status="INJURED">Hurt</button>
+        <button class="m" data-status="MISSING">Missing</button></div>{% endif %}
+    </div>{% endfor %}</div>
+  {% endfor %}
+</div>
+<script>
+(function () {
+  var open = {{ roll.is_open|yesno:"true,false" }}, started = new Date('{{ roll.started_at|date:"c" }}');
+  var clock = document.getElementById('rc-clock'), find = document.getElementById('rc-find'), only = document.getElementById('rc-only');
+  var endAt = {% if roll.ended_at %}new Date('{{ roll.ended_at|date:"c" }}'){% else %}null{% endif %};
+  function tick() { var s = Math.max(0, Math.floor(((endAt || new Date()) - started) / 1000)); clock.textContent = Math.floor(s / 60) + 'm ' + (s % 60) + 's'; }
+  tick(); if (open) setInterval(tick, 1000);
+  function filter() {
+    var q = find.value.trim().toLowerCase();
+    document.querySelectorAll('.rc-row').forEach(function (r) {
+      var show = (!q || r.dataset.name.indexOf(q) > -1) && (!only.checked || r.dataset.status === 'UNACCOUNTED' || r.dataset.status === 'MISSING' || q);
+      r.style.display = show ? '' : 'none';
+    });
+    document.querySelectorAll('.rc-group').forEach(function (g) {
+      g.style.display = Array.prototype.some.call(g.querySelectorAll('.rc-row'), function (r) { return r.style.display !== 'none'; }) ? '' : 'none';
+    });
+  }
+  find.addEventListener('input', filter); only.addEventListener('change', filter); filter();
+  function counts(c) { Object.keys(c).forEach(function (k) { var el = document.getElementById('n-' + k); if (el) el.textContent = c[k]; }); }
+  function setRow(key, status) {
+    var row = document.querySelector('.rc-row[data-key="' + key + '"]'); if (!row) return;
+    row.dataset.status = status;
+    row.querySelector('.rc-state').textContent = status === 'UNACCOUNTED' ? 'not yet seen' : status.toLowerCase();
+  }
+  document.querySelectorAll('.rc-btns button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var box = b.parentElement, data = new FormData();
+      data.append('action', 'mark'); data.append('type', box.dataset.type); data.append('id', box.dataset.id);
+      data.append('status', b.dataset.status); data.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+      setRow(box.dataset.type + '-' + box.dataset.id, b.dataset.status);
+      fetch('', {method: 'POST', body: data, credentials: 'same-origin', headers: {'X-Requested-With': 'fetch'}})
+        .then(function (r) { return r.json(); }).then(function (res) { if (res.ok) counts(res.counts); setTimeout(filter, 400); });
+    });
+  });
+  if (open) {
+    // Other staff are marking too: pull everyone's marks every few seconds.
+    setInterval(function () {
+      fetch('?format=json', {credentials: 'same-origin'}).then(function (r) { return r.json(); }).then(function (res) {
+        counts(res.counts);
+        res.people.forEach(function (p) { setRow(p.type + '-' + p.id, p.status); });
+        if (!res.open) location.reload();
+        filter();
+      }).catch(function () {});
+    }, 5000);
+  }
+})();
+</script>
+{% endblock %}

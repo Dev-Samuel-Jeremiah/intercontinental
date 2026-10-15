@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Room inspections{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Hostel</div>
+  <h1 class="fin-title">Room <em>inspections</em>{% if h %} — {{ h.name }}{% endif %}</h1>
+  <p class="fin-sub">Score each room from 1 to 5 on each point. The league shows the best-kept rooms over the last 90 days.</p>
+</div>{% include "hostel/boarding/_hostel_pick.html" %}</div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <div><label>Room</label><select name="room" required>{% for r in rooms %}<option value="{{ r.pk }}">Room {{ r.room_number }}</option>{% endfor %}</select></div>
+    <table class="tbl" data-no-export><tbody>{% for i, c in criteria %}<tr><td>{{ c }}</td><td>{% for n in scale %}<label class="pill"><input type="radio" name="s{{ i }}" value="{{ n }}" required> {{ n }}</label>{% endfor %}</td></tr>{% endfor %}</tbody></table>
+    <div><label>Note</label><input name="note" maxlength="255"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save inspection</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Room league</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>{% for r in league %}<tr><td><b>{{ forloop.counter }}</b></td><td class="name">Room {{ r.room_number }}</td><td>{{ r.avg|floatformat:1 }}%</td><td><small class="hint">{{ r.n }} inspection{{ r.n|pluralize }}</small></td></tr>{% empty %}<tr><td class="empty">No inspections yet.</td></tr>{% endfor %}</tbody></table></div></div>
+    <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b">{% for i in recent %}<p style="margin:.25rem 0">{{ i.date|date:"j M" }} — Room {{ i.room.room_number }}: <b>{{ i.total }}%</b>{% if i.note %} <small class="hint">{{ i.note }}</small>{% endif %}</p>{% empty %}<p class="empty">None.</p>{% endfor %}</div></div>
+  </div>
+</div>
+{% endblock %}

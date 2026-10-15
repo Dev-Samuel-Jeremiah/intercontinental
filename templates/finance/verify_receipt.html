@@ -1,0 +1,23 @@
+{% extends "partials/status_base.html" %}
+{% block title %}{% if payment %}Receipt verified{% else %}Receipt not found{% endif %}{% endblock %}
+{% block tone %}{% if payment %}tone-green{% else %}tone-red{% endif %}{% endblock %}
+{% block body %}
+{% if payment %}
+<div class="icon"><i class="bi bi-patch-check-fill"></i></div>
+<div class="eyebrow">Receipt verified</div>
+<h1>This receipt is <em>genuine</em></h1>
+<p>Issued by {{ payment.wallet.student.tenant.name }} and recorded in their system.</p>
+<div class="detail">
+  <div><i class="bi bi-hash"></i> Reference <strong style="color:var(--text);margin-left:auto">{{ payment.reference }}</strong></div>
+  <div><i class="bi bi-person"></i> Student <strong style="color:var(--text);margin-left:auto">{{ payment.wallet.student.full_name }}</strong></div>
+  <div><i class="bi bi-cash"></i> Amount <strong style="color:var(--text);margin-left:auto">₦{{ payment.amount|floatformat:"2g" }}</strong></div>
+  <div><i class="bi bi-calendar3"></i> Date <strong style="color:var(--text);margin-left:auto">{% if payment.approved_at %}{{ payment.approved_at|date:"j F Y" }}{% else %}{{ payment.created_at|date:"j F Y" }}{% endif %}</strong></div>
+</div>
+<p class="help">If any detail differs from the printed receipt, contact the school office.</p>
+{% else %}
+<div class="icon"><i class="bi bi-patch-exclamation"></i></div>
+<div class="eyebrow">Not found</div>
+<h1>We can't verify <em>this receipt</em></h1>
+<p>No approved payment matches the reference <strong style="color:var(--text)">{{ reference }}</strong>. Check the code, or contact the school office.</p>
+{% endif %}
+{% endblock %}

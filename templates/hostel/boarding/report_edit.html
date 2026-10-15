@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Boarding report — {{ b.student.full_name }}{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hostel:boarding_reports' %}" style="color:inherit">Housemaster reports</a></div>
+  <h1 class="fin-title">{{ b.student.full_name }}</h1>
+  <p class="fin-sub">{{ term }} {{ term.session }}</p>
+</div></div>
+{% include "hostel/boarding/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Roll calls missed</small><b>{{ facts.absent }}</b></div>
+  <div class="fin-stat"><small>Late</small><b>{{ facts.late }}</b></div>
+  <div class="fin-stat"><small>Sick bay visits</small><b>{{ facts.sick }}</b></div>
+  <div class="fin-stat"><small>Exeats</small><b>{{ facts.exeats }}</b></div>
+  <div class="fin-stat"><small>Room inspections</small><b>{% if facts.room_score %}{{ facts.room_score|floatformat:0 }}%{% else %}—{% endif %}</b></div>
+</div>
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:760px">{% csrf_token %}
+  <div><label>Conduct</label><select name="conduct">{% for v, l in ratings %}<option value="{{ v }}" {% if rep.conduct == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div><label>Neatness and care of property</label><select name="neatness">{% for v, l in ratings %}<option value="{{ v }}" {% if rep.neatness == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div><label>Getting on with others</label><select name="relationships">{% for v, l in ratings %}<option value="{{ v }}" {% if rep.relationships == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <div><label>Housemaster's comment</label><textarea name="comment" rows="5">{{ rep.comment }}</textarea></div>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="published" value="1" style="width:auto" {% if rep.published %}checked{% endif %}> Show to the family</label>
+  <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+</form>
+{% endblock %}

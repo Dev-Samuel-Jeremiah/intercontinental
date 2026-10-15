@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Report bullying or a worry{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Stay safe</div>
+  <h1 class="fin-title">Report bullying <em>or a worry</em></h1>
+  <p class="fin-sub">Only the school's safeguarding team reads these. You can stay anonymous — your name is then not saved at all. If someone is in danger right now, tell a teacher immediately.</p>
+</div><a class="fin-btn" href="{% url 'studentlife:report_check' %}">Check a report</a></div>
+{% if made %}
+<div class="panel" style="border-color:var(--green-border)"><div class="panel-b">
+  <h3 style="margin-top:0">Thank you for speaking up.</h3>
+  <p>Your reference is <b style="font-size:1.2rem">{{ made.ref }}</b> and your secret code is <b style="font-size:1.2rem">{{ made.code }}</b>.</p>
+  <p>Write them down or take a photo now — this is the only time the code is shown. Use them on "Check a report" to see what the school has done and to add more information{% if made.anonymous %}, while staying anonymous{% endif %}.</p>
+</div></div>
+{% else %}
+<form method="post" class="panel fin-form" style="padding:1.2rem;max-width:720px">{% csrf_token %}
+  <div><label>What is it about?</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+  <div><label>What happened?</label><textarea name="description" rows="6" required></textarea></div>
+  <div class="row2"><div><label>Where</label><input name="where" maxlength="160" placeholder="e.g. Hostel, bus, WhatsApp group"></div><div><label>When</label><input name="when" maxlength="120" placeholder="e.g. Every break this week"></div></div>
+  <div><label>Who was involved (if you know)</label><input name="who" maxlength="255"></div>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="anonymous" value="1" checked style="width:auto"> Keep me anonymous</label>
+  <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="urgent" value="1" style="width:auto"> This is urgent — someone could get hurt</label>
+  <button class="fin-btn fin-btn-gold" type="submit">Send report</button>
+</form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,8 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Suspension letter — {{ case.student.full_name }}</title>
+<style>body{font-family:Georgia,'Times New Roman',serif;max-width:720px;margin:30px auto;padding:0 20px;color:#111;background:#fff;line-height:1.55}h1{font-size:20px;margin:0}.top{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:24px}.bar{margin-bottom:20px;font-family:Arial,sans-serif}@media print{.bar{display:none}}</style></head>
+<body><div class="bar"><button onclick="window.print()">Print</button></div>
+<div class="top"><h1>{{ school }}</h1><div>{% now "j F Y" %}</div></div>
+<p><b>Re: Suspension of {{ case.student.full_name }} ({{ case.student.admission_number }})</b></p>
+<div>{{ text|linebreaks }}</div>
+</body></html>

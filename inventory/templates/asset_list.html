@@ -1,0 +1,18 @@
+<h1>All Assets</h1>
+<ul>
+{% for asset in assets %}
+    <li>
+        <a href="{% url 'inventory:asset_detail' asset.id %}">
+            {{ asset.name }} ({{ asset.current_stock }})
+        </a>
+    </li>
+    {% if asset.is_low_stock %}
+        <strong style="color:red;">LOW STOCK</strong>
+    {% endif %}
+    {% if perms.inventory.can_issue_asset %}
+        <a href="{% url 'inventory:issue_asset' %}">Issue Asset</a>
+    {% endif %}
+
+
+{% endfor %}
+</ul>

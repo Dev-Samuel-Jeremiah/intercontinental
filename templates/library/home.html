@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Library{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Library</div>
+  <h1 class="fin-title"><em>Library</em></h1>
+  <p class="fin-sub">{{ books }} title{{ books|pluralize }}, {{ copies }} cop{{ copies|pluralize:"y,ies" }}. Scan cards and books at the desk; reminders and fines run every morning.</p>
+</div></div>
+{% include "library/_nav.html" %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>On loan</small><b>{{ on_loan }}</b></div>
+  <div class="fin-stat"><small>Overdue</small><b>{{ overdue|length }}</b></div>
+  <div class="fin-stat"><small>Due today</small><b>{{ due_today }}</b></div>
+  <div class="fin-stat"><small>Reservations waiting</small><b>{{ waiting }}</b></div>
+  <div class="fin-stat"><small>Unpaid charges</small><b>{{ unpaid }}</b></div>
+</div>
+{% if logs or requests or open_takes %}<div class="panel" style="margin-bottom:1.2rem"><div class="panel-b">
+  {% if logs %}<p style="margin:.2rem 0"><a href="{% url 'library:reading' %}">{{ logs }} reading log{{ logs|pluralize }} to check</a></p>{% endif %}
+  {% if requests %}<p style="margin:.2rem 0"><a href="{% url 'library:requests' %}">{{ requests }} book request{{ requests|pluralize }} waiting</a></p>{% endif %}
+  {% for st in open_takes %}<p style="margin:.2rem 0"><a href="{% url 'library:stocktake' st.pk %}">Stock-take in progress{% if st.branch %} — {{ st.branch }}{% endif %}</a></p>{% endfor %}
+</div></div>{% endif %}
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3>Overdue</h3><a class="fin-btn fin-btn-sm" href="{% url 'library:loans' %}?show=overdue">All</a></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for l in overdue %}<tr><td class="name">{{ l.copy.book.title }}<br><small class="hint">{{ l.borrower_name }}{% if l.student %} · {{ l.student.class_assigned|default:"" }}{% endif %}</small></td><td><span class="chip red">due {{ l.due_on|date:"j M" }}</span></td></tr>
+    {% empty %}<tr><td class="empty">Nothing overdue.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3>Waiting at the desk</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+      {% for r in ready %}<tr><td class="name">{{ r.book.title }}<br><small class="hint">for {{ r.borrower_name }} · until {{ r.hold_until|date:"D j M" }}</small></td></tr>
+      {% empty %}<tr><td class="empty">No reserved books waiting.</td></tr>{% endfor %}
+    </tbody></table></div></div>
+    {% if repair %}<div class="panel"><div class="panel-h"><h3>Being repaired</h3></div><div class="panel-b">{% for c in repair %}<p style="margin:.2rem 0"><a href="{% url 'library:book' c.book_id %}">{{ c.book.title }}</a> [{{ c.barcode }}]</p>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

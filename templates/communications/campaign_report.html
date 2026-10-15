@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Delivery report — {{ c.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'communications:campaign_detail' c.pk %}" style="color:inherit">{{ c.title }}</a></div>
+  <h1 class="fin-title">Delivery <em>report</em></h1>
+  <p class="fin-sub">"Delivered" appears when the SMS provider confirms it reached the phone (needs the delivery webhook set up). Email shows sent or failed.</p>
+</div>
+<div style="display:flex;gap:.4rem">
+  <a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a>
+  {% if rep.counts.FAILED or rep.counts.BOUNCED %}<form method="post">{% csrf_token %}<button class="fin-btn fin-btn-gold" type="submit">Re-send failed</button></form>{% endif %}
+</div></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Messages</small><b>{{ rep.total }}</b></div>
+  <div class="fin-stat"><small>Sent</small><b>{{ rep.counts.SENT }}</b></div>
+  <div class="fin-stat"><small>Delivered</small><b>{{ rep.counts.DELIVERED }}</b></div>
+  <div class="fin-stat"><small>Failed</small><b>{{ rep.counts.FAILED }}</b></div>
+</div>
+<div class="panel"><div class="panel-b">
+  <table class="tbl exp"><thead><tr><th>Student</th><th>Channel</th><th>To</th><th>Status</th><th>Problem</th></tr></thead><tbody>
+  {% for log in rep.logs %}<tr><td class="name">{{ log.student.full_name }}</td><td>{{ log.channel }}</td><td>{{ log.recipient }}</td>
+    <td>{% if log.status == 'DELIVERED' %}<span class="chip green">Delivered</span>{% elif log.status == 'SENT' %}<span class="chip gold">Sent</span>{% else %}<span class="chip red">{{ log.get_status_display }}</span>{% endif %}</td>
+    <td><small class="hint">{{ log.error_message|truncatechars:80 }}</small></td></tr>
+  {% empty %}<tr><td colspan="5" class="empty">Nothing sent yet.</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+{% endblock %}

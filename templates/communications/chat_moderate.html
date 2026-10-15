@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Chat moderation{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Communications</div>
+  <h1 class="fin-title">Chat <em>moderation</em></h1>
+  <p class="fin-sub">Reported messages, every conversation, and office hours.</p>
+</div></div>
+{% include "communications/_engage_nav.html" %}
+<div class="fin-grid">
+  <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="chat_enabled" value="1" style="width:auto" {% if cfg.chat_enabled %}checked{% endif %}> Parents can message teachers</label>
+    <div><label>Office days</label><div style="display:flex;gap:.6rem;flex-wrap:wrap">{% for d in days %}<label style="display:flex;gap:.25rem;align-items:center;margin:0"><input type="checkbox" name="days" value="{{ d }}" style="width:auto" {% if d in on_days %}checked{% endif %}> {{ d|title }}</label>{% endfor %}</div></div>
+    <div class="row2"><div><label>From</label><input type="time" name="office_start" value="{{ cfg.office_start|time:'H:i' }}"></div><div><label>To</label><input type="time" name="office_end" value="{{ cfg.office_end|time:'H:i' }}"></div></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Save</button>
+  </form>
+  <div style="display:grid;gap:1.2rem">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-flag"></i> Reported</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for m in flagged %}<tr><td class="name"><a href="{% url 'communications:chat_thread' m.conversation_id %}">{{ m.conversation.subject }}</a><br><small class="hint">{{ m.body|truncatechars:90 }}</small></td><td>{{ m.flag_reason }}</td></tr>{% empty %}<tr><td class="empty">Nothing reported.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-chat-left-text"></i> Conversations</h3></div><div class="panel-b">
+      <table class="tbl" data-no-export><tbody>{% for c in convs %}<tr><td class="name"><a href="{% url 'communications:chat_thread' c.pk %}">{{ c.subject }}</a></td><td>{{ c.teacher.full_name }}</td><td>{{ c.student.full_name }}</td><td>{{ c.last_at|date:"j M" }}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}</tbody></table>
+    </div></div>
+  </div>
+</div>
+{% endblock %}

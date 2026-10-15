@@ -1,0 +1,880 @@
+{% extends "dashboard/base.html" %}
+{% load static %}
+{% block title %}{% if student %}Wallet — {{ student.full_name }}{% else %}Student Wallet Lookup{% endif %}{% endblock %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* design tokens come from dashboard/base.html */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body, .wallet-admin-wrap * { font-family: 'Outfit', sans-serif; color: var(--white); }
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.wallet-admin-wrap {
+  max-width: 1200px;
+  padding: 2rem 2.5rem 4rem;
+  animation: riseUp .4s ease both;
+}
+
+/* ── LOOKUP SCREEN ── */
+.lookup-wrap {
+  max-width: 480px;
+  margin: 60px auto;
+  animation: riseUp .4s ease both;
+}
+.lookup-card {
+  background: var(--surface);
+  border: 1px solid var(--rim2);
+  border-radius: 20px;
+  padding: 36px 32px;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+}
+.lookup-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+}
+.lookup-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.6rem; color: var(--champagne);
+  margin: 0 auto 20px;
+}
+.lookup-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.9rem; font-weight: 600;
+  color: var(--white); margin-bottom: 6px;
+}
+.lookup-title em { font-style: italic; color: var(--champagne); }
+.lookup-sub { font-size: .84rem; color: var(--slate2); margin-bottom: 24px; line-height: 1.5; }
+.lookup-select {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .9rem;
+  margin-bottom: 12px;
+}
+.lookup-select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.lookup-select option { background: var(--surface2); }
+.btn-lookup {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; border: none; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-weight: 700; font-size: .9rem;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .18s, box-shadow .18s;
+}
+.btn-lookup:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
+.lookup-back {
+  display: inline-block; margin-top: 16px;
+  color: var(--slate); font-size: .82rem; text-decoration: none;
+  transition: color .15s;
+}
+.lookup-back:hover { color: var(--champagne-lt); }
+
+/* ── PAGE HEADER ── */
+.page-header { margin-bottom: 2.25rem; animation: riseUp .45s ease both; }
+.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: .7rem; }
+.eyebrow-rule { width: 32px; height: 1px; background: var(--champagne); opacity: .6; }
+.eyebrow-label {
+  font-size: .68rem; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--champagne);
+}
+.header-row {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+}
+.header-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.4rem; font-weight: 600;
+  color: var(--white); line-height: 1.1;
+}
+.header-title em { font-style: italic; color: var(--champagne); }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: .4rem; }
+.context-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  background: var(--champagne-dim); border: 1px solid var(--champagne-border);
+  border-radius: 99px; font-size: .8rem; font-weight: 600;
+  color: var(--champagne-lt); white-space: nowrap;
+}
+.header-divider {
+  margin-top: 1.2rem; height: 1px;
+  background: var(--rim2); position: relative;
+}
+.header-divider::after {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 80px; height: 2px;
+  background: var(--champagne); border-radius: 2px; margin-top: -0.5px;
+}
+
+/* ── HERO BALANCE ── */
+.wallet-hero {
+  background: linear-gradient(135deg, #0e1520 0%, #111827 40%, #112850 100%);
+  border: 1px solid var(--champagne-border);
+  border-radius: 20px; padding: 28px 32px;
+  margin-bottom: 1.5rem; position: relative; overflow: hidden;
+  animation: riseUp .4s ease both;
+}
+.wallet-hero::before {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,210,31,.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wallet-hero::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--champagne-border), transparent);
+}
+.hero-inner {
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;
+}
+.hero-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--champagne); opacity: .75; margin-bottom: 6px;
+}
+.hero-balance {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 3rem; font-weight: 700;
+  color: var(--champagne-lt); line-height: 1; letter-spacing: -1px;
+}
+.hero-class {
+  font-size: .84rem; color: var(--slate2); margin-top: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.hero-stats {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+}
+.hero-stat-row { font-size: .8rem; color: var(--slate2); }
+.hero-stat-row strong { color: var(--white); }
+.shared-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  background: var(--amber-dim); border: 1px solid var(--amber-border);
+  border-radius: 99px; font-size: .71rem; font-weight: 700; color: var(--amber);
+}
+
+/* ── SIBLINGS BAR ── */
+.siblings-bar {
+  background: var(--surface);
+  border: 1px solid var(--green-border);
+  border-radius: 12px; padding: 14px 18px;
+  margin-bottom: 1.5rem;
+  animation: riseUp .45s ease both; animation-delay: .04s;
+}
+.siblings-label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .8px;
+  text-transform: uppercase; color: var(--green);
+  display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+}
+.siblings-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.sib-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 10px;
+  text-decoration: none; font-size: .82rem; font-weight: 600;
+  border: 1px solid; transition: all .18s;
+}
+.sib-chip.active {
+  background: var(--green-dim); border-color: var(--green-border); color: var(--green);
+}
+.sib-chip:not(.active) {
+  background: var(--surface2); border-color: var(--rim2); color: var(--slate2);
+}
+.sib-chip:hover:not(.active) { border-color: var(--champagne-border); color: var(--champagne-lt); }
+.sib-owed { font-size: .71rem; color: var(--red); font-weight: 700; }
+
+/* ── PANEL ── */
+.panel {
+  background: var(--surface); border: 1px solid var(--rim);
+  border-radius: 16px; overflow: hidden; position: relative;
+  animation: riseUp .45s ease both;
+}
+.panel::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--rim3), transparent);
+  pointer-events: none;
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 17px 22px 13px; border-bottom: 1px solid var(--rim);
+  flex-wrap: wrap; gap: 8px;
+}
+.panel-title-group { display: flex; align-items: center; gap: 12px; }
+.icon-badge {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.ib-green  { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-border);  }
+.ib-red    { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-border);    }
+.ib-blue   { background: var(--blue-dim);   color: var(--blue);   border: 1px solid var(--blue-border);   }
+.ib-amber  { background: var(--amber-dim);  color: var(--amber);  border: 1px solid var(--amber-border);  }
+.ib-teal   { background: var(--teal-dim);   color: var(--teal);   border: 1px solid var(--teal-border);   }
+.ib-champ  { background: var(--champagne-dim); color: var(--champagne); border: 1px solid var(--champagne-border); }
+.ib-slate  { background: var(--surface3); color: var(--slate2); border: 1px solid var(--rim2); }
+.panel-title { font-size: .9rem; font-weight: 600; color: var(--white); }
+.panel-body  { padding: 20px 22px; }
+
+/* ── BUTTONS ── */
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  background: var(--rim); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--slate2);
+  font-family: 'Outfit', sans-serif; font-size: .83rem; font-weight: 600;
+  text-decoration: none; transition: border-color .18s, color .18s, background .18s;
+  cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--champagne-border); color: var(--champagne-lt); background: var(--champagne-dim); }
+.btn-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #f4d21f, #d1ad00);
+  color: #0a1f44; border: none; border-radius: 10px;
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 4px 18px rgba(244,210,31,.22);
+  transition: transform .18s, box-shadow .18s; width: 100%;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
+.btn-green-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 10px;
+  background: var(--green-dim); border: 1px solid var(--green-border);
+  border-radius: 10px; color: var(--green);
+  font-family: 'Outfit', sans-serif; font-size: .84rem; font-weight: 700;
+  cursor: pointer; transition: background .18s;
+}
+.btn-green-action:hover { background: rgba(74,222,128,.18); }
+.btn-blue-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 11px;
+  background: var(--blue-dim); border: 1px solid var(--blue-border);
+  border-radius: 10px; color: var(--blue);
+  font-family: 'Outfit', sans-serif; font-size: .85rem; font-weight: 700;
+  cursor: pointer; transition: background .18s;
+}
+.btn-blue-action:hover { background: rgba(96,165,250,.18); }
+.btn-red-action {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 9px;
+  background: var(--red-dim); border: 1px solid var(--red-border);
+  border-radius: 9px; color: var(--red);
+  font-family: 'Outfit', sans-serif; font-size: .8rem; font-weight: 700;
+  cursor: pointer; transition: background .18s;
+}
+.btn-red-action:hover { background: rgba(248,113,113,.2); }
+.btn-small-pay {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; white-space: nowrap;
+  background: var(--green-dim); border: 1px solid var(--green-border);
+  border-radius: 8px; color: var(--green);
+  font-family: 'Outfit', sans-serif; font-size: .78rem; font-weight: 700;
+  cursor: pointer; transition: background .15s;
+}
+.btn-small-pay:hover { background: rgba(74,222,128,.18); }
+
+/* ── FORMS ── */
+.fg { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+.fg label {
+  font-size: .68rem; font-weight: 700; letter-spacing: .4px;
+  text-transform: uppercase; color: var(--slate2);
+}
+.fg input, .fg select {
+  padding: 10px 14px;
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .87rem;
+}
+.fg input:focus, .fg select:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.fg select option { background: var(--surface2); }
+.fg input::placeholder { color: var(--slate); }
+.input-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+@media (max-width: 820px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ── TABLE ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: .83rem; }
+.tbl th {
+  padding: 10px 14px; text-align: left;
+  font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .5px;
+  color: var(--slate); border-bottom: 1px solid var(--rim2);
+  background: var(--surface2); white-space: nowrap;
+}
+.tbl td {
+  padding: 11px 14px; border-bottom: 1px solid var(--rim);
+  color: var(--slate2); vertical-align: middle;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: rgba(255,255,255,.025); }
+.ref { font-family: monospace; font-size: .77rem; color: var(--blue); }
+.tbl-link {
+  color: var(--blue); font-size: .77rem; font-weight: 600;
+  text-decoration: none; transition: color .15s;
+}
+.tbl-link:hover { color: var(--champagne-lt); }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: .7rem; font-weight: 700; border: 1px solid;
+}
+.badge-green  { background: var(--green-dim);  border-color: var(--green-border);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    border-color: var(--red-border);    color: var(--red);    }
+.badge-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  color: var(--amber);  }
+.badge-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   color: var(--blue);   }
+.badge-champ  { background: var(--champagne-dim); border-color: var(--champagne-border); color: var(--champagne-lt); }
+
+/* ── BOARDING SUB-GRID ── */
+.boarding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 760px) { .boarding-grid { grid-template-columns: 1fr; } }
+.boarding-sub-title {
+  font-size: .73rem; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; color: var(--slate);
+  margin-bottom: 10px;
+}
+.bed-info-box {
+  background: var(--surface2); border: 1px solid var(--green-border);
+  border-radius: 10px; padding: 14px; margin-bottom: 16px;
+}
+.bed-info-row {
+  display: flex; gap: 20px; flex-wrap: wrap;
+  font-size: .83rem;
+}
+.bed-info-item { display: flex; flex-direction: column; gap: 2px; }
+.bed-info-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .4px; color: var(--slate); }
+.bed-info-value { font-weight: 700; color: var(--white); }
+
+/* ── BILL BOX ── */
+.bill-box {
+  background: var(--surface2); border: 1px solid var(--rim2);
+  border-radius: 10px; padding: 14px; margin-bottom: 12px;
+}
+.bill-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 5px 0; font-size: .82rem; color: var(--slate2);
+  border-bottom: 1px solid var(--rim);
+}
+.bill-row:first-child { padding-top: 0; }
+.bill-row:last-child { border-bottom: none; }
+.bill-pay-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.bill-input {
+  flex: 1; padding: 9px 12px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 9px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .85rem;
+}
+.bill-input:focus {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 0 0 3px rgba(244,210,31,.1);
+}
+.no-bill-box {
+  text-align: center; padding: 18px; font-size: .82rem;
+  color: var(--slate); background: var(--surface3);
+  border: 1px solid var(--rim); border-radius: 10px;
+}
+.no-bill-box a { color: var(--blue); text-decoration: none; font-weight: 600; }
+.no-bill-box a:hover { color: var(--champagne-lt); }
+.remove-boarding-input {
+  width: 100%; padding: 9px 12px; margin-bottom: 8px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 9px; color: var(--white);
+  font-family: 'Outfit', sans-serif; font-size: .83rem;
+}
+.remove-boarding-input:focus {
+  outline: none; border-color: var(--red);
+  box-shadow: 0 0 0 3px var(--red-dim);
+}
+.remove-boarding-input::placeholder { color: var(--slate); }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 20px; text-align: center;
+}
+.empty-icon-box {
+  width: 54px; height: 54px;
+  background: var(--surface3); border: 1px solid var(--rim2);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; color: var(--slate); margin-bottom: 14px;
+}
+.empty-title { font-size: .88rem; font-weight: 600; color: var(--slate2); margin-bottom: 4px; }
+.empty-sub   { font-size: .77rem; color: var(--slate); }
+</style>
+
+{% if not student %}
+<!-- ── LOOKUP SCREEN ─────────────────────────────────────── -->
+<div class="lookup-wrap">
+  <div class="lookup-card">
+    <div class="lookup-icon"><i class="bi bi-wallet2"></i></div>
+    <h2 class="lookup-title">Student <em>Wallet</em></h2>
+    <p class="lookup-sub">Select a student to view and manage their wallet, fees, boarding, and transaction history.</p>
+    <form method="GET" action="">
+      <select name="student_id" class="lookup-select" required>
+        <option value="">— Select a student —</option>
+        {% for s in students_all %}
+        <option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn-lookup">
+        <i class="bi bi-arrow-right-circle-fill"></i> Open Wallet
+      </button>
+    </form>
+    <a href="{% url 'finance:admin_dashboard' %}" class="lookup-back">← Back to Finance Dashboard</a>
+  </div>
+</div>
+
+{% else %}
+<!-- ── FULL WALLET VIEW ───────────────────────────────────── -->
+<div class="wallet-admin-wrap">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="eyebrow">
+      <div class="eyebrow-rule"></div>
+      <span class="eyebrow-label">Finance · Admin</span>
+    </div>
+    <div class="header-row">
+      <h1 class="header-title">Student <em>Wallet</em></h1>
+      <div class="header-right">
+        <div class="context-badge">
+          <i class="bi bi-person-fill"></i>
+          {{ student.admission_number }}
+        </div>
+        <a href="{% url 'finance:admin_dashboard' %}" class="btn-ghost">
+          <i class="bi bi-arrow-left"></i> Dashboard
+        </a>
+      </div>
+    </div>
+    <div class="header-divider"></div>
+  </div>
+
+  <!-- Balance Hero -->
+  <div class="wallet-hero">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-label">Current Balance</div>
+        <div class="hero-balance">₦{{ wallet.balance|floatformat:2 }}</div>
+        <div class="hero-class">
+          <i class="bi bi-mortarboard-fill" style="color:var(--champagne);font-size:.8rem;"></i>
+          {{ student.full_name }} · {{ student.class_assigned.name|default:"No class" }}
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat-row">Paid: <strong style="color:var(--green);">₦{{ total_paid|floatformat:2 }}</strong></div>
+        <div class="hero-stat-row">Outstanding: <strong style="color:var(--red);">₦{{ total_unpaid|floatformat:2 }}</strong></div>
+        <div class="shared-chip" style="margin-top:4px;">
+          <i class="bi bi-people-fill"></i> Family shared wallet
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Siblings -->
+  {% if siblings|length > 1 %}
+  <div class="siblings-bar">
+    <div class="siblings-label"><i class="bi bi-people-fill"></i> Siblings sharing this wallet</div>
+    <div class="siblings-chips">
+      {% for sib in siblings %}
+      <a href="/finance/admin/wallet/{{ sib.id }}/"
+         class="sib-chip {% if sib.id == student.id %}active{% endif %}">
+        {{ sib.full_name }}
+        {% for sd in siblings_data %}{% if sd.student.id == sib.id %}
+          {% if sd.total_owed > 0 %}<span class="sib-owed">₦{{ sd.total_owed|floatformat:0 }}</span>{% endif %}
+        {% endif %}{% endfor %}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── BOARDING MANAGEMENT ── -->
+  {% if boarder_profile %}
+  <div class="panel" style="margin-bottom:18px;animation-delay:.08s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge {% if boarder_profile.is_boarder %}ib-green{% else %}ib-slate{% endif %}">
+          <i class="bi bi-house-fill"></i>
+        </div>
+        <h3 class="panel-title">Boarding Status</h3>
+      </div>
+      {% if boarder_profile.is_boarder %}
+      <span class="badge badge-green">
+        <i class="bi bi-check-circle-fill" style="font-size:.65rem;"></i>
+        {{ boarder_profile.get_student_type_display }} · {{ boarder_profile.hostel.name|default:"No hostel assigned" }}
+      </span>
+      {% else %}
+      <span class="badge" style="background:var(--surface3);border-color:var(--rim2);color:var(--slate2);">Day Student</span>
+      {% endif %}
+    </div>
+    <div class="panel-body">
+      {% if boarder_profile.bed %}
+      <div class="bed-info-box">
+        <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--green);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+          <i class="bi bi-grid-1x2-fill"></i> Current Bed Assignment
+        </div>
+        <div class="bed-info-row">
+          <div class="bed-info-item"><span class="bed-info-label">Hostel</span><span class="bed-info-value">{{ boarder_profile.hostel.name }}</span></div>
+          <div class="bed-info-item"><span class="bed-info-label">Room</span><span class="bed-info-value">{{ boarder_profile.room.room_number }}</span></div>
+          <div class="bed-info-item"><span class="bed-info-label">Bed</span><span class="bed-info-value">{{ boarder_profile.bed.bed_number }}</span></div>
+          <div class="bed-info-item"><span class="bed-info-label">Status</span><span class="bed-info-value">{{ boarder_profile.get_status_display }}</span></div>
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="boarding-grid">
+        <!-- Assign / Update Boarding -->
+        <div>
+          <div class="boarding-sub-title">Assign / Update Boarding</div>
+          <form method="POST" action="{% url 'finance:make_boarder' student.id %}">
+            {% csrf_token %}
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="fg">
+                <label>Student Type</label>
+                <select name="student_type">
+                  <option value="BOARDER" {% if boarder_profile.student_type == 'BOARDER' %}selected{% endif %}>Full Boarder</option>
+                  <option value="WEEKLY"  {% if boarder_profile.student_type == 'WEEKLY'  %}selected{% endif %}>Weekly Boarder</option>
+                  <option value="DAY"     {% if boarder_profile.student_type == 'DAY'     %}selected{% endif %}>Day Student</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Assign Bed <span style="text-transform:none;font-weight:400;font-size:.68rem;">(optional)</span></label>
+                <select name="bed_id">
+                  <option value="">— Keep current / no change —</option>
+                  {% for bed in available_beds %}
+                  <option value="{{ bed.id }}">{{ bed.room.hostel.name }} — Room {{ bed.room.room_number }} — Bed {{ bed.bed_number }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn-green-action">
+                <i class="bi bi-check-lg"></i> Save Boarding Status
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Hostel Billing -->
+        <div>
+          <div class="boarding-sub-title">Hostel Fee Billing</div>
+          {% if current_hostel_bill %}
+          <div class="bill-box">
+            <div class="bill-row">
+              <span style="color:var(--slate2);">{{ current_hostel_bill.term }} / {{ current_hostel_bill.session }}</span>
+              <span class="badge
+                {% if current_hostel_bill.status == 'PAID' %}badge-green
+                {% elif current_hostel_bill.status == 'PARTIAL' %}badge-amber
+                {% else %}badge-red{% endif %}">
+                {{ current_hostel_bill.get_status_display }}
+              </span>
+            </div>
+            <div class="bill-row"><span>Total</span><strong style="color:var(--white);">₦{{ current_hostel_bill.total_fee|floatformat:2 }}</strong></div>
+            <div class="bill-row"><span style="color:var(--green);">Paid</span><strong style="color:var(--green);">₦{{ current_hostel_bill.amount_paid|floatformat:2 }}</strong></div>
+            <div class="bill-row"><span style="color:var(--red);">Balance</span><strong style="color:var(--red);">₦{{ current_hostel_bill.balance_due|floatformat:2 }}</strong></div>
+            {% if current_hostel_bill.balance_due > 0 %}
+            <form method="POST" action="{% url 'finance:pay_hostel_fee' student.id %}" style="margin-top:10px;">
+              {% csrf_token %}
+              <input type="hidden" name="billing_id" value="{{ current_hostel_bill.id }}">
+              <div class="bill-pay-row">
+                <input type="number" name="amount" min="1" step="0.01"
+                       max="{{ current_hostel_bill.balance_due }}"
+                       value="{{ current_hostel_bill.balance_due }}"
+                       class="bill-input" placeholder="Amount">
+                <button type="submit" class="btn-small-pay">
+                  <i class="bi bi-cash-coin"></i> Pay
+                </button>
+              </div>
+            </form>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="no-bill-box">
+            <i class="bi bi-hourglass" style="font-size:1.3rem;display:block;margin-bottom:6px;color:var(--slate);"></i>
+            No hostel bill for current term.<br>
+            <a href="{% url 'hostel:billing' %}">Generate bills in Hostel module →</a>
+          </div>
+          {% endif %}
+
+          {% if boarder_profile.is_boarder %}
+          <div style="margin-top:12px;">
+            <form method="POST" action="{% url 'finance:remove_boarder' student.id %}">
+              {% csrf_token %}
+              <input type="text" name="reason" placeholder="Reason for removal (optional)"
+                     class="remove-boarding-input">
+              <button type="submit" class="btn-red-action"
+                onclick="return confirm('Remove {{ student.full_name }} from boarding?')">
+                <i class="bi bi-box-arrow-right"></i> Remove from Boarding
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- No boarder profile yet -->
+  <div class="panel" style="margin-bottom:18px;animation-delay:.08s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-slate"><i class="bi bi-house"></i></div>
+        <h3 class="panel-title">Boarding Status</h3>
+      </div>
+      <span class="badge" style="background:var(--surface3);border-color:var(--rim2);color:var(--slate2);">Day Student</span>
+    </div>
+    <div class="panel-body">
+      <p style="font-size:.83rem;color:var(--slate2);margin-bottom:16px;">
+        <strong style="color:var(--white);">{{ student.full_name }}</strong> is currently a Day Student.
+        Use the form below to enrol them as a boarder.
+      </p>
+      <form method="POST" action="{% url 'finance:make_boarder' student.id %}">
+        {% csrf_token %}
+        <div class="input-row">
+          <div class="fg" style="min-width:160px;">
+            <label>Student Type</label>
+            <select name="student_type">
+              <option value="BOARDER">Full Boarder</option>
+              <option value="WEEKLY">Weekly Boarder</option>
+            </select>
+          </div>
+          <div class="fg" style="min-width:220px;">
+            <label>Assign Bed <span style="text-transform:none;font-weight:400;font-size:.68rem;">(optional)</span></label>
+            <select name="bed_id">
+              <option value="">— No bed yet —</option>
+              {% for bed in available_beds %}
+              <option value="{{ bed.id }}">{{ bed.room.hostel.name }} — Room {{ bed.room.room_number }} — Bed {{ bed.bed_number }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-green-action" style="width:auto;padding:10px 22px;flex-shrink:0;">
+            <i class="bi bi-house-fill"></i> Make Boarder
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+  <!-- ── END BOARDING ── -->
+
+  <!-- Manual Adjustment + Waive Fee -->
+  <div class="two-col" style="animation-delay:.14s;">
+    <!-- Manual Adjustment -->
+    <div class="panel" style="animation-delay:.14s;">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="icon-badge ib-blue"><i class="bi bi-pencil-fill"></i></div>
+          <h3 class="panel-title">Manual Adjustment</h3>
+        </div>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="{% url 'finance:admin_adjust_wallet' %}">
+          {% csrf_token %}
+          <input type="hidden" name="student_id" value="{{ student.id }}">
+          <div class="input-row" style="margin-bottom:12px;">
+            <div class="fg">
+              <label>Action</label>
+              <select name="action">
+                <option value="credit">Credit — Add Money</option>
+                <option value="debit">Debit — Deduct Money</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>Amount (₦)</label>
+              <input type="number" name="amount" min="1" step="0.01" placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom:14px;">
+            <label>Description</label>
+            <input type="text" name="description" placeholder="Reason for adjustment" required>
+          </div>
+          <button type="submit" class="btn-blue-action">
+            <i class="bi bi-lightning-fill"></i> Apply Adjustment
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Waive Fee -->
+    <div class="panel" style="animation-delay:.18s;">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <div class="icon-badge ib-green"><i class="bi bi-shield-check"></i></div>
+          <h3 class="panel-title">Waive a Fee</h3>
+        </div>
+      </div>
+      <div class="panel-body">
+        <form method="POST" action="{% url 'finance:waive_fee' %}">
+          {% csrf_token %}
+          <input type="hidden" name="student_id" value="{{ student.id }}">
+          <div class="fg" style="margin-bottom:12px;">
+            <label>Fee</label>
+            <select name="fee_id">
+              {% for fp in fees %}
+              {% if fp.status != 'PAID' and fp.status != 'WAIVED' %}
+              <option value="{{ fp.fee_structure.id }}">{{ fp.fee_structure.name }} — ₦{{ fp.fee_structure.amount }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="fg" style="margin-bottom:14px;">
+            <label>Reason / Note</label>
+            <input type="text" name="note" placeholder="e.g. Scholarship waiver">
+          </div>
+          <button type="submit" class="btn-green-action">
+            <i class="bi bi-check-circle-fill"></i> Waive Fee
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transaction History -->
+  <div class="panel" style="margin-bottom:18px;animation-delay:.22s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-teal"><i class="bi bi-clock-history"></i></div>
+        <h3 class="panel-title">Transaction History</h3>
+      </div>
+    </div>
+    {% if txns %}
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr><th>Date</th><th>Type</th><th>Description</th><th>Reference</th><th>Amount</th><th>Balance After</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for txn in txns %}
+          <tr>
+            <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y H:i" }}</td>
+            <td>
+              {% if txn.txn_type == 'CREDIT' %}<span class="badge badge-green">Credit</span>
+              {% else %}<span class="badge badge-red">Debit</span>{% endif %}
+            </td>
+            <td>{{ txn.description }}</td>
+            <td><span class="ref">{{ txn.reference }}</span></td>
+            <td style="font-weight:700;{% if txn.txn_type == 'CREDIT' %}color:var(--green);{% else %}color:var(--red);{% endif %}">
+              {% if txn.txn_type == 'CREDIT' %}+{% else %}−{% endif %}₦{{ txn.amount|floatformat:2 }}
+            </td>
+            <td style="color:var(--slate);">₦{{ txn.balance_after|floatformat:2 }}</td>
+            <td>
+              <a href="{% url 'finance:receipt_txn' txn.id %}" class="tbl-link">
+                <i class="bi bi-receipt"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon-box"><i class="bi bi-inbox"></i></div>
+      <div class="empty-title">No Transactions Yet</div>
+      <div class="empty-sub">Wallet activity will appear here once recorded.</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Fee Payment Status -->
+  <div class="panel" style="margin-bottom:18px;animation-delay:.26s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-green"><i class="bi bi-file-earmark-check"></i></div>
+        <h3 class="panel-title">Fee Payment Status</h3>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr><th>Fee</th><th>Amount</th><th>Paid</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for fp in fees %}
+          <tr>
+            <td style="color:var(--white);font-weight:500;">{{ fp.fee_structure.name }}</td>
+            <td style="color:var(--slate2);">₦{{ fp.fee_structure.amount|floatformat:2 }}</td>
+            <td style="color:var(--green);font-weight:600;">₦{{ fp.amount_paid|floatformat:2 }}</td>
+            <td>
+              {% if fp.status == 'PAID' %}<span class="badge badge-green">Paid</span>
+              {% elif fp.status == 'WAIVED' %}<span class="badge badge-blue">Waived</span>
+              {% elif fp.status == 'PARTIAL' %}<span class="badge badge-amber">Partial</span>
+              {% else %}<span class="badge badge-red">Unpaid</span>{% endif %}
+            </td>
+            <td>
+              {% if fp.transaction %}
+              <a href="{% url 'finance:receipt_txn' fp.transaction.id %}" class="tbl-link">
+                <i class="bi bi-receipt"></i> Receipt
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Purchase History -->
+  {% if purchases %}
+  <div class="panel" style="animation-delay:.3s;">
+    <div class="panel-header">
+      <div class="panel-title-group">
+        <div class="icon-badge ib-amber"><i class="bi bi-bag-check-fill"></i></div>
+        <h3 class="panel-title">Purchase History</h3>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th><th>Date</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for p in purchases %}
+          <tr>
+            <td style="color:var(--white);font-weight:500;">{{ p.item.name }}</td>
+            <td>{{ p.quantity }}</td>
+            <td>₦{{ p.unit_price|floatformat:2 }}</td>
+            <td style="font-weight:700;color:var(--champagne-lt);font-family:'Cormorant Garamond',serif;font-size:1rem;">
+              ₦{{ p.total_price|floatformat:2 }}
+            </td>
+            <td style="color:var(--slate);">{{ p.created_at|date:"d M Y" }}</td>
+            <td>
+              {% if p.transaction %}
+              <a href="{% url 'finance:receipt_txn' p.transaction.id %}" class="tbl-link">
+                <i class="bi bi-receipt"></i> Receipt
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div><!-- /.wallet-admin-wrap -->
+{% endif %}
+{% endblock %}

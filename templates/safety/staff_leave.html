@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Staff leave{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Staff</div>
+  <h1 class="fin-title">Staff <em>leave</em></h1>
+  <p class="fin-sub">Request leave and see who is away. Approved leave shows as leave on staff attendance, not absence.</p>
+</div>{% if can_manage %}<a class="fin-btn" href="{% url 'safety:staff_attendance' %}"><i class="bi bi-clipboard-data"></i> Staff attendance</a>{% endif %}</div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Away today</small><b>{{ current|length }}</b></div>
+  {% if can_manage %}<div class="fin-stat"><small>Waiting for approval</small><b style="color:{% if pending %}var(--amber){% else %}var(--green){% endif %}">{{ pending|length }}</b></div>{% endif %}
+  {% if me %}<div class="fin-stat"><small>Your leave this year</small><b>{% for k, v in taken.items %}{{ v }}{% if not forloop.last %} · {% endif %}{% empty %}0{% endfor %}</b><span class="hint">{% for k, v in taken.items %}{{ k|lower }}{% if not forloop.last %} · {% endif %}{% empty %}working days{% endfor %}</span></div>{% endif %}
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-plus"></i> {% if can_manage %}Request or record leave{% else %}Request leave{% endif %}</h3></div><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="request">
+      {% if can_manage %}<div><label>Staff member</label><select name="staff_id">{% if me %}<option value="">Me</option>{% endif %}{% for s in staff_list %}{% if s != me %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endif %}{% endfor %}</select>
+        <div class="hint">Leave you record for someone else is approved at once.</div></div>{% endif %}
+      <div><label>Kind</label><select name="leave_type">{% for v, l in types %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem"><div><label>From</label><input type="date" name="start_date" required value="{{ today|date:'Y-m-d' }}"></div><div><label>To</label><input type="date" name="end_date" required value="{{ today|date:'Y-m-d' }}"></div></div>
+      <div><label>Reason</label><input name="reason" maxlength="255"></div>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-send"></i> Submit</button>
+    </form>
+  </div></div>
+  <div>
+    {% if can_manage %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> Waiting for approval</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for lv in pending %}<tr><td><b>{{ lv.staff.full_name }}</b><br><span class="hint">{{ lv.get_leave_type_display }} · {{ lv.start_date|date:"j M" }}–{{ lv.end_date|date:"j M" }}{% if lv.reason %} · {{ lv.reason }}{% endif %}</span></td>
+        <td style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.3rem">{% csrf_token %}<input type="hidden" name="leave_id" value="{{ lv.id }}"><button class="fin-btn fin-btn-sm fin-btn-gold" name="action" value="approve">Approve</button><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="decline">Decline</button></form></td></tr>
+      {% empty %}<tr><td class="hint" style="padding:1rem">Nothing waiting.</td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+    <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-person-dash"></i> Away today</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+      {% for lv in current %}<tr><td><b>{{ lv.staff.full_name }}</b></td><td class="hint">{{ lv.get_leave_type_display }} · back {{ lv.end_date|date:"D j M" }}</td></tr>
+      {% empty %}<tr><td class="hint" style="padding:1rem">Everyone is in.</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+</div>
+{% if me %}<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Your leave</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+  {% for lv in mine %}<tr><td>{{ lv.start_date|date:"j M Y" }} – {{ lv.end_date|date:"j M Y" }}</td><td>{{ lv.get_leave_type_display }}</td>
+    <td><span class="chip {% if lv.status == 'APPROVED' %}green{% elif lv.status == 'PENDING' %}amber{% else %}red{% endif %}">{{ lv.get_status_display|lower }}</span>{% if lv.review_note %} <span class="hint">{{ lv.review_note }}</span>{% endif %}</td>
+    <td>{% if lv.status == 'PENDING' or lv.status == 'APPROVED' and lv.end_date >= today %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="leave_id" value="{{ lv.id }}"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form>{% endif %}</td></tr>
+  {% empty %}<tr><td class="hint" style="padding:1rem">No leave yet.</td></tr>{% endfor %}</tbody></table></div></div>{% endif %}
+{% endblock %}

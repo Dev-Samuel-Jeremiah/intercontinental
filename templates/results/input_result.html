@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Input Results{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <h2>Input Results</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <label>Term:</label>
+        <select name="term" required>
+            {% for code,label in terms %}
+                <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>First Test</th>
+                    <th>Second Test</th>
+                    <th>Third Test</th>
+                    <th>CBT</th>
+                    <th>Theory</th>
+                    <th>Comment</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{ student.full_name }}</td>
+                    <td><input type="number" name="first_{{ student.id }}" value="0" min="0" max="100" required></td>
+                    <td><input type="number" name="second_{{ student.id }}" value="0" min="0" max="100" required></td>
+                    <td><input type="number" name="third_{{ student.id }}" value="0" min="0" max="100" required></td>
+                    <td><input type="number" name="cbt_{{ student.id }}" value="0" min="0" max="100" required></td>
+                    <td><input type="number" name="theory_{{ student.id }}" value="0" min="0" max="100" required></td>
+                    <td><input type="text" name="comment_{{ student.id }}"></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="submit" class="btn btn-primary">Save Results</button>
+    </form>
+</div>
+{% endblock %}

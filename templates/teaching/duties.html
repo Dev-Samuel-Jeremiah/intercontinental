@@ -1,0 +1,41 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Duty roster{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Duty <em>roster</em></h1>
+  <p class="fin-sub">Gate, break, dining hall and prep duties, shared fairly. Staff on approved leave are skipped, and everyone is emailed the evening before.</p>
+</div>{% if admin %}<div style="display:flex;gap:.4rem"><a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a></div>{% endif %}</div>
+{% include "teaching/_nav.html" %}
+<div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>My duties</h3></div><div class="panel-b">
+  {% for d in mine %}<span class="chip{% if d.date == today %} gold{% endif %}" style="margin:.15rem">{{ d.date|date:"D j M" }} · {{ d.post.name }} {{ d.post.start_time|time:"H:i" }}</span>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
+</div></div>
+<div class="fin-grid">
+  {% if admin %}
+  <div style="display:grid;gap:1.2rem">
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="generate">
+      <h3 style="margin:0 0 .6rem">Make the rota</h3>
+      <div class="row2"><div><label>From</label><input type="date" name="start" required></div><div><label>To</label><input type="date" name="end" required></div></div>
+      <div><label>Staff who share duties</label><div style="max-height:200px;overflow:auto"><label class="pill" style="display:flex"><input type="checkbox" onclick="document.querySelectorAll('.st').forEach(x=>x.checked=this.checked)"> Everyone</label>{% for s in staff %}<label class="pill" style="display:flex"><input class="st" type="checkbox" name="staff" value="{{ s.pk }}"> {{ s.full_name }}</label>{% endfor %}</div></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Fill school days</button>
+      <p class="hint">Weekends and public holidays are skipped. Existing duties are kept.</p>
+    </form>
+    <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="post">
+      <h3 style="margin:0 0 .6rem">Duty posts</h3>
+      <div><label>Name</label><input name="name" required maxlength="100" placeholder="e.g. Gate — morning"></div>
+      <div class="row2"><div><label>From</label><input type="time" name="start_time" required></div><div><label>To</label><input type="time" name="end_time" required></div></div>
+      <div class="row2"><div><label>Where</label><input name="location" maxlength="100"></div><div><label>Staff needed</label><input name="staff_needed" value="1" inputmode="numeric"></div></div>
+      <button class="fin-btn" type="submit">Add post</button>
+      {% for p in posts %}<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid var(--rim)"><span>{{ p.name }} <small class="hint">{{ p.start_time|time:"H:i" }}–{{ p.end_time|time:"H:i" }} · {{ p.staff_needed }}</small>{% if not p.active %} <span class="chip">Off</span>{% endif %}</span><span><button class="fin-btn fin-btn-sm" type="submit" form="toggle{{ p.pk }}">{% if p.active %}Turn off{% else %}Turn on{% endif %}</button></span></div>{% endfor %}
+    </form>
+    {% for p in posts %}<form id="toggle{{ p.pk }}" method="post" style="display:none">{% csrf_token %}<input type="hidden" name="action" value="post_toggle"><input type="hidden" name="id" value="{{ p.pk }}"></form>{% endfor %}
+  </div>
+  {% endif %}
+  <div class="panel"><div class="panel-h"><h3>Coming up</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
+    {% for a in rota %}<tr><td>{{ a.date|date:"D j M" }}</td><td class="name">{{ a.post.name }}<br><small class="hint">{{ a.post.start_time|time:"H:i" }}–{{ a.post.end_time|time:"H:i" }}</small></td><td>{{ a.staff.full_name }}</td>
+      {% if admin %}<td style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.2rem">{% csrf_token %}<input type="hidden" name="action" value="swap"><input type="hidden" name="id" value="{{ a.pk }}"><select name="staff" style="width:auto;max-width:130px">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk == a.staff_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select><button class="fin-btn fin-btn-sm" type="submit">Swap</button></form>
+        <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ a.pk }}"><button class="fin-btn fin-btn-sm" type="submit">✕</button></form></td>{% endif %}</tr>
+    {% empty %}<tr><td class="empty">No duties planned.</td></tr>{% endfor %}
+  </tbody></table></div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Visitors{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .vf input,.vf select{width:100%;padding:.55rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.86rem}
+  .vf label{font-size:.72rem;color:var(--slate2);font-weight:600;display:block;margin:.5rem 0 .2rem}
+  .vf .g2{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+  .vtabs{display:flex;gap:.3rem;margin-bottom:.6rem}
+  .vtabs button{flex:1;padding:.55rem;border-radius:10px;border:1px solid var(--rim2);background:none;color:var(--slate2);font:inherit;font-weight:600;cursor:pointer}
+  .vtabs button.on{background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;border-color:transparent}
+  .vrow{display:flex;justify-content:space-between;gap:.6rem;align-items:center;padding:.65rem 0;border-bottom:1px solid var(--rim)}
+  .vrow b{color:var(--white)}
+  .vrow .fin-btn{white-space:nowrap}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Gate &amp; safety</div>
+  <h1 class="fin-title">Visitor <em>desk</em></h1>
+  <p class="fin-sub">Expected visitors, who is on site now, and walk-ins. Visitors with a pass can be scanned at the gate.</p>
+</div>
+<form method="get"><input type="search" name="q" value="{{ q }}" placeholder="Search past visitors" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"></form></div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>On site now</small><b style="color:{% if on_site %}var(--amber){% else %}var(--green){% endif %}">{{ on_site|length }}</b></div>
+  <div class="fin-stat"><small>Still expected today</small><b>{{ expected|length }}</b></div>
+  <div class="fin-stat"><small>Coming up</small><b>{{ upcoming|length }}</b></div>
+</div>
+
+<div class="fin-grid">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-person-walking"></i> On site now</h3></div><div class="panel-b" style="padding-top:.2rem">
+      {% for v in on_site %}
+      <div class="vrow"><div><b>#{{ v.badge_number }} {{ v.name }}</b>{% if v.organisation %} <span class="hint">· {{ v.organisation }}</span>{% endif %}
+        <div class="hint">in since {{ v.checked_in_at|time:"H:i" }} · {{ v.get_purpose_display }}{% if v.host %} · seeing {{ v.host.full_name }}{% endif %}{% if v.student %} · {{ v.student.full_name }}{% endif %}{% if v.vehicle %} · {{ v.vehicle }}{% endif %}</div></div>
+        <div style="display:flex;gap:.3rem"><a class="fin-btn fin-btn-sm" href="{% url 'safety:visitor_badge' v.id %}"><i class="bi bi-printer"></i></a>
+        <form method="post">{% csrf_token %}<input type="hidden" name="action" value="check_out"><input type="hidden" name="visit_id" value="{{ v.id }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Check out</button></form></div></div>
+      {% empty %}<p class="hint">Nobody is signed in.</p>{% endfor %}
+    </div></div>
+
+    <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-calendar-check"></i> Expected today</h3></div><div class="panel-b" style="padding-top:.2rem">
+      {% for v in expected %}
+      <div class="vrow" style="flex-wrap:wrap"><div><b>{{ v.name }}</b>{% if v.expected_time %} <span class="hint">· {{ v.expected_time|time:"H:i" }}</span>{% endif %}
+        <div class="hint">{{ v.get_purpose_display }}{% if v.host %} · seeing {{ v.host.full_name }}{% endif %}{% if v.purpose_note %} · {{ v.purpose_note }}{% endif %}</div></div>
+        <form method="post" enctype="multipart/form-data" style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">{% csrf_token %}<input type="hidden" name="visit_id" value="{{ v.id }}">
+          <input name="id_number" placeholder="ID no." maxlength="40" style="width:100px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem">
+          <button class="fin-btn fin-btn-sm fin-btn-gold" name="action" value="check_in" type="submit">Check in</button>
+          <button class="fin-btn fin-btn-sm" name="action" value="cancel" type="submit">Cancel</button></form></div>
+      {% empty %}<p class="hint">No one else is expected today.</p>{% endfor %}
+    </div></div>
+  </div>
+
+  <div class="panel vf"><div class="panel-b">
+    <div class="vtabs"><button type="button" class="on" data-mode="walk_in">Walk-in</button><button type="button" data-mode="expect">Expect a visitor</button></div>
+    <form method="post" enctype="multipart/form-data" id="vform">{% csrf_token %}
+      <input type="hidden" name="action" value="walk_in" id="vaction">
+      <label>Full name</label><input name="name" required maxlength="120">
+      <div class="g2"><div><label>Phone</label><input name="phone" type="tel" maxlength="20"></div><div><label>Organisation</label><input name="organisation" maxlength="120"></div></div>
+      <div class="g2"><div><label>Purpose</label><select name="purpose">{% for v, l in purposes %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+        <div><label>Seeing</label><select name="host_id"><option value="">—</option>{% for s in staff %}<option value="{{ s.id }}">{{ s.full_name }}</option>{% endfor %}</select></div></div>
+      <label>About a student <span class="hint">(optional)</span></label><select name="student_id"><option value="">—</option>{% for s in students %}<option value="{{ s.id }}">{{ s.full_name }} ({{ s.admission_number }})</option>{% endfor %}</select>
+      <label>Details</label><input name="purpose_note" maxlength="200" placeholder="Fixing the borehole pump">
+      <div class="walk-only">
+        <div class="g2"><div><label>ID shown</label><input name="id_type" maxlength="40" placeholder="NIN slip, driver's licence"></div><div><label>ID number</label><input name="id_number" maxlength="40"></div></div>
+        <div class="g2"><div><label>Vehicle plate</label><input name="vehicle" maxlength="20"></div><div><label>Photo</label><input type="file" name="photo" accept="image/*" capture="user"></div></div>
+      </div>
+      <div class="expect-only" style="display:none">
+        <div class="g2"><div><label>Day</label><input type="date" name="expected_on" value="{{ today|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}"></div><div><label>Time</label><input type="time" name="expected_time"></div></div>
+        <label>Email <span class="hint">(to send the pass)</span></label><input type="email" name="email">
+        <p class="hint" style="margin:.5rem 0 0">They get a QR pass by SMS or email to show at the gate.</p>
+      </div>
+      <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.9rem" id="vsubmit"><i class="bi bi-box-arrow-in-right"></i> Check in &amp; print badge</button>
+    </form>
+  </div></div>
+</div>
+
+<div class="fin-grid" style="margin-top:1rem">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar3"></i> Coming up</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+    {% for v in upcoming %}<tr><td style="white-space:nowrap">{{ v.expected_on|date:"D j M" }}{% if v.expected_time %} {{ v.expected_time|time:"H:i" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_purpose_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}</span></td></tr>
+    {% empty %}<tr><td class="hint" style="padding:1rem">Nobody booked.</td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> {% if q %}Search results{% else %}Left today{% endif %}</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+    {% for v in history %}<tr><td style="white-space:nowrap">{% if v.checked_in_at %}{{ v.checked_in_at|date:"j M H:i" }}{% else %}{{ v.expected_on|date:"j M" }}{% endif %}{% if v.checked_out_at %}–{{ v.checked_out_at|time:"H:i" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_status_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}{% if v.note %} · {{ v.note }}{% endif %}</span></td></tr>
+    {% empty %}<tr><td class="hint" style="padding:1rem">{% if q %}No visitor found.{% else %}No one has left yet today.{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+<script>
+  (function(){var tabs=document.querySelectorAll('.vtabs button'),act=document.getElementById('vaction'),sub=document.getElementById('vsubmit');
+  tabs.forEach(function(t){t.addEventListener('click',function(){tabs.forEach(function(x){x.classList.toggle('on',x===t);});
+    var walk=t.dataset.mode==='walk_in';act.value=t.dataset.mode;
+    document.querySelector('.walk-only').style.display=walk?'':'none';document.querySelector('.expect-only').style.display=walk?'none':'';
+    sub.innerHTML=walk?'<i class="bi bi-box-arrow-in-right"></i> Check in &amp; print badge':'<i class="bi bi-send"></i> Expect and send the pass';});});})();
+</script>
+{% endblock %}

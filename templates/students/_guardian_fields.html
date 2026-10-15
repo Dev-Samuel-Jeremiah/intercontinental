@@ -1,0 +1,19 @@
+<div class="sp-grid2">
+  <div><label>Full name</label><input name="full_name" value="{{ g.full_name }}" maxlength="160" required></div>
+  <div><label>Relationship</label><select name="relationship">{% for v, l in relationships %}<option value="{{ v }}"{% if g.relationship == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+</div>
+<div class="sp-grid2">
+  <div><label>Phone</label><input name="phone" value="{{ g.phone }}" maxlength="20" inputmode="tel"></div>
+  <div><label>Email</label><input type="email" name="email" value="{{ g.email }}"></div>
+</div>
+<div class="sp-grid2">
+  <div><label>Occupation</label><input name="occupation" value="{{ g.occupation }}" maxlength="120"></div>
+  <div><label>NIN <span class="hint">(optional)</span></label><input name="nin" value="{{ g.nin }}" maxlength="13" inputmode="numeric" autocomplete="off"></div>
+</div>
+<div><label>Photo <span class="hint">(shown to gate staff at pickup)</span></label><input type="file" name="photo" accept="image/jpeg,image/png,image/webp">{% if g.photo %}<div class="hint" style="margin-top:.2rem"><img src="{{ g.photo.url }}" alt="" style="width:34px;height:42px;object-fit:cover;border-radius:6px;vertical-align:middle"> current photo — choose a new one to replace it</div>{% endif %}</div>
+<div><label>Address</label><input name="address" value="{{ g.address }}" maxlength="255"></div>
+<div><label>Messages</label><select name="contact_by">{% for v, l in contact_choices %}<option value="{{ v }}"{% if g.contact_by == v %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+<label class="sp-check"><input type="checkbox" name="gets_fee_messages" value="1"{% if g.gets_fee_messages %} checked{% endif %}> Send fee reminders too</label>
+<label class="sp-check"><input type="checkbox" name="can_pick_up" value="1"{% if g.can_pick_up or not g %} checked{% endif %}> Allowed to collect the child</label>
+<label class="sp-check"><input type="checkbox" name="emergency_contact" value="1"{% if g.emergency_contact %} checked{% endif %}> Emergency contact</label>
+<div><label>Note</label><input name="note" value="{{ g.note }}" maxlength="255" placeholder="e.g. Court order — father may not collect"></div>

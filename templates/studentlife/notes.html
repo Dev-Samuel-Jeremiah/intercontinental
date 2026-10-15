@@ -1,0 +1,28 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Shared notes{% endblock %}
+{% block content %}
+{% include "studentlife/_head.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'studentlife:hub' %}" style="color:inherit">My school life</a></div>
+  <h1 class="fin-title">Shared <em>notes</em></h1>
+  <p class="fin-sub">Notes students in {{ me.class_assigned.level|default:me.class_assigned.name }} share with each other. Share your own — teachers check them first.</p>
+</div></div>
+<div class="fin-grid">
+  <form method="post" enctype="multipart/form-data" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="share">
+    <h3 style="margin:0 0 .6rem">Share notes</h3>
+    <div class="row2"><div><label>Subject</label><select name="subject">{% for s in subjects %}<option value="{{ s.pk }}">{{ s.name }}</option>{% endfor %}</select></div><div><label>Title</label><input name="title" required maxlength="160"></div></div>
+    <div><label>Notes</label><textarea name="body" rows="5"></textarea></div>
+    <div><label>Or a file <span class="hint">PDF or photo</span></label><input type="file" name="file"></div>
+    <button class="fin-btn fin-btn-gold" type="submit">Share</button>
+  </form>
+  <div>
+    <form method="get" class="fin-form" style="display:flex;gap:.4rem;margin-bottom:.8rem"><select name="subject"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.pk }}" {% if subject and s.pk == subject.pk %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select><button class="fin-btn fin-btn-sm" type="submit">Filter</button></form>
+    {% for n in items %}<div class="panel" style="margin-bottom:.8rem"><div class="panel-h"><h3>{{ n.title }} <span class="chip">{{ n.subject.name }}</span>{% if n.status != 'APPROVED' %} <span class="chip amber">{{ n.get_status_display }}</span>{% endif %}</h3></div><div class="panel-b">
+      <small class="hint">by {{ n.author.full_name|truncatewords:1 }} · {{ n.created_at|date:"j M" }} · {{ n.n_likes }} found this helpful</small>
+      {% if n.body %}<p>{{ n.body|linebreaksbr|truncatewords_html:120 }}</p>{% endif %}
+      {% if n.file %}<a href="{% url 'studentlife:note_file' n.pk %}" target="_blank"><i class="bi bi-paperclip"></i> Open file</a>{% endif %}
+      <div style="display:flex;gap:.3rem;margin-top:.4rem">{% if n.author_id == me.pk %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ n.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Delete</button></form>{% else %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="like"><input type="hidden" name="id" value="{{ n.pk }}"><button class="fin-btn fin-btn-sm" type="submit">👍 Helpful</button></form><form method="post">{% csrf_token %}<input type="hidden" name="action" value="report"><input type="hidden" name="id" value="{{ n.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Report</button></form>{% endif %}</div>
+    </div></div>{% empty %}<div class="panel"><div class="panel-b"><p class="empty">No notes yet — be the first to share.</p></div></div>{% endfor %}
+  </div>
+</div>
+{% endblock %}

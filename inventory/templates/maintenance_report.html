@@ -1,0 +1,8 @@
+<h1>Maintenance Report</h1>
+<ul>
+{% for log in logs %}
+  <li>
+    {{ log.asset.name }} – {{ log.date }} – Cost: {{ log.cost }}
+  </li>
+{% endfor %}
+</ul>

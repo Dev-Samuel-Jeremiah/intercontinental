@@ -1,0 +1,53 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ club.name }}{% endblock %}
+{% block content %}
+<style>
+  .mt td{vertical-align:middle}
+  .mt select{padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem}
+  .cand{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.3rem .8rem;max-height:260px;overflow:auto;margin:.6rem 0}
+  .cand label{display:flex;gap:.4rem;align-items:center;font-size:.84rem;color:var(--slate2);cursor:pointer}
+  .att{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.3rem .8rem;margin:.4rem 0}
+  .att label{display:flex;gap:.4rem;align-items:center;font-size:.84rem;color:var(--slate2);cursor:pointer}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Club</div>
+  <h1 class="fin-title">{{ club.name }}</h1>
+  <p class="fin-sub">{{ club.description }}{% if club.meeting_day %} · {{ club.get_meeting_day_display }}{% if club.meeting_time %} {{ club.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if club.venue %} · {{ club.venue }}{% endif %} · patron{{ club.patrons.all|length|pluralize }}: {% for p in club.patrons.all %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}none yet{% endfor %}</p>
+</div><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:clubs' %}"><i class="bi bi-arrow-left"></i> All clubs</a></div>
+{% include "curriculum/_nav.html" %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Members ({{ members|length }}{% if club.capacity %}/{{ club.capacity }}{% endif %})</h3></div>
+      {% if members %}<div style="overflow-x:auto"><table class="tbl mt"><thead><tr><th>Student</th><th>Class</th><th>Role</th><th>Attendance</th><th></th></tr></thead><tbody>
+      {% for m in members %}<tr><td class="name">{{ m.student.full_name }}</td><td>{{ m.student.class_assigned.name|default:"—" }}</td>
+        <td>{% if runs %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="role"><input type="hidden" name="member_id" value="{{ m.id }}"><select name="role" onchange="this.form.submit()">{% for k, l in roles %}<option value="{{ k }}" {% if k == m.role %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></form>
+          {% else %}{% if m.role != 'MEMBER' %}<span class="chip gold">{{ m.get_role_display }}</span>{% else %}Member{% endif %}{% endif %}</td>
+        <td>{% if m.rate is not None %}<span class="chip {% if m.rate >= 75 %}green{% elif m.rate >= 50 %}amber{% else %}red{% endif %}">{{ m.rate }}%</span>{% else %}—{% endif %}</td>
+        <td>{% if runs %}<form method="post">{% csrf_token %}<input type="hidden" name="member_id" value="{{ m.id }}"><button class="fin-btn fin-btn-sm" name="action" value="remove" onclick="return confirm('Remove {{ m.student.full_name|escapejs }} from the club?')"><i class="bi bi-x"></i></button></form>{% endif %}</td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-person-plus"></i><p>No members yet.</p></div>{% endif %}
+    </div>
+    {% if runs %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-plus"></i> Add members</h3>
+      <form method="get"><select name="class" onchange="this.form.submit()" class="fin-btn fin-btn-sm"><option value="">From class…</option>{% for c in classes %}<option value="{{ c.id }}" {% if c.id == pick_class.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></form></div>
+      {% if pick_class %}<div class="panel-b"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="add"><input type="hidden" name="class_id" value="{{ pick_class.id }}">
+        {% if candidates %}<div class="cand">{% for s in candidates %}<label><input type="checkbox" name="student_ids" value="{{ s.id }}"> {{ s.full_name }}</label>{% endfor %}</div>
+        <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Add to {{ club.name }}</button>
+        {% else %}<p class="hint" style="margin:0">Everyone in {{ pick_class.name }} is already a member.</p>{% endif %}</form></div>{% endif %}
+    </div>{% endif %}
+  </div>
+  <div>
+    {% if runs and members %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-check"></i> Record a meeting</h3></div><div class="panel-b">
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="meeting">
+        <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}"></div><div><label>Topic</label><input name="topic" maxlength="160"></div></div>
+        <div><label>Present <span class="hint">(untick anyone absent)</span></label><div class="att">{% for m in members %}<label><input type="checkbox" name="present" value="{{ m.student_id }}" checked style="width:auto"> {{ m.student.full_name }}</label>{% endfor %}</div></div>
+        <div><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+        <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit">Save meeting</button>
+      </form></div></div>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Meetings</h3></div><div class="panel-b">
+      {% for mt in meetings %}<div style="padding:.45rem 0;border-bottom:1px solid var(--rim)"><div style="display:flex;justify-content:space-between;gap:.5rem"><b>{{ mt.date|date:"D j M Y" }}</b>
+        <span class="hint">{{ mt.present_count }} of {{ mt.attendance.all|length }} present</span></div>
+        {% if mt.topic %}<div>{{ mt.topic }}</div>{% endif %}{% if mt.notes %}<div class="hint">{{ mt.notes|truncatechars:140 }}</div>{% endif %}</div>
+      {% empty %}<p class="hint" style="margin:0">No meetings recorded.</p>{% endfor %}
+    </div></div>
+  </div>
+</div>
+{% endblock %}

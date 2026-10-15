@@ -1,0 +1,114 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Staff reports{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">People &amp; HR &middot; Staff reports</div>
+    <h1 class="rp-title">Staff <em>reports</em></h1>
+    <p class="rp-sub">{{ period_label }}{% if campus %} &middot; {{ campus.name }} staff{% endif %}</p>
+  </div>
+  <div class="rp-actions">
+    <div class="rp-seg">
+      <a href="?period=daily&date={{ start|date:'Y-m-d' }}" class="{% if period == 'DAILY' %}on{% endif %}">Daily</a>
+      <a href="?period=weekly&date={{ start|date:'Y-m-d' }}" class="{% if period == 'WEEKLY' %}on{% endif %}">Weekly</a>
+    </div>
+    <form method="get" class="rp-nav">
+      <input type="hidden" name="period" value="{{ period|lower }}">
+      <a href="?period={{ period|lower }}&date={{ prev|date:'Y-m-d' }}" title="Previous"><i class="bi bi-chevron-left"></i></a>
+      <input type="date" name="date" value="{{ start|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Pick a day">
+      {% if next %}<a href="?period={{ period|lower }}&date={{ next|date:'Y-m-d' }}" title="Next"><i class="bi bi-chevron-right"></i></a>{% else %}<span class="off"><i class="bi bi-chevron-right"></i></span>{% endif %}
+    </form>
+    {% if not is_current %}<a class="rp-btn" href="?period={{ period|lower }}"><i class="bi bi-calendar-check"></i> {% if period == 'WEEKLY' %}This week{% else %}Today{% endif %}</a>{% endif %}
+    <button class="rp-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  </div>
+</div>
+
+{% if closed %}<div class="rp-banner"><i class="bi bi-moon-stars"></i> No school day in this period (weekend or public holiday) — reports are not expected.</div>{% endif %}
+
+<div class="rp-stats">
+  <div class="rp-stat" style="--c:var(--green)"><small><i class="bi bi-inbox-fill"></i> Received</small><b>{{ counts.in }}</b><span>of {{ rows|length }} staff</span></div>
+  <div class="rp-stat" style="--c:var(--champagne)"><small><i class="bi bi-hourglass-split"></i> To review</small><b>{{ counts.to_review }}</b><span>submitted, not reviewed</span></div>
+  <div class="rp-stat" style="--c:var(--blue)"><small><i class="bi bi-check2-all"></i> Reviewed</small><b>{{ counts.reviewed|default:0 }}</b><span>feedback given</span></div>
+  <div class="rp-stat" style="--c:var(--red)"><small><i class="bi bi-alarm"></i> Late</small><b>{{ counts.late|default:0 }}</b><span>sent after the due date</span></div>
+  <div class="rp-stat" style="--c:var(--amber)"><small><i class="bi bi-exclamation-triangle"></i> Outstanding</small><b>{{ counts.outstanding }}</b><span>{{ counts.draft|default:0 }} draft{{ counts.draft|pluralize }} not sent</span></div>
+</div>
+
+<div class="rp-panel">
+  <div class="rp-panel-h">
+    <h3><i class="bi bi-people"></i> {% if period == 'WEEKLY' %}Weekly{% else %}Daily{% endif %} register</h3>
+    <div class="rp-actions rp-tools">
+      <label class="rp-search"><i class="bi bi-search"></i><input type="search" id="rp-q" placeholder="Find staff…" autocomplete="off"></label>
+      <div class="rp-filters" id="rp-filters">
+        <button type="button" class="on" data-f="all">All</button>
+        <button type="button" data-f="review">To review</button>
+        <button type="button" data-f="reviewed">Reviewed</button>
+        <button type="button" data-f="late">Late</button>
+        <button type="button" data-f="outstanding">Outstanding</button>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="rp-table">
+      <thead><tr><th>Staff</th><th>Status</th><th>Submitted</th><th>Summary</th><th style="text-align:right"></th></tr></thead>
+      <tbody id="rp-rows">
+        {% for r in rows %}
+        <tr data-name="{{ r.staff.full_name|lower }}" data-state="{{ r.state }}">
+          <td><div class="rp-person"><div class="rp-av">{{ r.staff.full_name|slice:":1"|upper }}</div>
+            <div><b>{{ r.staff.full_name }}</b><small>{{ r.staff.get_role_display }}</small></div></div></td>
+          <td data-label="Status">
+            {% if r.state == 'reviewed' %}<span class="rp-chip green"><i class="bi bi-check2-all"></i> Reviewed</span>
+            {% elif r.state == 'submitted' %}<span class="rp-chip blue"><i class="bi bi-send-check"></i> Submitted</span>
+            {% elif r.state == 'late' %}<span class="rp-chip red"><i class="bi bi-alarm"></i> Submitted late</span>
+            {% elif r.state == 'draft' %}<span class="rp-chip amber"><i class="bi bi-pencil"></i> Draft — not sent</span>
+            {% elif r.state == 'overdue' %}<span class="rp-chip red"><i class="bi bi-exclamation-octagon"></i> Overdue</span>
+            {% elif r.state == 'missing' %}<span class="rp-chip amber"><i class="bi bi-hourglass"></i> Not yet</span>
+            {% elif r.state == 'leave' %}<span class="rp-chip blue"><i class="bi bi-calendar2-x"></i> On leave</span>
+            {% else %}<span class="rp-chip grey">Not expected</span>{% endif %}
+          </td>
+          <td data-label="Submitted">{% if r.report.submitted_at %}<b>{{ r.report.submitted_at|date:"D j M" }}</b><br><small class="rp-muted">{{ r.report.submitted_at|date:"H:i" }}</small>{% else %}<span class="rp-muted">—</span>{% endif %}</td>
+          <td data-label="Summary">{% if r.report and r.report.status != 'DRAFT' %}<div class="rp-snip">{{ r.report.work_done }}</div>{% else %}<span class="rp-muted">—</span>{% endif %}</td>
+          <td style="text-align:right">
+            {% if r.report and r.report.status != 'DRAFT' %}
+              <a class="rp-btn sm{% if r.state == 'submitted' or r.state == 'late' %} gold{% endif %}" href="{% url 'hr:report' r.report.pk %}">{% if r.state == 'submitted' or r.state == 'late' %}Review{% else %}Open{% endif %}</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="rp-empty"><i class="bi bi-people"></i>No staff yet.</td></tr>
+        {% endfor %}
+        <tr id="rp-none" hidden><td colspan="5" class="rp-empty">No staff match this filter.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<p class="rp-muted" style="font-size:.78rem">Daily reports are on time until the end of the next day; weekly reports until the Monday after. Drafts stay private to the staff member until they submit.{% if campus %} Showing {{ campus.name }} staff — pick "All sections" on the dashboard to see everyone.{% endif %}</p>
+
+<script>
+(function () {
+  const rows = [...document.querySelectorAll('#rp-rows tr[data-name]')];
+  const none = document.getElementById('rp-none'), q = document.getElementById('rp-q');
+  let filter = 'all';
+  const tests = {
+    all: () => true,
+    review: r => ['submitted', 'late'].includes(r.dataset.state),
+    reviewed: r => r.dataset.state === 'reviewed',
+    late: r => r.dataset.state === 'late',
+    outstanding: r => ['missing', 'overdue', 'draft'].includes(r.dataset.state),
+  };
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let shown = 0;
+    rows.forEach(r => { const ok = tests[filter](r) && (!term || r.dataset.name.includes(term)); r.hidden = !ok; if (ok) shown++; });
+    if (none) none.hidden = shown > 0 || !rows.length;
+  }
+  document.getElementById('rp-filters').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#rp-filters button').forEach(x => x.classList.toggle('on', x === b));
+    filter = b.dataset.f; apply();
+  });
+  q.addEventListener('input', apply);
+})();
+</script>
+{% endblock %}

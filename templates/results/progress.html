@@ -1,0 +1,14 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Progress — {{ student.full_name }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Results</div>
+  <h1 class="fin-title">{{ student.full_name }} — <em>progress</em></h1>
+  <p class="fin-sub">{{ student.class_assigned.name|default:"" }} · every term's results, including ones not yet published.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}<a class="fin-btn fin-btn-sm" href="{% url 'results:transcript' student.id %}"><i class="bi bi-file-earmark-text"></i> Transcript</a>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'users:student_profile' student.id %}"><i class="bi bi-person"></i> Profile</a>
+</div></div>
+{% include "results/_progress_body.html" %}
+{% endblock %}

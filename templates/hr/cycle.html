@@ -1,0 +1,20 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ c.title }}{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'hr:appraisals' %}" style="color:inherit">Appraisals</a></div>
+  <h1 class="fin-title">{{ c.title }}</h1>
+  <p class="fin-sub">{{ c.opens|date:"j M Y" }} – {{ c.closes|date:"j M Y" }} · {{ done }} of {{ items|length }} complete</p>
+</div>
+<form method="post">{% csrf_token %}<button class="fin-btn" type="submit">{% if c.open %}Close self-reviews{% else %}Reopen self-reviews{% endif %}</button></form></div>
+{% include "hr/_nav.html" %}
+<div class="panel"><div class="panel-b">
+  <table class="tbl"><thead><tr><th>Staff</th><th>Reviewer</th><th>Status</th><th>Overall</th></tr></thead><tbody>
+  {% for a in items %}<tr><td class="name"><a href="{% url 'hr:appraisal' a.pk %}">{{ a.staff.full_name }}</a></td><td>{{ a.reviewer.full_name|default:"Administrator" }}</td><td>{{ a.get_status_display }}</td><td>{% if a.overall %}{{ a.overall }}{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+</div></div>
+<div class="panel" style="margin-top:1.2rem"><div class="panel-h"><h3>Criteria</h3></div><div class="panel-b">
+  <table class="tbl" data-no-export><tbody>{% for cr in c.criteria %}<tr><td>{{ cr.name }}</td><td>weight {{ cr.weight }}</td></tr>{% endfor %}</tbody></table>
+</div></div>
+{% endblock %}

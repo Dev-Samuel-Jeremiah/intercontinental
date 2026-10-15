@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lesson attendance{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Attendance</div>
+  <h1 class="fin-title">Lesson <em>attendance</em></h1>
+  <p class="fin-sub">{{ day|date:"l j F Y" }} — registers taken, registers missing, and children in school who missed a lesson.</p>
+</div><div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-sm" href="?date={{ prev|date:'Y-m-d' }}"><i class="bi bi-chevron-left"></i></a><a class="fin-btn fin-btn-sm" href="?date={{ next|date:'Y-m-d' }}"><i class="bi bi-chevron-right"></i></a>
+  <a class="fin-btn fin-btn-sm" href="{% url 'timetable:subject_attendance' %}"><i class="bi bi-table"></i> By subject</a></div></div>
+{% if not has_timetable %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>No timetable has been published yet.</p></div></div>{% else %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Lessons</small><b>{{ rows|length }}</b></div>
+  <div class="fin-stat"><small>Registers missing</small><b style="color:{% if missing %}var(--amber){% else %}var(--green){% endif %}">{{ missing|length }}</b></div>
+  <div class="fin-stat"><small>In school, missed a lesson</small><b style="color:{% if missed %}var(--red){% else %}var(--green){% endif %}">{{ missed|length }}</b></div>
+</div>
+<div class="fin-grid">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> In school but missed a lesson</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+    {% for student, slots in missed %}<tr><td><a href="{% url 'users:student_profile' student.id %}#attendance" style="color:var(--white)"><b>{{ student.full_name }}</b></a><br><span class="hint">{{ student.class_assigned.name|default:"" }}</span></td>
+      <td>{% for s in slots %}<span class="chip red" style="display:inline-block;margin:.1rem">{{ s.time_slot.start_time|time:"H:i" }} {{ s.subject.name }}</span>{% endfor %}</td></tr>
+    {% empty %}<tr><td class="empty"><i class="bi bi-check2-circle"></i><p>Every child marked present at school was in their lessons.</p></td></tr>{% endfor %}</tbody></table></div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Lessons</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
+    {% for r in rows %}<tr><td style="white-space:nowrap">{{ r.slot.time_slot.start_time|time:"H:i" }}</td><td><b>{{ r.slot.school_class.name }}</b> {{ r.slot.subject.name }}<br><span class="hint">{{ r.slot.teacher.full_name }}</span></td>
+      <td>{% if r.taken %}<span class="chip green">taken</span>{% else %}<a class="chip amber" href="{% url 'timetable:take_register' r.slot.id %}?date={{ day|date:'Y-m-d' }}" style="text-decoration:none">not taken</a>{% endif %}</td></tr>
+    {% empty %}<tr><td class="hint" style="padding:1rem">No lessons this day.</td></tr>{% endfor %}</tbody></table></div></div>
+</div>{% endif %}
+{% endblock %}
