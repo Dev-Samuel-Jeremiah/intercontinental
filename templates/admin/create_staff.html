@@ -384,10 +384,10 @@ body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-
       </div>
       <h1 class="header-title">Create <em>Staff</em> Account</h1>
     </div>
-    <div class="header-badge">
-      <i class="bi bi-person-plus-fill"></i>
-      New Staff
-    </div>
+    <a class="header-badge" href="{% url 'users:import_staff' %}" style="text-decoration:none" title="Register many at once from a spreadsheet">
+      <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+      Import many from Excel
+    </a>
   </div>
 
   <!-- ─── FORM PANEL ─── -->

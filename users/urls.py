@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_achievements, views_attendance, views_profile, views_roster
+from . import views, views_achievements, views_attendance, views_import, views_profile, views_roster
 from users.views import parent_login, parent_dashboard
 
 app_name = "users"
@@ -19,6 +19,15 @@ urlpatterns = [
 
     # Student Management
     path('students/register/', views.register_student, name='register_student'),
+    # Bulk registration from Excel
+    path('students/import/', views_import.import_page, {'kind': 'students'}, name='import_students'),
+    path('students/import/confirm/', views_import.import_confirm, {'kind': 'students'}, name='import_students_confirm'),
+    path('students/import/done/', views_import.import_done, {'kind': 'students'}, name='import_students_done'),
+    path('staff/import/', views_import.import_page, {'kind': 'staff'}, name='import_staff'),
+    path('staff/import/confirm/', views_import.import_confirm, {'kind': 'staff'}, name='import_staff_confirm'),
+    path('staff/import/done/', views_import.import_done, {'kind': 'staff'}, name='import_staff_done'),
+    path('import/<str:kind>/template.xlsx', views_import.import_template, name='import_template'),
+    path('import/<str:kind>/logins.xlsx', views_import.import_credentials, name='import_credentials'),
     path('students/generate_password/', views.generate_student_password_view, name='generate_student_password'),
     path('students/all/', views.all_students, name='all_students'),
     path('students/export/', views.export_students_excel, name='export_students_excel'),

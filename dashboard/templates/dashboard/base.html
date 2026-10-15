@@ -740,8 +740,14 @@
         <a href="{% url 'users:create_staff' %}" class="nav-item" data-tooltip="Create Staff">
           <i class="bi bi-person-plus-fill"></i><span class="ni-label">Create Staff</span>
         </a>
+        <a href="{% url 'users:import_staff' %}" class="nav-item" data-tooltip="Import Staff">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i><span class="ni-label">Import Staff (Excel)</span>
+        </a>
         <a href="{% url 'users:register_student' %}" class="nav-item" data-tooltip="Register">
           <i class="bi bi-mortarboard-fill"></i><span class="ni-label">Register Student</span>
+        </a>
+        <a href="{% url 'users:import_students' %}" class="nav-item" data-tooltip="Import Students">
+          <i class="bi bi-file-earmark-spreadsheet-fill"></i><span class="ni-label">Import Students (Excel)</span>
         </a>
         <a href="{% url 'users:all_students' %}" class="nav-item" data-tooltip="Students">
           <i class="bi bi-people-fill"></i><span class="ni-label">All Students</span>

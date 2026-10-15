@@ -1,0 +1,60 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ title }} imported{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+<style>
+  .ir-pw{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.04em;color:var(--champagne-lt)}
+  .ir-hidden .ir-pw{filter:blur(5px);user-select:none}
+</style>
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">{{ title }} &middot; Bulk registration &middot; Done</div>
+    <h1 class="rp-title">{{ count }} {% if count == 1 %}{{ one }}{% else %}{{ many }}{% endif %} <em>registered</em></h1>
+    <p class="rp-sub"><i class="bi bi-file-earmark-excel"></i> {{ file }}{% if skipped %} &middot; {{ skipped }} row{{ skipped|pluralize }} skipped because of problems{% endif %}{% if new_classes %} &middot; new classes: {{ new_classes|join:", " }}{% endif %}</p>
+  </div>
+  <div class="rp-actions">
+    <a class="rp-btn gold" href="{% url 'users:import_credentials' kind %}"><i class="bi bi-download"></i> Download logins (Excel)</a>
+    <a class="rp-btn" href="{% url 'users:import_'|add:kind %}"><i class="bi bi-upload"></i> Import more</a>
+    <a class="rp-btn" href="{{ list_url }}"><i class="bi bi-people"></i> {% if kind == 'students' %}All students{% else %}Staff directory{% endif %}</a>
+  </div>
+</div>
+
+<div class="rp-banner green"><i class="bi bi-shield-lock"></i><span>
+  {% if kind == 'students' %}Students sign in at <b>/student/login/</b> with their admission number and student password; parents at <b>/parent/login/</b> with the admission number and parent password. Passwords can be reprinted any time from <b>Student Passwords</b>.
+  {% else %}Staff sign in at <b>/staff/login/</b> and must choose their own password the first time. Temporary passwords are shown only now — download them before leaving.{% endif %}
+</span></div>
+
+<div class="rp-panel" id="ir-panel">
+  <div class="rp-panel-h">
+    <h3><i class="bi bi-key"></i> New logins</h3>
+    <button class="rp-btn sm" type="button" id="ir-toggle"><i class="bi bi-eye-slash"></i> Hide passwords</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="rp-table">
+      {% if kind == 'students' %}
+      <thead><tr><th>Admission no.</th><th>Name</th><th>Class</th><th>Student password</th><th>Parent password</th></tr></thead>
+      <tbody>{% for r in created %}<tr>
+        <td data-label="Admission no."><b>{{ r.admission_number }}</b></td><td data-label="Name">{{ r.full_name }}</td>
+        <td data-label="Class">{{ r.class|default:"—" }}</td>
+        <td data-label="Student password"><span class="ir-pw">{{ r.student_password }}</span></td>
+        <td data-label="Parent password"><span class="ir-pw">{{ r.parent_password }}</span></td></tr>{% endfor %}</tbody>
+      {% else %}
+      <thead><tr><th>Name</th><th>Role</th><th>Username</th><th>Temporary password</th><th>Section</th></tr></thead>
+      <tbody>{% for r in created %}<tr>
+        <td data-label="Name"><b>{{ r.full_name }}</b></td><td data-label="Role">{{ r.role }}</td>
+        <td data-label="Username">{{ r.username }}</td>
+        <td data-label="Temporary password"><span class="ir-pw">{{ r.temporary_password }}</span></td>
+        <td data-label="Section">{{ r.section|default:"—" }}</td></tr>{% endfor %}</tbody>
+      {% endif %}
+    </table>
+  </div>
+</div>
+
+<script>
+  document.getElementById('ir-toggle').addEventListener('click', function () {
+    const hidden = document.getElementById('ir-panel').classList.toggle('ir-hidden');
+    this.innerHTML = hidden ? '<i class="bi bi-eye"></i> Show passwords' : '<i class="bi bi-eye-slash"></i> Hide passwords';
+  });
+</script>
+{% endblock %}

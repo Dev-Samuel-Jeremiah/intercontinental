@@ -1,0 +1,88 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Import {{ many }} from Excel{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+<style>
+  .im-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.4rem}
+  @media(max-width:900px){.im-steps{grid-template-columns:1fr}}
+  .im-step{position:relative;padding:1.2rem 1.3rem;border-radius:var(--radius);background:var(--surface);border:1px solid var(--rim);display:flex;gap:.9rem}
+  .im-num{width:34px;height:34px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#0a1f44;
+    background:linear-gradient(135deg,var(--champagne),var(--champagne-dk))}
+  .im-step b{display:block;color:var(--white);margin-bottom:.2rem}
+  .im-step p{margin:0;color:var(--slate2);font-size:.82rem;line-height:1.5}
+  .im-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;padding:2.4rem 1rem;border-radius:16px;
+    border:2px dashed var(--rim3);background:var(--surface2);text-align:center;cursor:pointer;transition:border-color .18s,background .18s}
+  .im-drop:hover,.im-drop.over{border-color:var(--champagne);background:var(--champagne-dim)}
+  .im-drop i{font-size:2.2rem;color:var(--champagne)}
+  .im-drop b{color:var(--white)}
+  .im-drop small{color:var(--slate)}
+  .im-drop input{display:none}
+  .im-file{font-weight:600;color:var(--champagne-lt)}
+  .im-opt{display:flex;align-items:flex-start;gap:.6rem;margin-top:1rem;font-size:.84rem;color:var(--slate2)}
+  .im-opt input{margin-top:.2rem;accent-color:var(--champagne)}
+  .im-cols td{font-size:.8rem}
+  .im-req{color:var(--champagne);font-weight:700}
+</style>
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">{{ title }} &middot; Bulk registration</div>
+    <h1 class="rp-title">Import {{ many }} from <em>Excel</em></h1>
+    <p class="rp-sub">Register up to {{ max_rows }} {{ many }} at once. You will see every row checked before anything is saved.</p>
+  </div>
+  <div class="rp-actions">
+    <a class="rp-btn" href="{{ single_url }}"><i class="bi bi-person-plus"></i> Register one {{ one }}</a>
+  </div>
+</div>
+
+<div class="im-steps">
+  <div class="im-step"><div class="im-num">1</div><div><b>Download the template</b>
+    <p>An Excel file with the right columns, drop-down lists{% if kind == 'students' %} of your classes{% else %} of roles and sections{% endif %}, and instructions.</p>
+    <a class="rp-btn sm gold" style="margin-top:.7rem" href="{% url 'users:import_template' kind %}"><i class="bi bi-file-earmark-excel"></i> Download template</a></div></div>
+  <div class="im-step"><div class="im-num">2</div><div><b>Fill it in</b>
+    <p>One {{ one }} per row. Only <span class="im-req">Full Name</span>{% if kind == 'staff' %} and <span class="im-req">Role</span> are{% else %} is{% endif %} required. Your own spreadsheet also works if the headers are similar.</p></div></div>
+  <div class="im-step"><div class="im-num">3</div><div><b>Upload and check</b>
+    <p>Problems are shown row by row. Import the rows that are ready, then download the new logins.</p></div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:1.3rem;align-items:start" class="im-grid">
+  <form method="post" enctype="multipart/form-data" class="rp-panel"><div class="rp-panel-b">{% csrf_token %}
+    <label class="im-drop" id="im-drop">
+      <i class="bi bi-cloud-arrow-up"></i>
+      <b>Choose your Excel file</b>
+      <small>or drag it here · .xlsx, .xls or .csv · up to 5 MB</small>
+      <span class="im-file" id="im-file"></span>
+      <input type="file" name="file" id="im-input" accept=".xlsx,.xlsm,.xls,.csv" required>
+    </label>
+    {% if kind == 'students' %}
+    <label class="im-opt"><input type="checkbox" name="create_classes" value="1">
+      <span>Create classes that don't exist yet <span class="rp-muted">— useful when setting up a new session. Otherwise a class name that doesn't match is shown as a problem.</span></span></label>
+    {% endif %}
+    <button class="rp-btn gold" type="submit" style="margin-top:1.2rem;width:100%;justify-content:center"><i class="bi bi-search"></i> Check the file</button>
+    <p class="rp-muted" style="font-size:.76rem;margin:.7rem 0 0;text-align:center">Nothing is saved until you confirm on the next page.</p>
+  </div></form>
+
+  <div class="rp-panel">
+    <div class="rp-panel-h"><h3><i class="bi bi-table"></i> Columns</h3></div>
+    <table class="rp-table im-cols"><tbody>
+      {% for c in columns %}<tr><td><b>{{ c.header }}</b>{% if c.required %} <span class="im-req">*</span>{% endif %}<br><span class="rp-muted">{{ c.help }}</span></td></tr>{% endfor %}
+    </tbody></table>
+    {% if kind == 'students' %}
+    <div class="rp-panel-b" style="border-top:1px solid var(--rim)"><b style="color:var(--white);font-size:.84rem">Classes in the portal</b>
+      <p class="rp-muted" style="font-size:.8rem;margin:.4rem 0 0">{% for c in classes %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% empty %}None yet — tick "Create classes" above, or add them under Manage Classes first.{% endfor %}</p></div>
+    {% endif %}
+  </div>
+</div>
+<style>@media(max-width:1000px){.im-grid{grid-template-columns:1fr!important}}</style>
+
+<script>
+(function () {
+  const drop = document.getElementById('im-drop'), input = document.getElementById('im-input'), label = document.getElementById('im-file');
+  const show = () => { label.textContent = input.files.length ? input.files[0].name : ''; };
+  input.addEventListener('change', show);
+  ['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', ev => { if (ev.dataTransfer.files.length) { input.files = ev.dataTransfer.files; show(); } });
+})();
+</script>
+{% endblock %}

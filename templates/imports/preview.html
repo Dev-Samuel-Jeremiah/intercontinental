@@ -1,0 +1,99 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Check {{ many }} import{% endblock %}
+{% block content %}
+{% include "hr/_report_styles.html" %}
+<style>
+  .ip-row.bad td{background:rgba(232,112,112,.04)}
+  .ip-issues{margin:.3rem 0 0;padding:0;list-style:none;font-size:.76rem;line-height:1.45}
+  .ip-issues li{display:flex;gap:.35rem}
+  .ip-issues .e{color:var(--red)}
+  .ip-issues .w{color:var(--amber)}
+  .ip-confirm{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:1.1rem 1.3rem;margin-bottom:1.3rem;
+    border-radius:var(--radius);background:var(--surface);border:1px solid var(--champagne-border)}
+  .ip-confirm p{margin:0;color:var(--slate2);font-size:.86rem}
+  .ip-confirm b{color:var(--white)}
+  .ip-num{color:var(--slate);font-variant-numeric:tabular-nums;font-size:.78rem}
+</style>
+
+<div class="rp-head">
+  <div>
+    <div class="rp-eyebrow">{{ title }} &middot; Bulk registration &middot; Step 2 of 3</div>
+    <h1 class="rp-title">Check the <em>file</em></h1>
+    <p class="rp-sub"><i class="bi bi-file-earmark-excel"></i> {{ file_name }} &middot; {{ checks|length }} row{{ checks|length|pluralize }} read &middot; nothing has been saved yet</p>
+  </div>
+  <div class="rp-actions"><a class="rp-btn" href="{% url 'users:import_'|add:kind %}"><i class="bi bi-arrow-repeat"></i> Upload a different file</a></div>
+</div>
+
+<div class="rp-stats" style="grid-template-columns:repeat(4,1fr)">
+  <div class="rp-stat" style="--c:var(--green)"><small><i class="bi bi-check2-circle"></i> Ready</small><b>{{ ready }}</b><span>will be registered</span></div>
+  <div class="rp-stat" style="--c:var(--amber)"><small><i class="bi bi-exclamation-triangle"></i> With notes</small><b>{{ warned }}</b><span>ready, worth a look</span></div>
+  <div class="rp-stat" style="--c:var(--red)"><small><i class="bi bi-x-octagon"></i> Problems</small><b>{{ failed }}</b><span>will be skipped</span></div>
+  <div class="rp-stat" style="--c:var(--blue)"><small><i class="bi bi-list-ol"></i> Rows</small><b>{{ checks|length }}</b><span>in the file</span></div>
+</div>
+
+{% if unknown %}<div class="rp-banner"><i class="bi bi-info-circle"></i> These columns were not recognised and are ignored: {{ unknown|join:", " }}.</div>{% endif %}
+{% if new_classes %}<div class="rp-banner"><i class="bi bi-plus-square"></i> New classes will be created: {{ new_classes|join:", " }}.</div>{% endif %}
+
+{% if ready %}
+<form method="post" action="{% url 'users:import_'|add:kind|add:'_confirm' %}" class="ip-confirm">{% csrf_token %}
+  <p><b>Register {{ ready }} {% if ready == 1 %}{{ one }}{% else %}{{ many }}{% endif %}</b>{% if failed %} — the {{ failed }} row{{ failed|pluralize }} with problems will be skipped; fix {% if failed == 1 %}it{% else %}them{% endif %} and import again later{% endif %}.
+    {% if kind == 'students' %}Each student gets a student password and a parent password.{% else %}Each person gets a temporary password to change at first sign-in.{% endif %}</p>
+  <button class="rp-btn gold" type="submit" onclick="this.disabled=true;this.innerHTML='<i class=\'bi bi-hourglass-split\'></i> Registering…';this.form.submit()"><i class="bi bi-check2-all"></i> Import {{ ready }} {% if ready == 1 %}{{ one }}{% else %}{{ many }}{% endif %}</button>
+</form>
+{% else %}
+<div class="rp-banner" style="background:var(--red-dim);border-color:var(--red-border);color:var(--red)"><i class="bi bi-x-octagon"></i> No rows are ready yet. Fix the problems below in Excel and upload the file again.</div>
+{% endif %}
+
+<div class="rp-panel">
+  <div class="rp-panel-h">
+    <h3><i class="bi bi-list-check"></i> Rows</h3>
+    <div class="rp-filters" id="ip-filters">
+      <button type="button" class="on" data-f="all">All</button>
+      <button type="button" data-f="bad">Problems ({{ failed }})</button>
+      <button type="button" data-f="warn">Notes ({{ warned }})</button>
+      <button type="button" data-f="ok">Ready ({{ ready }})</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="rp-table">
+      <thead><tr><th>Row</th><th>Status</th>{% for label in preview_columns %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+      <tbody id="ip-rows">
+        {% for c, cells in preview_rows %}
+        <tr class="ip-row{% if not c.ok %} bad{% endif %}" data-state="{% if not c.ok %}bad{% elif c.warnings %}warn{% else %}ok{% endif %}">
+          <td data-label="Row"><span class="ip-num">#{{ c.number }}</span></td>
+          <td data-label="Status">
+            {% if not c.ok %}<span class="rp-chip red"><i class="bi bi-x-lg"></i> Skip</span>
+            {% elif c.warnings %}<span class="rp-chip amber"><i class="bi bi-check2"></i> Ready</span>
+            {% else %}<span class="rp-chip green"><i class="bi bi-check2"></i> Ready</span>{% endif %}
+          </td>
+          {% for value in cells %}
+          <td>
+            {% if forloop.first %}<b>{{ value|default:"—" }}</b>
+              {% if c.errors or c.warnings %}<ul class="ip-issues">
+                {% for e in c.errors %}<li class="e"><i class="bi bi-x-circle"></i><span>{{ e }}</span></li>{% endfor %}
+                {% for w in c.warnings %}<li class="w"><i class="bi bi-info-circle"></i><span>{{ w }}</span></li>{% endfor %}
+              </ul>{% endif %}
+            {% else %}{{ value|default:"—" }}{% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+        <tr id="ip-none" hidden><td colspan="{{ preview_columns|length|add:2 }}" class="rp-empty">No rows here.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function () {
+  const rows = [...document.querySelectorAll('#ip-rows tr.ip-row')], none = document.getElementById('ip-none');
+  document.getElementById('ip-filters').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#ip-filters button').forEach(x => x.classList.toggle('on', x === b));
+    let shown = 0;
+    rows.forEach(r => { const ok = b.dataset.f === 'all' || r.dataset.state === b.dataset.f; r.hidden = !ok; if (ok) shown++; });
+    none.hidden = shown > 0;
+  });
+})();
+</script>
+{% endblock %}

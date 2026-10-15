@@ -593,10 +593,10 @@ body { background: var(--ink); color: var(--white); font-family: 'Outfit', sans-
       </div>
       <h1 class="header-title">Register <em>New Student</em></h1>
     </div>
-    <div class="header-badge">
-      <i class="bi bi-person-plus-fill"></i>
-      New Record
-    </div>
+    <a class="header-badge" href="{% url 'users:import_students' %}" style="text-decoration:none" title="Register many at once from a spreadsheet">
+      <i class="bi bi-file-earmark-spreadsheet-fill"></i>
+      Import many from Excel
+    </a>
   </div>
 
   <!-- ─── MAIN PANEL ─── -->
