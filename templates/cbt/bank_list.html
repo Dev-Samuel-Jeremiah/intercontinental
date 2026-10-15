@@ -12,6 +12,13 @@
   .tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
   .addbar{position:sticky;bottom:1rem;display:none;gap:.5rem;align-items:center;flex-wrap:wrap;padding:.8rem 1rem;border-radius:14px;border:1px solid var(--champagne-border);background:var(--surface2,#172f5c);margin-top:1rem}
   .addbar select{padding:.45rem .6rem;border-radius:9px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem;max-width:340px}
+  .imp summary{cursor:pointer;padding:.9rem 1.2rem;font-weight:600;color:var(--white);display:flex;align-items:center;gap:.55rem;flex-wrap:wrap}
+  .imp summary i{color:var(--champagne)}
+  .imp summary .hint{font-weight:400;margin-left:auto}
+  .imp-form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.7rem;align-items:end;border-top:1px solid var(--rim)}
+  .imp-form label{display:flex;flex-direction:column;gap:.3rem;font-size:.74rem;color:var(--slate2);font-weight:600}
+  .imp-form select,.imp-form input{padding:.55rem .65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.84rem}
+  @media(max-width:900px){.imp-form{grid-template-columns:1fr}}
 </style>
 <div class="fin-head"><div>
   <div class="fin-eyebrow">CBT &amp; Exams</div>
@@ -19,6 +26,32 @@
   <p class="fin-sub">Questions by subject, class level, topic and learning outcome — reused across exams and student practice. {{ total }} question{{ total|pluralize }} found.</p>
 </div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><a class="fin-btn" href="{% url 'assistant:questions' %}"><i class="bi bi-stars"></i> Write questions with AI</a><a class="fin-btn fin-btn-gold" href="{% url 'cbt:bank_new' %}{% if f.subject %}?subject={{ f.subject }}{% endif %}"><i class="bi bi-plus-lg"></i> Add a question</a></div></div>
 {% include "cbt/_bank_msgs.html" %}
+{% if importable %}
+<details class="panel imp" {% if not total %}open{% endif %}>
+  <summary><i class="bi bi-box-arrow-in-down"></i> Import questions from an existing exam
+    <span class="hint">{{ importable|length }} exam{{ importable|length|pluralize }} with questions not yet in the bank</span></summary>
+  <form method="post" class="panel-b imp-form" id="impform">{% csrf_token %}
+    <input type="hidden" name="next" value="{% url 'cbt:bank' %}">
+    <label>Exam
+      <select id="imp-exam" required>
+        <option value="">— Choose an exam —</option>
+        {% for e in importable %}<option value="{% url 'cbt:exam_to_bank' e.id %}">{{ e.title }} · {{ e.subject.name }} · {{ e.unsaved }} question{{ e.unsaved|pluralize }}</option>{% endfor %}
+      </select></label>
+    <label>Class level <input name="level" maxlength="40" list="imp-levels" placeholder="e.g. JSS 1"></label>
+    <datalist id="imp-levels">{% for l in levels %}<option value="{{ l }}">{% endfor %}</datalist>
+    <label>Topic <input name="topic" maxlength="120" placeholder="Optional — e.g. Fractions"></label>
+    <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-box-arrow-in-down"></i> Save to the bank</button>
+    <p class="hint" style="grid-column:1/-1;margin:0">Multiple-choice and true/false questions are copied, with their options and correct answers. Essay and short-answer questions stay on the exam. The exam itself is not changed, and questions already in the bank are skipped.</p>
+  </form>
+</details>
+<script>
+  document.getElementById('impform').addEventListener('submit', function (e) {
+    const url = document.getElementById('imp-exam').value;
+    if (!url) { e.preventDefault(); return; }
+    this.action = url;
+  });
+</script>
+{% endif %}
 <form method="get" class="panel"><div class="panel-b flt">
   <select name="subject"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.id }}" {% if f.subject == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
   <select name="level"><option value="">All levels</option>{% for l in levels %}<option {% if f.level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
@@ -39,7 +72,7 @@
         {% if q.n_uses %}<span class="chip">used in {{ q.n_uses }} exam{{ q.n_uses|pluralize }}</span>{% endif %}</div>
       {% if q.outcome %}<div class="hint" style="margin-top:.3rem"><i class="bi bi-bullseye"></i> {{ q.outcome }}</div>{% endif %}</div>
     <div>{% if q.editable %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:bank_edit' q.id %}"><i class="bi bi-pencil"></i></a>{% endif %}</div>
-  </div>{% empty %}<div class="empty"><i class="bi bi-collection"></i><p>No questions match. Add some, or save an existing exam's questions into the bank from the exam's analysis page.</p></div>{% endfor %}
+  </div>{% empty %}<div class="empty"><i class="bi bi-collection"></i><p>No questions match. Add one, or write some with AI{% if importable %}, or import an existing exam's questions with the panel above{% endif %}.</p></div>{% endfor %}
 </div>
 {% if page.has_other_pages %}<div style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span class="hint" style="align-self:center">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
 <div class="addbar" id="addbar"><b id="npick">0</b> selected — add to

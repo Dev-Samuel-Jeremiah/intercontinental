@@ -7,6 +7,7 @@ the bank, random pools, and item analysis after an exam.
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -49,6 +50,11 @@ def bank_list(request):
     if subject:
         exams = exams.filter(subject=subject)
     parts = [p for e in exams[:40] for p in e.parts.all() if p.part_type == 'CBT']
+    # Exams with objective questions not yet saved in the bank, for "Import from an exam"
+    importable = (exams.annotate(unsaved=Count('parts__questions', filter=Q(
+                      parts__questions__question_type__in=('MCQ', 'TF'),
+                      parts__questions__bank_question__isnull=True)))
+                  .filter(unsaved__gt=0)[:60])
     levels = sorted(set(BankQuestion.objects.filter(tenant=request.tenant).exclude(level='')
                         .values_list('level', flat=True)))
     for q in page:
@@ -56,7 +62,7 @@ def bank_list(request):
     query = '&'.join(f'{k}={v}' for k, v in f.items() if v)
     return render(request, 'cbt/bank_list.html', {
         'page': page, 'subjects': subjects, 'f': f, 'parts': parts, 'levels': levels, 'query': query,
-        'difficulties': BankQuestion.DIFFICULTY, 'total': qs.count(),
+        'difficulties': BankQuestion.DIFFICULTY, 'total': qs.count(), 'importable': importable,
     })
 
 
