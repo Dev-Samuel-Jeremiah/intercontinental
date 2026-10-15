@@ -1103,6 +1103,15 @@ button { font-family: inherit; }
                 {% else %}
                 <span class="btn-disabled"><i class="bi bi-check-circle-fill"></i> Done</span>
                 {% endif %}
+                {% if part.review.attempt %}
+                <a href="{% url 'cbt:review_answers' part.review.attempt %}" class="btn btn-primary">
+                  <i class="bi bi-lightbulb"></i> Review {{ part.part_type }} answers
+                </a>
+                {% elif part.review.opens %}
+                <span class="btn-disabled" title="Your teacher shows the answers after the exam closes">
+                  <i class="bi bi-lightbulb"></i> Review from {{ part.review.opens|date:"j M, H:i" }}
+                </span>
+                {% endif %}
               {% elif exam.status == "Open" %}
               <a href="{% url 'cbt:take_exam' exam.id part.part_type %}" class="btn btn-success">
                 <i class="bi bi-play-fill"></i> Start {{ part.part_type }}

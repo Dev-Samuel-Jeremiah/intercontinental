@@ -209,6 +209,27 @@ def review_open(attempt):
     return timezone.now() > exam.end_time
 
 
+def review_opens_at(attempt):
+    """When this submitted attempt can be reviewed: a time (possibly already past), or None if never."""
+    exam = attempt.exam_part.exam
+    if not attempt.completed or exam.answer_review == 'NEVER':
+        return None
+    if exam.answer_review == 'AFTER_SUBMIT':
+        return attempt.submitted_at or timezone.now()
+    return exam.end_time
+
+
+def review_link(attempt):
+    """What a student sees for reviewing this attempt: {'attempt': id} when open now,
+    {'opens': datetime} when it opens later, or None when answers are never shown."""
+    if attempt is None:
+        return None
+    if review_open(attempt):
+        return {'attempt': attempt.id}
+    opens = review_opens_at(attempt)
+    return {'opens': opens} if opens else None
+
+
 def review(attempt):
     saved = {a.question_id: a for a in StudentAnswer.objects.filter(attempt=attempt).select_related('selected_option')}
     out = []

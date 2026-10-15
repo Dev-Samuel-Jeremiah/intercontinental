@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.db.models import Q
 
 from academics.utils import get_active_session, get_active_term
+from cbt import engine as cbt_engine
 from cbt.models import Exam, ExamAttempt
 from results.models import TermResult, Term, AcademicSession
 from classroom.models import Course
@@ -245,9 +246,11 @@ def student_dashboard(request):
         status = 'Open' if exam.is_active else ('Closed' if exam.is_past else 'Upcoming')
         if status == 'Closed':
             closed_exams.append(exam)
-        exam_parts = [{'part_type': p.part_type,
-                        'is_completed': attempts.filter(exam_part=p, completed=True).exists()}
-                      for p in exam.parts.all()]
+        exam_parts = []
+        for p in exam.parts.all():
+            last = attempts.filter(exam_part=p, completed=True).select_related('exam_part__exam').order_by('-id').first()
+            exam_parts.append({'part_type': p.part_type, 'is_completed': last is not None,
+                               'review': cbt_engine.review_link(last)})
         exam_list.append({
             'id': exam.id, 'title': exam.title, 'subject': exam.subject.name,
             'start_time': exam.start_time, 'end_time': exam.end_time,

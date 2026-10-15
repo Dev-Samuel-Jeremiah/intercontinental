@@ -449,6 +449,7 @@
               <a href="{% url 'cbt:take_exam' exam.id part.part_type %}" class="btn-part btn-part-retake">
                 <i class="bi bi-arrow-repeat"></i> Retake {{ part.part_type }}
               </a>
+              {% if part.review_attempt %}<a href="{% url 'cbt:review_answers' part.review_attempt %}" class="btn-part btn-part-retake" style="margin-top:.35rem"><i class="bi bi-lightbulb"></i> Review answers</a>{% endif %}
             {% elif part.is_completed %}
               <button class="btn-part btn-part-done" disabled>
                 <i class="bi bi-check-circle-fill"></i> {{ part.part_type }} Completed
