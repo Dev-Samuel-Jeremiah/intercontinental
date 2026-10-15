@@ -300,6 +300,10 @@ def add_question(request):
             return redirect('cbt:cbt_add_question')
  
         exam_part = get_object_or_404(ExamPart, id=exam_part_id, exam__tenant=request.tenant)
+        if exam_part.part_type == 'CBT' and question_type == 'SA':
+            exam_part = exam_part.section_for('SA')
+            messages.info(request, "Short-answer questions need a teacher to mark them, so this one was added "
+                                   "to the exam's Essay section, not the objective (CBT) section.")
  
         # 🖼️ PROCESS IMAGE IF UPLOADED
         processed_image = None
@@ -1266,6 +1270,12 @@ def edit_question(request, question_id):
                 messages.error(request, "Invalid question type for CBT part.")
                 return redirect('cbt:edit_question', question_id=question.id)
             question.question_type = question_type
+            if question_type == 'SA':
+                # Typed answers are marked by a teacher: move it to the exam's Essay section
+                question.exam_part = exam_part.section_for('SA')
+                question.options.all().delete()
+                messages.info(request, "Short-answer questions are marked by a teacher, so this one moved to "
+                                       "the exam's Essay section.")
         else:
             question.question_type = None  # Essay questions do not have type
 
@@ -1496,11 +1506,25 @@ import os
 from django.core.files.base import ContentFile
 from pathlib import Path
 
+def _essay_question_count(exam_part):
+    return Question.objects.filter(exam_part__exam=exam_part.exam, exam_part__part_type='ESSAY').count()
+
+
+def _note_essay_moves(request, exam_part, essay_before):
+    """After an upload into an objective section: say how many short-answer questions went to Essay."""
+    moved = _essay_question_count(exam_part) - essay_before if exam_part.part_type == 'CBT' else 0
+    if moved > 0:
+        messages.info(request, f"{moved} short-answer question{'s' if moved != 1 else ''} "
+                               f"{'were' if moved != 1 else 'was'} put in the exam's Essay section — typed "
+                               f"answers are marked by a teacher, not in the objective (CBT) section.")
+
+
 def _process_word_upload(request, upload_file, exam_part):
     """
     Process Word document uploads with passages and images.
     Supports both embedded images (pasted in Word) and ZIP-referenced images.
     """
+    essay_before = _essay_question_count(exam_part)
     try:
         # ✅ Pass image_zip directly to parser — it handles everything internally
         images_zip = request.FILES.get('images_zip')
@@ -1547,7 +1571,7 @@ def _process_word_upload(request, upload_file, exam_part):
                 # ── Create Question ───────────────────────────────────────
                 # ✅ question_text is already clean — parser stripped IMAGE:/CAPTION:
                 question = Question.objects.create(
-                    exam_part     = exam_part,
+                    exam_part     = exam_part.section_for(q_data['question_type']),
                     question_text = q_data['question_text'],
                     question_type = q_data['question_type'],
                     marks         = float(q_data.get('marks', 1.0)),
@@ -1615,6 +1639,7 @@ def _process_word_upload(request, upload_file, exam_part):
             if skipped_count > 0:
                 msg += f"  • {skipped_count} question(s) skipped due to errors"
             messages.success(request, msg)
+            _note_essay_moves(request, exam_part, essay_before)
 
         return redirect('cbt:admin_exam_list')
 
@@ -1628,6 +1653,7 @@ def _process_text_upload(request, exam_part):
     Uses plain_text_parser to parse the raw text into question dicts,
     then saves them to the database exactly like the Word/Excel handlers.
     """
+    essay_before = _essay_question_count(exam_part)
     raw_text = request.POST.get('plain_text', '').strip()
 
     if not raw_text:
@@ -1658,7 +1684,7 @@ def _process_text_upload(request, exam_part):
             options = q_data.get('options', {})
 
             question = Question.objects.create(
-                exam_part     = exam_part,
+                exam_part     = exam_part.section_for(q_type),
                 question_text = q_data['question_text'],
                 question_type = q_type,
                 marks         = float(q_data.get('marks', 1.0)),
@@ -1694,6 +1720,7 @@ def _process_text_upload(request, exam_part):
         if skipped_count:
             msg += f" ({skipped_count} skipped due to errors.)"
         messages.success(request, msg)
+        _note_essay_moves(request, exam_part, essay_before)
     else:
         messages.error(request, "No questions were saved. Check your format and try again.")
 
@@ -1733,6 +1760,7 @@ def _process_excel_upload(request, upload_file, exam_part):
     """
     Process Excel/CSV uploads (original logic preserved)
     """
+    essay_before = _essay_question_count(exam_part)
     try:
         file_extension = upload_file.name.lower().split('.')[-1]
         
@@ -1808,7 +1836,7 @@ def _process_excel_upload(request, upload_file, exam_part):
 
         # Create Question
         question = Question.objects.create(
-            exam_part=exam_part,
+            exam_part=exam_part.section_for(question_type),
             question_text=question_text,
             question_type=question_type,
             marks=marks
@@ -1855,6 +1883,7 @@ def _process_excel_upload(request, upload_file, exam_part):
         if skipped_count > 0:
             msg += f" ({skipped_count} row(s) skipped due to invalid data.)"
         messages.success(request, msg)
+        _note_essay_moves(request, exam_part, essay_before)
 
     return redirect('cbt:admin_exam_list')
 

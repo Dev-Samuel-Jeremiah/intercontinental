@@ -84,6 +84,16 @@ class ExamPart(models.Model):
     def __str__(self):
         return f"{self.exam.title} - {self.part_type}"
 
+    def section_for(self, question_type):
+        """Where a question of this type belongs. A short-answer (typed) question needs a teacher
+        to mark it, so on an objective (CBT) section it goes to the exam's Essay section instead —
+        objective sections only mark chosen options, so a typed answer there would always score 0."""
+        if self.part_type == 'CBT' and question_type == 'SA':
+            essay, _ = ExamPart.objects.get_or_create(
+                exam=self.exam, part_type='ESSAY', defaults={'duration_minutes': self.duration_minutes})
+            return essay
+        return self
+
 
 # ----------------------------
 # CBT Questions
