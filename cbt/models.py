@@ -376,9 +376,16 @@ class BankOption(models.Model):
 # Practice (JAMB-style and topic drills)
 # ----------------------------
 class PracticeSession(TenantModelMixin, models.Model):
-    MODES = (('JAMB', 'UTME-style mock'), ('TOPIC', 'Topic drill'))
+    MODES = (('QUICK', 'Quick quiz'), ('DAILY', 'Daily challenge'), ('MISTAKES', 'Fix my mistakes'),
+             ('JAMB', 'UTME-style mock'), ('TOPIC', 'Topic drill'))
+    FEEDBACK = (('END', 'At the end'), ('INSTANT', 'After each question'))
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='practice_sessions')
-    mode = models.CharField(max_length=5, choices=MODES, default='JAMB')
+    mode = models.CharField(max_length=8, choices=MODES, default='JAMB')
+    difficulty = models.CharField(max_length=6, blank=True, help_text='EASY / MEDIUM / HARD, or blank for mixed.')
+    feedback = models.CharField(max_length=7, choices=FEEDBACK, default='END')
+    timed = models.BooleanField(default=True)
+    points = models.PositiveIntegerField(default=0)
+    challenge_date = models.DateField(null=True, blank=True, help_text='The day of a daily challenge.')
     subjects = models.ManyToManyField(Subject, related_name='+')
     topic = models.CharField(max_length=120, blank=True)
     # {subject_id: [bank question ids]} and {question_id: [option ids]} — fixed at the start.

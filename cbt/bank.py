@@ -59,7 +59,7 @@ def save_question(tenant, data, staff=None, question=None, subject=None):
 
 def search(tenant, subject=None, level='', topic='', difficulty='', text=''):
     qs = (BankQuestion.objects.filter(tenant=tenant).select_related('subject', 'created_by')
-          .prefetch_related('options').annotate(n_uses=Count('uses')))
+          .prefetch_related('options').annotate(n_uses=Count('uses')).order_by('subject__name', 'level', 'topic', 'id'))
     if subject:
         qs = qs.filter(subject=subject)
     if level:
@@ -74,8 +74,8 @@ def search(tenant, subject=None, level='', topic='', difficulty='', text=''):
 
 
 @transaction.atomic
-def to_bank(question, staff=None, level='', topic=''):
-    """Copy an exam question into the bank (once)."""
+def to_bank(question, staff=None, level='', topic='', for_practice=False):
+    """Copy an exam question into the bank (once). Students only see it once it is released (for_practice)."""
     if question.question_type not in ('MCQ', 'TF'):
         return None
     if question.bank_question_id:
@@ -84,7 +84,7 @@ def to_bank(question, staff=None, level='', topic=''):
     b = BankQuestion.objects.create(tenant=exam.tenant, subject=exam.subject, level=level, topic=topic,
                                     question_type=question.question_type, text=question.question_text,
                                     passage=question.passage or '', explanation=question.explanation or '',
-                                    marks=question.marks or 1, created_by=staff, for_practice=False)
+                                    marks=question.marks or 1, created_by=staff, for_practice=for_practice)
     if question.image:
         b.image = question.image
         b.save(update_fields=['image'])

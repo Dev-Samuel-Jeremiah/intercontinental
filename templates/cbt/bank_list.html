@@ -18,6 +18,16 @@
   .imp-form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.7rem;align-items:end;border-top:1px solid var(--rim)}
   .imp-form label{display:flex;flex-direction:column;gap:.3rem;font-size:.74rem;color:var(--slate2);font-weight:600}
   .imp-form select,.imp-form input{padding:.55rem .65rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.84rem}
+  .imp-check{grid-column:1/-1;flex-direction:row!important;align-items:center;gap:.5rem!important;font-size:.84rem!important;color:var(--white)!important;font-weight:500!important}
+  .imp-check input{width:auto}
+  .rel{cursor:pointer;font:inherit;font-size:.7rem}
+  .rel.on{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+  .rel.off{border-style:dashed}
+  .rel:hover{border-color:var(--champagne);color:var(--champagne-lt)}
+  .release-note{display:flex;gap:.8rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.85rem 1.2rem;border-color:var(--champagne-border)}
+  .release-note i{color:var(--champagne-lt)}
+  .bulk-head{display:flex;gap:.55rem;align-items:center;padding:.6rem 1.2rem;border-bottom:1px solid var(--rim);font-size:.8rem;color:var(--slate2)}
+  .bulk-head input{width:auto}
   @media(max-width:900px){.imp-form{grid-template-columns:1fr}}
 </style>
 <div class="fin-head"><div>
@@ -41,7 +51,8 @@
     <datalist id="imp-levels">{% for l in levels %}<option value="{{ l }}">{% endfor %}</datalist>
     <label>Topic <input name="topic" maxlength="120" placeholder="Optional — e.g. Fractions"></label>
     <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-box-arrow-in-down"></i> Save to the bank</button>
-    <p class="hint" style="grid-column:1/-1;margin:0">Multiple-choice and true/false questions are copied, with their options and correct answers. Essay and short-answer questions stay on the exam. The exam itself is not changed, and questions already in the bank are skipped.</p>
+    <label class="imp-check"><input type="checkbox" name="release"> Release them to students for the Quiz Centre straight away</label>
+    <p class="hint" style="grid-column:1/-1;margin:0">Multiple-choice and true/false questions are copied, with their options and correct answers. Essay and short-answer questions stay on the exam. The exam itself is not changed, and questions already in the bank are skipped. Unless you tick the box above, imported questions stay hidden from students until you release them.</p>
   </form>
 </details>
 <script>
@@ -57,18 +68,26 @@
   <select name="level"><option value="">All levels</option>{% for l in levels %}<option {% if f.level == l %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
   <input name="topic" value="{{ f.topic }}" placeholder="Topic">
   <select name="difficulty"><option value="">Any difficulty</option>{% for k, l in difficulties %}<option value="{{ k }}" {% if f.difficulty == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <select name="students"><option value="">Released or hidden</option><option value="released" {% if f.students == 'released' %}selected{% endif %}>Released to students</option><option value="hidden" {% if f.students == 'hidden' %}selected{% endif %}>Hidden from students</option></select>
   <input name="q" value="{{ f.q }}" placeholder="Search text or outcome" style="flex:1 1 180px">
   <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-funnel"></i> Filter</button>
 </div></form>
+{% if hidden %}<form method="post" action="{% url 'cbt:bank_release' %}" class="panel release-note">{% csrf_token %}
+  <input type="hidden" name="scope" value="filter"><input type="hidden" name="action" value="release"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+  {% for k, v in f.items %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+  <span><i class="bi bi-eye-slash"></i> <b>{{ hidden }}</b> question{{ hidden|pluralize }} {% if f.subject or f.level or f.topic or f.difficulty or f.q or f.students %}matching this filter {% endif %}{{ hidden|pluralize:"is,are" }} hidden from students. Released questions appear in the students' Quiz Centre and practice.</span>
+  <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit" onclick="return confirm('Release {{ hidden }} question{{ hidden|pluralize }} to students?')"><i class="bi bi-eye"></i> Release all {{ hidden }}</button>
+</form>{% endif %}
 <form method="post" action="{% url 'cbt:bank_add_to_exam' %}" id="addform">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
 <div class="panel">
+  {% if page %}<label class="bulk-head"><input type="checkbox" id="pickall"> Select all on this page</label>{% endif %}
   {% for q in page %}<div class="bq">
     <input type="checkbox" name="ids" value="{{ q.id }}" class="pick" style="margin-top:.3rem" aria-label="Select question">
     <div><div>{{ q.text|safe }}</div>
       <div class="opts">{% for o in q.options.all %}<span class="{% if o.is_correct %}c{% endif %}">{% if o.is_correct %}✓ {% endif %}{{ o.text }}</span>{% endfor %}</div>
       <div class="tags"><span class="chip gold">{{ q.subject.name }}</span>{% if q.level %}<span class="chip">{{ q.level }}</span>{% endif %}{% if q.topic %}<span class="chip">{{ q.topic }}</span>{% endif %}
         <span class="chip {% if q.difficulty == 'HARD' %}red{% elif q.difficulty == 'EASY' %}green{% else %}amber{% endif %}">{{ q.get_difficulty_display }}</span>
-        {% if q.for_practice %}<span class="chip" title="Students may meet it in practice"><i class="bi bi-controller"></i> practice</span>{% endif %}
+        {% if q.editable %}<button type="submit" class="chip rel {% if q.for_practice %}on{% else %}off{% endif %}" formaction="{% url 'cbt:bank_release' %}" formnovalidate name="toggle" value="{{ q.id }}" title="{% if q.for_practice %}Click to hide it from students{% else %}Click to release it to students{% endif %}">{% else %}<span class="chip {% if q.for_practice %}green{% endif %}">{% endif %}{% if q.for_practice %}<i class="bi bi-eye"></i> Released to students{% else %}<i class="bi bi-eye-slash"></i> Hidden from students{% endif %}{% if q.editable %}</button>{% else %}</span>{% endif %}
         {% if q.n_uses %}<span class="chip">used in {{ q.n_uses }} exam{{ q.n_uses|pluralize }}</span>{% endif %}</div>
       {% if q.outcome %}<div class="hint" style="margin-top:.3rem"><i class="bi bi-bullseye"></i> {{ q.outcome }}</div>{% endif %}</div>
     <div>{% if q.editable %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:bank_edit' q.id %}"><i class="bi bi-pencil"></i></a>{% endif %}</div>
@@ -77,11 +96,16 @@
 {% if page.has_other_pages %}<div style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span class="hint" style="align-self:center">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
 <div class="addbar" id="addbar"><b id="npick">0</b> selected — add to
   <select name="part" required>{% for p in parts %}<option value="{{ p.id }}">{{ p.exam.title }} · {{ p.exam.subject.name }}</option>{% empty %}<option value="">No CBT exam to add to</option>{% endfor %}</select>
-  <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"{% if not parts %} disabled{% endif %}><i class="bi bi-plus-circle"></i> Add to exam</button></div>
+  <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"{% if not parts %} disabled{% endif %}><i class="bi bi-plus-circle"></i> Add to exam</button>
+  <span class="hint">or</span>
+  <button class="fin-btn fin-btn-sm" type="submit" formaction="{% url 'cbt:bank_release' %}" formnovalidate name="action" value="release"><i class="bi bi-eye"></i> Release to students</button>
+  <button class="fin-btn fin-btn-sm" type="submit" formaction="{% url 'cbt:bank_release' %}" formnovalidate name="action" value="hide"><i class="bi bi-eye-slash"></i> Hide from students</button></div>
 </form>
 <script>
 (function(){var bar=document.getElementById('addbar'),n=document.getElementById('npick');
   function sync(){var c=document.querySelectorAll('.pick:checked').length;n.textContent=c;bar.style.display=c?'flex':'none';}
-  document.querySelectorAll('.pick').forEach(function(x){x.addEventListener('change',sync);});})();
+  document.querySelectorAll('.pick').forEach(function(x){x.addEventListener('change',sync);});
+  var all=document.getElementById('pickall');if(all)all.addEventListener('change',function(){
+    document.querySelectorAll('.pick').forEach(function(x){x.checked=all.checked;});sync();});})();
 </script>
 {% endblock %}

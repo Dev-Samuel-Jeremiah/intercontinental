@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/bank/new/', views_bank.bank_edit, name='bank_new'),
     path('admin/bank/<int:pk>/', views_bank.bank_edit, name='bank_edit'),
     path('admin/bank/add-to-exam/', views_bank.bank_add_to_exam, name='bank_add_to_exam'),
+    path('admin/bank/release/', views_bank.bank_release, name='bank_release'),
     path('admin/exams/<int:exam_id>/to-bank/', views_bank.exam_to_bank, name='exam_to_bank'),
     path('admin/exams/<int:exam_id>/analysis/', views_bank.exam_analysis, name='exam_analysis'),
     path('admin/exams/<int:exam_id>/invigilate/', views_live.invigilate, name='invigilate'),

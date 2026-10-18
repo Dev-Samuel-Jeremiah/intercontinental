@@ -39,9 +39,9 @@ def bank_list(request):
     if not can_view(request.user):
         return _deny(request, 'staff can use the question bank')
     subjects = Subject.objects.filter(tenant=request.tenant).order_by('name')
-    f = {k: (request.GET.get(k) or '').strip() for k in ('subject', 'level', 'topic', 'difficulty', 'q')}
+    f = {k: (request.GET.get(k) or '').strip() for k in ('subject', 'level', 'topic', 'difficulty', 'q', 'students')}
     subject = subjects.filter(pk=f['subject']).first() if f['subject'] else None
-    qs = bank.search(request.tenant, subject, f['level'], f['topic'], f['difficulty'], f['q'])
+    qs = _filtered(request, f, subject)
     page = Paginator(qs, 25).get_page(request.GET.get('page'))
     staff = getattr(request.user, 'staff', None)
     exams = Exam.objects.filter(tenant=request.tenant).select_related('subject').prefetch_related('parts').order_by('-start_time')
@@ -63,7 +63,49 @@ def bank_list(request):
     return render(request, 'cbt/bank_list.html', {
         'page': page, 'subjects': subjects, 'f': f, 'parts': parts, 'levels': levels, 'query': query,
         'difficulties': BankQuestion.DIFFICULTY, 'total': qs.count(), 'importable': importable,
+        'hidden': qs.filter(for_practice=False).count(),
     })
+
+
+def _filtered(request, f, subject):
+    qs = bank.search(request.tenant, subject, f['level'], f['topic'], f['difficulty'], f['q'])
+    if f.get('students') in ('released', 'hidden'):
+        qs = qs.filter(for_practice=f['students'] == 'released')
+    return qs
+
+
+@login_required
+def bank_release(request):
+    """Release questions to students' Quiz Centre, or hide them again — ticked ones, one, or all matching a filter."""
+    if not can_view(request.user) or request.method != 'POST':
+        return _deny(request, 'staff can use the question bank')
+    p = request.POST
+    if p.get('toggle'):
+        chosen = BankQuestion.objects.filter(tenant=request.tenant, pk=p.get('toggle'))
+        release = not chosen.filter(for_practice=True).exists()
+    else:
+        release = p.get('action') != 'hide'
+        if p.get('scope') == 'filter':
+            f = {k: (p.get(k) or '').strip() for k in ('subject', 'level', 'topic', 'difficulty', 'q', 'students')}
+            subject = Subject.objects.filter(tenant=request.tenant, pk=f['subject']).first() if f['subject'] else None
+            chosen = _filtered(request, f, subject)
+        else:
+            chosen = BankQuestion.objects.filter(tenant=request.tenant, pk__in=[i for i in p.getlist('ids') if i.isdigit()])
+    allowed = [q.id for q in chosen.select_related(None).only('id', 'created_by_id') if _may_edit(request.user, q)]
+    skipped = chosen.count() - len(allowed)
+    n = BankQuestion.objects.filter(pk__in=allowed).exclude(for_practice=release).update(for_practice=release)
+    if not allowed:
+        messages.error(request, 'Choose questions you may change — your own, or any if you manage exams.')
+    elif release:
+        messages.success(request, f'{n} question{"s" if n != 1 else ""} released — students can now meet '
+                                  f'{"them" if n != 1 else "it"} in the Quiz Centre.' if n else 'Those questions were already released.')
+    else:
+        messages.success(request, f'{n} question{"s" if n != 1 else ""} hidden from students.' if n
+                         else 'Those questions were already hidden from students.')
+    if skipped and allowed:
+        messages.info(request, f'{skipped} question{"s" if skipped != 1 else ""} written by other teachers {"were" if skipped != 1 else "was"} left as {"they were" if skipped != 1 else "it was"}.')
+    nxt = p.get('next') or ''
+    return redirect(nxt if nxt.startswith('/') and not nxt.startswith('//') else reverse('cbt:bank'))
 
 
 @login_required
@@ -133,13 +175,16 @@ def exam_to_bank(request, exam_id):
     if not _may_use_exam(request.user, exam) or request.method != 'POST':
         return _deny(request, 'exam managers and the teacher who set the exam can do this')
     staff = getattr(request.user, 'staff', None)
+    release = bool(request.POST.get('release'))
     n = 0
     for q in Question.objects.filter(exam_part__exam=exam, question_type__in=('MCQ', 'TF'),
                                      bank_question__isnull=True).select_related('exam_part__exam').prefetch_related('options'):
-        if bank.to_bank(q, staff, (request.POST.get('level') or '').strip()[:40], (request.POST.get('topic') or '').strip()[:120]):
+        if bank.to_bank(q, staff, (request.POST.get('level') or '').strip()[:40], (request.POST.get('topic') or '').strip()[:120],
+                        for_practice=release):
             n += 1
-    messages.success(request, f'{n} question{"s" if n != 1 else ""} from {exam.title} saved to the bank.' if n
-                     else 'Every objective question in this exam is already in the bank.')
+    messages.success(request, (f'{n} question{"s" if n != 1 else ""} from {exam.title} saved to the bank'
+                               + (' and released to students.' if release else ' — hidden from students until you release them.'))
+                     if n else 'Every objective question in this exam is already in the bank.')
     return redirect(request.POST.get('next') or f"{reverse('cbt:bank')}?subject={exam.subject_id}")
 
 

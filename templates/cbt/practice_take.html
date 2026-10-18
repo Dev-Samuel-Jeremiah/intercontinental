@@ -33,31 +33,51 @@
   .grid button{aspect-ratio:1;border-radius:8px;border:1px solid var(--rim2);background:none;color:var(--slate);font:inherit;font-size:.78rem;cursor:pointer}
   .grid button.done{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--green)}
   .grid button.cur{outline:2px solid var(--gold)}
+  .grid button.ok{background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.5);color:var(--green)}
+  .grid button.bad{background:rgba(232,112,112,.16);border-color:rgba(232,112,112,.5);color:var(--red)}
+  .q.locked .opt{cursor:default}.q.locked .opt:hover{border-color:var(--rim2)}
+  .opt.ok{border-color:rgba(74,222,128,.6)!important;background:rgba(74,222,128,.12)}
+  .opt.ok .k{background:var(--green);color:#0a1f44;border-color:transparent}
+  .opt.bad{border-color:rgba(232,112,112,.6)!important;background:rgba(232,112,112,.12)}
+  .opt.bad .k{background:var(--red);color:#0a1f44;border-color:transparent}
+  .fb{display:none;margin-top:.9rem;padding:.8rem 1rem;border-radius:12px;border:1px solid var(--rim2);font-size:.92rem;line-height:1.55;animation:pop .25s ease}
+  .fb.show{display:block}
+  .fb.right{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.08)}
+  .fb.wrong{border-color:rgba(232,112,112,.45);background:rgba(232,112,112,.08)}
+  .fb b{display:block;margin-bottom:.2rem}
+  .fb.right b{color:var(--green)} .fb.wrong b{color:var(--red)}
+  .fb .why{color:rgba(255,255,255,.8);white-space:pre-wrap}
+  @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .score{display:flex;gap:.8rem;font-size:.82rem;color:var(--slate);margin-top:.8rem}
+  .score b{color:var(--white)}
   @media(max-width:860px){main{grid-template-columns:1fr}aside{position:static}}
 </style>
 </head>
 <body>
-<header><div><b>{{ request.tenant.name }}</b> · {{ session.get_mode_display }}{% if session.topic %} — {{ session.topic }}{% endif %}<div style="font-size:.8rem;color:var(--slate)">{{ request.user.student.full_name }} · <span id="ans">0</span>/{{ session.total }} answered</div></div>
+<header><div><b>{{ request.tenant.name }}</b> · {{ session.get_mode_display }}{% if session.topic %} — {{ session.topic }}{% endif %}{% if session.difficulty %} · {{ session.difficulty|title }}{% endif %}<div style="font-size:.8rem;color:var(--slate)">{{ request.user.student.full_name }} · <span id="ans">0</span>/{{ session.total }} answered</div></div>
   <div style="display:flex;gap:.8rem;align-items:center"><span class="timer" id="timer">--:--</span>
-  <form method="post" id="submitForm">{% csrf_token %}<button class="b gold" type="submit" onclick="return confirm('Submit your practice now?')">Submit</button></form></div></header>
+  <form method="post" id="submitForm">{% csrf_token %}<button class="b gold" type="submit" id="submitBtn" onclick="return this.dataset.done==='1'||confirm('Finish now? Questions you have not answered count as wrong.')">{% if instant %}Finish{% else %}Submit{% endif %}</button></form></div></header>
 <div class="tabs" role="tablist">{% for s in sections %}<button type="button" data-sec="{{ forloop.counter0 }}" class="{% if forloop.first %}on{% endif %}">{{ s.subject.name }} <small>({{ s.questions|length }})</small></button>{% endfor %}</div>
 <main>
   <section id="qs">{% for s in sections %}{% with si=forloop.counter0 %}{% for q in s.questions %}
-    <div class="q" data-sec="{{ si }}" data-i="{{ forloop.counter0 }}" data-qid="{{ q.id }}">
+    <div class="q{% if instant and q.chosen_id %} locked{% endif %}" data-sec="{{ si }}" data-i="{{ forloop.counter0 }}" data-qid="{{ q.id }}"{% if instant and q.chosen_id %} data-state="{% if q.was_right %}ok{% else %}bad{% endif %}"{% endif %}>
       <div class="qn">{{ s.subject.name }} · Question {{ forloop.counter }} of {{ s.questions|length }}</div>
       {% if q.passage %}<div class="passage">{{ q.passage }}</div>{% endif %}
       <div class="qt">{{ q.text|safe }}</div>
       {% if q.image %}<img src="{{ q.image.url }}" alt="" style="max-width:100%;max-height:280px;border-radius:12px;margin-bottom:.6rem">{% endif %}
-      {% for o in q.ordered_options %}<div class="opt{% if q.chosen_id == o.id %} sel{% endif %}" data-oid="{{ o.id }}" role="button" tabindex="0"><span class="k">{% cycle 'A' 'B' 'C' 'D' 'E' 'F' %}</span><span>{{ o.text }}</span></div>{% endfor %}{% resetcycle %}
+      {% for o in q.ordered_options %}<div class="opt{% if q.chosen_id == o.id %} sel{% endif %}{% if instant and q.chosen_id %}{% if o.is_correct %} ok{% elif q.chosen_id == o.id %} bad{% endif %}{% endif %}" data-oid="{{ o.id }}" role="button" tabindex="0"><span class="k">{% cycle 'A' 'B' 'C' 'D' 'E' 'F' %}</span><span>{{ o.text }}</span></div>{% endfor %}{% resetcycle %}
+      {% if instant %}<div class="fb{% if q.chosen_id %} show {% if q.was_right %}right{% else %}wrong{% endif %}{% endif %}">{% if q.chosen_id %}<b>{% if q.was_right %}Correct!{% else %}Not quite.{% endif %}</b>{% if q.explanation %}<div class="why">{{ q.explanation }}</div>{% endif %}{% endif %}</div>{% endif %}
     </div>{% endfor %}{% endwith %}{% endfor %}
     <div class="nav"><button class="b" type="button" id="prev"><i class="bi bi-chevron-left"></i> Previous (P)</button><button class="b" type="button" id="next">Next (N) <i class="bi bi-chevron-right"></i></button></div>
   </section>
-  <aside><div style="font-size:.8rem;color:var(--slate);margin-bottom:.5rem">Questions — tap to jump</div><div class="grid" id="grid"></div></aside>
+  <aside><div style="font-size:.8rem;color:var(--slate);margin-bottom:.5rem">Questions — tap to jump</div><div class="grid" id="grid"></div>
+    {% if instant %}<div class="score"><span><i class="bi bi-check-circle" style="color:var(--green)"></i> <b id="nok">0</b> right</span><span><i class="bi bi-x-circle" style="color:var(--red)"></i> <b id="nbad">0</b> wrong</span></div>{% endif %}</aside>
 </main>
 {% include "cbt/_math.html" %}
 <script>
 (function(){
-  var LEFT={{ left }}, SAVE='{% url "cbt:practice_answer" session.id %}', CSRF='{{ csrf_token }}';
+  var LEFT={{ left }}, TIMED=LEFT>=0, INSTANT={{ instant|yesno:"true,false" }}, TOTAL={{ session.total }},
+      SAVE='{% url "cbt:practice_answer" session.id %}', CSRF='{{ csrf_token }}';
   var qs=[].slice.call(document.querySelectorAll('.q')), sec=0, cur=0;
   function inSec(){return qs.filter(q=>+q.dataset.sec===sec);}
   function show(){var list=inSec();cur=Math.max(0,Math.min(cur,list.length-1));
@@ -65,12 +85,29 @@
     document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',+b.dataset.sec===sec));
     var g=document.getElementById('grid');g.innerHTML='';
     list.forEach(function(q,i){var b=document.createElement('button');b.type='button';b.textContent=i+1;
-      if(q.querySelector('.opt.sel'))b.classList.add('done');if(i===cur)b.classList.add('cur');
+      if(q.dataset.state)b.classList.add(q.dataset.state);else if(q.querySelector('.opt.sel'))b.classList.add('done');if(i===cur)b.classList.add('cur');
       b.onclick=function(){cur=i;show();};g.appendChild(b);});
-    document.getElementById('ans').textContent=document.querySelectorAll('.opt.sel').length;}
-  function pick(opt){var q=opt.closest('.q');q.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));opt.classList.add('sel');show();
+    var n=document.querySelectorAll('.opt.sel').length;document.getElementById('ans').textContent=n;
+    if(INSTANT){document.getElementById('nok').textContent=document.querySelectorAll('.q[data-state=ok]').length;
+      document.getElementById('nbad').textContent=document.querySelectorAll('.q[data-state=bad]').length;
+      var sb=document.getElementById('submitBtn');if(n>=TOTAL){sb.dataset.done='1';sb.textContent='See my results';}}}
+  function verdict(q,opt,r){
+    var right=q.querySelector('.opt[data-oid="'+r.correct_option+'"]');if(right)right.classList.add('ok');
+    if(!r.correct)opt.classList.add('bad');q.dataset.state=r.correct?'ok':'bad';
+    var fb=q.querySelector('.fb');fb.className='fb show '+(r.correct?'right':'wrong');fb.innerHTML='';
+    var h=document.createElement('b');h.textContent=r.correct?'Correct!':'Not quite.';fb.appendChild(h);
+    if(r.explanation){var w=document.createElement('div');w.className='why';w.textContent=r.explanation;fb.appendChild(w);
+      if(window.renderMathInElement)renderMathInElement(w,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],throwOnError:false});}
+    show();}
+  function pick(opt){var q=opt.closest('.q');if(q.classList.contains('locked'))return;
+    q.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));opt.classList.add('sel');
+    if(INSTANT)q.classList.add('locked');show();
     fetch(SAVE,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
-      body:JSON.stringify({question:q.dataset.qid,option:opt.dataset.oid})}).catch(function(){});}
+      body:JSON.stringify({question:q.dataset.qid,option:opt.dataset.oid})})
+      .then(function(r){return r.json();})
+      .then(function(r){if(!INSTANT)return;if(r.ok)verdict(q,opt,r);
+        else{q.classList.remove('locked');opt.classList.remove('sel');show();alert(r.error||'Could not save that answer.');}})
+      .catch(function(){if(INSTANT){q.classList.remove('locked');opt.classList.remove('sel');show();alert('No connection — try that answer again.');}});}
   document.querySelectorAll('.opt').forEach(o=>{o.addEventListener('click',()=>pick(o));o.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(o);}});});
   document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{sec=+b.dataset.sec;cur=0;show();}));
   document.getElementById('prev').onclick=function(){if(cur>0)cur--;else if(sec>0){sec--;cur=1e9;}show();};
@@ -79,7 +116,9 @@
     if(k==='N')document.getElementById('next').click();else if(k==='P')document.getElementById('prev').click();
     else if('ABCDEF'.indexOf(k)>=0&&k.length===1){var q=inSec()[cur],o=q&&q.querySelectorAll('.opt')['ABCDEF'.indexOf(k)];if(o)pick(o);}});
   var t=document.getElementById('timer');
-  function tick(){var m=Math.floor(LEFT/60),s=LEFT%60;t.textContent=m+':'+(s<10?'0':'')+s;t.classList.toggle('low',LEFT<300);
+  var UP={{ elapsed }};
+  function tick(){if(!TIMED){var um=Math.floor(UP/60),us=UP%60;t.textContent='\u23F1 '+um+':'+(us<10?'0':'')+us;UP++;return;}
+    var m=Math.floor(LEFT/60),s=LEFT%60;t.textContent=m+':'+(s<10?'0':'')+s;t.classList.toggle('low',LEFT<300);
     if(LEFT<=0){document.getElementById('submitForm').submit();return;}LEFT--;}
   tick();setInterval(tick,1000);show();
 })();

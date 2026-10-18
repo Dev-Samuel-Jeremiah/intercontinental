@@ -1,8 +1,10 @@
 """
 cbt/views_practice.py
 ─────────────────────
-Students practising from the question bank, and topic mastery for students,
-families and teachers.
+The student Quiz Centre — quick quizzes, the daily challenge, fixing mistakes,
+UTME-style mocks, points, streaks and the class leaderboard — practising from
+the questions teachers have released in the bank, and topic mastery for
+students, families and teachers.
 """
 import json
 
@@ -10,13 +12,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from users.models import Class, Student, Subject
 from users.views_profile import can_view
 
 from . import practice
-from .models import PracticeSession
+from .models import BankQuestion, PracticeSession
 
 
 def _student(request):
@@ -30,20 +33,33 @@ def home(request):
         messages.error(request, 'Practice is for students.')
         return redirect('dashboard:router')
     if request.method == 'POST':
+        p = request.POST
         try:
-            mode = 'TOPIC' if request.POST.get('mode') == 'TOPIC' else 'JAMB'
-            ids = request.POST.getlist('subjects') if mode == 'JAMB' else [request.POST.get('subject')]
-            s = practice.start(student, [i for i in ids if i], mode, request.POST.get('per_subject'),
-                               (request.POST.get('topic') or '').strip())
+            mode = p.get('mode') or 'JAMB'
+            ids = p.getlist('subjects') if mode == 'JAMB' else [p.get('subject')]
+            source = None
+            if p.get('source'):
+                source = get_object_or_404(PracticeSession, pk=p.get('source'), student=student,
+                                           submitted_at__isnull=False)
+            s = practice.start(student, [i for i in ids if i], mode, p.get('per_subject'),
+                               (p.get('topic') or '').strip(), p.get('difficulty') or '',
+                               p.get('feedback') or 'END', p.get('timed') == 'on', source)
             return redirect('cbt:practice_take', s.id)
         except (practice.PracticeError, ValueError) as problem:
             messages.error(request, str(problem))
         return redirect('cbt:practice')
+    current = practice.current(student)
     sessions = PracticeSession.objects.filter(student=student).prefetch_related('subjects')[:15]
-    current = next((s for s in sessions if not s.finished and practice.seconds_left(s) > 0), None)
+    board = 'all' if request.GET.get('board') == 'all' else 'week'
+    top, me = practice.leaderboard(student, None if board == 'all' else 7)
+    progress = practice.progress(student)
     return render(request, 'cbt/practice_home.html', {
         'student': student, 'available': practice.available(student), 'sessions': sessions, 'current': current,
         'mastery': practice.student_mastery(student), 'max_subjects': practice.MAX_SUBJECTS,
+        'stats': practice.stats(student), 'board': board, 'top': top, 'me': me,
+        'me_off_board': me and me not in top, 'progress': progress,
+        'subject_accuracy': practice.subject_accuracy(student), 'sizes': practice.QUIZ_SIZES,
+        'difficulties': BankQuestion.DIFFICULTY, 'daily_size': practice.DAILY_SIZE, 'points': practice.POINTS,
     })
 
 
@@ -63,8 +79,11 @@ def take(request, pk):
     if request.method == 'POST':
         practice.submit(session)
         return redirect('cbt:practice_result', session.id)
+    left = practice.seconds_left(session)
     return render(request, 'cbt/practice_take.html', {
-        'session': session, 'sections': practice.sections(session), 'left': practice.seconds_left(session)})
+        'session': session, 'sections': practice.sections(session), 'left': -1 if left is None else left,
+        'instant': session.feedback == 'INSTANT',
+        'elapsed': int((timezone.now() - session.started_at).total_seconds())})
 
 
 @login_required
@@ -73,8 +92,8 @@ def save_answer(request, pk):
     session = _own(request, pk)
     try:
         data = json.loads(request.body)
-        practice.answer(session, data.get('question'), data.get('option'))
-        return JsonResponse({'ok': True, 'answered': session.answers.exclude(option__isnull=True).count()})
+        verdict = practice.answer(session, data.get('question'), data.get('option'))
+        return JsonResponse({'ok': True, 'answered': session.answers.exclude(option__isnull=True).count(), **verdict})
     except (practice.PracticeError, ValueError, TypeError) as problem:
         return JsonResponse({'ok': False, 'error': str(problem)}, status=400)
 
@@ -85,8 +104,11 @@ def result(request, pk):
     if not session.finished:
         return redirect('cbt:practice_take', session.id)
     subjects, topics = practice.breakdown(session)
+    sections = practice.sections(session)
     return render(request, 'cbt/practice_result.html', {
-        'session': session, 'subjects': subjects, 'topics': topics, 'sections': practice.sections(session),
+        'session': session, 'subjects': subjects, 'topics': topics, 'sections': sections,
+        'missed': sum(1 for sec in sections for q in sec['questions'] if not q.was_right),
+        'subject_id': next(iter(session.paper), ''), 'stats': practice.stats(session.student),
         'utme': round(400 * session.score / session.total) if session.mode == 'JAMB' and session.total else None})
 
 

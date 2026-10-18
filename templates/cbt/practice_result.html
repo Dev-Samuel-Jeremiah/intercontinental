@@ -9,12 +9,26 @@
   .o.ok{border-color:var(--green-border);background:var(--green-dim)} .o.bad{border-color:var(--red-border);background:var(--red-dim)}
   .ex{margin-top:.5rem;padding:.5rem .8rem;border-left:3px solid var(--champagne);background:var(--champagne-dim);border-radius:0 9px 9px 0;font-size:.86rem}
   details summary{cursor:pointer}
+  .won{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem;margin-bottom:1rem}
+  .won div{display:flex;flex-direction:column;align-items:center;gap:.1rem;padding:.9rem;border-radius:16px;border:1px solid var(--champagne-border);background:linear-gradient(135deg,rgba(244,210,31,.12),var(--surface) 75%)}
+  .won i{color:var(--champagne);font-size:1.2rem}.won b{font-size:1.5rem;color:var(--white)}.won span{font-size:.72rem;color:var(--slate2);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .fin-head form{margin:0}
 </style>
 <div class="fin-head"><div>
-  <div class="fin-eyebrow">{{ session.get_mode_display }}{% if session.topic %} · {{ session.topic }}{% endif %}</div>
+  <div class="fin-eyebrow">{{ session.get_mode_display }}{% if session.topic %} · {{ session.topic }}{% endif %}{% if session.difficulty %} · {{ session.difficulty|title }}{% endif %}</div>
   <h1 class="fin-title">{{ session.score }} / {{ session.total }} — <em>{{ session.percent }}%</em></h1>
-  <p class="fin-sub">{% if utme is not None %}That's roughly <b>{{ utme }}/400</b> on the UTME scale. {% endif %}Finished {{ session.submitted_at|date:"j M Y, H:i" }}.</p>
-</div><div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'cbt:practice' %}"><i class="bi bi-arrow-repeat"></i> Practise again</a></div></div>
+  <p class="fin-sub">{% if session.percent == 100 %}Perfect score — brilliant! {% elif session.percent >= 70 %}Great work! {% elif session.percent >= 50 %}Good effort — keep going. {% else %}Keep practising — every mistake is a lesson. {% endif %}{% if utme is not None %}That's roughly <b>{{ utme }}/400</b> on the UTME scale. {% endif %}Finished {{ session.submitted_at|date:"j M Y, H:i" }}.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  {% if missed %}<form method="post" action="{% url 'cbt:practice' %}">{% csrf_token %}<input type="hidden" name="mode" value="MISTAKES"><input type="hidden" name="source" value="{{ session.id }}"><input type="hidden" name="feedback" value="INSTANT"><input type="hidden" name="per_subject" value="60">
+    <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i> Retry my {{ missed }} mistake{{ missed|pluralize }}</button></form>{% endif %}
+  {% if session.mode == 'QUICK' or session.mode == 'TOPIC' %}<form method="post" action="{% url 'cbt:practice' %}">{% csrf_token %}<input type="hidden" name="mode" value="{{ session.mode }}"><input type="hidden" name="subject" value="{{ subject_id }}"><input type="hidden" name="topic" value="{{ session.topic }}"><input type="hidden" name="difficulty" value="{{ session.difficulty }}"><input type="hidden" name="per_subject" value="{{ session.total }}"><input type="hidden" name="feedback" value="{{ session.feedback }}">{% if session.timed %}<input type="hidden" name="timed" value="on">{% endif %}
+    <button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-shuffle"></i> New quiz, same settings</button></form>{% endif %}
+  <a class="fin-btn fin-btn-sm" href="{% url 'cbt:practice' %}"><i class="bi bi-grid"></i> Quiz Centre</a></div></div>
+<div class="won">
+  <div><i class="bi bi-star-fill"></i><b>+{{ session.points }}</b><span>points earned</span></div>
+  <div><i class="bi bi-fire"></i><b>{{ stats.streak }}</b><span>day streak</span></div>
+  <div><i class="bi bi-trophy"></i><b>{{ stats.points }}</b><span>total points</span></div>
+</div>
 <div class="fin-grid">
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal"></i> By subject</h3></div><table class="tbl"><tbody>
     {% for s in subjects %}<tr><td class="name">{{ s.subject }}</td><td>{{ s.right }}/{{ s.total }}</td><td><span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span></td></tr>{% endfor %}</tbody></table></div>

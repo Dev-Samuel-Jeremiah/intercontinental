@@ -1,58 +1,187 @@
 {% extends "dashboard/base.html" %}
-{% block title %}Practice{% endblock %}
+{% block title %}Quiz Centre{% endblock %}
 {% block content %}
 {% include "finance/_fin_styles.html" %}
 <style>
-  .subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.5rem}
-  .sub{display:flex;gap:.55rem;align-items:center;padding:.65rem .8rem;border-radius:12px;border:1px solid var(--rim2);cursor:pointer}
-  .sub:has(input:checked){border-color:var(--champagne);background:var(--champagne-dim)}
-  .sub input{width:auto}
-  .tabs{display:flex;gap:.35rem;margin-bottom:.9rem}
-  .tabs button{padding:.45rem .9rem;border-radius:99px;border:1px solid var(--rim2);background:none;color:var(--slate2);font:inherit;font-weight:600;cursor:pointer}
-  .tabs button.on{background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;border-color:transparent}
-  .msgs .m{padding:.7rem .9rem;border-radius:12px;margin-bottom:.8rem;font-size:.86rem;border:1px solid var(--red-border);color:var(--red);background:var(--red-dim)}
-  .msgs .info{border-color:var(--champagne-border);color:var(--champagne-lt);background:var(--champagne-dim)}
+  .qc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin-bottom:1rem}
+  .qc-stat{position:relative;overflow:hidden;padding:1rem 1.1rem;border-radius:16px;border:1px solid var(--rim2);background:var(--surface)}
+  .qc-stat .v{font-size:1.7rem;font-weight:700;line-height:1.1;color:var(--white);font-variant-numeric:tabular-nums}
+  .qc-stat .l{font-size:.74rem;color:var(--slate2);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-top:.2rem}
+  .qc-stat i{position:absolute;right:.9rem;top:.85rem;font-size:1.3rem;color:var(--champagne)}
+  .qc-stat.hot{border-color:var(--champagne-border);background:linear-gradient(135deg,rgba(244,210,31,.14),var(--surface) 70%)}
+  .qc-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:1rem;align-items:start}
+  .qc-col{display:flex;flex-direction:column;gap:1rem;min-width:0}
+  .qc-col .panel{margin:0}
+  .pills{display:flex;gap:.35rem;flex-wrap:wrap}
+  .pill{position:relative}
+  .pill input{position:absolute;opacity:0;pointer-events:none}
+  .pill span{display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .85rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);font-weight:600;font-size:.84rem;cursor:pointer;transition:.15s}
+  .pill input:checked+span{background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;border-color:transparent}
+  .pill input:focus-visible+span{outline:2px solid var(--champagne)}
+  .fld{display:flex;flex-direction:column;gap:.4rem}
+  .fld>label,.fld>.lbl{font-size:.74rem;color:var(--slate2);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .switch{display:flex;gap:.6rem;align-items:center;font-size:.86rem;cursor:pointer}
+  .switch input{width:auto}
+  .modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.7rem}
+  .mode{display:flex;flex-direction:column;gap:.45rem;padding:1rem;border-radius:16px;border:1px solid var(--rim2);background:var(--surface)}
+  .mode h4{margin:0;font-size:.98rem;display:flex;gap:.45rem;align-items:center}
+  .mode h4 i{color:var(--champagne)}
+  .mode p{margin:0;font-size:.8rem;color:var(--slate2);flex:1}
+  .mode form{margin:0}
+  .mode.done{border-color:var(--green-border)}
+  .board{list-style:none;margin:0;padding:0}
+  .board li{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:.6rem;align-items:center;padding:.55rem 1.2rem;border-bottom:1px solid var(--rim);font-size:.88rem}
+  .board li.me{background:var(--champagne-dim)}
+  .board .rk{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.06);font-weight:700;font-size:.78rem}
+  .board li:nth-child(1) .rk{background:#f4d21f;color:#0a1f44}
+  .board li:nth-child(2) .rk{background:#cfd8e6;color:#0a1f44}
+  .board li:nth-child(3) .rk{background:#d99a5b;color:#0a1f44}
+  .board .pt{font-weight:700;color:var(--champagne-lt);font-variant-numeric:tabular-nums}
+  .seg{display:inline-flex;border:1px solid var(--rim2);border-radius:99px;overflow:hidden}
+  .seg a{padding:.25rem .7rem;font-size:.74rem;color:var(--slate2);text-decoration:none;font-weight:600}
+  .seg a.on{background:var(--champagne);color:#0a1f44}
+  .bars{display:flex;align-items:flex-end;gap:.35rem;height:120px;padding:.4rem 0}
+  .bars a{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:.25rem;height:100%;text-decoration:none}
+  .bars .b{width:100%;max-width:34px;border-radius:7px 7px 3px 3px;min-height:4px}
+  .bars .n{font-size:.66rem;color:var(--slate2)}
+  .acc{display:flex;flex-direction:column;gap:.55rem}
+  .acc .row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:.6rem;align-items:center;font-size:.84rem}
+  .acc .track{height:7px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:.25rem}
+  .acc .fill{height:100%;border-radius:99px}
+  .g{background:var(--green)} .a{background:var(--amber)} .r{background:var(--red)}
+  .jamb-subs{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.45rem}
+  .jamb-subs label{display:flex;gap:.5rem;align-items:center;padding:.55rem .75rem;border-radius:11px;border:1px solid var(--rim2);cursor:pointer;font-size:.86rem}
+  .jamb-subs label:has(input:checked){border-color:var(--champagne);background:var(--champagne-dim)}
+  .jamb-subs input{width:auto}
+  details.jamb summary{cursor:pointer;list-style:none}
+  details.jamb summary::-webkit-details-marker{display:none}
+  .rules{display:flex;gap:.4rem;flex-wrap:wrap;font-size:.74rem}
+  @media(max-width:1000px){.qc-grid{grid-template-columns:1fr}.modes{grid-template-columns:1fr}}
+  @media(max-width:640px){.qc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+
 <div class="fin-head"><div>
   <div class="fin-eyebrow">My learning</div>
-  <h1 class="fin-title">Practice &amp; <em>mock exams</em></h1>
-  <p class="fin-sub">A timed UTME-style mock across up to {{ max_subjects }} subjects, or a quick drill on one topic. Marked straight away, with explanations.</p>
+  <h1 class="fin-title">Quiz <em>Centre</em></h1>
+  <p class="fin-sub">Quick quizzes from your teachers' question bank — pick a subject, a level of difficulty and how many questions. Earn points, keep your streak going and climb your class leaderboard.</p>
 </div></div>
+
+<div class="qc-stats">
+  <div class="qc-stat hot"><i class="bi bi-star-fill"></i><div class="v">{{ stats.points }}</div><div class="l">Points</div></div>
+  <div class="qc-stat{% if stats.streak %} hot{% endif %}"><i class="bi bi-fire"></i><div class="v">{{ stats.streak }}</div><div class="l">Day streak</div></div>
+  <div class="qc-stat"><i class="bi bi-check2-all"></i><div class="v">{{ stats.quizzes }}</div><div class="l">Quizzes done</div></div>
+  <div class="qc-stat"><i class="bi bi-bullseye"></i><div class="v">{% if stats.accuracy is not None %}{{ stats.accuracy }}%{% else %}—{% endif %}</div><div class="l">Accuracy</div></div>
+</div>
+
 {% if current %}<div class="panel" style="border-color:var(--champagne-border)"><div class="panel-b" style="display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;align-items:center">
-  <span><i class="bi bi-hourglass-split" style="color:var(--champagne-lt)"></i> You have a practice in progress ({% for s in current.subjects.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}).</span>
-  <a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'cbt:practice_take' current.id %}">Continue</a></div></div>{% endif %}
-<div class="fin-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
-  <div class="panel"><div class="panel-h"><h3><i class="bi bi-play-circle"></i> Start practising</h3></div><div class="panel-b">
-    {% if not available %}<p class="hint" style="margin:0">Your teachers haven't added practice questions for your class yet.</p>{% else %}
-    <div class="tabs"><button type="button" class="on" data-t="JAMB">UTME-style mock</button><button type="button" data-t="TOPIC">Topic drill</button></div>
-    <form method="post" id="pf-JAMB" class="fin-form">{% csrf_token %}<input type="hidden" name="mode" value="JAMB">
-      <div class="subs">{% for s, n, topics in available %}<label class="sub"><input type="checkbox" name="subjects" value="{{ s.id }}" class="js-sub"> <span>{{ s.name }}<span class="hint" style="display:block">{{ n }} questions</span></span></label>{% endfor %}</div>
-      <div class="row2"><div><label>Questions per subject</label><input type="number" name="per_subject" value="40" min="5" max="60"></div><div><label>Time</label><input id="tm" disabled value="About 40 seconds a question"></div></div>
-      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-stopwatch"></i> Start the mock</button>
-      <p class="hint" style="margin:0">Use A–D to answer, N and P for next and previous — as in the real UTME.</p></form>
-    <form method="post" id="pf-TOPIC" class="fin-form" style="display:none">{% csrf_token %}<input type="hidden" name="mode" value="TOPIC">
-      <div><label>Subject</label><select name="subject" id="tsub">{% for s, n, topics in available %}<option value="{{ s.id }}" data-topics="{{ topics|join:'|' }}">{{ s.name }}</option>{% endfor %}</select></div>
-      <div class="row2"><div><label>Topic</label><select name="topic" id="ttop"></select></div><div><label>Questions</label><input type="number" name="per_subject" value="15" min="5" max="60"></div></div>
-      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-lightning"></i> Start the drill</button></form>
+  <span><i class="bi bi-hourglass-split" style="color:var(--champagne-lt)"></i> You have a {{ current.get_mode_display|lower }} in progress ({% for s in current.subjects.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}).</span>
+  <a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'cbt:practice_take' current.id %}">Continue <i class="bi bi-arrow-right"></i></a></div></div>{% endif %}
+
+<div class="qc-grid">
+<div class="qc-col">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-lightning-charge-fill"></i> Quick quiz</h3></div><div class="panel-b">
+    {% if not available %}
+      <div class="empty" style="padding:1.2rem 0"><i class="bi bi-hourglass"></i><p>Your teachers haven't released any quiz questions for your class yet. Check back soon!</p></div>
+    {% else %}
+    <form method="post" class="fin-form" id="quick">{% csrf_token %}<input type="hidden" name="mode" value="QUICK">
+      <div class="row2">
+        <div class="fld"><label for="qsub">Subject</label><select name="subject" id="qsub">{% for s, n, topics in available %}<option value="{{ s.id }}" data-topics="{{ topics|join:'|' }}">{{ s.name }} ({{ n }})</option>{% endfor %}</select></div>
+        <div class="fld"><label for="qtop">Topic</label><select name="topic" id="qtop"></select></div>
+      </div>
+      <div class="fld"><span class="lbl">Difficulty</span><div class="pills">
+        <label class="pill"><input type="radio" name="difficulty" value="" checked><span><i class="bi bi-shuffle"></i> Mixed</span></label>
+        {% for k, l in difficulties %}<label class="pill"><input type="radio" name="difficulty" value="{{ k }}"><span>{{ l }}</span></label>{% endfor %}
+      </div></div>
+      <div class="fld"><span class="lbl">Questions</span><div class="pills">
+        {% for n in sizes %}<label class="pill"><input type="radio" name="per_subject" value="{{ n }}" {% if n == 10 %}checked{% endif %}><span>{{ n }}</span></label>{% endfor %}
+      </div></div>
+      <div class="fld"><span class="lbl">Feedback</span><div class="pills">
+        <label class="pill"><input type="radio" name="feedback" value="INSTANT" checked><span><i class="bi bi-lightning"></i> After each question</span></label>
+        <label class="pill"><input type="radio" name="feedback" value="END"><span><i class="bi bi-flag"></i> At the end</span></label>
+      </div></div>
+      <label class="switch"><input type="checkbox" name="timed"> Timed — about 40 seconds a question</label>
+      <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+        <button class="fin-btn fin-btn-gold" type="submit"{% if current %} disabled title="Finish your current practice first"{% endif %}><i class="bi bi-play-fill"></i> Start quiz</button>
+        <span class="rules"><span class="chip green">Easy +{{ points.EASY }}</span><span class="chip amber">Medium +{{ points.MEDIUM }}</span><span class="chip red">Hard +{{ points.HARD }}</span><span class="chip gold">All right +20</span></span>
+      </div>
+    </form>
     {% endif %}
   </div></div>
+
+  {% if available %}<div class="modes">
+    <div class="mode{% if stats.daily %} done{% endif %}">
+      <h4><i class="bi bi-calendar-check"></i> Daily challenge</h4>
+      {% if stats.daily %}
+        <p>{% if stats.daily.finished %}Done for today — {{ stats.daily.score }}/{{ stats.daily.total }}, +{{ stats.daily.points }} points. A new one is ready tomorrow.{% else %}You've started today's challenge.{% endif %}</p>
+        <a class="fin-btn fin-btn-sm" href="{% if stats.daily.finished %}{% url 'cbt:practice_result' stats.daily.id %}{% else %}{% url 'cbt:practice_take' stats.daily.id %}{% endif %}">{% if stats.daily.finished %}See answers{% else %}Continue{% endif %}</a>
+      {% else %}
+        <p>{{ daily_size }} questions from all your subjects — the same for your whole class today. +25 bonus points.</p>
+        <form method="post">{% csrf_token %}<input type="hidden" name="mode" value="DAILY"><button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"{% if current %} disabled{% endif %}><i class="bi bi-play-fill"></i> Take today's</button></form>
+      {% endif %}
+    </div>
+    <div class="mode">
+      <h4><i class="bi bi-arrow-repeat"></i> Fix my mistakes</h4>
+      {% if stats.mistakes %}
+        <p><b>{{ stats.mistakes }}</b> question{{ stats.mistakes|pluralize }} you got wrong last time. Get {{ stats.mistakes|pluralize:"it,them" }} right to clear {{ stats.mistakes|pluralize:"it,them" }}.</p>
+        <form method="post">{% csrf_token %}<input type="hidden" name="mode" value="MISTAKES"><input type="hidden" name="feedback" value="INSTANT"><input type="hidden" name="per_subject" value="10">
+          <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"{% if current %} disabled{% endif %}><i class="bi bi-play-fill"></i> Retry {% if stats.mistakes > 10 %}10{% else %}{{ stats.mistakes }}{% endif %}</button></form>
+      {% else %}
+        <p>Questions you get wrong collect here, so you can try them again until you master them.</p>
+        <span class="chip green" style="align-self:flex-start"><i class="bi bi-check2"></i> Nothing to fix</span>
+      {% endif %}
+    </div>
+    <div class="mode">
+      <h4><i class="bi bi-mortarboard"></i> UTME mock</h4>
+      <p>A timed mock across up to {{ max_subjects }} subjects — about 40 seconds a question, like the real exam.</p>
+      <a class="fin-btn fin-btn-sm" href="#jamb" onclick="document.getElementById('jamb').open=true">Set up a mock</a>
+    </div>
+  </div>
+
+  <details class="panel jamb" id="jamb"><summary class="panel-h"><h3><i class="bi bi-mortarboard"></i> UTME-style mock</h3><span class="hint">Choose up to {{ max_subjects }}</span></summary><div class="panel-b">
+    <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="mode" value="JAMB">
+      <div class="jamb-subs">{% for s, n, topics in available %}<label><input type="checkbox" name="subjects" value="{{ s.id }}" class="js-sub"> {{ s.name }}<span class="hint" style="margin-left:auto">{{ n }}</span></label>{% endfor %}</div>
+      <div class="row2"><div class="fld"><label>Questions per subject</label><input type="number" name="per_subject" value="40" min="5" max="60"></div><div class="fld"><label>Time</label><input disabled value="About 40 seconds a question"></div></div>
+      <button class="fin-btn fin-btn-gold" type="submit"{% if current %} disabled{% endif %}><i class="bi bi-stopwatch"></i> Start the mock</button>
+      <p class="hint" style="margin:0">Use A–D to answer, N and P for next and previous — as in the real UTME.</p>
+    </form></div></details>
+  {% endif %}
+
+  {% if sessions %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> History</h3></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>When</th><th>Quiz</th><th>Score</th><th>Points</th><th></th></tr></thead><tbody>
+    {% for s in sessions %}<tr><td>{{ s.started_at|date:"j M, H:i" }}</td>
+      <td>{{ s.get_mode_display }}<div class="hint">{% for x in s.subjects.all %}{{ x.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if s.topic %} · {{ s.topic }}{% endif %}{% if s.difficulty %} · {{ s.difficulty|title }}{% endif %}</div></td>
+      <td>{% if s.finished %}<b>{{ s.score }}/{{ s.total }}</b> <span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span>{% else %}<span class="chip">in progress</span>{% endif %}</td>
+      <td>{% if s.finished %}<span style="color:var(--champagne-lt);font-weight:700">+{{ s.points }}</span>{% endif %}</td>
+      <td>{% if s.finished %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:practice_result' s.id %}">Review</a>{% else %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:practice_take' s.id %}">Continue</a>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div></div>{% endif %}
+</div>
+
+<div class="qc-col">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-trophy-fill"></i> {{ student.class_assigned.name|default:"Class" }} leaderboard</h3>
+    <span class="seg"><a href="?board=week" class="{% if board == 'week' %}on{% endif %}">This week</a><a href="?board=all" class="{% if board == 'all' %}on{% endif %}">All time</a></span></div>
+    {% if top %}<ol class="board">{% for r in top %}<li class="{% if r.me %}me{% endif %}"><span class="rk">{{ r.rank }}</span><span>{{ r.name }}{% if r.me %} <span class="chip gold">You</span>{% endif %}<div class="hint">{{ r.quizzes }} quiz{{ r.quizzes|pluralize:"zes" }} · {{ r.accuracy }}% right</div></span><span class="pt">{{ r.points }}</span></li>{% endfor %}
+      {% if me_off_board %}<li class="me"><span class="rk">{{ me.rank }}</span><span>You<div class="hint">{{ me.quizzes }} quiz{{ me.quizzes|pluralize:"zes" }} · {{ me.accuracy }}% right</div></span><span class="pt">{{ me.points }}</span></li>{% endif %}</ol>
+    {% else %}<div class="panel-b"><p class="hint" style="margin:0">No points yet {% if board == 'week' %}this week{% endif %}. Finish a quiz to get your class started!</p></div>{% endif %}
+  </div>
+
+  {% if progress %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-graph-up-arrow"></i> My progress</h3><span class="hint">Last {{ progress|length }}</span></div><div class="panel-b">
+    <div class="bars">{% for s in progress %}<a href="{% url 'cbt:practice_result' s.id %}" title="{{ s.get_mode_display }} · {{ s.submitted_at|date:'j M' }} · {{ s.percent }}%"><span class="n">{{ s.percent }}%</span><span class="b {% if s.percent >= 70 %}g{% elif s.percent >= 50 %}a{% else %}r{% endif %}" style="height:{{ s.percent|default:2 }}%"></span></a>{% endfor %}</div>
+  </div></div>{% endif %}
+
+  {% if subject_accuracy %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-bookmark"></i> My subjects</h3><span class="hint">Weakest first</span></div><div class="panel-b acc">
+    {% for r in subject_accuracy %}<div class="row"><div>{{ r.subject }} <span class="hint">· {{ r.right }}/{{ r.total }}</span><div class="track"><div class="fill {% if r.percent >= 70 %}g{% elif r.percent >= 50 %}a{% else %}r{% endif %}" style="width:{{ r.percent }}%"></div></div></div><b style="text-align:right">{{ r.percent }}%</b></div>{% endfor %}
+  </div></div>{% endif %}
+
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-bullseye"></i> My topics</h3></div><div class="panel-b">{% include "cbt/_mastery_body.html" %}</div></div>
 </div>
-{% if sessions %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent practice</h3></div><table class="tbl"><thead><tr><th>When</th><th>Type</th><th>Subjects</th><th>Score</th><th></th></tr></thead><tbody>
-  {% for s in sessions %}<tr><td>{{ s.started_at|date:"j M, H:i" }}</td><td>{{ s.get_mode_display }}{% if s.topic %} · {{ s.topic }}{% endif %}</td><td class="hint">{% for x in s.subjects.all %}{{ x.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
-    <td>{% if s.finished %}<b>{{ s.score }}/{{ s.total }}</b> <span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span>{% else %}<span class="chip">unfinished</span>{% endif %}</td>
-    <td>{% if s.finished %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:practice_result' s.id %}">Review</a>{% endif %}</td></tr>{% endfor %}
-</tbody></table></div>{% endif %}
+</div>
+
 <script>
 (function(){
-  document.querySelectorAll('.tabs button').forEach(function(b){b.addEventListener('click',function(){
-    document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
-    ['JAMB','TOPIC'].forEach(t=>{var f=document.getElementById('pf-'+t);if(f)f.style.display=t===b.dataset.t?'':'none';});});});
   var subs=document.querySelectorAll('.js-sub');subs.forEach(function(c){c.addEventListener('change',function(){
-    var n=document.querySelectorAll('.js-sub:checked').length;subs.forEach(x=>{if(!x.checked)x.disabled=n>={{ max_subjects }};});});});
-  var ts=document.getElementById('tsub'),tt=document.getElementById('ttop');
+    var n=document.querySelectorAll('.js-sub:checked').length;subs.forEach(function(x){if(!x.checked)x.disabled=n>={{ max_subjects }};});});});
+  var ts=document.getElementById('qsub'),tt=document.getElementById('qtop');
   function fill(){if(!ts)return;var o=ts.selectedOptions[0],t=(o.dataset.topics||'').split('|').filter(Boolean);
-    tt.innerHTML='<option value="">All topics</option>'+t.map(x=>'<option>'+x.replace(/</g,'&lt;')+'</option>').join('');}
+    tt.innerHTML='<option value="">All topics</option>'+t.map(function(x){var e=x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');return '<option value="'+e+'">'+e+'</option>';}).join('');}
   if(ts){ts.addEventListener('change',fill);fill();}
 })();
 </script>

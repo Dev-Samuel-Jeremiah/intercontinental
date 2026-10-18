@@ -1,9 +1,12 @@
 """
 cbt/practice.py
 ───────────────
-Practice from the question bank — a UTME-style mock across up to four
-subjects, or a short drill on one topic — and topic mastery built from
-practice and from exam questions that came from the bank.
+Practice from the question bank — the Quiz Centre's quick quizzes, daily
+challenge and "fix my mistakes" rounds, a UTME-style mock across up to four
+subjects, or a short drill on one topic — with points, day streaks and a class
+leaderboard, and topic mastery built from practice and from exam questions
+that came from the bank. Only questions a teacher has released
+(for_practice) are ever drawn.
 """
 import math
 from datetime import timedelta
@@ -12,7 +15,7 @@ import re
 from collections import defaultdict
 
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Sum
 from django.utils import timezone
 
 from users.models import ENROLLED_STATUSES, Student, Subject
@@ -24,6 +27,12 @@ JAMB_PER_SUBJECT = 40
 SECONDS_PER_QUESTION = 40          # 160 questions ≈ 107 minutes, close to the UTME's 2 hours for 180
 MASTERED, DEVELOPING = 80, 50
 MIN_ANSWERS = 3
+QUIZ_SIZES = (5, 10, 15, 20, 30)
+DAILY_SIZE = 10
+STALE_HOURS = 4                    # an unfinished practice older than this is marked as it stands
+POINTS = {'EASY': 5, 'MEDIUM': 10, 'HARD': 15}
+PERFECT_BONUS = 20                 # every question right, on a quiz of at least 5
+DAILY_BONUS = 25
 
 
 class PracticeError(ValueError):
@@ -35,11 +44,13 @@ def _levels(student):
     return {v.strip().lower() for v in (getattr(cls, 'level', '') or '', getattr(cls, 'name', '') or '') if v.strip()}
 
 
-def pool(student, subject, topic=''):
-    """Practice questions suitable for the student's class: matching level, or no level given."""
+def pool(student, subject, topic='', difficulty=''):
+    """Released questions suitable for the student's class: matching level, or no level given."""
     qs = BankQuestion.objects.filter(tenant_id=student.tenant_id, subject=subject, for_practice=True)
     if topic:
         qs = qs.filter(topic__iexact=topic)
+    if difficulty:
+        qs = qs.filter(difficulty=difficulty)
     names = _levels(student)
     wanted = Q(level='')
     for n in names:
@@ -67,44 +78,131 @@ def available(student):
     return out
 
 
+def mistakes(student, subject=None):
+    """Released questions the student got wrong the last time they met them in practice."""
+    latest = {}
+    answers = PracticeAnswer.objects.filter(session__student=student, session__submitted_at__isnull=False,
+                                            question__for_practice=True)
+    if subject:
+        answers = answers.filter(question__subject=subject)
+    for qid, right in answers.order_by('answered_at', 'id').values_list('question_id', 'correct'):
+        latest[qid] = right
+    return [qid for qid, right in latest.items() if not right]
+
+
+def current(student):
+    """The student's practice still in progress, if any (marking any that have run out of time or been left)."""
+    found = None
+    for s in PracticeSession.objects.filter(student=student, submitted_at__isnull=True):
+        if seconds_left(s) == 0 or s.started_at < timezone.now() - timedelta(hours=STALE_HOURS):
+            submit(s)
+        elif found is None:
+            found = s
+    return found
+
+
+def _paper_by_subject(ids):
+    paper = defaultdict(list)
+    for qid, sid in BankQuestion.objects.filter(id__in=ids).values_list('id', 'subject_id'):
+        paper[str(sid)].append(qid)
+    order = {qid: i for i, qid in enumerate(ids)}
+    return {sid: sorted(qids, key=order.get) for sid, qids in paper.items()}
+
+
+def _check_size(n, default):
+    try:
+        n = int(n or default)
+    except (TypeError, ValueError):
+        n = default
+    return max(5, min(60, n))
+
+
 @transaction.atomic
-def start(student, subject_ids, mode='JAMB', per_subject=None, topic=''):
-    subject_ids = [int(i) for i in subject_ids][:MAX_SUBJECTS + 1]
-    if not subject_ids:
+def start(student, subject_ids, mode='JAMB', per_subject=None, topic='', difficulty='', feedback='END',
+          timed=True, source=None):
+    """
+    Begin a practice. QUICK and TOPIC take one subject (with an optional topic
+    and difficulty); JAMB up to four subjects; MISTAKES retries what the student
+    got wrong (in one finished practice, given as source, or anywhere); DAILY is
+    the same ten questions for the whole day, once.
+    """
+    subject_ids = [int(i) for i in subject_ids if i][:MAX_SUBJECTS + 1]
+    difficulty = difficulty if difficulty in POINTS else ''
+    feedback = 'INSTANT' if feedback == 'INSTANT' else 'END'
+    if mode not in dict(PracticeSession.MODES):
+        raise PracticeError('Choose a kind of practice.')
+    if mode in ('JAMB', 'QUICK', 'TOPIC') and not subject_ids:
         raise PracticeError('Choose at least one subject.')
     if len(subject_ids) > MAX_SUBJECTS:
         raise PracticeError(f'Choose up to {MAX_SUBJECTS} subjects, as in the UTME.')
-    if mode == 'TOPIC' and len(subject_ids) != 1:
-        raise PracticeError('A topic drill is for one subject.')
-    if PracticeSession.objects.filter(tenant_id=student.tenant_id, student=student, submitted_at__isnull=True,
-                                      started_at__gte=timezone.now() - timedelta(hours=4)).exists():
+    if mode in ('TOPIC', 'QUICK') and len(subject_ids) != 1:
+        raise PracticeError('A quick quiz or topic drill is for one subject.')
+    if current(student):
         raise PracticeError('Finish or submit your current practice first.')
-    per = int(per_subject or (JAMB_PER_SUBJECT if mode == 'JAMB' else 15))
-    per = max(5, min(60, per))
-    subjects = list(Subject.objects.filter(tenant_id=student.tenant_id, id__in=subject_ids))
     rng = random.Random()
-    paper, total = {}, 0
-    for s in subjects:
-        ids = pool(student, s, topic if mode == 'TOPIC' else '')
+    today = timezone.localdate()
+    if mode == 'JAMB':
+        feedback, timed = 'END', True          # as in the real examination
+        per = _check_size(per_subject, JAMB_PER_SUBJECT)
+        subjects = list(Subject.objects.filter(tenant_id=student.tenant_id, id__in=subject_ids))
+        paper = {}
+        for s in subjects:
+            ids = pool(student, s)
+            if not ids:
+                raise PracticeError(f'There are no practice questions for {s.name} yet.')
+            paper[str(s.id)] = rng.sample(ids, min(per, len(ids)))
+    elif mode in ('QUICK', 'TOPIC'):
+        per = _check_size(per_subject, 10 if mode == 'QUICK' else 15)
+        subject = Subject.objects.filter(tenant_id=student.tenant_id, id=subject_ids[0]).first()
+        ids = pool(student, subject, topic, difficulty) if subject else []
         if not ids:
-            raise PracticeError(f'There are no practice questions for {s.name}' + (f' on {topic}' if topic else '') + ' yet.')
-        chosen = rng.sample(ids, min(per, len(ids)))
-        paper[str(s.id)] = chosen
-        total += len(chosen)
+            what = ' '.join(x for x in ((dict(BankQuestion.DIFFICULTY).get(difficulty) or '').lower(),
+                                        subject.name if subject else '') if x)
+            raise PracticeError(f'There are no {what} practice questions' + (f' on {topic}' if topic else '') + ' yet.')
+        paper = {str(subject.id): rng.sample(ids, min(per, len(ids)))}
+    elif mode == 'MISTAKES':
+        per = _check_size(per_subject, 10)
+        if source is not None:
+            right = set(source.answers.filter(correct=True).values_list('question_id', flat=True))
+            ids = list(BankQuestion.objects.filter(id__in=[q for qs in source.paper.values() for q in qs],
+                                                   for_practice=True).exclude(id__in=right)
+                       .values_list('id', flat=True))
+        else:
+            subject = Subject.objects.filter(tenant_id=student.tenant_id, id=subject_ids[0]).first() if subject_ids else None
+            ids = mistakes(student, subject)
+        if not ids:
+            raise PracticeError('No mistakes to fix — well done!')
+        paper = _paper_by_subject(rng.sample(ids, min(per, len(ids))))
+    else:   # DAILY
+        if PracticeSession.objects.filter(student=student, mode='DAILY', challenge_date=today).exists():
+            raise PracticeError("You've already taken today's challenge. Come back tomorrow!")
+        ids = sorted(q for s, n, t in available(student) for q in pool(student, s))
+        if not ids:
+            raise PracticeError('There are no practice questions for your class yet.')
+        day = random.Random(f'{student.tenant_id}-{student.class_assigned_id}-{today.isoformat()}')
+        paper = _paper_by_subject(day.sample(ids, min(DAILY_SIZE, len(ids))))
+        feedback, timed = 'INSTANT', False
+    subjects = list(Subject.objects.filter(id__in=[int(k) for k in paper]))
+    total = sum(len(v) for v in paper.values())
     option_order = {}
     for o in BankOption.objects.filter(question_id__in=[q for qs in paper.values() for q in qs]).values('id', 'question_id'):
         option_order.setdefault(str(o['question_id']), []).append(o['id'])
     for v in option_order.values():
         rng.shuffle(v)
     session = PracticeSession.objects.create(
-        tenant_id=student.tenant_id, student=student, mode=mode, topic=topic if mode == 'TOPIC' else '',
+        tenant_id=student.tenant_id, student=student, mode=mode,
+        topic=topic if mode in ('TOPIC', 'QUICK') else '', difficulty=difficulty if mode in ('TOPIC', 'QUICK') else '',
+        feedback=feedback, timed=bool(timed), challenge_date=today if mode == 'DAILY' else None,
         paper=paper, option_order=option_order, total=total,
-        duration_seconds=max(300, int(math.ceil(total * SECONDS_PER_QUESTION / 60.0)) * 60))
+        duration_seconds=max(300, int(math.ceil(total * SECONDS_PER_QUESTION / 60.0)) * 60) if timed else 0)
     session.subjects.set(subjects)
     return session
 
 
 def seconds_left(session):
+    """Seconds remaining, or None for an untimed practice."""
+    if not session.timed:
+        return None
     return max(0, int(session.duration_seconds - (timezone.now() - session.started_at).total_seconds()))
 
 
@@ -133,14 +231,31 @@ def sections(session):
 
 
 def answer(session, question_id, option_id):
+    """
+    Save a choice. With instant feedback the answer is final and the reply
+    carries the verdict: {'correct', 'correct_option', 'explanation'};
+    otherwise the choice can be changed until the end and the reply is {}.
+    """
     if session.finished or seconds_left(session) == 0:
         raise PracticeError('This practice has ended.')
     qid = int(question_id)
     if qid not in {q for qs in session.paper.values() for q in qs}:
         raise PracticeError('That question is not in this practice.')
     option = BankOption.objects.filter(pk=option_id, question_id=qid).first() if option_id else None
-    PracticeAnswer.objects.update_or_create(session=session, question_id=qid,
-                                            defaults={'option': option, 'correct': bool(option and option.is_correct)})
+    if session.feedback != 'INSTANT':
+        PracticeAnswer.objects.update_or_create(session=session, question_id=qid,
+                                                defaults={'option': option, 'correct': bool(option and option.is_correct)})
+        return {}
+    if option is None:
+        raise PracticeError('Choose an answer.')
+    _, created = PracticeAnswer.objects.get_or_create(session=session, question_id=qid,
+                                                      defaults={'option': option, 'correct': option.is_correct})
+    if not created:
+        raise PracticeError('You have already answered this question.')
+    question = option.question
+    right = question.options.filter(is_correct=True).first()
+    return {'correct': option.is_correct, 'correct_option': right.id if right else None,
+            'explanation': question.explanation or ''}
 
 
 @transaction.atomic
@@ -149,9 +264,88 @@ def submit(session):
     if session.finished:
         return session
     session.score = session.answers.filter(correct=True).count()
+    session.points = points_for(session)
     session.submitted_at = timezone.now()
-    session.save(update_fields=['score', 'submitted_at'])
+    session.save(update_fields=['score', 'points', 'submitted_at'])
     return session
+
+
+def points_for(session):
+    """Points by difficulty for each right answer, plus bonuses for a perfect quiz and the daily challenge."""
+    levels = session.answers.filter(correct=True).values_list('question__difficulty', flat=True)
+    points = sum(POINTS.get(d, POINTS['MEDIUM']) for d in levels)
+    if session.total >= 5 and len(levels) == session.total:
+        points += PERFECT_BONUS
+    if session.mode == 'DAILY' and session.answers.exists():
+        points += DAILY_BONUS
+    return points
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Points, streaks, leaderboard and progress
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _finished(student):
+    return PracticeSession.objects.filter(student=student, submitted_at__isnull=False)
+
+
+def streak(student):
+    """Days in a row, ending today or yesterday, with at least one finished practice."""
+    days = {timezone.localtime(t).date() for t in _finished(student).values_list('submitted_at', flat=True)}
+    day = timezone.localdate()
+    if day not in days:
+        day -= timedelta(days=1)
+    n = 0
+    while day in days:
+        n += 1
+        day -= timedelta(days=1)
+    return n
+
+
+def stats(student):
+    done = _finished(student)
+    totals = done.aggregate(points=Sum('points'), right=Sum('score'), asked=Sum('total'))
+    today = timezone.localdate()
+    return {
+        'points': totals['points'] or 0, 'quizzes': done.count(), 'streak': streak(student),
+        'accuracy': round(100 * (totals['right'] or 0) / totals['asked']) if totals['asked'] else None,
+        'mistakes': len(mistakes(student)),
+        'daily': PracticeSession.objects.filter(student=student, mode='DAILY', challenge_date=today).first(),
+    }
+
+
+def leaderboard(student, days=7, size=10):
+    """Classmates ranked by practice points (the last `days` days, or all time if None): (top rows, the student's row)."""
+    if not student.class_assigned_id:
+        return [], None
+    done = PracticeSession.objects.filter(tenant_id=student.tenant_id, submitted_at__isnull=False,
+                                          student__class_assigned_id=student.class_assigned_id,
+                                          student__status__in=ENROLLED_STATUSES)
+    if days:
+        done = done.filter(submitted_at__gte=timezone.now() - timedelta(days=days))
+    rows = list(done.values('student_id', 'student__full_name')
+                .annotate(points=Sum('points'), quizzes=Count('id'), right=Sum('score'), asked=Sum('total'))
+                .filter(points__gt=0).order_by('-points', '-right', 'student__full_name'))
+    me = None
+    for i, r in enumerate(rows, 1):
+        r.update(rank=i, name=r['student__full_name'], me=r['student_id'] == student.id,
+                 accuracy=round(100 * r['right'] / r['asked']) if r['asked'] else 0)
+        if r['me']:
+            me = r
+    return rows[:size], me
+
+
+def progress(student, n=10):
+    """The student's last n finished practices, oldest first, for a progress chart."""
+    return list(reversed(list(_finished(student).order_by('-submitted_at')[:n])))
+
+
+def subject_accuracy(student):
+    """[{subject, right, total, percent}] from every practice answer, weakest first."""
+    rows = (PracticeAnswer.objects.filter(session__student=student, session__submitted_at__isnull=False)
+            .values('question__subject__name').annotate(n=Count('id'), right=Count('id', filter=Q(correct=True))))
+    return sorted([{'subject': r['question__subject__name'], 'right': r['right'], 'total': r['n'],
+                    'percent': round(100 * r['right'] / r['n'])} for r in rows], key=lambda r: r['percent'])
 
 
 def breakdown(session):
