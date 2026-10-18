@@ -32,6 +32,7 @@ urlpatterns = [
     path('admissions/', include('admissions.urls', namespace='admissions')),
     path('safety/', include('safety.urls', namespace='safety')),
     path('notifications/', include('notifications.urls', namespace='notifications')),
+    path('staff-chat/', include('staffchat.urls', namespace='staffchat')),
     path('curriculum/', include('curriculum.urls', namespace='curriculum')),
     path('assistant/', include('assistant.urls', namespace='assistant')),
     path('analytics/', include('analytics.urls', namespace='analytics')),

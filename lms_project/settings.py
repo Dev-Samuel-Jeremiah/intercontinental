@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'saas_admin',
     'security.apps.SecurityConfig',
     'notifications.apps.NotificationsConfig',
+    'staffchat.apps.StaffchatConfig',
 ]
 
 MIDDLEWARE = [

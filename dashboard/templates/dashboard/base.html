@@ -628,6 +628,25 @@
           <i class="bi bi-house-fill"></i>
           <span class="ni-label">Dashboard</span>
         </a>
+        {% if user.is_superuser or user.is_staff_user %}
+        <a href="{% url 'staffchat:home' %}" class="nav-item" data-tooltip="Staff Chat">
+          <i class="bi bi-chat-square-heart-fill"></i>
+          <span class="ni-label">Staff Chat</span>
+          <span class="ni-badge" id="navChatBadge" style="display:none;margin-left:auto"></span>
+        </a>
+        <script>
+          (function () {
+            if (location.pathname.indexOf('/staff-chat/') === 0) return;   // the chat page keeps this up to date itself
+            function check() {
+              fetch('{% url "staffchat:api_unread" %}', {credentials: 'same-origin'}).then(function (r) { return r.json(); })
+                .then(function (d) { var b = document.getElementById('navChatBadge'); if (!b) return;
+                  b.textContent = d.unread > 99 ? '99+' : d.unread; b.style.display = d.unread ? '' : 'none'; })
+                .catch(function () {});
+            }
+            check(); setInterval(function () { if (document.visibilityState === 'visible') check(); }, 30000);
+          })();
+        </script>
+        {% endif %}
         {% if user.is_staff_user %}
         <a href="{% url 'idcards:my_id_card' %}" class="nav-item" data-tooltip="ID Card">
           <i class="bi bi-person-vcard-fill"></i>
