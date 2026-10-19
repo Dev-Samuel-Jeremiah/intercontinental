@@ -318,6 +318,41 @@ class StudentPromotionRecord(TenantModelMixin, models.Model):
 
 
 # ── Student history ───────────────────────────────────────────────────────────
+class ClassHistory(TenantModelMixin, models.Model):
+    """
+    One spell in one class: which class and section, in which session, from
+    when to when, and how the student got there. Written automatically
+    whenever a student's class changes, so the record shows every class a
+    pupil passed through from admission to graduation.
+    """
+    HOW = [('ADMITTED', 'Joined the school'), ('PROMOTED', 'Promoted'), ('REPEATED', 'Repeated the class'),
+           ('MOVED', 'Changed class'), ('EARLIER', 'From earlier records')]
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='class_history')
+    school_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    class_name = models.CharField(max_length=50)
+    section = models.ForeignKey('saas_admin.Campus', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    section_name = models.CharField(max_length=120, blank=True)
+    session = models.ForeignKey('academics.AcademicSession', on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name='+')
+    session_name = models.CharField(max_length=40, blank=True)
+    started_on = models.DateField()
+    ended_on = models.DateField(null=True, blank=True)
+    how = models.CharField(max_length=8, choices=HOW, default='MOVED')
+    recorded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    objects = TenantManager()
+
+    class Meta:
+        ordering = ['-started_on', '-id']
+
+    def __str__(self):
+        return f"{self.student.full_name}: {self.class_name} from {self.started_on}"
+
+    @property
+    def current(self):
+        return self.ended_on is None
+
+
 class StudentStatusChange(TenantModelMixin, models.Model):
     """Each move between active, suspended, withdrawn, graduated and deceased."""
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='status_changes')

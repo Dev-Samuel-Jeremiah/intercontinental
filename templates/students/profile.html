@@ -36,6 +36,26 @@
   .sp-tab.on{color:var(--champagne-lt);border-bottom-color:var(--champagne)}
   .sp-pane{display:none;animation:spRise .35s ease both}
   .sp-pane.on{display:block}
+  .sp-medalert{display:inline-flex;gap:.45rem;align-items:center;margin-top:.5rem;padding:.35rem .7rem;border-radius:10px;background:var(--red-dim);border:1px solid var(--red-border);color:var(--red);font-size:.8rem;font-weight:600}
+  .sp-medalert.big{display:flex;margin:0 0 1rem;padding:.8rem 1rem;font-size:.88rem;font-weight:500}
+  .sp-complete .panel-b{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+  .sp-complete.ok .panel-b{gap:.5rem}
+  .sp-complete .ring{--p:0;width:58px;height:58px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+    background:conic-gradient(var(--champagne) calc(var(--p)*1%),rgba(255,255,255,.08) 0)}
+  .sp-complete .ring span{width:44px;height:44px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:.78rem;font-weight:700;color:var(--white)}
+  .sp-complete .gaps{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.45rem}
+  .sp-complete .gaps button{cursor:pointer;font-family:inherit}
+  .sp-classes{display:flex;gap:.6rem;overflow-x:auto;padding:1rem 1.2rem 1.1rem}
+  .sp-class{position:relative;flex:0 0 190px;display:flex;flex-direction:column;gap:.25rem;padding:.75rem .85rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(0,0,0,.16)}
+  .sp-class::after{content:"";position:absolute;right:-.62rem;top:50%;width:.6rem;height:2px;background:var(--rim2)}
+  .sp-class:last-child::after{display:none}
+  .sp-class b{color:var(--white);font-size:.95rem}
+  .sp-class.now{border-color:var(--champagne-border);background:var(--champagne-dim)}
+  .sp-class .how{align-self:flex-start;font-size:.64rem;font-weight:700;padding:.08rem .45rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);text-transform:uppercase;letter-spacing:.4px}
+  .sp-class .how-PROMOTED{color:var(--green);border-color:var(--green-border)}
+  .sp-class .how-REPEATED{color:var(--amber);border-color:var(--amber-border)}
+  .sp-class .how-ADMITTED{color:var(--champagne-lt);border-color:var(--champagne-border)}
+  .sp-class .sec-flag{font-size:.66rem;font-weight:700;color:var(--champagne-lt);text-transform:uppercase;letter-spacing:.5px}
   .sp-kv{display:grid;grid-template-columns:150px 1fr;gap:.55rem 1rem;font-size:.86rem}
   .sp-kv dt{color:var(--slate2)}
   .sp-kv dd{margin:0;color:var(--white)}
@@ -92,6 +112,7 @@
     <div class="sp-meta">
       <span><i class="bi bi-hash"></i>{{ student.admission_number }}</span>
       {% if student.class_assigned %}<span><i class="bi bi-easel2"></i>{{ student.class_assigned.name }}</span>{% endif %}
+      {% if section %}<span><i class="bi bi-building"></i>{{ section.name }}</span>{% endif %}
       {% if student.house %}<span><i class="bi bi-flag-fill" style="color:{{ student.house.colour }}"></i>{{ student.house.name }}</span>{% endif %}
       {% if student.gender %}<span><i class="bi bi-person"></i>{{ student.gender }}</span>{% endif %}
       {% if student.age is not None %}<span><i class="bi bi-cake2"></i>{{ student.age }} years</span>{% endif %}
@@ -104,11 +125,13 @@
     {% if student.status_reason and student.status != 'Active' %}<div class="hint" style="margin-top:.4rem">{{ student.status_reason }}</div>{% endif %}
     {% for r in roles %}{% if r.is_current %}<span class="sp-status" style="background:rgba(244,210,31,.12);color:var(--champagne-lt);border:1px solid rgba(244,210,31,.35);margin-left:.3rem"><i class="bi bi-star-fill"></i> {{ r.title }}</span>{% endif %}{% endfor %}
     {% if support.adjustments %}<div class="hint" style="margin-top:.45rem;color:var(--amber)"><i class="bi bi-heart-pulse"></i> {{ support.adjustments|join:" · " }}</div>{% endif %}
+    {% if health.alerts %}<div class="sp-medalert"><i class="bi bi-exclamation-triangle-fill"></i> {{ health.alerts|join:" · " }}</div>{% endif %}
     {% if can_manage and pending_corrections %}<div style="margin-top:.45rem"><a href="{% url 'users:change_requests' %}" class="chip amber" style="text-decoration:none">{{ pending_corrections }} correction{{ pending_corrections|pluralize }} from the parent waiting</a></div>{% endif %}
   </div>
   <div class="sp-actions">
     {% if can_manage %}<a class="fin-btn fin-btn-gold" href="{% url 'users:edit_student' student.id %}"><i class="bi bi-pencil"></i> Edit details</a>{% endif %}
     {% if session and term and student.class_assigned %}<a class="fin-btn" href="{% url 'results:term_results' %}?class={{ student.class_assigned.id }}&student={{ student.id }}&term={{ term.id }}&session={{ session.id }}"><i class="bi bi-journal-text"></i> This term's result</a>{% endif %}
+    <a class="fin-btn" href="{% url 'users:record_card' student.id %}" target="_blank"><i class="bi bi-printer"></i> Record card</a>
     <a class="fin-btn" href="{% url 'users:all_students' %}"><i class="bi bi-arrow-left"></i> All students</a>
   </div>
 </div>
@@ -143,6 +166,7 @@
   <button class="sp-tab" data-tab="details"><i class="bi bi-card-list"></i> More details</button>
   <button class="sp-tab" data-tab="awards"><i class="bi bi-award"></i> Awards &amp; roles <span class="hint">({{ awards|length }})</span></button>
   <button class="sp-tab" data-tab="support"><i class="bi bi-heart-pulse"></i> Support{% if support.adjustments %} <span class="chip amber" style="padding:.05rem .4rem">{{ support.adjustments|length }}</span>{% endif %}</button>
+  {% if health %}<button class="sp-tab" data-tab="health"><i class="bi bi-hospital"></i> Health{% if health.alerts %} <span class="chip red" style="padding:.05rem .4rem">{{ health.alerts|length }}</span>{% endif %}</button>{% endif %}
   <button class="sp-tab" data-tab="results"><i class="bi bi-journal-check"></i> Results</button>
   <button class="sp-tab" data-tab="attendance"><i class="bi bi-calendar2-week"></i> Attendance</button>
   {% if fees %}<button class="sp-tab" data-tab="fees"><i class="bi bi-cash-coin"></i> Fees</button>{% endif %}
@@ -153,6 +177,12 @@
 
 <!-- Overview -->
 <div class="sp-pane on" id="pane-overview">
+  {% if completeness.missing %}<div class="panel sp-complete"><div class="panel-b">
+    <div class="ring" style="--p:{{ completeness.percent }}"><span>{{ completeness.percent }}%</span></div>
+    <div style="flex:1;min-width:0"><b style="color:var(--white)">Record {{ completeness.percent }}% complete</b> <span class="hint">· {{ completeness.done }} of {{ completeness.total }} checks</span>
+      <div class="gaps">{% for m in completeness.missing %}<button type="button" class="chip amber" data-goto="{{ m.tab }}" title="{{ m.why }}"><i class="bi bi-plus-circle"></i> {{ m.label }}</button>{% endfor %}</div></div>
+  </div></div>
+  {% else %}<div class="panel sp-complete ok"><div class="panel-b"><i class="bi bi-patch-check-fill" style="font-size:1.4rem;color:var(--green)"></i> <b style="color:var(--white)">Record complete</b> <span class="hint">— every check passed.</span></div></div>{% endif %}
   <div class="fin-grid">
     <div class="panel">
       <div class="panel-h"><h3><i class="bi bi-person-badge"></i> Details</h3></div>
@@ -240,7 +270,55 @@
       </div>
     </div>
   </div>
+  <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-ladder"></i> Class history</h3>
+    <span class="hint">{% if sections_attended %}{{ sections_attended|join:" → " }}{% endif %}</span></div>
+    {% if class_history %}<div class="sp-classes">{% for c in class_history %}
+      <div class="sp-class{% if c.current %} now{% endif %}{% if c.new_section %} newsec{% endif %}">
+        {% if c.new_section %}<div class="sec-flag"><i class="bi bi-building"></i> {{ c.section_name }}</div>{% endif %}
+        <b>{{ c.class_name }}</b>
+        <span class="hint">{{ c.started_on|date:"M Y" }} – {% if c.ended_on %}{{ c.ended_on|date:"M Y" }}{% else %}now{% endif %}{% if c.session_name %} · {{ c.session_name }}{% endif %}</span>
+        <span class="how how-{{ c.how }}">{{ c.get_how_display }}</span>
+        {% if c.section_name and not c.new_section and forloop.first %}<span class="hint"><i class="bi bi-building"></i> {{ c.section_name }}</span>{% endif %}
+      </div>{% endfor %}</div>
+    {% else %}<div class="panel-b"><p class="hint" style="margin:0">Not in a class yet.</p></div>{% endif %}
+  </div>
 </div>
+
+<!-- Health -->
+{% if health %}<div class="sp-pane" id="pane-health">
+  {% if health.alerts %}<div class="sp-medalert big"><i class="bi bi-exclamation-triangle-fill"></i><div><b>Alert for all staff</b><br>{{ health.alerts|join:" · " }}</div></div>{% endif %}
+  <div class="fin-grid">
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-heart-pulse"></i> Medical details</h3>
+      {% if health.nurse %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:medical' student.id %}"><i class="bi bi-pencil"></i> {% if health.medical %}Update{% else %}Add{% endif %}</a>{% endif %}</div>
+      <div class="panel-b">{% with m=health.medical %}{% if m %}
+        <dl class="sp-kv">
+          <dt>Blood group</dt><dd>{{ m.blood_group|default:"—" }}</dd>
+          <dt>Genotype</dt><dd>{{ m.genotype|default:"—" }}</dd>
+          <dt>Allergies</dt><dd>{{ m.allergies|default:"None recorded" }}</dd>
+          <dt>Emergency medication</dt><dd>{{ m.emergency_medication|default:"—" }}</dd>
+          {% if m.diet %}<dt>Diet</dt><dd>{{ m.diet }}</dd>{% endif %}
+          {% if health.nurse %}<dt>Conditions</dt><dd>{{ m.conditions|default:"—"|linebreaksbr }}</dd>{% endif %}
+          <dt>Doctor</dt><dd>{{ m.doctor_name|default:"—" }}{% if m.doctor_phone %} · {{ m.doctor_phone }}{% endif %}</dd>
+          <dt>Hospital</dt><dd>{{ m.hospital|default:"—" }}</dd>
+          <dt>Health plan</dt><dd>{% if m.plan %}{{ m.plan }}{% if m.member_number %} · {{ m.member_number }}{% endif %}{% if m.cover_expires %} · until {{ m.cover_expires|date:"j M Y" }}{% endif %}{% else %}{{ m.other_insurance|default:"—" }}{% endif %}</dd>
+          <dt>Consent</dt><dd>{% if m.consent_first_aid %}<span class="chip green">First aid</span>{% else %}<span class="chip red">No first aid</span>{% endif %} {% if m.consent_hospital %}<span class="chip green">Emergency hospital</span>{% else %}<span class="chip red">No hospital consent</span>{% endif %}</dd>
+        </dl>
+        {% if not health.nurse %}<p class="hint" style="margin:.6rem 0 0"><i class="bi bi-lock"></i> Conditions and nurse's notes are visible to the school nurse and administrators only.</p>{% endif %}
+      {% else %}<p class="hint" style="margin:0">No medical details yet.{% if health.nurse %} Add blood group, genotype and allergies so the nurse is never guessing in an emergency.{% endif %}</p>{% endif %}{% endwith %}</div></div>
+    <div>
+      <div class="panel"><div class="panel-h"><h3><i class="bi bi-shield-plus"></i> Immunisations</h3></div>
+        {% if health.immunisations %}<table class="tbl"><tbody>{% for i in health.immunisations %}<tr><td class="name">{{ i.name }}{% if i.dose %} <span class="hint">{{ i.dose }}</span>{% endif %}</td><td>{{ i.given_on|date:"j M Y"|default:"—" }}</td>
+          <td>{% if i.next_due %}{% if i.next_due < today %}<span class="chip red">Due {{ i.next_due|date:"j M Y" }}</span>{% else %}<span class="hint">next {{ i.next_due|date:"j M Y" }}</span>{% endif %}{% endif %}{% if i.verified %} <span class="chip green">Verified</span>{% endif %}</td></tr>{% endfor %}</tbody></table>
+        {% else %}<div class="panel-b"><p class="hint" style="margin:0">No immunisations recorded.</p></div>{% endif %}</div>
+      {% if health.medication %}<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-capsule"></i> Medication in school</h3></div><table class="tbl"><tbody>
+        {% for p in health.medication %}<tr><td class="name">{{ p.medicine }}</td><td>{{ p.dose }} · {{ p.times }}</td><td>{% if p.parent_consent %}<span class="chip green">Parent consent</span>{% else %}<span class="chip amber">No consent yet</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+      {% if health.visits %}<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-hospital"></i> Sick bay visits</h3></div><table class="tbl"><tbody>
+        {% for v in health.visits %}<tr><td>{{ v.admitted_at|date:"j M Y" }}</td><td class="name">{{ v.complaint }}</td><td class="hint">{{ v.get_outcome_display }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+      {% if health.lab_incidents %}<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-bandaid"></i> Lab incidents</h3></div><table class="tbl"><tbody>
+        {% for i in health.lab_incidents %}<tr><td>{{ i.happened_at|date:"j M Y" }}</td><td class="name"><a href="{% url 'labs:incident' i.id %}" style="color:inherit">{{ i.get_kind_display }}</a></td><td class="hint">{{ i.lab.name }} · {{ i.get_severity_display }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+    </div>
+  </div>
+</div>{% endif %}
 
 <!-- Timeline -->
 <div class="sp-pane" id="pane-timeline">
@@ -589,6 +667,12 @@
     try { history.replaceState(null, '', '#' + name); } catch (e) {}
   }
   tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.tab); }); });
+  document.querySelectorAll('[data-goto]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var t = document.querySelector('.sp-tab[data-tab="' + b.dataset.goto + '"]') || document.querySelector('.sp-tab[data-tab="overview"]');
+      if (t) { t.click(); t.scrollIntoView({behavior: 'smooth', block: 'nearest'}); }
+    });
+  });
   var start = (location.hash || '').slice(1);
   if (start && document.getElementById('pane-' + start)) show(start);
 

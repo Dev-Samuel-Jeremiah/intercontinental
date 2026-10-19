@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_achievements, views_attendance, views_import, views_profile, views_roster
+from . import views, views_achievements, views_attendance, views_import, views_profile, views_records, views_roster
 from users.views import parent_login, parent_dashboard
 
 app_name = "users"
@@ -73,6 +73,8 @@ urlpatterns = [
 
     # Student Management
     path('students/<int:student_id>/', views_profile.student_profile_view, name='student_profile'),
+    path('students/<int:student_id>/record-card/', views_records.record_card, name='record_card'),
+    path('students/records/', views_records.records_health, name='records_health'),
     path('students/<int:student_id>/status/', views_profile.change_student_status,
          name='change_student_status'),
     path('students/<int:student_id>/guardians/', views_profile.student_guardians,

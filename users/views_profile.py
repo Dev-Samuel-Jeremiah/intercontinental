@@ -62,6 +62,11 @@ def student_profile_view(request, student_id):
     session, term = get_active_session(), get_active_term()
     fees_allowed = can_see_fees(request.user)
     manage = can_manage(request.user)
+    from . import completeness, history
+    spells = history.history(student)
+    health = student_profile.health(student, request.user)
+    timeline = student_profile.timeline(student, include_fees=fees_allowed,
+                                        include_health=bool(health and health['nurse']), include_documents=manage)
 
     return render(request, 'students/profile.html', {
         'student': student,
@@ -70,7 +75,11 @@ def student_profile_view(request, student_id):
         'results': student_profile.results_history(student),
         'attendance': student_profile.attendance_summary(student, term),
         'fees': student_profile.fees_summary(student, session, term) if fees_allowed else None,
-        'timeline': student_profile.timeline(student, include_fees=fees_allowed),
+        'timeline': timeline,
+        'class_history': spells, 'sections_attended': history.sections_attended(spells),
+        'section': history.section_of(student.class_assigned),
+        'completeness': completeness.check(student),
+        'health': health,
         'status_history': student.status_changes.select_related('changed_by')[:20],
         'changes': student_profile.change_history(student) if manage else [],
         'statuses': [s for s in STATUS_OPTIONS if s[0] != student.status],
@@ -248,6 +257,21 @@ def _guardian_photo(request, guardian):
         guardian.photo.storage.delete(old)
 
 
+def _guardian_summary(g):
+    flags = [label for flag, label in (('emergency_contact', 'emergency contact'), ('can_pick_up', 'may collect'))
+             if getattr(g, flag)]
+    return ' · '.join(x for x in (f'{g.full_name} ({g.get_relationship_display()})', g.phone, g.email, ', '.join(flags)) if x)
+
+
+def _log_guardian(request, student, before, guardian):
+    """Guardians are part of the record's history: who was added, changed or removed, by whom."""
+    from users.models import StudentChange
+    after = _guardian_summary(guardian) if guardian else ''
+    if before != after:
+        StudentChange.objects.create(tenant_id=student.tenant_id, student=student, field='guardian', label='Guardian',
+                                     old_value=before, new_value=after, changed_by=request.user, source='Guardians')
+
+
 @login_required
 def student_guardians(request, student_id):
     student = get_object_or_404(Student, pk=student_id)
@@ -261,16 +285,20 @@ def student_guardians(request, student_id):
             g = _guardian_from(request.POST, Guardian(tenant_id=student.tenant_id, student=student))
             g.save()
             _guardian_photo(request, g)
+            _log_guardian(request, student, '', g)
             messages.success(request, f'{g.full_name} added as {g.get_relationship_display().lower()}.')
         elif action == 'edit':
             g = get_object_or_404(Guardian, pk=request.POST.get('guardian_id'), student=student)
+            before = _guardian_summary(g)
             _guardian_from(request.POST, g).save()
             _guardian_photo(request, g)
+            _log_guardian(request, student, before, g)
             messages.success(request, f'{g.full_name} updated.')
         elif action == 'delete':
             g = get_object_or_404(Guardian, pk=request.POST.get('guardian_id'), student=student)
-            name = g.full_name
+            name, before = g.full_name, _guardian_summary(g)
             g.delete()
+            _log_guardian(request, student, before, None)
             messages.success(request, f'{name} removed.')
     except records.RecordError as problem:
         messages.error(request, str(problem))

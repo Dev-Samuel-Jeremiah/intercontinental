@@ -160,8 +160,8 @@ STATUS_ICONS = {'Active': 'bi-person-check', 'Suspended': 'bi-pause-circle',
                 'Deceased': 'bi-flower1'}
 
 
-def timeline(student, include_fees=True):
-    """Every notable event, newest first."""
+def timeline(student, include_fees=True, include_health=False, include_documents=False):
+    """Every notable event, newest first — from admissions, classes, results, fees, awards, health and labs."""
     events = []
 
     def add(when, icon, tone, title, detail='', url=''):
@@ -199,12 +199,42 @@ def timeline(student, include_fees=True):
                 else change.effective_on)
         add(when, STATUS_ICONS[change.to_status], tone, title, detail)
 
-    for change in StudentChange.objects.filter(tenant_id=student.tenant_id, student=student,
-                                               field='class_assigned'):
-        verb = 'Promoted' if change.source == 'Promotion' else 'Moved class'
-        add(change.changed_at, 'bi-arrow-up-right-circle', 'blue',
-            f'{verb} to {change.new_value or "no class"}',
-            f'from {change.old_value}' if change.old_value else '')
+    from users import history as class_history
+    for spell in class_history.history(student)[1:]:
+        verb = {'PROMOTED': 'Promoted', 'REPEATED': 'Repeated'}.get(spell.how, 'Moved')
+        detail = ' · '.join(x for x in (spell.session_name, f'started the {spell.section_name} section' if spell.new_section else '') if x)
+        # Same-day moves use the moment they were recorded, so they sort after enrolling that day
+        when = (spell.created_at if spell.created_at and timezone.localdate(spell.created_at) == spell.started_on
+                else spell.started_on)
+        add(when, 'bi-arrow-up-right-circle', 'gold' if spell.new_section else 'blue',
+            f'{verb} to {spell.class_name}', detail)
+
+    for change in StudentChange.objects.filter(tenant_id=student.tenant_id, student=student, field='guardian'):
+        title = (f'Guardian added: {change.new_value}' if not change.old_value else
+                 f'Guardian removed: {change.old_value}' if not change.new_value else f'Guardian updated: {change.new_value}')
+        add(change.changed_at, 'bi-people', 'blue', title.split(' · ')[0])
+
+    for award in student.awards.all():
+        add(award.awarded_on, 'bi-award', 'gold', f'Award: {award.title}',
+            ' · '.join(x for x in (award.position, f'{award.get_level_display()} level') if x))
+
+    if include_documents:
+        for doc in student.documents.all():
+            add(doc.created_at, 'bi-file-earmark-arrow-up', 'blue', f'{doc.display_name} put on file')
+
+    if include_health:
+        try:
+            from hostel.models import SickBayVisit
+            for v in SickBayVisit.objects.filter(tenant_id=student.tenant_id, student=student)[:30]:
+                add(v.admitted_at, 'bi-hospital', 'amber', 'Sick bay visit', v.complaint[:80])
+        except Exception:
+            pass
+    try:
+        for inc in student.lab_incidents.select_related('lab'):
+            add(inc.happened_at, 'bi-bandaid', 'red' if inc.severity != 'MINOR' else 'amber',
+                f'Lab incident: {inc.get_kind_display()}', inc.lab.name, f'/labs/incidents/{inc.pk}/')
+    except Exception:
+        pass
 
     for row in results_history(student):
         if row['published']:
@@ -246,3 +276,31 @@ def timeline(student, include_fees=True):
 def change_history(student, limit=60):
     return list(StudentChange.objects.filter(tenant_id=student.tenant_id, student=student)
                 .select_related('changed_by')[:limit])
+
+
+def health(student, user):
+    """What the profile's Health tab shows. Everyone on staff sees the safety alerts (allergies,
+    emergency medication, sickle-cell genotype); conditions, notes and sick-bay visits are for the
+    nurse and administrators only — the same rule as the Welfare module."""
+    try:
+        from welfare import services as welfare
+        from welfare.models import Immunisation, MedicalProfile, MedicationPlan
+    except Exception:
+        return None
+    nurse = welfare.is_nurse(user, student.tenant)
+    medical = MedicalProfile.objects.filter(tenant_id=student.tenant_id, student=student).select_related('plan').first()
+    out = {'nurse': nurse, 'medical': medical, 'alerts': medical.alerts if medical else [],
+           'immunisations': list(Immunisation.objects.filter(tenant_id=student.tenant_id, student=student)),
+           'medication': list(MedicationPlan.objects.filter(tenant_id=student.tenant_id, student=student, active=True)),
+           'visits': [], 'lab_incidents': []}
+    if nurse:
+        try:
+            from hostel.models import SickBayVisit
+            out['visits'] = list(SickBayVisit.objects.filter(tenant_id=student.tenant_id, student=student)[:10])
+        except Exception:
+            pass
+    try:
+        out['lab_incidents'] = list(student.lab_incidents.select_related('lab')[:10])
+    except Exception:
+        pass
+    return out

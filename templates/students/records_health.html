@@ -1,0 +1,55 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Records health{% endblock %}
+{% block content %}
+{% include "finance/_fin_styles.html" %}
+<style>
+  .rh-bars{display:flex;flex-direction:column;gap:.55rem}
+  .rh-bar{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 70px;gap:.7rem;align-items:center;font-size:.84rem;text-decoration:none;color:var(--white)}
+  .rh-bar:hover .t{color:var(--champagne-lt)}
+  .rh-bar .track{height:9px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .rh-bar .fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--amber),var(--red))}
+  .rh-bar.on .t{color:var(--champagne-lt);font-weight:700}
+  .rh-flt{display:flex;gap:.5rem;flex-wrap:wrap;align-items:flex-end}
+  .rh-flt select{padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.84rem}
+  .rh-pct{display:inline-flex;align-items:center;gap:.4rem}
+  .rh-pct .mini{width:60px;height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+  .rh-pct .mini span{display:block;height:100%;background:var(--champagne)}
+  @media(max-width:700px){.rh-bar{grid-template-columns:1fr 60px}.rh-bar .track{grid-column:1/-1;order:3}}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Student records</div>
+  <h1 class="fin-title">Records <em>health</em></h1>
+  <p class="fin-sub">Every other module reads the student record — a missing parent phone means no absence SMS, a missing date of birth holds up WAEC/NECO registration. Find the gaps and fix them.</p>
+</div><a class="fin-btn" href="?{{ query }}{% if query %}&{% endif %}export=csv"><i class="bi bi-filetype-csv"></i> Export the list</a></div>
+<form method="get" class="panel"><div class="panel-b rh-flt">
+  {% if sections %}<select name="section" onchange="this.form.class.value='';this.form.submit()" aria-label="Section"><option value="">All sections</option>{% for s in sections %}<option value="{{ s.id }}" {% if section.id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>{% endif %}
+  <select name="class" onchange="this.form.submit()" aria-label="Class"><option value="">All classes</option>{% for c in classes %}<option value="{{ c.id }}" {% if school_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="missing" onchange="this.form.submit()" aria-label="Missing"><option value="">Missing anything</option>{% for k, l, t, w in checks %}<option value="{{ k }}" {% if missing == k %}selected{% endif %}>Missing: {{ l }}</option>{% endfor %}</select>
+</div></form>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Students on the roll</small><b>{{ total_students }}</b></div>
+  <div class="fin-stat"><small>Average completeness</small><b>{% if average is not None %}{{ average }}%{% else %}—{% endif %}</b></div>
+  <div class="fin-stat"><small>Complete records</small><b style="color:var(--green)">{{ complete }}</b></div>
+  <div class="fin-stat"><small>{% if missing %}Missing {{ missing_label|lower }}{% else %}Need attention{% endif %}</small><b style="color:var(--amber)">{{ need_attention }}</b></div>
+</div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-diamond"></i> What is missing most</h3></div><div class="panel-b">
+    {% if gaps %}<div class="rh-bars">{% for g in gaps %}<a class="rh-bar{% if missing == g.key %} on{% endif %}" href="?{% if section %}section={{ section.id }}&{% endif %}{% if school_class %}class={{ school_class.id }}&{% endif %}missing={{ g.key }}"><span class="t">{{ g.label }}</span><span class="track"><span class="fill" style="width:{{ g.percent }}%;display:block"></span></span><span class="hint" style="text-align:right">{{ g.count }} · {{ g.percent }}%</span></a>{% endfor %}</div>
+    {% else %}<p class="hint" style="margin:0"><i class="bi bi-patch-check-fill" style="color:var(--green)"></i> Nothing missing — every record is complete.</p>{% endif %}
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-easel2"></i> By class — weakest first</h3></div>
+    {% if class_rows %}<div style="max-height:360px;overflow-y:auto"><table class="tbl"><tbody>{% for c in class_rows %}<tr><td class="name">{% if c.id %}<a href="?{% if section %}section={{ section.id }}&{% endif %}class={{ c.id }}" style="color:inherit">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</td>
+      <td><span class="rh-pct"><span class="mini"><span style="width:{{ c.avg }}%"></span></span>{{ c.avg }}%</span></td><td class="hint">{{ c.complete }} of {{ c.students }} complete</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<div class="panel-b"><p class="hint" style="margin:0">No students here.</p></div>{% endif %}</div>
+</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-exclamation"></i> Records to complete{% if missing %} — missing {{ missing_label|lower }}{% endif %}</h3><span class="hint">{{ page.paginator.count }} student{{ page.paginator.count|pluralize }}</span></div>
+  {% if page %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Student</th><th>Class</th><th>Complete</th><th>Missing</th></tr></thead><tbody>
+  {% for st, pct, gaps in page %}<tr><td class="name"><a href="{% url 'users:student_profile' st.id %}" style="color:inherit">{{ st.full_name }}</a><div class="hint">{{ st.admission_number }}</div></td>
+    <td>{{ st.class_assigned.name|default:"—" }}</td>
+    <td><span class="rh-pct"><span class="mini"><span style="width:{{ pct }}%"></span></span>{{ pct }}%</span></td>
+    <td>{% for g in gaps %}<span class="chip {% if g == missing %}red{% else %}amber{% endif %}" style="margin:.1rem .15rem .1rem 0">{% for k, l, t, w in checks %}{% if k == g %}{{ l }}{% endif %}{% endfor %}</span>{% endfor %}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% if page.has_other_pages %}<div class="panel-b" style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span class="hint" style="align-self:center">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?{{ query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
+  {% else %}<div class="empty"><i class="bi bi-patch-check"></i><p>No records need attention here.</p></div>{% endif %}
+</div>
+{% endblock %}

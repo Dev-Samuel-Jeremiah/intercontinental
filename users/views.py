@@ -1196,14 +1196,18 @@ def promote_students(request):
 
         # update() skips save signals, so record each student's move ourselves —
         # otherwise their profile would never show which classes they passed through.
+        from users import history
         from users.audit import record_bulk
         before = list(Student.objects.filter(id__in=student_ids).select_related('class_assigned'))
+        for st in before:
+            history.ensure(st)                 # keep each child's earlier classes before moving them
         updated = Student.objects.filter(id__in=student_ids).update(
             class_assigned=new_class,
             current_term=new_term,
         )
         record_bulk(before, 'class_assigned', new_class.name, 'Promotion', request.user)
         record_bulk(before, 'current_term', new_term, 'Promotion', request.user)
+        history.move_many(before, new_class, user=request.user)
 
         messages.success(
             request,

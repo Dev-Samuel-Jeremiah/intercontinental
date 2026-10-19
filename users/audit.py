@@ -141,17 +141,34 @@ def record_bulk(students, field, new_display, source, user=None):
 @receiver(pre_save, sender='users.Student')
 def _remember_before(sender, instance, **kwargs):
     instance._audit_before = None
+    instance._class_before = instance._status_before = None
     if instance.pk:
         # The plain base manager: the record as stored, whichever school is active.
         old = sender._base_manager.filter(pk=instance.pk).first()
         if old is not None:
             instance._audit_before = snapshot(old)
+            instance._class_before, instance._status_before = old.class_assigned_id, old.status
+            if old.class_assigned_id != instance.class_assigned_id or old.status != instance.status:
+                from users import history
+                history.ensure(old)            # keep what came before, built from the change log
 
 
 @receiver(post_save, sender='users.Student')
 def _record_after(sender, instance, created, **kwargs):
+    from users import history
+    if created:
+        if instance.class_assigned_id:
+            history.move(instance, instance.class_assigned, how='ADMITTED', user=get_current_user(),
+                         on=timezone.localdate(instance.created_at) if instance.created_at else None)
+        return
     before = getattr(instance, '_audit_before', None)
-    if created or before is None:
+    if before is None:
         return
     record(instance, before, snapshot(instance))
     instance._audit_before = None
+    if instance.status in history.LEFT and instance._status_before not in history.LEFT:
+        history.close(instance, instance.left_on)
+    elif instance._class_before != instance.class_assigned_id or (
+            instance._status_before in history.LEFT and instance.status not in history.LEFT):
+        history.move(instance, instance.class_assigned, user=get_current_user(),
+                     source=getattr(_local, 'source', None))

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Record card — {{ student.full_name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0a1f44;--gold:#c9a50f;--line:#d7dce5;--muted:#5b6475}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9edf3;font-family:Outfit,system-ui,sans-serif;color:#13203a;font-size:12.5px;line-height:1.45}
+  .bar{position:sticky;top:0;display:flex;justify-content:center;gap:.6rem;padding:.7rem;background:var(--navy)}
+  .bar button,.bar a{padding:.5rem 1rem;border-radius:9px;border:0;background:#f4d21f;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+  .bar a{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)}
+  .sheet{width:210mm;min-height:297mm;margin:1rem auto;background:#fff;padding:14mm 14mm 12mm;box-shadow:0 10px 40px rgba(10,31,68,.18)}
+  header{display:flex;gap:14px;align-items:center;border-bottom:3px solid var(--navy);padding-bottom:10px;margin-bottom:12px}
+  header img.logo{width:62px;height:62px;object-fit:contain}
+  header h1{margin:0;font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--navy);line-height:1.1}
+  header .sub{color:var(--muted);font-size:11px}
+  header .title{margin-left:auto;text-align:right}
+  header .title b{display:block;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold)}
+  .bio{display:grid;grid-template-columns:110px 1fr;gap:14px;margin-bottom:12px}
+  .photo{width:110px;height:140px;border:1px solid var(--line);border-radius:6px;object-fit:cover;background:#f2f4f8;display:grid;place-items:center;color:var(--muted);font-size:34px;font-weight:700}
+  dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px;margin:0}
+  dl div{display:flex;gap:6px;border-bottom:1px dotted var(--line);padding:2px 0}
+  dt{color:var(--muted);min-width:118px}
+  dd{margin:0;font-weight:600}
+  h2{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:#fff;background:var(--navy);margin:14px 0 6px;padding:4px 8px;border-radius:4px}
+  table{width:100%;border-collapse:collapse}
+  th,td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+  th{background:#f2f4f8;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  .alert{border:1.5px solid #c0392b;color:#c0392b;border-radius:6px;padding:6px 8px;font-weight:600;margin-top:6px}
+  .muted{color:var(--muted)}
+  .sign{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:28px}
+  .sign div{border-top:1px solid #13203a;padding-top:4px;text-align:center;color:var(--muted);font-size:11px}
+  footer{margin-top:14px;display:flex;justify-content:space-between;color:var(--muted);font-size:10px;border-top:1px solid var(--line);padding-top:6px}
+  @media print{body{background:#fff}.bar{display:none}.sheet{margin:0;box-shadow:none;width:auto;min-height:0;padding:10mm}h2{-webkit-print-color-adjust:exact;print-color-adjust:exact}@page{size:A4;margin:8mm}}
+  @media screen and (max-width:820px){.sheet{width:auto;margin:0;padding:16px}.bio{grid-template-columns:1fr}dl{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bar"><button onclick="window.print()">Print / save as PDF</button><a href="{% url 'users:student_profile' student.id %}">Back to the profile</a></div>
+<div class="sheet">
+  <header>
+    {% if school.logo %}<img class="logo" src="{{ school.logo.url }}" alt="">{% endif %}
+    <div><h1>{{ school.name }}</h1><div class="sub">{{ school.address|default:"" }}{% if school.phone %} · {{ school.phone }}{% endif %}{% if school.email %} · {{ school.email }}{% endif %}</div></div>
+    <div class="title"><b>Cumulative record card</b><span class="muted">Printed {% now "j F Y" %}</span></div>
+  </header>
+
+  <div class="bio">
+    {% if student.passport %}<img class="photo" src="{{ student.passport.url }}" alt="">{% else %}<div class="photo">{{ student.full_name|slice:":1"|upper }}</div>{% endif %}
+    <dl>
+      <div><dt>Full name</dt><dd>{{ student.full_name }}</dd></div>
+      <div><dt>Admission number</dt><dd>{{ student.admission_number }}</dd></div>
+      <div><dt>Date of birth</dt><dd>{{ student.date_of_birth|date:"j F Y"|default:"—" }}{% if student.age is not None %} ({{ student.age }}){% endif %}</dd></div>
+      <div><dt>Gender</dt><dd>{{ student.gender|default:"—" }}</dd></div>
+      <div><dt>Current class</dt><dd>{{ student.class_assigned.name|default:"—" }}{% if section %} · {{ section.name }}{% endif %}</dd></div>
+      <div><dt>Status</dt><dd>{{ student.status }}{% if student.left_on %} · left {{ student.left_on|date:"j M Y" }}{% endif %}</dd></div>
+      <div><dt>Joined</dt><dd>{{ student.created_at|date:"j F Y" }}</dd></div>
+      <div><dt>House</dt><dd>{{ student.house.name|default:"—" }}</dd></div>
+      <div><dt>NIN</dt><dd>{{ nin_display|default:"—" }}</dd></div>
+      <div><dt>Home address</dt><dd>{{ student.address|default:"—" }}</dd></div>
+      {% if student.destination %}<div><dt>Went on to</dt><dd>{{ student.destination }}</dd></div>{% endif %}
+    </dl>
+  </div>
+
+  <h2>Parents and guardians</h2>
+  <table><thead><tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th><th>Notes</th></tr></thead><tbody>
+    {% if student.parent_name or student.parent_phone %}<tr><td>{{ student.parent_name|default:"—" }}</td><td>Main contact</td><td>{{ student.parent_phone|default:"—" }}</td><td>{{ student.parent_email|default:"—" }}</td><td></td></tr>{% endif %}
+    {% for g in guardians %}<tr><td>{{ g.full_name }}</td><td>{{ g.get_relationship_display }}</td><td>{{ g.phone|default:"—" }}</td><td>{{ g.email|default:"—" }}</td><td>{% if g.emergency_contact %}Emergency contact. {% endif %}{% if not g.can_pick_up %}May not collect.{% endif %}</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>Classes attended</h2>
+  <table><thead><tr><th>Class</th><th>Section</th><th>Session</th><th>From</th><th>To</th><th>How</th></tr></thead><tbody>
+    {% for c in spells %}<tr><td><b>{{ c.class_name }}</b></td><td>{{ c.section_name|default:"—" }}</td><td>{{ c.session_name|default:"—" }}</td><td>{{ c.started_on|date:"j M Y" }}</td><td>{% if c.ended_on %}{{ c.ended_on|date:"j M Y" }}{% else %}Present{% endif %}</td><td>{{ c.get_how_display }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="muted">No classes recorded.</td></tr>{% endfor %}
+  </tbody></table>
+
+  <h2>Academic record</h2>
+  <table><thead><tr><th>Session</th><th>Term</th><th>Subjects</th><th>Average</th><th>Best subject</th></tr></thead><tbody>
+    {% for r in results %}<tr><td>{{ r.session }}</td><td>{{ r.term.name }}</td><td>{{ r.subjects|default:"" }}</td><td><b>{{ r.average }}</b></td><td>{{ r.best.subject.name }}</td></tr>
+    {% empty %}<tr><td colspan="5" class="muted">No published results yet.</td></tr>{% endfor %}
+  </tbody></table>
+
+  {% if awards or roles %}<h2>Achievements and responsibilities</h2>
+  <table><tbody>
+    {% for a in awards %}<tr><td style="width:24%">{{ a.awarded_on|date:"j M Y" }}</td><td><b>{{ a.title }}</b>{% if a.position %} — {{ a.position }}{% endif %} <span class="muted">({{ a.get_level_display }})</span></td></tr>{% endfor %}
+    {% for r in roles %}<tr><td>{{ r.start_date|date:"M Y" }}{% if r.end_date %} – {{ r.end_date|date:"M Y" }}{% endif %}</td><td><b>{{ r.title }}</b></td></tr>{% endfor %}
+  </tbody></table>{% endif %}
+
+  {% if health and health.medical %}<h2>Health</h2>
+  <dl>
+    <div><dt>Blood group</dt><dd>{{ health.medical.blood_group|default:"—" }}</dd></div>
+    <div><dt>Genotype</dt><dd>{{ health.medical.genotype|default:"—" }}</dd></div>
+  </dl>
+  {% if health.alerts %}<div class="alert">⚠ {{ health.alerts|join:" · " }}</div>{% endif %}{% endif %}
+
+  {% if status_history %}<h2>Enrolment status</h2>
+  <table><tbody>{% for c in status_history %}<tr><td style="width:24%">{{ c.effective_on|date:"j M Y" }}</td><td>{{ c.from_status }} → <b>{{ c.to_status }}</b>{% if c.reason %} <span class="muted">— {{ c.reason }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table>{% endif %}
+
+  <div class="sign"><div>Class teacher</div><div>Principal / Head teacher</div><div>Date and school stamp</div></div>
+  <footer><span>{{ school.name }} — confidential student record</span><span>Record {{ completeness.percent }}% complete</span></footer>
+</div>
+</body>
+</html>
