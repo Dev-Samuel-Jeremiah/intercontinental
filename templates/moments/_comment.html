@@ -1,0 +1,12 @@
+{% load moments_tags %}
+<div class="mo-c{% if c.status == 'HELD' %} held{% endif %}" id="c{{ c.id }}" data-comment="{{ c.id }}" data-name="{{ c.name }}"{% if c.reply_to_id %} data-top="{{ c.reply_to_id }}"{% endif %}>
+  <div class="mo-av sm"><span style="background:{{ c.colour }}">{{ c.initials }}</span></div>
+  <div class="txt"><b>{{ c.name }}</b>{% if c.role and c.role != 'Student' %}<span class="r">{{ c.role }}</span>{% endif %}<span class="body">{{ c.body }}</span>
+    {% if c.status == 'HELD' %}<div class="heldnote"><i class="bi bi-hourglass-split"></i> {% if viewer.is_staff %}Held for review — {{ c.flag_reason }}{% else %}Only you and staff can see this until it is reviewed.{% endif %}</div>{% endif %}
+    <div class="ln"><span title="{{ c.created_at|date:'j M Y, H:i' }}">{{ c.created_at|short_ago }}</span>
+      {% if post.comments_on %}<button type="button" class="reply">Reply</button>{% endif %}
+      {% if c.status == 'HELD' and viewer.is_staff %}<button type="button" class="allow" style="color:var(--green)">Allow</button><button type="button" class="hide" style="color:var(--red)">Remove</button>{% endif %}
+      {% if c.deletable %}<button type="button" class="del">Delete</button>{% elif not c.mine %}<button type="button" class="rep">Report</button>{% endif %}</div>
+    {% if c.reply_list %}<div class="mo-replies">{% for r in c.reply_list %}{% include "moments/_comment.html" with c=r %}{% endfor %}</div>{% elif not c.reply_to_id %}<div class="mo-replies"></div>{% endif %}
+  </div>
+</div>

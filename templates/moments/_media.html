@@ -1,0 +1,18 @@
+{# The photo/video carousel of one post: swipe, arrows, dots, double-tap to like #}
+{% with first=post.items.0 %}
+<div class="mo-media" data-count="{{ post.items|length }}" style="aspect-ratio:{% if first %}{{ first.ratio|stringformat:'s' }}{% else %}1{% endif %}">
+  <div class="mo-track">
+    {% for m in post.items %}<div class="mo-slide" data-media="{{ m.id }}" data-kind="{{ m.kind }}" data-status="{{ m.status }}">
+      {% if m.kind == 'IMAGE' %}<img src="{% url 'moments:file' m.id %}" alt="{{ post.get_category_display }} photo {{ forloop.counter }}{% if post.caption %}: {{ post.caption|truncatechars:80 }}{% endif %}" loading="{% if forloop.first %}eager{% else %}lazy{% endif %}" decoding="async" width="{{ m.width }}" height="{{ m.height }}">
+      {% elif m.status == 'PROCESSING' %}<div class="mo-proc"><span class="mo-spin"></span>Preparing video…<small>It will play here in a minute or two.</small></div>
+      {% elif m.status == 'FAILED' %}<div class="mo-proc"><i class="bi bi-camera-video-off" style="font-size:1.8rem"></i>This video couldn't be prepared.</div>
+      {% else %}<video src="{% url 'moments:file' m.id %}"{% if m.thumb %} poster="{% url 'moments:thumb' m.id %}"{% endif %} controls playsinline preload="none"></video>{% endif %}
+    </div>{% endfor %}
+  </div>
+  {% if post.items|length > 1 %}<span class="mo-count">1/{{ post.items|length }}</span>
+  <button class="mo-arrow prev" type="button" aria-label="Previous" hidden><i class="bi bi-chevron-left"></i></button>
+  <button class="mo-arrow next" type="button" aria-label="Next"><i class="bi bi-chevron-right"></i></button>{% endif %}
+  <i class="bi bi-heart-fill mo-heart" aria-hidden="true"></i>
+</div>
+{% if post.items|length > 1 %}<div class="mo-dots">{% for m in post.items %}<i class="{% if forloop.first %}on{% endif %}"></i>{% endfor %}</div>{% endif %}
+{% endwith %}

@@ -1,0 +1,30 @@
+{% load moments_tags %}
+{% for post in posts %}
+<article class="mo-card" id="p{{ post.id }}" data-id="{{ post.id }}" data-caption="{{ post.caption }}" data-editable="{{ post.editable|yesno:'1,0' }}" data-comments="{{ post.comments_on|yesno:'1,0' }}" data-pinned="{{ post.pinned|yesno:'1,0' }}">
+  <header class="mo-h">
+    <div class="mo-av"><span style="background:{{ post.author_colour }}">{{ post.author_initials }}</span></div>
+    <div class="mo-who">
+      <b>{{ post.author_name }}</b>{% if post.author_role %}<span class="role">{{ post.author_role }}</span>{% endif %}
+      <div class="meta"><i class="bi bi-{{ post.icon }}"></i> {{ post.get_category_display }} · {% if post.school_class %}{{ post.school_class.name }}{% else %}Whole school{% endif %} · <span title="{{ post.created_at|date:'j M Y, H:i' }}">{{ post.created_at|short_ago }}</span></div>
+    </div>
+    {% if post.pinned %}<i class="bi bi-pin-angle-fill mo-pin" title="Pinned"></i>{% endif %}
+    <button class="mo-more js-menu" type="button" aria-label="Post options"><i class="bi bi-three-dots"></i></button>
+  </header>
+  {% include "moments/_media.html" %}
+  <div class="mo-acts">
+    <button class="like{% if post.liked %} on{% endif %}" type="button" aria-label="Like" aria-pressed="{{ post.liked|yesno:'true,false' }}"><i class="bi bi-heart"></i></button>
+    <a href="{% url 'moments:detail' post.id %}#comments" aria-label="Comments"><i class="bi bi-chat"></i></a>
+    <button class="share" type="button" aria-label="Share"><i class="bi bi-send"></i></button>
+    <button class="save{% if post.saved %} on{% endif %}" type="button" aria-label="Save" aria-pressed="{{ post.saved|yesno:'true,false' }}"><i class="bi bi-bookmark"></i></button>
+  </div>
+  <div class="mo-b">
+    <button class="mo-likes" type="button" data-count="{{ post.like_count }}">{% include "moments/_likes.html" %}</button>
+    {% if post.caption %}<div class="mo-cap clamp"><b>{{ post.author_name }}</b>{{ post.caption_html }}</div><button class="mo-morecap" type="button" hidden>more</button>{% endif %}
+    {% if post.comment_count > post.preview|length %}<a class="mo-allc" href="{% url 'moments:detail' post.id %}#comments">View all {{ post.comment_count }} comments</a>{% endif %}
+    <div class="mo-pcs">{% for c in post.preview %}<div class="mo-pc"><b>{{ c.name }}</b>{{ c.body }}{% if c.status == 'HELD' %}<span class="held"><i class="bi bi-hourglass-split"></i> waiting for review</span>{% endif %}</div>{% endfor %}</div>
+    <div class="mo-time">{{ post.created_at|ago }}{% if post.edited_at %} · edited{% endif %}</div>
+  </div>
+  {% if post.comments_on %}<form class="mo-add" autocomplete="off"><input type="text" name="body" maxlength="1000" placeholder="Add a comment…" aria-label="Add a comment"><button type="submit" disabled>Post</button></form>
+  {% else %}<div class="mo-off"><i class="bi bi-chat-square-dots"></i> Comments are turned off for this post.</div>{% endif %}
+</article>
+{% endfor %}

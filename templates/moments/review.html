@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+{% load moments_tags %}
+{% block title %}Review · School Moments{% endblock %}
+{% block content %}
+{% include "moments/_styles.html" %}
+{% include "finance/_fin_styles.html" %}
+<div class="mo">
+  <a href="{% url 'moments:home' %}" style="display:inline-flex;gap:.4rem;align-items:center;color:var(--slate2);text-decoration:none;font-size:.85rem;margin-bottom:.9rem"><i class="bi bi-arrow-left"></i> School Moments</a>
+  <div class="mo-top"><div><h1>Review <em>queue</em></h1><p>Comments held by the safety check wait here until a member of staff lets them through or removes them.{% if viewer.manager %} Reports from staff, students and parents come to administrators.{% endif %}</p></div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> Held comments · {{ held|length }}</h3></div>
+    {% for c in held %}<div class="panel-b" style="display:flex;gap:1rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid var(--rim)">
+      <div style="flex:1;min-width:240px"><b>{{ c.name }}</b> <span class="hint">· {{ c.created_at|ago }} · on <a href="{% url 'moments:detail' c.post_id %}#c{{ c.id }}" style="color:var(--champagne-lt)">this post</a></span>
+        <div style="margin:.35rem 0;white-space:pre-wrap">{{ c.body }}</div><span class="chip amber">{{ c.flag_reason }}</span></div>
+      <div style="display:flex;gap:.4rem">
+        <form method="post" action="{% url 'moments:comment_review' c.id %}">{% csrf_token %}<input type="hidden" name="allow" value="1"><button class="fin-btn fin-btn-sm" type="submit"><i class="bi bi-check2"></i> Allow</button></form>
+        <form method="post" action="{% url 'moments:comment_review' c.id %}">{% csrf_token %}<input type="hidden" name="allow" value="0"><button class="fin-btn fin-btn-sm" type="submit" style="color:var(--red)"><i class="bi bi-x-lg"></i> Remove</button></form>
+      </div></div>{% empty %}<div class="panel-b"><p class="hint" style="margin:0">Nothing waiting — every comment is through.</p></div>{% endfor %}
+  </div>
+  {% if viewer.manager %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-flag"></i> Reports · {{ reports|length }}</h3></div>
+    {% for r in reports %}<div class="panel-b" style="display:flex;gap:1rem;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;border-bottom:1px solid var(--rim)">
+      <div style="flex:1;min-width:240px"><b>{{ r.name }}</b> reported a {% if r.comment %}comment{% else %}post{% endif %} <span class="hint">· {{ r.created_at|ago }}</span>
+        <div style="margin:.35rem 0">“{{ r.reason }}”</div>{% if r.comment %}<div class="hint">Comment: {{ r.comment.body|truncatechars:160 }}</div>{% endif %}</div>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+        <a class="fin-btn fin-btn-sm" href="{% url 'moments:detail' r.post_id %}{% if r.comment %}#c{{ r.comment_id }}{% endif %}"><i class="bi bi-box-arrow-up-right"></i> Open</a>
+        <form method="post">{% csrf_token %}<input type="hidden" name="report" value="{{ r.id }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit"><i class="bi bi-check2-all"></i> Dealt with</button></form>
+      </div></div>{% empty %}<div class="panel-b"><p class="hint" style="margin:0">No open reports.</p></div>{% endfor %}
+  </div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "dashboard/base.html" %}
+{% block title %}New post · School Moments{% endblock %}
+{% block content %}
+{% include "moments/_styles.html" %}
+<style>
+  .np{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:1.2rem;max-width:1100px;margin:0 auto;align-items:start}
+  .np-box{border:1px solid var(--line);border-radius:20px;background:var(--card);padding:1.2rem}
+  .np-drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;min-height:300px;border:2px dashed var(--rim2);border-radius:16px;text-align:center;color:var(--slate2);padding:1.5rem;cursor:pointer;transition:.2s}
+  .np-drop:hover,.np-drop.over{border-color:var(--champagne);background:var(--champagne-dim);color:var(--champagne-lt)}
+  .np-drop .big{width:76px;height:76px;border-radius:22px;display:grid;place-items:center;font-size:2rem;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne))}
+  .np-drop h3{margin:.3rem 0 0;color:var(--white);font-size:1.1rem}
+  .np-drop p{margin:0;font-size:.82rem}
+  .np-thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.6rem}
+  .np-thumb{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#050d1f;border:1px solid var(--rim2)}
+  .np-thumb img,.np-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+  .np-thumb .x{position:absolute;top:.35rem;right:.35rem;width:26px;height:26px;border-radius:50%;border:0;background:rgba(5,13,31,.8);color:#fff;display:grid;place-items:center}
+  .np-thumb .k{position:absolute;bottom:.35rem;left:.35rem;padding:.1rem .45rem;border-radius:99px;background:rgba(5,13,31,.75);color:#fff;font-size:.66rem}
+  .np-thumb .n{position:absolute;top:.35rem;left:.35rem;width:22px;height:22px;border-radius:50%;background:var(--champagne);color:#0a1f44;font-size:.7rem;font-weight:700;display:grid;place-items:center}
+  .np-add{display:grid;place-items:center;aspect-ratio:1;border-radius:12px;border:2px dashed var(--rim2);color:var(--slate2);font-size:1.6rem;background:none}
+  .np-add:hover{border-color:var(--champagne);color:var(--champagne-lt)}
+  .np label.lbl{display:block;font-size:.74rem;color:var(--slate2);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:1rem 0 .4rem}
+  .np label.lbl:first-child{margin-top:0}
+  .np textarea,.np select{width:100%;padding:.7rem .85rem;border-radius:12px;border:1px solid var(--rim2);background:rgba(0,0,0,.28);color:var(--white);font:inherit;font-size:.9rem}
+  .np textarea{resize:vertical;min-height:130px;line-height:1.5}
+  .np .cnt{text-align:right;font-size:.72rem;color:var(--slate);margin-top:.25rem}
+  .np-pills{display:flex;gap:.35rem;flex-wrap:wrap}
+  .np-pill{position:relative}
+  .np-pill input{position:absolute;opacity:0;pointer-events:none}
+  .np-pill span{display:inline-flex;gap:.35rem;align-items:center;padding:.42rem .8rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);font-size:.8rem;font-weight:600;cursor:pointer}
+  .np-pill input:checked+span{background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;border-color:transparent}
+  .np-pill input:focus-visible+span{outline:2px solid var(--champagne)}
+  .np-switch{display:flex;gap:.6rem;align-items:center;margin-top:1rem;font-size:.88rem;color:var(--white);cursor:pointer}
+  .np-switch input{width:auto}
+  .np-note{display:flex;gap:.6rem;margin-top:1rem;padding:.75rem .9rem;border-radius:12px;background:var(--champagne-dim);border:1px solid var(--champagne-border);font-size:.8rem;color:var(--champagne-lt);line-height:1.5}
+  .np-progress{display:none;margin-top:1rem}
+  .np-progress.on{display:block}
+  .np-progress .track{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+  .np-progress .fill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--champagne),var(--champagne-lt));transition:width .2s}
+  .np-progress .t{font-size:.78rem;color:var(--slate2);margin-top:.35rem}
+  .np-err{display:none;margin-top:1rem;padding:.7rem .9rem;border-radius:12px;border:1px solid var(--red-border);background:var(--red-dim);color:var(--red);font-size:.85rem}
+  @media(max-width:900px){.np{grid-template-columns:1fr}}
+</style>
+<div class="mo">
+  <a class="mo-backlink" href="{% url 'moments:home' %}" style="display:inline-flex;gap:.4rem;align-items:center;color:var(--slate2);text-decoration:none;font-size:.85rem;margin-bottom:.9rem"><i class="bi bi-arrow-left"></i> School Moments</a>
+  <div class="mo-top"><div><h1>New <em>post</em></h1><p>Share photos and videos of a class activity or school event. Up to {{ max_files }} files — photos up to {{ max_image_mb }} MB, videos up to {{ max_video_mb }} MB.</p></div></div>
+  <form class="np" id="npForm" method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}
+    <div class="np-box">
+      <input type="file" id="npFiles" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm,video/3gpp,.mov,.m4v" multiple hidden>
+      <div class="np-drop" id="npDrop" role="button" tabindex="0" aria-label="Add photos and videos">
+        <div class="big"><i class="bi bi-images"></i></div>
+        <h3>Add photos and videos</h3>
+        <p>Drag them here, or tap to choose from your phone or computer.</p>
+        <span class="mo-btn gold sm" style="margin-top:.4rem"><i class="bi bi-folder2-open"></i> Choose files</span>
+      </div>
+      <div class="np-thumbs" id="npThumbs" hidden></div>
+    </div>
+    <div class="np-box">
+      <label class="lbl" for="npCaption">Caption</label>
+      <textarea id="npCaption" name="caption" maxlength="2200" placeholder="What's happening? e.g. JSS 1 learning about plant cells under the microscope 🔬 #ScienceWeek"></textarea>
+      <div class="cnt"><span id="npCount">0</span> / 2,200 · use #hashtags so people can find similar posts</div>
+      <label class="lbl">Category</label>
+      <div class="np-pills">{% for k, l in categories %}<label class="np-pill"><input type="radio" name="category" value="{{ k }}" {% if forloop.first %}checked{% endif %}><span>{{ l }}</span></label>{% endfor %}</div>
+      <label class="lbl" for="npClass">Who can see it</label>
+      <select id="npClass" name="school_class"><option value="">Everyone — the whole school (staff, students and parents)</option>
+        {% for c in classes %}<option value="{{ c.id }}">{{ c.name }} only — its students, their parents and staff</option>{% endfor %}</select>
+      <label class="np-switch"><input type="checkbox" name="comments_on" checked> Allow comments</label>
+      <div class="np-note" id="npConsent" hidden style="background:var(--amber-dim);border-color:var(--amber-border);color:var(--amber)"><i class="bi bi-exclamation-triangle"></i><span></span></div>
+      <div class="np-note"><i class="bi bi-shield-check"></i><span>Before posting, make sure parents of every child shown have agreed to their child appearing in school photos, and that no names, addresses or other personal details are visible. Location data is removed from photos and videos automatically.</span></div>
+      <div class="np-err" id="npErr" role="alert"></div>
+      <div class="np-progress" id="npProg"><div class="track"><div class="fill"></div></div><div class="t">Uploading…</div></div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1.1rem">
+        <a class="mo-btn" href="{% url 'moments:home' %}">Cancel</a>
+        <button class="mo-btn gold" type="submit" id="npSubmit"><i class="bi bi-send-fill"></i> Share</button>
+      </div>
+    </div>
+  </form>
+</div>
+{{ consent|json_script:"np-consent" }}
+<script>
+(function(){
+  var CONSENT=JSON.parse(document.getElementById('np-consent').textContent), sel=document.getElementById('npClass'), cn=document.getElementById('npConsent');
+  function consent(){var row=CONSENT[sel.value||''];if(!row||!row.total){cn.hidden=true;return;}
+    var where=sel.value?'in '+sel.options[sel.selectedIndex].text.split(' only')[0]:'across the school', parts=[];
+    if(row.refused.length){parts.push('Parents said no to photos for '+(row.refused.length>8?row.refused.length+' children '+where:row.refused.join(', '))+' — make sure they are not in this post.');}
+    if(row.unanswered){parts.push(row.unanswered+' of '+row.total+' children '+where+' have no photo consent recorded yet.');}
+    cn.hidden=!parts.length;cn.querySelector('span').textContent=parts.join(' ');}
+  sel.addEventListener('change',consent);consent();
+})();
+</script>
+<script>
+(function(){
+  var MAX={{ max_files }}, MAXV={{ max_video_mb }}*1048576, MAXI={{ max_image_mb }}*1048576;
+  var files=[], input=document.getElementById('npFiles'), drop=document.getElementById('npDrop'), thumbs=document.getElementById('npThumbs');
+  var err=document.getElementById('npErr'), cap=document.getElementById('npCaption');
+  function show(msg){err.textContent=msg;err.style.display=msg?'block':'none';}
+  function isVideo(f){return /^video\//.test(f.type)||/\.(mov|m4v|mp4|webm|3gp)$/i.test(f.name);}
+  function add(list){show('');[].forEach.call(list,function(f){
+    if(files.length>=MAX){show('A post can have up to '+MAX+' photos and videos.');return;}
+    var ok=isVideo(f)||/^image\/(jpeg|png|webp|gif)$/.test(f.type)||/\.(jpe?g|png|webp|gif)$/i.test(f.name);
+    if(!ok){show('"'+f.name+'" is not a photo or video we can use. iPhone photos: set Camera → Formats → Most Compatible, or share as JPG.');return;}
+    if(f.size>(isVideo(f)?MAXV:MAXI)){show('"'+f.name+'" is too big — '+(isVideo(f)?'videos up to '+(MAXV/1048576)+' MB':'photos up to '+(MAXI/1048576)+' MB')+'.');return;}
+    files.push(f);});render();}
+  function render(){thumbs.innerHTML='';drop.hidden=files.length>0;thumbs.hidden=!files.length;
+    files.forEach(function(f,i){var d=document.createElement('div');d.className='np-thumb';var url=URL.createObjectURL(f);
+      var m=document.createElement(isVideo(f)?'video':'img');m.src=url;if(isVideo(f)){m.muted=true;m.preload='metadata';}else m.alt='';d.appendChild(m);
+      var n=document.createElement('span');n.className='n';n.textContent=i+1;d.appendChild(n);
+      var k=document.createElement('span');k.className='k';k.textContent=(isVideo(f)?'Video · ':'')+(f.size>1048576?(f.size/1048576).toFixed(1)+' MB':Math.round(f.size/1024)+' KB');d.appendChild(k);
+      var x=document.createElement('button');x.type='button';x.className='x';x.setAttribute('aria-label','Remove');x.innerHTML='<i class="bi bi-x-lg"></i>';
+      x.onclick=function(){files.splice(i,1);render();};d.appendChild(x);thumbs.appendChild(d);});
+    if(files.length&&files.length<MAX){var a=document.createElement('button');a.type='button';a.className='np-add';a.setAttribute('aria-label','Add more');a.innerHTML='<i class="bi bi-plus-lg"></i>';a.onclick=function(){input.click();};thumbs.appendChild(a);}}
+  drop.onclick=function(){input.click();};drop.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();input.click();}};
+  input.onchange=function(){add(this.files);this.value='';};
+  ['dragenter','dragover'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault();drop.classList.add('over');});});
+  ['dragleave','drop'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault();if(t==='drop'||e.target===drop)drop.classList.remove('over');});});
+  document.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files.length)add(e.dataTransfer.files);});
+  cap.addEventListener('input',function(){document.getElementById('npCount').textContent=cap.value.length;});
+  document.getElementById('npForm').addEventListener('submit',function(e){e.preventDefault();show('');
+    if(!files.length){show('Add at least one photo or video.');return;}
+    var fd=new FormData(this);files.forEach(function(f){fd.append('files',f);});
+    var btn=document.getElementById('npSubmit'),prog=document.getElementById('npProg'),fill=prog.querySelector('.fill'),txt=prog.querySelector('.t');
+    btn.disabled=true;prog.classList.add('on');
+    var x=new XMLHttpRequest();x.open('POST',location.pathname);x.setRequestHeader('X-Requested-With','XMLHttpRequest');
+    x.upload.onprogress=function(ev){if(!ev.lengthComputable)return;var p=Math.round(ev.loaded*100/ev.total);fill.style.width=p+'%';
+      txt.textContent=p<100?'Uploading… '+p+'%':'Preparing your photos and videos…';};
+    x.onload=function(){var r={};try{r=JSON.parse(x.responseText);}catch(_){}
+      if(x.status===200&&r.ok){txt.textContent='Posted!';location.href=r.url;return;}
+      btn.disabled=false;prog.classList.remove('on');show(r.error||(x.status===413?'Those files are too big to upload together. Try fewer or smaller videos.':'Upload failed — please try again.'));};
+    x.onerror=function(){btn.disabled=false;prog.classList.remove('on');show('No connection — please try again.');};
+    x.send(fd);});
+})();
+</script>
+{% endblock %}

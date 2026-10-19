@@ -628,6 +628,10 @@
           <i class="bi bi-house-fill"></i>
           <span class="ni-label">Dashboard</span>
         </a>
+        <a href="{% url 'moments:home' %}" class="nav-item" data-tooltip="School Moments">
+          <i class="bi bi-camera-fill"></i>
+          <span class="ni-label">School Moments</span>
+        </a>
         {% if user.is_superuser or user.is_staff_user %}
         <a href="{% url 'staffchat:home' %}" class="nav-item" data-tooltip="Staff Chat">
           <i class="bi bi-chat-square-heart-fill"></i>

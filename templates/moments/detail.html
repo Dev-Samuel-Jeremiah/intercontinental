@@ -1,0 +1,106 @@
+{% extends "dashboard/base.html" %}
+{% load moments_tags %}
+{% block title %}School Moments{% endblock %}
+{% block content %}
+{% include "moments/_styles.html" %}
+<style>
+  .mo-post{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,1fr);max-width:1180px;margin:0 auto;border:1px solid var(--line);border-radius:22px;overflow:hidden;background:var(--card);box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .mo-post .left{background:#050d1f;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .mo-post .left .mo-media{max-height:82vh}
+  .mo-post .left .mo-dots{padding-bottom:.6rem}
+  .mo-post .right{display:flex;flex-direction:column;min-width:0;max-height:88vh;border-left:1px solid var(--rim)}
+  .mo-post .right .mo-h{border-bottom:1px solid var(--rim)}
+  .mo-thread{flex:1;overflow-y:auto;padding:.9rem 1rem;display:flex;flex-direction:column;gap:1rem;min-height:200px}
+  .mo-c{display:flex;gap:.65rem;align-items:flex-start}
+  .mo-c .txt{flex:1;min-width:0;font-size:.88rem;line-height:1.5;color:var(--white);overflow-wrap:anywhere}
+  .mo-c .body{white-space:pre-wrap}
+  .mo-c a.tag{color:#7cb7ff;text-decoration:none}
+  .mo-c .txt b{margin-right:.3rem}
+  .mo-c .txt .r{font-size:.62rem;padding:.04rem .4rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);margin-right:.35rem;vertical-align:1px;white-space:nowrap}
+  .mo-c .ln{display:flex;gap:.9rem;margin-top:.25rem;font-size:.72rem;color:var(--slate)}
+  .mo-c .ln button{border:0;background:none;padding:0;color:var(--slate2);font-weight:600;font-size:.72rem}
+  .mo-c .ln button:hover{color:var(--white)}
+  .mo-c .ln .del:hover{color:var(--red)}
+  .mo-c.held .txt{opacity:.75}
+  .mo-c .heldnote{display:inline-flex;gap:.3rem;align-items:center;margin-top:.3rem;padding:.15rem .5rem;border-radius:8px;background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber);font-size:.7rem}
+  .mo-replies{margin:.6rem 0 0 0;display:flex;flex-direction:column;gap:.8rem}
+  .mo-replies:empty{display:none}
+  .mo-c.target{animation:moflash 2s ease}
+  @keyframes moflash{0%,30%{background:rgba(244,210,31,.12)}100%{background:transparent}}
+  .mo-post .foot{border-top:1px solid var(--rim)}
+  .mo-replying{display:flex;align-items:center;gap:.5rem;padding:.4rem 1rem;background:rgba(0,0,0,.2);font-size:.78rem;color:var(--slate2)}
+  .mo-replying button{margin-left:auto;border:0;background:none;color:var(--slate2)}
+  .mo-replying[hidden]{display:none}
+  .mo-backlink{display:inline-flex;gap:.4rem;align-items:center;color:var(--slate2);text-decoration:none;font-size:.85rem;margin-bottom:.9rem}
+  .mo-backlink:hover{color:var(--champagne-lt)}
+  @media(max-width:960px){.mo-post{grid-template-columns:1fr}.mo-post .right{max-height:none;border-left:0}.mo-thread{max-height:none}}
+  @media(max-width:640px){.mo-post{border-radius:0;margin:0 -16px;border-left:0;border-right:0}}
+</style>
+<div class="mo">
+  <a class="mo-backlink" href="{% url 'moments:home' %}"><i class="bi bi-arrow-left"></i> School Moments</a>
+  <article class="mo-post" data-id="{{ post.id }}" data-caption="{{ post.caption }}" data-editable="{{ post.editable|yesno:'1,0' }}" data-comments="{{ post.comments_on|yesno:'1,0' }}" data-pinned="{{ post.pinned|yesno:'1,0' }}">
+    <div class="left">{% include "moments/_media.html" %}</div>
+    <div class="right">
+      <header class="mo-h">
+        <div class="mo-av"><span style="background:{{ post.author_colour }}">{{ post.author_initials }}</span></div>
+        <div class="mo-who"><b>{{ post.author_name }}</b>{% if post.author_role %}<span class="role">{{ post.author_role }}</span>{% endif %}
+          <div class="meta"><i class="bi bi-{{ post.icon }}"></i> {{ post.get_category_display }} · {% if post.school_class %}{{ post.school_class.name }}{% else %}Whole school{% endif %}</div></div>
+        {% if post.pinned %}<i class="bi bi-pin-angle-fill mo-pin" title="Pinned"></i>{% endif %}
+        <button class="mo-more js-menu" type="button" aria-label="Post options"><i class="bi bi-three-dots"></i></button>
+      </header>
+      <div class="mo-thread" id="comments">
+        {% if post.caption %}<div class="mo-c"><div class="mo-av sm"><span style="background:{{ post.author_colour }}">{{ post.author_initials }}</span></div>
+          <div class="txt"><b>{{ post.author_name }}</b><span class="body">{{ post.caption_html }}</span><div class="ln"><span>{{ post.created_at|short_ago }}{% if post.edited_at %} · edited{% endif %}</span></div></div></div>{% endif %}
+        <div id="cList" style="display:flex;flex-direction:column;gap:1rem">
+        {% for c in comments %}{% include "moments/_comment.html" with c=c %}{% empty %}<p class="hint" id="noComments" style="margin:1rem 0;text-align:center;color:var(--slate2);font-size:.86rem">{% if post.comments_on %}No comments yet. Start the conversation.{% else %}Comments are turned off.{% endif %}</p>{% endfor %}
+        </div>
+      </div>
+      <div class="foot">
+        <div class="mo-acts">
+          <button class="like{% if post.liked %} on{% endif %}" type="button" aria-label="Like" aria-pressed="{{ post.liked|yesno:'true,false' }}"><i class="bi bi-heart"></i></button>
+          <button type="button" aria-label="Comment" onclick="var i=document.querySelector('.mo-add input');if(i)i.focus();"><i class="bi bi-chat"></i></button>
+          <button class="share" type="button" aria-label="Share"><i class="bi bi-send"></i></button>
+          <button class="save{% if post.saved %} on{% endif %}" type="button" aria-label="Save" aria-pressed="{{ post.saved|yesno:'true,false' }}"><i class="bi bi-bookmark"></i></button>
+        </div>
+        <div class="mo-b" style="padding-bottom:.7rem">
+          <button class="mo-likes" type="button" data-count="{{ post.like_count }}">{% include "moments/_likes.html" %}</button>
+          <div class="mo-time">{{ post.created_at|ago }}</div>
+        </div>
+        {% if post.comments_on %}
+        <div class="mo-replying" id="replyingTo" hidden><span></span><button type="button" aria-label="Cancel reply"><i class="bi bi-x-lg"></i></button></div>
+        <form class="mo-add" autocomplete="off"><input type="text" name="body" maxlength="1000" placeholder="Add a comment…" aria-label="Add a comment"><button type="submit" disabled>Post</button></form>
+        {% else %}<div class="mo-off"><i class="bi bi-chat-square-dots"></i> Comments are turned off for this post.</div>{% endif %}
+      </div>
+    </div>
+  </article>
+</div>
+{% include "moments/_script.html" %}
+<script>
+(function(){
+  var post=document.querySelector('.mo-post'), form=document.querySelector('.mo-add'), bar=document.getElementById('replyingTo');
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+  document.getElementById('comments').addEventListener('click',function(e){
+    var row=e.target.closest('.mo-c[data-comment]');if(!row)return;
+    if(e.target.closest('.reply')&&form){form.dataset.reply=row.dataset.top||row.dataset.comment;var i=form.querySelector('input');
+      bar.hidden=false;bar.querySelector('span').textContent='Replying to '+row.dataset.name;i.value='@'+row.dataset.name.split(' ')[0]+' ';i.focus();form.querySelector('button').disabled=false;}
+    if(e.target.closest('.del')){if(!confirm('Delete this comment?'))return;momentsPost('/moments/comments/'+row.dataset.comment+'/delete/').then(function(r){if(!r.ok)return momentsToast(r.error);row.remove();});}
+    if(e.target.closest('.rep')){momentsReport(post,row.dataset.comment);}
+    if(e.target.closest('.allow')||e.target.closest('.hide')){var allow=!!e.target.closest('.allow');
+      momentsPost('/moments/comments/'+row.dataset.comment+'/review/',{allow:allow}).then(function(r){if(!r.ok)return momentsToast(r.error);
+        if(allow){row.classList.remove('held');var n=row.querySelector('.heldnote');if(n)n.remove();}else row.remove();});}
+  });
+  if(bar)bar.querySelector('button').onclick=function(){delete form.dataset.reply;bar.hidden=true;form.querySelector('input').value='';};
+  window.momentsCommentAdded=function(c,r){var none=document.getElementById('noComments');if(none)none.remove();
+    var row=el('div','mo-c'+(r.held?' held':''));row.dataset.comment=r.comment.id;row.dataset.name=r.comment.name;
+    var av=el('div','mo-av sm');var s=el('span',null,r.comment.initials);s.style.background=r.comment.colour;av.appendChild(s);row.appendChild(av);
+    var t=el('div','txt');t.appendChild(el('b',null,r.comment.name));t.appendChild(el('span','body',r.comment.body));
+    if(r.held){var h=el('div','heldnote');h.appendChild(el('i','bi bi-hourglass-split'));h.appendChild(document.createTextNode(' Only you and staff can see this until it is reviewed.'));t.appendChild(h);}
+    var ln=el('div','ln');ln.appendChild(el('span',null,'now'));var d=el('button','del','Delete');d.type='button';ln.appendChild(d);t.appendChild(ln);row.appendChild(t);
+    if(r.comment.reply_to){var parent=document.querySelector('.mo-c[data-comment="'+r.comment.reply_to+'"]');row.dataset.top=r.comment.reply_to;
+      var box=parent&&parent.querySelector('.mo-replies');if(box){box.appendChild(row);}else document.getElementById('cList').appendChild(row);}
+    else document.getElementById('cList').appendChild(row);
+    row.scrollIntoView({behavior:'smooth',block:'nearest'});};
+  if(location.hash.indexOf('#c')===0){var t=document.getElementById(location.hash.slice(1));if(t){t.scrollIntoView({block:'center'});t.classList.add('target');}}
+})();
+</script>
+{% endblock %}

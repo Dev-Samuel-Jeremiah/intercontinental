@@ -1,0 +1,6 @@
+{% for post in posts %}{% with m=post.items.0 %}
+<a href="{% url 'moments:detail' post.id %}" {% if m and m.thumb %}style="background-image:url('{% url 'moments:thumb' m.id %}')"{% endif %} aria-label="{{ post.get_category_display }} by {{ post.author_name }}">
+  {% if not m.thumb %}<span class="ph"><i class="bi bi-{% if m.kind == 'VIDEO' %}camera-video{% else %}image{% endif %}"></i></span>{% endif %}
+  {% if post.items|length > 1 %}<i class="bi bi-collection-fill ic"></i>{% elif m.kind == 'VIDEO' %}<i class="bi bi-play-btn-fill ic"></i>{% endif %}
+  <span class="ov"><span><i class="bi bi-heart-fill"></i> {{ post.like_count }}</span><span><i class="bi bi-chat-fill"></i> {{ post.comment_count }}</span></span>
+</a>{% endwith %}{% endfor %}

@@ -1,0 +1,60 @@
+{% extends "dashboard/base.html" %}
+{% block title %}School Moments{% endblock %}
+{% block content %}
+{% include "moments/_styles.html" %}
+<div class="mo">
+  <div class="mo-top">
+    <div>
+      <h1>School <em>Moments</em></h1>
+      <p>Photos and videos from our classrooms, events and celebrations — shared by teachers for our school family.</p>
+    </div>
+    <div class="acts">
+      {% if viewer.is_staff %}<a class="mo-btn" href="{% url 'moments:review' %}"><i class="bi bi-shield-check"></i> Review{% if pending or reports %}<span class="n">{{ pending|add:reports }}</span>{% endif %}</a>
+      <a class="mo-btn gold" href="{% url 'moments:new' %}"><i class="bi bi-plus-square"></i> New post</a>{% endif %}
+    </div>
+  </div>
+
+  <nav class="mo-hl" aria-label="Browse by category">
+    <a href="?{% if f.view == 'grid' %}view=grid{% endif %}" class="{% if not f.category and not f.saved and not f.tag and not f.class %}on{% endif %}"><span class="ring"><span class="in"><i class="bi bi-grid-3x3-gap-fill"></i></span></span><span class="l">All</span></a>
+    {% for h in highlights %}<a href="?category={{ h.key }}{% if f.view == 'grid' %}&view=grid{% endif %}" class="{% if f.category == h.key %}on{% endif %}"><span class="ring"><span class="in" {% if h.cover %}style="background-image:url('{% url 'moments:thumb' h.cover.id %}')"{% endif %}>{% if not h.cover %}<i class="bi bi-{{ h.icon }}"></i>{% endif %}</span></span><span class="l">{{ h.label }}</span></a>{% endfor %}
+    <a href="?saved=1{% if f.view == 'grid' %}&view=grid{% endif %}" class="{% if f.saved %}on{% endif %}"><span class="ring dim"><span class="in"><i class="bi bi-bookmark-fill"></i></span></span><span class="l">Saved</span></a>
+  </nav>
+
+  <div class="mo-bar">
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <span class="mo-seg"><a href="?{{ feed_query }}" class="{% if f.view == 'feed' %}on{% endif %}"><i class="bi bi-view-stacked"></i> Feed</a><a href="?{{ grid_query }}" class="{% if f.view == 'grid' %}on{% endif %}"><i class="bi bi-grid-3x3"></i> Grid</a></span>
+      {% if classes %}<form method="get" style="margin:0">{% if f.category %}<input type="hidden" name="category" value="{{ f.category }}">{% endif %}{% if f.view == 'grid' %}<input type="hidden" name="view" value="grid">{% endif %}
+        <select name="class" onchange="this.form.submit()" aria-label="Filter by class"><option value="">{% if viewer.is_staff %}All classes{% else %}Whole school &amp; my class{% endif %}</option>{% for c in classes %}<option value="{{ c.id }}" {% if f.class == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }} only</option>{% endfor %}</select></form>{% endif %}
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+      {% if f.tag %}<a class="mo-chip" href="?"><i class="bi bi-hash"></i>{{ f.tag }} <i class="bi bi-x"></i></a>{% endif %}
+      {% if f.saved %}<span class="mo-chip"><i class="bi bi-bookmark-fill"></i> Saved by you</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="mo-wrap">
+    <div class="mo-col">
+      {% if posts %}
+        {% if f.view == 'grid' %}<div class="mo-grid" id="moList">{% include "moments/_grid.html" %}</div>
+        {% else %}<div class="mo-col" id="moList">{% include "moments/_cards.html" %}</div>{% endif %}
+        {% if page.has_next %}<div class="mo-loading" id="moMore" data-next="{{ page.next_page_number }}"><span class="mo-spin"></span></div>{% endif %}
+      {% else %}
+        <div class="mo-empty"><i class="bi bi-camera"></i>
+          <h3>{% if f.saved %}Nothing saved yet{% elif f.category or f.tag or f.class %}No posts here yet{% else %}No moments shared yet{% endif %}</h3>
+          <p>{% if f.saved %}Tap <i class="bi bi-bookmark" style="font-size:inherit;display:inline;color:inherit"></i> on a post to keep it here.{% elif viewer.is_staff %}Share the first photo or video of a class activity or school event.{% else %}When teachers share photos and videos from school, they'll appear here.{% endif %}</p>
+          {% if viewer.is_staff and not f.saved %}<a class="mo-btn gold" href="{% url 'moments:new' %}" style="margin-top:.8rem"><i class="bi bi-plus-square"></i> New post</a>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+    <aside class="mo-side">
+      <div class="mo-box"><h4>About School Moments</h4>
+        <p>Only people signed in to the {{ request.tenant.name }} portal can see these posts. Posts for one class are seen by that class, their parents and staff.</p></div>
+      {% if classes %}<div class="mo-box"><h4>{% if viewer.is_staff %}Classes{% else %}{% if viewer.children %}My children's classes{% else %}My class{% endif %}{% endif %}</h4>
+        {% for c in classes|slice:":8" %}<a class="row" href="?class={{ c.id }}"><span>{{ c.name }}</span><i class="bi bi-chevron-right"></i></a>{% endfor %}</div>{% endif %}
+      <div class="mo-box"><h4>Browse</h4>
+        {% for k, l in categories %}<a class="row" href="?category={{ k }}"><span>{{ l }}</span><i class="bi bi-chevron-right"></i></a>{% endfor %}</div>
+    </aside>
+  </div>
+</div>
+{% include "moments/_script.html" %}
+{% endblock %}

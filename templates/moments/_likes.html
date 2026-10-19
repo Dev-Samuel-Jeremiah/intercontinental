@@ -1,0 +1,1 @@
+{% if post.like_count == 0 %}Be the first to like this{% elif post.likers %}Liked by <b>{{ post.likers.0 }}</b>{% if post.like_count > 1 %} and <b>{{ post.like_count|add:"-1" }} other{{ post.like_count|add:"-1"|pluralize }}</b>{% endif %}{% else %}<b>{{ post.like_count }} like{{ post.like_count|pluralize }}</b>{% endif %}

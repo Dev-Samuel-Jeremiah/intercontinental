@@ -36,7 +36,7 @@ DNS can take a few minutes to a few hours. Check with `ping intercontinentalscho
 ```bash
 $ sudo apt update && sudo apt upgrade -y
 $ sudo apt install -y python3 python3-venv python3-dev build-essential git nginx sqlite3 \
-                      wkhtmltopdf fonts-dejavu certbot python3-certbot-nginx ufw
+                      wkhtmltopdf fonts-dejavu ffmpeg certbot python3-certbot-nginx ufw
 $ sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw --force enable
 $ sudo timedatectl set-timezone Africa/Lagos
 ```
