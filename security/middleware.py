@@ -147,6 +147,8 @@ class PlatformHeartbeatMiddleware:
         try:
             from .platform import maybe_auto_backup
             maybe_auto_backup()
+            from schoolai.training import maybe_auto_learn
+            maybe_auto_learn(getattr(request, 'tenant', None))
         except Exception:
             import logging
             logging.getLogger(__name__).exception('Backup heartbeat failed')

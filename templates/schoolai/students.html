@@ -1,0 +1,21 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Students to support{% endblock %}
+{% block content %}
+{% include "schoolai/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{% if admin %}<a href="{% url 'schoolai:dashboard' %}" style="color:inherit;text-decoration:none">School Intelligence</a>{% else %}School AI · my form class{% endif %}</div>
+  <h1 class="fin-title">Students to <em>support</em></h1>
+  <p class="fin-sub">The school's model, trained on its own history, estimates each student's chance of falling below 50% next term — and shows why. Model status: <b>{{ maturity.label }}</b>.</p>
+</div></div>
+<form method="get" class="panel"><div class="panel-b" style="display:flex;gap:.5rem;flex-wrap:wrap">
+  <select name="band" onchange="this.form.submit()" style="padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">All levels</option><option value="HIGH" {% if band == 'HIGH' %}selected{% endif %}>High risk</option><option value="MEDIUM" {% if band == 'MEDIUM' %}selected{% endif %}>Medium</option><option value="LOW" {% if band == 'LOW' %}selected{% endif %}>Low</option></select>
+  <select name="class" onchange="this.form.submit()" style="padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">All classes</option>{% for c in classes %}<option value="{{ c.id }}" {% if class_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select>
+</div></form>
+<div class="panel">{% for p in page %}<div class="ai-risk"><div>
+    <a href="{% url 'users:student_profile' p.student.id %}" style="color:var(--white);font-weight:600;text-decoration:none">{{ p.student.full_name }}</a> <span class="hint">{{ p.student.class_assigned.name }} · from {{ p.term.name }} {{ p.term.session.name }}{% if p.expected %} · expected {{ p.expected.value|floatformat:0 }}% next term{% endif %}</span>
+    <div class="why">{% for r in p.reasons %}<span class="{% if r.effect == 'helps' %}good{% else %}bad{% endif %}" title="{{ r.effect }}">{{ r.label }} {{ r.value }}</span>{% endfor %}</div></div>
+    <div style="text-align:right"><span class="ai-pct {{ p.band }}">{% widthratio p.value 1 100 %}%</span><div class="hint">{{ p.get_band_display }} risk</div></div></div>
+  {% empty %}<div class="empty"><i class="bi bi-emoji-smile"></i><p>No predictions here yet.</p></div>{% endfor %}</div>
+{% if page.has_other_pages %}<div style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?band={{ band }}&class={{ class_id }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}<span class="hint" style="align-self:center">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?band={{ band }}&class={{ class_id }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
+<div class="ai-note"><i class="bi bi-shield-lock"></i><span>Visible to administrators and form teachers only. Use it to decide who to talk to first — every student deserves the conversation, and the model can be wrong.</span></div>
+{% endblock %}

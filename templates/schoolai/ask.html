@@ -1,0 +1,67 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Ask the school{% endblock %}
+{% block content %}
+{% include "schoolai/_styles.html" %}
+<style>
+  .ak{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:1rem}
+  .ak-head{display:flex;gap:1rem;align-items:center}
+  .ak-head h1{margin:0;font-family:var(--serif);font-size:2rem;color:var(--white)}
+  .ak-head h1 em{color:var(--champagne-lt)}
+  .ak-head p{margin:.2rem 0 0;color:var(--slate2);font-size:.88rem}
+  .ak-box{border:1px solid var(--rim2);border-radius:22px;background:var(--surface);display:flex;flex-direction:column;min-height:420px}
+  .ak-msgs{flex:1;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;overflow-y:auto;max-height:60vh}
+  .ak-msg{max-width:84%;padding:.75rem .95rem;border-radius:16px;font-size:.92rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+  .ak-msg.me{align-self:flex-end;background:linear-gradient(135deg,rgba(244,210,31,.22),rgba(244,210,31,.1));border:1px solid var(--champagne-border);color:var(--white);border-bottom-right-radius:5px}
+  .ak-msg.ai{align-self:flex-start;background:rgba(255,255,255,.05);border:1px solid var(--rim2);color:var(--white);border-bottom-left-radius:5px}
+  .ak-msg.ai.unsure{border-color:var(--amber-border)}
+  .ak-src{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.5rem}
+  .ak-src span{font-size:.7rem;padding:.1rem .5rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);white-space:normal}
+  .ak-rate{display:flex;gap:.3rem;align-items:center;margin-top:.5rem;font-size:.74rem;color:var(--slate)}
+  .ak-rate button{border:1px solid var(--rim2);background:none;color:var(--slate2);border-radius:8px;padding:.15rem .5rem;cursor:pointer;font:inherit}
+  .ak-rate button:hover{color:var(--champagne-lt);border-color:var(--champagne-border)}
+  .ak-typing span{display:inline-block;width:7px;height:7px;margin:0 2px;border-radius:50%;background:var(--slate2);animation:akDot 1s infinite}
+  .ak-typing span:nth-child(2){animation-delay:.15s}.ak-typing span:nth-child(3){animation-delay:.3s}
+  @keyframes akDot{50%{transform:translateY(-4px);opacity:.5}}
+  .ak-sug{display:flex;gap:.4rem;flex-wrap:wrap;padding:0 1.2rem 1rem}
+  .ak-sug button{padding:.45rem .8rem;border-radius:99px;border:1px solid var(--rim2);background:rgba(0,0,0,.18);color:var(--slate2);font:inherit;font-size:.8rem;cursor:pointer}
+  .ak-sug button:hover{border-color:var(--champagne-border);color:var(--champagne-lt)}
+  .ak-form{display:flex;gap:.5rem;padding:.9rem;border-top:1px solid var(--rim)}
+  .ak-form input{flex:1;padding:.8rem 1rem;border-radius:14px;border:1px solid var(--rim2);background:rgba(0,0,0,.28);color:var(--white);font:inherit;font-size:.92rem}
+  .ak-form input:focus{outline:none;border-color:var(--champagne-border)}
+  .ak-form button{width:48px;border-radius:14px;border:0;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));color:#0a1f44;font-size:1.1rem;cursor:pointer}
+  .ak-empty{margin:auto;text-align:center;color:var(--slate2);font-size:.9rem;padding:1rem}
+</style>
+<div class="ak">
+  <div class="ak-head"><span class="ai-orb" style="width:58px;height:58px;font-size:1.6rem;border-radius:18px"><i class="bi bi-stars"></i></span>
+    <div><h1>Ask the <em>school</em></h1><p>Term dates, fees, events, contacts, rules — answered from {{ request.tenant.name }}'s own information.{% if admin %} <a href="{% url 'schoolai:dashboard' %}" style="color:var(--champagne-lt)">School Intelligence →</a>{% endif %}</p></div></div>
+  <div class="ak-box">
+    <div class="ak-msgs" id="msgs">
+      {% for q in mine reversed %}<div class="ak-msg me">{{ q.text }}</div><div class="ak-msg ai{% if q.status == 'UNSURE' %} unsure{% endif %}">{{ q.answer }}</div>
+      {% empty %}<div class="ak-empty" id="empty"><i class="bi bi-chat-heart" style="font-size:2rem;color:var(--champagne);display:block;margin-bottom:.4rem"></i>Ask anything about the school. If I don't know yet, I'll ask the school for you — and I'll remember the answer.</div>{% endfor %}
+    </div>
+    <div class="ak-sug" id="sug">{% for s in suggestions %}<button type="button">{{ s }}</button>{% endfor %}</div>
+    <form class="ak-form" id="askForm" autocomplete="off"><input id="askIn" maxlength="500" placeholder="Type your question…" aria-label="Your question"><button type="submit" aria-label="Ask"><i class="bi bi-send-fill"></i></button></form>
+  </div>
+  <p class="hint" style="text-align:center;margin:0">{% if ai %}Answers are written by AI from the school's information.{% else %}Answers are quoted from the school's information.{% endif %} Rate them — that is how it learns.</p>
+</div>
+<script>
+(function(){
+  var CSRF='{{ csrf_token }}', msgs=document.getElementById('msgs'), input=document.getElementById('askIn');
+  function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e;}
+  function bottom(){msgs.scrollTop=msgs.scrollHeight;}
+  function post(url,data){return fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},body:JSON.stringify(data)}).then(function(r){return r.json();});}
+  function ask(text){text=(text||'').trim();if(!text)return;var e=document.getElementById('empty');if(e)e.remove();
+    msgs.appendChild(el('div','ak-msg me',text));var wait=el('div','ak-msg ai ak-typing');wait.innerHTML='<span></span><span></span><span></span>';msgs.appendChild(wait);bottom();input.value='';
+    post('{% url "schoolai:ask" %}',{question:text}).then(function(r){wait.remove();
+      if(!r.ok){msgs.appendChild(el('div','ak-msg ai unsure',r.error||'Something went wrong.'));bottom();return;}
+      var a=el('div','ak-msg ai'+(r.status==='UNSURE'?' unsure':''),r.answer);
+      if(r.sources&&r.sources.length&&r.status!=='UNSURE'){var s=el('div','ak-src');r.sources.forEach(function(x){s.appendChild(el('span',null,x.source+': '+x.title));});a.appendChild(s);}
+      if(r.status==='ANSWERED'){var rate=el('div','ak-rate');rate.appendChild(document.createTextNode('Did this help?'));
+        [['👍',true],['👎',false]].forEach(function(b){var btn=el('button',null,b[0]);btn.type='button';btn.onclick=function(){post('/school-ai/ask/'+r.id+'/rate/',{helpful:b[1]}).then(function(){rate.textContent=b[1]?'Thanks — glad it helped.':'Thanks — I have asked the school to improve this answer.';});};rate.appendChild(btn);});a.appendChild(rate);}
+      msgs.appendChild(a);bottom();}).catch(function(){wait.remove();msgs.appendChild(el('div','ak-msg ai unsure','No connection — try again.'));});}
+  document.getElementById('askForm').addEventListener('submit',function(e){e.preventDefault();ask(input.value);});
+  document.getElementById('sug').addEventListener('click',function(e){var b=e.target.closest('button');if(b)ask(b.textContent);});
+  bottom();
+})();
+</script>
+{% endblock %}

@@ -93,6 +93,7 @@ INSTALLED_APPS = [
     'staffchat.apps.StaffchatConfig',
     'moments.apps.MomentsConfig',
     'labs.apps.LabsConfig',
+    'schoolai.apps.SchoolaiConfig',
 ]
 
 MIDDLEWARE = [
@@ -336,6 +337,8 @@ BACKUP_OFFSITE_DIR = config('BACKUP_OFFSITE_DIR', default='')
 BACKUP_OFFSITE_COMMAND = config('BACKUP_OFFSITE_COMMAND', default='')
 # If the daily timer is missed, the site starts a backup itself once the last good one is a day old.
 AUTO_BACKUP = config('AUTO_BACKUP', default=True, cast=bool) and not TESTING
+# The school AI learns nightly (timer) and catches up by itself if a night is missed
+SCHOOL_AI_AUTO = config('SCHOOL_AI_AUTO', default=True, cast=bool) and not TESTING
 # Files that must never be reachable by URL — student documents such as birth
 # certificates and medical reports. Served only through permission-checked views.
 PRIVATE_MEDIA_ROOT = Path(config('PRIVATE_MEDIA_ROOT', default=str(BASE_DIR / 'private_media')))

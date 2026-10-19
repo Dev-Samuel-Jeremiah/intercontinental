@@ -1,0 +1,86 @@
+{% extends "dashboard/base.html" %}
+{% block title %}School Intelligence{% endblock %}
+{% block content %}
+{% include "schoolai/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">School AI</div>
+  <h1 class="fin-title">School <em>Intelligence</em></h1>
+  <p class="fin-sub">The school's long-term memory, and the models it trains on its own history — retrained every night, and only replaced when a new version does better.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn" href="{% url 'schoolai:ask' %}"><i class="bi bi-chat-dots"></i> Ask the school</a>
+  <a class="fin-btn" href="{% url 'schoolai:knowledge' %}"><i class="bi bi-book"></i> Knowledge</a>
+  <a class="fin-btn" href="{% url 'schoolai:questions' %}"><i class="bi bi-mortarboard"></i> Teach it{% if waiting or disliked %} <span class="chip red" style="padding:.05rem .4rem">{{ waiting|add:disliked }}</span>{% endif %}</a>
+  <form method="post">{% csrf_token %}<input type="hidden" name="op" value="learn"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-lightning-charge"></i> Learn now</button></form>
+</div></div>
+
+<div class="ai-hero">
+  <div class="top"><span class="ai-orb"><i class="bi bi-cpu"></i></span>
+    <div style="flex:1;min-width:240px"><h2>{{ m.label }} <span class="hint" style="font-size:.85rem">· {{ m.years }} year{{ m.years|pluralize }} of history</span></h2><p>{{ m.text }}</p></div>
+    <div class="hint" style="text-align:right">{% if last_run %}Last learned {{ last_run.started_at|timesince }} ago{% if not last_run.ok %} <span class="chip red">with problems</span>{% endif %}{% else %}Has not learned yet — press <b>Learn now</b>.{% endif %}</div></div>
+  <div class="ai-steps">{% for key, label, text in m.levels %}<div class="ai-step {% if forloop.counter0 < m.level %}done{% elif forloop.counter0 == m.level %}now{% endif %}"><b>{% if forloop.counter0 < m.level %}<i class="bi bi-check-circle-fill"></i> {% endif %}{{ label }}</b><span>{{ text|truncatechars:70 }}</span></div>{% endfor %}</div>
+  <div class="ai-bar"><span style="width:{{ m.progress }}%"></span></div>
+  <div class="ai-mem">
+    <div><b>{{ m.stats.terms }}</b><small>Terms remembered</small></div>
+    <div><b>{{ m.stats.student_terms }}</b><small>Student-terms</small></div>
+    <div><b>{{ m.stats.labelled }}</b><small>Outcomes learned from</small></div>
+    <div><b>{{ m.stats.results }}</b><small>Results</small></div>
+    <div><b>{{ m.stats.attendance }}</b><small>Attendance marks</small></div>
+    <div><b>{{ m.stats.snapshots }}</b><small>Daily snapshots{% if m.stats.since %} since {{ m.stats.since|date:"M Y" }}{% endif %}</small></div>
+    <div><b>{{ m.stats.knowledge }}</b><small>Things it knows</small></div>
+    <div><b>{{ m.stats.taught }}</b><small>Answers taught</small></div>
+  </div>
+</div>
+
+<div class="ai-models">
+  <a class="ai-model" href="{% url 'schoolai:model' 'NEXT_AVG' %}"><span class="k">Model · next-term average</span>
+    {% with v=models.NEXT_AVG.metrics.validation %}{% if models.NEXT_AVG %}<span class="big">±{{ v.mae }}</span>
+    <span class="sub">points off on average, tested on a term it had not seen{% if v.baseline_mae %} (guessing "same as this term" is ±{{ v.baseline_mae }}){% endif %}.</span>
+    <span class="hint">Version {{ models.NEXT_AVG.version }} · {{ models.NEXT_AVG.samples }} student-terms · {{ models.NEXT_AVG.trained_at|date:"j M" }}</span>
+    {% else %}<span class="big">—</span><span class="sub">Collecting: needs two terms of results with a term after them.</span>{% endif %}{% endwith %}
+    <canvas id="chAvg"></canvas></a>
+  <a class="ai-model" href="{% url 'schoolai:model' 'FAIL_RISK' %}"><span class="k">Model · risk of falling below 50%</span>
+    {% with v=models.FAIL_RISK.metrics.validation %}{% if models.FAIL_RISK %}<span class="big">{{ v.auc|floatformat:2 }}</span>
+    <span class="sub">AUC on the latest term (1.0 = always ranks the struggling student higher, 0.5 = guessing). Caught {% widthratio v.recall 1 100 %}% of those who fell below.</span>
+    <span class="hint">Version {{ models.FAIL_RISK.version }} · {{ models.FAIL_RISK.samples }} student-terms · {{ models.FAIL_RISK.trained_at|date:"j M" }}</span>
+    {% else %}<span class="big">—</span><span class="sub">Collecting: needs students who passed and who struggled in the history.</span>{% endif %}{% endwith %}
+    <canvas id="chRisk"></canvas></a>
+  <a class="ai-model" href="{% url 'schoolai:model' 'ENROLMENT' %}"><span class="k">Forecast · enrolment in 12 months</span>
+    {% with f=models.ENROLMENT.metrics %}{% if models.ENROLMENT %}<span class="big">{{ f.in_12_months }}</span>
+    <span class="sub">students expected (likely {{ f.low }}–{{ f.high }}); {{ f.now }} today, trend {{ f.per_year|floatformat:0 }} a year.</span>
+    <span class="hint">From {{ models.ENROLMENT.samples }} months of admissions and leavers</span>
+    {% else %}<span class="big">—</span><span class="sub">Needs six months of admissions history.</span>{% endif %}{% endwith %}
+    <canvas id="chEnrol"></canvas></a>
+</div>
+
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-person-exclamation"></i> Students the model is worried about</h3>
+    <a class="fin-btn fin-btn-sm" href="{% url 'schoolai:students' %}">All {{ bands.HIGH|add:bands.MEDIUM|add:bands.LOW }}</a></div>
+    <div class="panel-b" style="display:flex;gap:.4rem;padding-bottom:.4rem"><a class="chip red" href="{% url 'schoolai:students' %}?band=HIGH" style="text-decoration:none">{{ bands.HIGH }} high</a><a class="chip amber" href="{% url 'schoolai:students' %}?band=MEDIUM" style="text-decoration:none">{{ bands.MEDIUM }} medium</a><span class="chip green">{{ bands.LOW }} low</span></div>
+    {% for p in risk %}<div class="ai-risk"><div><a href="{% url 'users:student_profile' p.student.id %}" style="color:var(--white);font-weight:600;text-decoration:none">{{ p.student.full_name }}</a> <span class="hint">{{ p.student.class_assigned.name }}{% if p.expected %} · expected {{ p.expected.value|floatformat:0 }}% next term{% endif %}</span>
+      <div class="why">{% for r in p.reasons %}<span class="{% if r.effect == 'helps' %}good{% else %}bad{% endif %}">{{ r.label }} {{ r.value }}</span>{% endfor %}</div></div>
+      <span class="ai-pct {{ p.band }}">{% widthratio p.value 1 100 %}%</span></div>
+    {% empty %}<div class="panel-b"><p class="hint" style="margin:0">No predictions yet — the model needs more history first.</p></div>{% endfor %}
+  </div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-activity"></i> Learning log</h3></div><div class="panel-b ai-log">
+      {% for r in runs %}<div style="padding-bottom:.6rem;margin-bottom:.6rem;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ r.started_at|date:"j M, H:i" }}</b> <span class="hint">· {{ r.get_trigger_display }}</span> {% if not r.finished_at %}<span class="chip amber">Learning…</span>{% elif r.ok %}<span class="chip green">OK</span>{% else %}<span class="chip red">Problems</span>{% endif %}
+        {% if forloop.first %}<ul>{% for s in r.steps %}<li>{% if s.ok %}<i class="bi bi-check-circle" style="color:var(--green)"></i>{% elif s.ok is None %}<i class="bi bi-hourglass" style="color:var(--amber)"></i>{% else %}<i class="bi bi-x-circle" style="color:var(--red)"></i>{% endif %} <b>{{ s.step }}</b> — {{ s.result }}</li>{% endfor %}</ul>{% endif %}</div>
+      {% empty %}<p class="hint" style="margin:0">Nothing learned yet.</p>{% endfor %}</div></div>
+    <div class="ai-note" style="margin-top:1rem"><i class="bi bi-shield-lock"></i><span>Everything is learned on the school's own server — no student data is sent anywhere to train these models. Predictions are seen only by administrators and form teachers, never by students or parents. A prediction is a prompt for a conversation, not a judgement.</span></div>
+  </div>
+</div>
+{{ chart|json_script:"ai-chart" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  if(!window.Chart)return;var d=JSON.parse(JSON.parse(document.getElementById('ai-chart').textContent));
+  var base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:true}},scales:{x:{display:false},y:{display:false}},elements:{point:{radius:2},line:{tension:.35}}};
+  function spark(id,labels,sets,zero){var el=document.getElementById(id);if(!el||!labels.length)return;var o=JSON.parse(JSON.stringify(base));if(zero)o.scales.y.beginAtZero=true;new Chart(el,{type:'line',data:{labels:labels,datasets:sets},options:o});}
+  spark('chAvg',d.avg.map(function(x){return 'v'+x.v;}),[{data:d.avg.map(function(x){return x.mae;}),borderColor:'#f4d21f',backgroundColor:'rgba(244,210,31,.15)',fill:true},{data:d.avg.map(function(x){return x.base;}),borderColor:'rgba(255,255,255,.3)',borderDash:[4,4]}]);
+  spark('chRisk',d.risk.map(function(x){return 'v'+x.v;}),[{data:d.risk.map(function(x){return x.auc;}),borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,.12)',fill:true}]);
+  if(d.enrol&&d.enrol.length){var labels=d.enrol.map(function(x){return x[0];}),vals=d.enrol.map(function(x){return x[1];});
+    var fc=d.forecast?vals.map(function(){return null;}).concat([d.forecast.in_12_months]):[];var l2=labels.concat(d.forecast?['+12 months']:[]);
+    spark('chEnrol',l2,[{data:vals,borderColor:'#60a5fa',backgroundColor:'rgba(96,165,250,.15)',fill:true},{data:fc.length?vals.map(function(v,i){return i===vals.length-1?v:null;}).concat([d.forecast.in_12_months]):[],borderColor:'#f4d21f',borderDash:[5,4],spanGaps:true}],true);}
+})();
+</script>
+{% endblock %}

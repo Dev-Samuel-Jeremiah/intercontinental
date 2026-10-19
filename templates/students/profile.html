@@ -183,6 +183,13 @@
       <div class="gaps">{% for m in completeness.missing %}<button type="button" class="chip amber" data-goto="{{ m.tab }}" title="{{ m.why }}"><i class="bi bi-plus-circle"></i> {{ m.label }}</button>{% endfor %}</div></div>
   </div></div>
   {% else %}<div class="panel sp-complete ok"><div class="panel-b"><i class="bi bi-patch-check-fill" style="font-size:1.4rem;color:var(--green)"></i> <b style="color:var(--white)">Record complete</b> <span class="hint">— every check passed.</span></div></div>{% endif %}
+  {% if ai_outlook %}{% with r=ai_outlook.FAIL_RISK a=ai_outlook.NEXT_AVG %}<div class="panel" style="border-color:var(--champagne-border)"><div class="panel-b" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+    <i class="bi bi-cpu" style="font-size:1.4rem;color:var(--champagne)"></i>
+    <div style="flex:1;min-width:220px"><b style="color:var(--white)">School AI outlook</b> <span class="hint">· from {{ r.term.name|default:a.term.name }} · staff only</span>
+      <div style="margin-top:.3rem;display:flex;gap:.35rem;flex-wrap:wrap">{% if a %}<span class="chip">Expected next term: {{ a.value|floatformat:0 }}%</span>{% endif %}
+        {% if r %}<span class="chip {% if r.band == 'HIGH' %}red{% elif r.band == 'MEDIUM' %}amber{% else %}green{% endif %}">{% widthratio r.value 1 100 %}% risk of falling below 50%</span>
+        {% for x in r.reasons %}<span class="chip">{{ x.label }} {{ x.value }}</span>{% endfor %}{% endif %}</div></div>
+    <a class="fin-btn fin-btn-sm" href="{% url 'schoolai:students' %}">Why?</a></div></div>{% endwith %}{% endif %}
   <div class="fin-grid">
     <div class="panel">
       <div class="panel-h"><h3><i class="bi bi-person-badge"></i> Details</h3></div>

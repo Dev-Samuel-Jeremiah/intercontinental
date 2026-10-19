@@ -628,6 +628,10 @@
           <i class="bi bi-house-fill"></i>
           <span class="ni-label">Dashboard</span>
         </a>
+        <a href="{% url 'schoolai:ask' %}" class="nav-item" data-tooltip="Ask the School">
+          <i class="bi bi-stars"></i>
+          <span class="ni-label">Ask the School</span>
+        </a>
         <a href="{% url 'moments:home' %}" class="nav-item" data-tooltip="School Moments">
           <i class="bi bi-camera-fill"></i>
           <span class="ni-label">School Moments</span>
@@ -918,6 +922,11 @@
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        <a href="{% url 'schoolai:dashboard' %}" class="nav-item" data-tooltip="School Intelligence">
+          <i class="bi bi-cpu-fill"></i><span class="ni-label">School Intelligence</span>
+        </a>
+        {% endif %}
         <a href="{% url 'assistant:home' %}" class="nav-item" data-tooltip="AI Tools">
           <i class="bi bi-stars"></i><span class="ni-label">AI Tools</span>
         </a>

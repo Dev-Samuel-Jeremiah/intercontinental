@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly learning for the Intercontinental school AI
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

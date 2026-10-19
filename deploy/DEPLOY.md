@@ -144,6 +144,16 @@ $ sudo systemctl enable --now intercontinental-backup.timer
 $ systemctl list-timers intercontinental-backup.timer      # shows the next run
 ```
 
+And the school AI's nightly learning (02:30 — it remembers the day, learns from new results and
+content, retrains its models and updates its predictions; if a night is missed the site catches up
+by itself):
+
+```bash
+$ sudo cp /srv/intercontinental/app/deploy/intercontinental-ai.* /etc/systemd/system/
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable --now intercontinental-ai.timer
+```
+
 And the school's own data export (shown under Administration → Data Export & Backups):
 
 ```bash

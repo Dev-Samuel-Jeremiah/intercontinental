@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}School knowledge{% endblock %}
+{% block content %}
+{% include "schoolai/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'schoolai:dashboard' %}" style="color:inherit;text-decoration:none">School Intelligence</a></div>
+  <h1 class="fin-title">What the school <em>knows</em></h1>
+  <p class="fin-sub">Announcements, the calendar, fees and school facts are learned automatically and kept up to date. Add your policies, FAQs and anything else people ask about.</p>
+</div><form method="post">{% csrf_token %}<input type="hidden" name="op" value="sync"><button class="fin-btn" type="submit"><i class="bi bi-arrow-repeat"></i> Refresh from school content</button></form></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)">
+  <form method="post" class="panel">{% csrf_token %}<input type="hidden" name="op" value="save">{% if edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+    <div class="panel-h"><h3><i class="bi bi-{% if edit %}pencil{% else %}plus-circle{% endif %}"></i> {% if edit %}Edit{% else %}Teach it something{% endif %}</h3></div><div class="panel-b fin-form">
+      <div><label>Title</label><input name="title" required maxlength="200" value="{{ edit.title }}" placeholder="e.g. School uniform policy"></div>
+      <div><label>The information</label><textarea name="body" rows="8" required placeholder="Write it the way you would explain it to a parent.">{{ edit.body }}</textarea></div>
+      <div class="row2"><div><label>Who may be told</label><select name="audience">{% for k, l in audiences %}<option value="{{ k }}" {% if edit.audience == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        <div><label>Other words people use</label><input name="keywords" maxlength="255" value="{{ edit.keywords }}" placeholder="e.g. dress code, clothes"></div></div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end">{% if edit %}<a class="fin-btn" href="?">Cancel</a>{% endif %}<button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save</button></div>
+    </div></form>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-book"></i> Knowledge · {{ page.paginator.count }}</h3>
+    <form method="get" style="display:flex;gap:.3rem"><select name="source" onchange="this.form.submit()" style="padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem"><option value="">All sources</option>{% for k, l in sources %}<option value="{{ k }}" {% if source == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><input name="q" value="{{ q }}" placeholder="Search" style="padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem;width:120px"></form></div>
+    {% for k in page %}<div style="padding:.75rem 1.1rem;border-bottom:1px solid var(--rim);{% if not k.active %}opacity:.5{% endif %}">
+      <div style="display:flex;justify-content:space-between;gap:.5rem;align-items:flex-start"><b style="color:var(--white)">{{ k.title }}</b>
+        <span style="display:flex;gap:.25rem;flex-shrink:0">{% if k.source == 'MANUAL' or k.source == 'ANSWER' %}<a class="fin-btn fin-btn-sm" href="?edit={{ k.id }}" title="Edit"><i class="bi bi-pencil"></i></a>{% endif %}
+          <form method="post">{% csrf_token %}<input type="hidden" name="op" value="toggle"><input type="hidden" name="id" value="{{ k.id }}"><button class="fin-btn fin-btn-sm" type="submit" title="{% if k.active %}Switch off{% else %}Switch on{% endif %}"><i class="bi bi-{% if k.active %}eye{% else %}eye-slash{% endif %}"></i></button></form>
+          {% if k.source == 'MANUAL' or k.source == 'ANSWER' %}<form method="post" onsubmit="return confirm('Remove this?')">{% csrf_token %}<input type="hidden" name="op" value="delete"><input type="hidden" name="id" value="{{ k.id }}"><button class="fin-btn fin-btn-sm" type="submit" title="Remove" style="color:var(--red)"><i class="bi bi-trash"></i></button></form>{% endif %}</span></div>
+      <div class="hint" style="margin:.25rem 0">{{ k.body|truncatechars:180 }}</div>
+      <span class="chip">{{ k.get_source_display }}</span> <span class="chip">{{ k.get_audience_display }}</span>{% if k.uses %} <span class="hint">used {{ k.uses }}×</span>{% endif %}{% if k.helpful or k.unhelpful %} <span class="hint"><i class="bi bi-hand-thumbs-up"></i> {{ k.helpful }} <i class="bi bi-hand-thumbs-down"></i> {{ k.unhelpful }}</span>{% endif %}</div>
+    {% empty %}<div class="empty"><i class="bi bi-book"></i><p>Nothing yet — press Refresh, or teach it something.</p></div>{% endfor %}
+    {% if page.has_other_pages %}<div class="panel-b" style="display:flex;gap:.4rem;justify-content:center">{% if page.has_previous %}<a class="fin-btn fin-btn-sm" href="?source={{ source }}&q={{ q }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}{% if page.has_next %}<a class="fin-btn fin-btn-sm" href="?source={{ source }}&q={{ q }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

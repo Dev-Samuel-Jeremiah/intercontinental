@@ -80,6 +80,7 @@ def student_profile_view(request, student_id):
         'section': history.section_of(student.class_assigned),
         'completeness': completeness.check(student),
         'health': health,
+        'ai_outlook': _ai_outlook(request, student),
         'status_history': student.status_changes.select_related('changed_by')[:20],
         'changes': student_profile.change_history(student) if manage else [],
         'statuses': [s for s in STATUS_OPTIONS if s[0] != student.status],
@@ -100,6 +101,21 @@ def student_profile_view(request, student_id):
         'exports': student.data_exports.select_related('exported_by')[:10] if manage else [],
         **_attendance_context(student, term),
     })
+
+
+def _ai_outlook(request, student):
+    """The school AI's view of this student — administrators and the student's form teacher only."""
+    try:
+        from schoolai.models import Prediction
+    except Exception:
+        return None
+    user = request.user
+    form_teacher = bool(student.class_assigned and student.class_assigned.form_teacher_id
+                        and student.class_assigned.form_teacher.user_id == user.pk)
+    if not (can_manage(user) or form_teacher):
+        return None
+    preds = {p.kind: p for p in Prediction.objects.filter(tenant_id=student.tenant_id, student=student)}
+    return preds or None
 
 
 def _attendance_context(student, term):

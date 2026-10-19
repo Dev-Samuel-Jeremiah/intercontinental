@@ -1,0 +1,15 @@
+# The school AI's nightly learning — run by intercontinental-ai.timer.
+# Install:  sudo cp deploy/intercontinental-ai.* /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now intercontinental-ai.timer
+[Unit]
+Description=Intercontinental School — school AI learning
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=school
+Group=school
+WorkingDirectory=/srv/intercontinental/app
+EnvironmentFile=-/srv/intercontinental/app/.env
+ExecStart=/srv/intercontinental/venv/bin/python manage.py school_ai_learn
+Nice=10

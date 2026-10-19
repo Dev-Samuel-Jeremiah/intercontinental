@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Teach the school AI{% endblock %}
+{% block content %}
+{% include "schoolai/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'schoolai:dashboard' %}" style="color:inherit;text-decoration:none">School Intelligence</a></div>
+  <h1 class="fin-title">Teach the <em>school AI</em></h1>
+  <p class="fin-sub">Questions it could not answer, and answers people said did not help. Answer once: the asker is told, and the school knows it for everyone who asks next.</p>
+</div></div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> Waiting for an answer · {{ waiting|length }}</h3></div>
+  {% for q in waiting %}{% include "schoolai/_teach.html" %}{% empty %}<div class="panel-b"><p class="hint" style="margin:0"><i class="bi bi-check-circle" style="color:var(--green)"></i> Nothing waiting.</p></div>{% endfor %}</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-hand-thumbs-down"></i> Answers that did not help · {{ disliked|length }}</h3></div>
+  {% for q in disliked %}{% include "schoolai/_teach.html" %}{% empty %}<div class="panel-b"><p class="hint" style="margin:0">None.</p></div>{% endfor %}</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-chat-dots"></i> Recent questions</h3></div>
+  <table class="tbl"><tbody>{% for q in recent %}<tr><td style="white-space:nowrap">{{ q.created_at|date:"j M, H:i" }}</td><td class="name">{{ q.text }}<div class="hint">{{ q.answer|truncatechars:120 }}</div></td>
+    <td>{% if q.status == 'UNSURE' %}<span class="chip amber">Waiting</span>{% elif q.status == 'RESOLVED' %}<span class="chip green">Taught</span>{% else %}<span class="chip">Answered</span>{% endif %}{% if q.rating == 1 %} <i class="bi bi-hand-thumbs-up" style="color:var(--green)"></i>{% elif q.rating == -1 %} <i class="bi bi-hand-thumbs-down" style="color:var(--red)"></i>{% endif %}{% if q.used_ai %} <span class="chip gold">AI</span>{% endif %}</td></tr>
+  {% empty %}<tr><td class="hint">No questions yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}
