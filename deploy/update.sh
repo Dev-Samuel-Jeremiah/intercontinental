@@ -10,7 +10,7 @@ PIP=/srv/intercontinental/venv/bin/pip
 cd "$APP"
 
 echo "→ Backing up the database"
-$PY manage.py backup_database
+$PY manage.py backup_database --trigger UPDATE
 
 echo "→ Fetching the latest code"
 git pull --ff-only

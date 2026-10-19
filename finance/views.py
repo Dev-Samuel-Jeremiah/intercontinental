@@ -37,16 +37,30 @@ from finance.services.payment_service import (
 # ── Permission helpers ──────────────────────────────────────────────────────
 
 def _is_finance_staff(user):
-    if user.is_superuser: return True
-    if getattr(user, "is_staff_user", False): return True
-    try: return user.staff.role in ("ADMIN", "ACCOUNT")
-    except Exception: return False
+    """Administrators, Account Officers, and anyone given the finance switch on the Roles page."""
+    from security.access import allowed
+    return allowed(user, 'can_access_finance', 'can_approve_payments')
 
 
 def _require_finance_staff(fn):
     def wrap(req, *a, **kw):
         if not req.user.is_authenticated or not _is_finance_staff(req.user):
+            if req.user.is_authenticated:
+                from security.access import refused
+                refused(req, 'can_access_finance')
             return HttpResponse("Finance staff only.", status=403)
+        return fn(req, *a, **kw)
+    wrap.__name__ = fn.__name__
+    return wrap
+
+
+def _require_payment_approver(fn):
+    """Moving money — approving payments and top-ups, adjusting wallets, paying on someone's behalf."""
+    def wrap(req, *a, **kw):
+        from security.access import allowed, refused
+        if not allowed(req.user, 'can_approve_payments'):
+            refused(req, 'can_approve_payments')
+            return HttpResponse("Only staff allowed to approve payments can do this.", status=403)
         return fn(req, *a, **kw)
     wrap.__name__ = fn.__name__
     return wrap
@@ -554,6 +568,7 @@ def admin_finance_dashboard(request):
 
 @login_required
 @_require_finance_staff
+@_require_payment_approver
 @require_POST
 def review_payment(request, payment_id):
     payment = get_object_or_404(Payment, id=payment_id, status=Payment.PENDING)
@@ -572,6 +587,7 @@ def review_payment(request, payment_id):
 
 @login_required
 @_require_finance_staff
+@_require_payment_approver
 @require_POST
 def review_topup(request, topup_id):
     from django.db import transaction as dbt
@@ -682,6 +698,7 @@ def admin_student_wallet(request, student_id=None):
 
 @login_required
 @_require_finance_staff
+@_require_payment_approver
 def admin_pay_on_behalf(request):
     """
     Admin/accountant can pay fees or buy items for any student,
@@ -813,6 +830,7 @@ def admin_pay_on_behalf(request):
 
 @login_required
 @_require_finance_staff
+@_require_payment_approver
 @require_POST
 def admin_adjust_wallet(request):
     student_id  = request.POST.get("student_id")

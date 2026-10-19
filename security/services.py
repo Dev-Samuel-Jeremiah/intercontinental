@@ -136,6 +136,10 @@ ACTIONS = {
     'EXPORT': ('PRIVACY', 'Data exported'), 'CONSENT': ('PRIVACY', 'Consent'), 'REQUEST': ('PRIVACY', 'Data request'),
     'ANONYMISED': ('PRIVACY', 'Anonymised'), 'BREACH': ('PRIVACY', 'Breach'), 'RETENTION': ('PRIVACY', 'Retention'),
     'SETTINGS': ('ADMIN', 'Settings changed'), 'IMPERSONATION': ('ACCESS', 'Support sign-in'),
+    'SCORES': ('RESULTS', 'Scores changed'), 'APPROVAL': ('RESULTS', 'Results approval'),
+    'EXAM': ('RESULTS', 'Exam changed'), 'PAYMENT': ('MONEY', 'Payment'), 'FEES': ('MONEY', 'Fees & charges'),
+    'STUDENT': ('DATA', 'Student record'), 'DENIED': ('ACCESS', 'Access refused'),
+    'BACKUP': ('ADMIN', 'Backup'),
 }
 
 
@@ -174,7 +178,9 @@ def log_event(action, summary, request=None, user=None, tenant: Any = 'current',
 def audit_feed(tenant, q='', category='', user_id='', since=None, until=None, limit=300):
     """Audit events, finance audit entries and student record changes, newest first."""
     rows = []
-    ev = AuditEvent.objects.filter(tenant=tenant).select_related('user')
+    from django.db.models import Q
+    # The school's events, plus platform-wide ones every school should see (backups)
+    ev = AuditEvent.objects.filter(Q(tenant=tenant) | Q(tenant__isnull=True, action='BACKUP')).select_related('user')
     if category:
         ev = ev.filter(category=category)
     if user_id:

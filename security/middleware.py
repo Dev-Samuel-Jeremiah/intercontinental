@@ -136,6 +136,23 @@ def build_csp():
     return '; '.join(parts)
 
 
+class PlatformHeartbeatMiddleware:
+    """Now and then (at most every 10 minutes per worker), make sure today's backup has happened."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        try:
+            from .platform import maybe_auto_backup
+            maybe_auto_backup()
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception('Backup heartbeat failed')
+        return response
+
+
 class SecurityHeadersMiddleware:
 
     def __init__(self, get_response):

@@ -31,15 +31,22 @@ from hostel.services import (
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _is_hostel_staff(user):
-    if user.is_superuser: return True
-    if getattr(user, 'is_staff_user', False): return True
-    try: return user.staff.role in ('ADMIN', 'ACCOUNT')
-    except Exception: return False
+    """Administrators, Account Officers, hostel wardens, and anyone given the boarding switches on the Roles page."""
+    from security.access import allowed
+    if allowed(user, 'can_access_hostel', 'can_manage_boarders'):
+        return True
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    from .models import Hostel
+    return Hostel.objects.filter(warden=user).exists()
 
 
 def _hostel_required(fn):
     def wrap(request, *a, **kw):
         if not request.user.is_authenticated or not _is_hostel_staff(request.user):
+            if request.user.is_authenticated:
+                from security.access import refused
+                refused(request, 'can_access_hostel')
             return HttpResponse("Hostel staff access only.", status=403)
         return fn(request, *a, **kw)
     wrap.__name__ = fn.__name__

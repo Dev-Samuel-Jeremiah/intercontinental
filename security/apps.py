@@ -7,5 +7,6 @@ class SecurityConfig(AppConfig):
     verbose_name = 'Security, privacy & compliance'
 
     def ready(self):
-        from . import signals
+        from . import signals, watch
         signals.connect_deletes()
+        watch.connect()

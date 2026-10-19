@@ -167,7 +167,7 @@ class RoleAssignment(TenantModelMixin, models.Model):
 
 class AuditEvent(models.Model):
     CATEGORIES = [('AUTH', 'Sign-in'), ('ACCESS', 'Access & permissions'), ('DATA', 'Records'),
-                  ('PRIVACY', 'Privacy'), ('ADMIN', 'Settings')]
+                  ('RESULTS', 'Results & exams'), ('MONEY', 'Money'), ('PRIVACY', 'Privacy'), ('ADMIN', 'Settings')]
     tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True,
                                related_name='audit_events')
     user = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_events')
@@ -399,3 +399,31 @@ class PenTest(models.Model):
 
     class Meta:
         ordering = ['-starts']
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Platform: backups (daily database snapshots of the whole system)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SystemBackup(models.Model):
+    """One run of the database (or files) backup: when, how big, whether it passed its checks."""
+    TRIGGERS = [('SCHEDULE', 'Scheduled (cron / timer)'), ('AUTO', 'Automatic daily run'), ('MANUAL', 'Started by an administrator'),
+                ('UPDATE', 'Before an update')]
+    kind = models.CharField(max_length=5, choices=[('DB', 'Database'), ('FILES', 'Uploaded files')], default='DB')
+    trigger = models.CharField(max_length=8, choices=TRIGGERS, default='SCHEDULE')
+    started_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    ok = models.BooleanField(default=False)
+    file_name = models.CharField(max_length=120, blank=True)
+    size = models.PositiveBigIntegerField(default=0)
+    integrity = models.CharField(max_length=120, blank=True, help_text='"ok", or what the check found')
+    offsite = models.CharField(max_length=200, blank=True, help_text='Where the off-site copy went, or why it did not')
+    error = models.TextField(blank=True)
+    started_by = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
+    class Meta:
+        ordering = ['-started_at']
+
+    @property
+    def seconds(self):
+        return (self.finished_at - self.started_at).total_seconds() if self.finished_at else None

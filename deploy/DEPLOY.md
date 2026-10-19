@@ -135,23 +135,41 @@ landing page should load, and **/staff/login/** signs in with the admin password
 
 ## 9. Backups (do not skip)
 
+Install the daily backup timer (database every night at 01:30, plus uploaded files on Sundays):
+
 ```bash
-$ sudo crontab -u school -e
+$ sudo cp /srv/intercontinental/app/deploy/intercontinental-backup.* /etc/systemd/system/
+$ sudo systemctl daemon-reload
+$ sudo systemctl enable --now intercontinental-backup.timer
+$ systemctl list-timers intercontinental-backup.timer      # shows the next run
 ```
 
-Add:
+And the school's own data export (shown under Administration → Data Export & Backups):
 
-```cron
-# Database snapshot every night at 01:30, plus uploaded files every Sunday
-30 1 * * *  cd /srv/intercontinental/app && ../venv/bin/python manage.py backup_database
-45 1 * * 0  cd /srv/intercontinental/app && ../venv/bin/python manage.py backup_database --media
-# The school's own data export (shown under Administration → Data Export & Backups)
+```bash
+$ sudo crontab -u school -e
 15 2 * * *  cd /srv/intercontinental/app && ../venv/bin/python manage.py nightly_backup
 ```
 
-Snapshots go to `/srv/intercontinental/backups/` and are kept for 14 days. **Copy them off
-the server regularly** (download them, or use your VPS provider's backup feature) — a
-backup on the same disk is lost with the disk.
+Every backup is integrity-checked and recorded under **Security → Platform & Backups**, where
+administrators can see the last good backup, start one, download one, and see the system's
+health. If the timer is ever missed, the site starts a backup itself once the last good one is
+more than a day old, and administrators are notified if a backup fails.
+
+Snapshots go to `/srv/intercontinental/backups/` and are kept for 14 days (`BACKUP_KEEP_DAYS`).
+**Copy them off the server** — a backup on the same disk is lost with the disk. Either mount a
+second disk or network share and set, in `.env`:
+
+```
+BACKUP_OFFSITE_DIR=/mnt/offsite/school-backups
+```
+
+or install [rclone](https://rclone.org) (`sudo apt install rclone`, then `rclone config` to
+connect Google Drive, Dropbox, S3…) and set:
+
+```
+BACKUP_OFFSITE_COMMAND=rclone copy {file} gdrive:intercontinental-backups
+```
 
 ---
 

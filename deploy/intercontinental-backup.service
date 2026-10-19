@@ -1,0 +1,16 @@
+# Daily database backup (with uploaded files on Sundays) — run by intercontinental-backup.timer.
+# Install:  sudo cp deploy/intercontinental-backup.* /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now intercontinental-backup.timer
+[Unit]
+Description=Intercontinental School — database backup
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=school
+Group=school
+WorkingDirectory=/srv/intercontinental/app
+EnvironmentFile=-/srv/intercontinental/app/.env
+ExecStart=/bin/sh -c 'if [ "$(date +%%u)" = "7" ]; then exec /srv/intercontinental/venv/bin/python manage.py backup_database --media; else exec /srv/intercontinental/venv/bin/python manage.py backup_database; fi'
+Nice=10
+IOSchedulingClass=idle

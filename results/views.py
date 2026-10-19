@@ -801,16 +801,12 @@ def cbt_scores_reference(request):
                                     f"maximum of {exam_max}. Check the CBT exam's total marks or the assessment structure.")
             return redirect(back)
         imported = 0
-        for row in rows:
-            if row['tr_id'] and row['cbt_score'] > 0:
-                TermResult.objects.filter(id=row['tr_id']).update(
-                    exam_score=row['cbt_score'],
-                    raw_exam_score=row['cbt_score'],
-                )
-                imported += 1
-        # Recalculate totals for affected records
-        for tr in TermResult.objects.filter(id__in=[r['tr_id'] for r in rows if r['tr_id']]):
+        new_scores = {r['tr_id']: r['cbt_score'] for r in rows if r['tr_id'] and r['cbt_score'] > 0}
+        # Save each row normally, so totals are recalculated and the change is in the audit trail
+        for tr in TermResult.objects.filter(id__in=list(new_scores)):
+            tr.exam_score = tr.raw_exam_score = new_scores[tr.id]
             tr.save()
+            imported += 1
         messages.success(request, f'Imported CBT scores for {imported} student(s). Totals recalculated.')
         return redirect(
             f"{request.path}?class={selected_class}"

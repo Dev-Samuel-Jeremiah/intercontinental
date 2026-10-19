@@ -8,6 +8,7 @@ media and security.txt.
 """
 from datetime import timedelta
 
+from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -719,3 +720,42 @@ def security_txt(request):
         lines.insert(0, f'Contact: mailto:{contact}')
     lines += [f'Expires: {expires}', f'Policy: {site}/security/disclosure/', 'Preferred-Languages: en']
     return HttpResponse('\n'.join(lines) + '\n', content_type='text/plain')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Platform: backups and system health
+# ─────────────────────────────────────────────────────────────────────────────
+
+@admin_only
+def platform_page(request):
+    from . import platform
+    if request.method == 'POST' and request.POST.get('op') == 'backup':
+        try:
+            platform.start_manual(request.user)
+            messages.success(request, 'Backup started — it takes a few seconds to a minute. Refresh to see it below.')
+        except platform.PlatformError as problem:
+            messages.error(request, str(problem))
+        return redirect('security:platform')
+    checks = platform.health(request.tenant)
+    return render(request, 'security/platform.html', {
+        'checks': checks, 'counts': platform.summary(checks), 'backups': platform.backups(),
+        'last': platform.last_good(), 'fresh': not platform.backup_due(), 'running': platform.running(), 'keep_days': django_settings.BACKUP_KEEP_DAYS,
+        'can_download': request.user.is_superuser, 'auto': getattr(django_settings, 'AUTO_BACKUP', True),
+        'offsite': bool(getattr(django_settings, 'BACKUP_OFFSITE_DIR', '') or getattr(django_settings, 'BACKUP_OFFSITE_COMMAND', '')),
+    })
+
+
+@admin_only
+def backup_download(request, name):
+    """The whole database — superusers only, and every download is in the audit trail."""
+    from django.http import FileResponse
+    from . import platform
+    if not request.user.is_superuser:
+        return _deny(request)
+    try:
+        path = platform.backup_path(name)
+    except platform.PlatformError as problem:
+        messages.error(request, str(problem))
+        return redirect('security:platform')
+    svc.log_event('EXPORT', f'Backup file downloaded: {name}', request=request)
+    return FileResponse(open(path, 'rb'), as_attachment=True, filename=name, content_type='application/gzip')

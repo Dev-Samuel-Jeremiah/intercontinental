@@ -55,9 +55,11 @@ def inventory_permission(view_func):
         except Exception:
             pass  # fallback to staff check
 
-        # No whitelist — any staff_user can access
-        if getattr(request.user, 'is_staff_user', False) or request.user.is_staff:
+        # No email list — administrators and anyone given the store switch on the Roles page
+        from security.access import allowed, refused
+        if allowed(request.user, 'can_access_inventory'):
             return view_func(request, *args, **kwargs)
+        refused(request, 'can_access_inventory')
 
         return render(request, 'inventory/403.html', {
             'reason': 'You do not have permission to access the Inventory module.'

@@ -109,6 +109,7 @@ MIDDLEWARE = [
     'security.middleware.LoginThrottleMiddleware',
     'security.middleware.SecurityGateMiddleware',
     'security.middleware.SecurityHeadersMiddleware',
+    'security.middleware.PlatformHeartbeatMiddleware',
 ]
 
 ROOT_URLCONF = 'lms_project.tenant_urls'
@@ -329,6 +330,12 @@ MEDIA_ROOT = Path(config('MEDIA_ROOT', default=str(BASE_DIR / 'mediafiles')))
 # Where backup_database writes database snapshots (keep a copy off the server too)
 BACKUP_DIR = Path(config('BACKUP_DIR', default=str(BASE_DIR / 'backups')))
 BACKUP_KEEP_DAYS = config('BACKUP_KEEP_DAYS', default=14, cast=int)
+# Copy each backup off the server: a mounted drive/folder, and/or a command such as
+# "rclone copy {file} gdrive:school-backups" ({file} is replaced by the backup's path).
+BACKUP_OFFSITE_DIR = config('BACKUP_OFFSITE_DIR', default='')
+BACKUP_OFFSITE_COMMAND = config('BACKUP_OFFSITE_COMMAND', default='')
+# If the daily timer is missed, the site starts a backup itself once the last good one is a day old.
+AUTO_BACKUP = config('AUTO_BACKUP', default=True, cast=bool) and not TESTING
 # Files that must never be reachable by URL — student documents such as birth
 # certificates and medical reports. Served only through permission-checked views.
 PRIVATE_MEDIA_ROOT = Path(config('PRIVATE_MEDIA_ROOT', default=str(BASE_DIR / 'private_media')))

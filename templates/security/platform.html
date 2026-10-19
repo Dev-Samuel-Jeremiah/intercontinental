@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Platform & backups{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Platform &amp; <em>backups</em></h1>
+  <p class="fin-sub">Daily, integrity-checked backups of all the school's data, and a health check of the things that keep the system reliable and safe.</p>
+</div>
+<form method="post">{% csrf_token %}<input type="hidden" name="op" value="backup">
+  <button class="fin-btn fin-btn-gold" type="submit" {% if running %}disabled{% endif %}><i class="bi bi-cloud-arrow-up"></i> {% if running %}Backup running…{% else %}Back up now{% endif %}</button></form></div>
+{% include "security/_nav.html" %}
+<style>
+  .pf-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1.1rem;align-items:center;padding:1.2rem 1.3rem}
+  .pf-hero .ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;font-size:1.8rem}
+  .pf-hero .ic.ok{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+  .pf-hero .ic.bad{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
+  .pf-hero h3{margin:0;color:var(--white);font-size:1.15rem}
+  .pf-hero p{margin:.25rem 0 0;color:var(--slate2);font-size:.86rem}
+  .pf-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:.7rem;padding:1rem 1.2rem}
+  .pf-check{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.7rem;padding:.8rem .9rem;border-radius:13px;border:1px solid var(--rim2);background:rgba(0,0,0,.14)}
+  .pf-check i{font-size:1.15rem;margin-top:.05rem}
+  .pf-check.ok i{color:var(--green)} .pf-check.warn i{color:var(--amber)} .pf-check.bad i{color:var(--red)}
+  .pf-check.bad{border-color:var(--red-border)} .pf-check.warn{border-color:var(--amber-border)}
+  .pf-check b{color:var(--white);font-size:.88rem;display:block}
+  .pf-check span{font-size:.8rem;color:var(--slate2)}
+  .pf-check em{display:block;font-style:normal;font-size:.76rem;color:var(--champagne-lt);margin-top:.25rem}
+</style>
+<div class="panel"><div class="pf-hero">
+  {% if last %}<span class="ic {% if fresh %}ok{% else %}bad{% endif %}"><i class="bi bi-{% if fresh %}shield-check{% else %}exclamation-octagon{% endif %}"></i></span>
+  <div><h3>Last good backup: {{ last.started_at|date:"l j F Y, H:i" }} <span class="hint">({{ last.started_at|timesince }} ago)</span></h3>
+    <p>{{ last.size|filesizeformat }} · integrity check {{ last.integrity }} · {% if last.offsite and not last.offsite|slice:":6" == "FAILED" %}{{ last.offsite }}{% else %}kept on this server only{% endif %} · backups are kept {{ keep_days }} days{% if auto %} · the site starts one itself if a day is missed{% endif %}.</p></div>
+  {% else %}<span class="ic bad"><i class="bi bi-exclamation-octagon"></i></span>
+  <div><h3>No backup has been made yet</h3><p>Press <b>Back up now</b>, then set up the daily backup timer on the server (deploy/DEPLOY.md, step 9).</p></div>{% endif %}
+</div></div>
+
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-heart-pulse"></i> System health</h3>
+  <span class="hint">{{ counts.ok }} fine{% if counts.warn %} · <span style="color:var(--amber)">{{ counts.warn }} to look at</span>{% endif %}{% if counts.bad %} · <span style="color:var(--red)">{{ counts.bad }} need action</span>{% endif %}</span></div>
+  <div class="pf-checks">{% for c in checks %}<div class="pf-check {{ c.level }}"><i class="bi bi-{% if c.level == 'ok' %}check-circle-fill{% elif c.level == 'warn' %}exclamation-triangle-fill{% else %}x-octagon-fill{% endif %}"></i>
+    <div><b>{{ c.name }}</b><span>{{ c.detail }}</span>{% if c.fix %}<em>{{ c.fix }}</em>{% endif %}</div></div>{% endfor %}</div>
+</div>
+
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-hdd-stack"></i> Backup history</h3><span class="hint">Latest {{ backups|length }}</span></div>
+  {% if backups %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Started</th><th>What</th><th>How</th><th>Size</th><th>Checks</th><th>Off-site</th><th></th></tr></thead><tbody>
+  {% for b in backups %}<tr><td style="white-space:nowrap">{{ b.started_at|date:"j M Y, H:i" }}{% if b.seconds %}<div class="hint">{{ b.seconds|floatformat:0 }} s</div>{% endif %}</td>
+    <td>{{ b.get_kind_display }}</td><td class="hint">{{ b.get_trigger_display }}{% if b.started_by %} · {{ b.started_by.username }}{% endif %}</td>
+    <td>{% if b.size %}{{ b.size|filesizeformat }}{% else %}—{% endif %}</td>
+    <td>{% if not b.finished_at %}<span class="chip amber">Running</span>{% elif b.ok %}<span class="chip green">OK</span>{% else %}<span class="chip red" title="{{ b.error }}">Failed</span><div class="hint">{{ b.error|truncatechars:80 }}</div>{% endif %}</td>
+    <td class="hint">{{ b.offsite|default:"—"|truncatechars:50 }}</td>
+    <td>{% if can_download and b.ok and b.file_name %}<a class="fin-btn fin-btn-sm" href="{% url 'security:backup_download' b.file_name %}"><i class="bi bi-download"></i></a>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% if can_download %}<p class="hint" style="padding:.6rem 1rem;margin:0"><i class="bi bi-lock"></i> A backup file contains everything in the system. Store downloads safely; each download is recorded in the audit trail.</p>{% endif %}
+  {% else %}<div class="empty"><i class="bi bi-hdd"></i><p>No backups yet.</p></div>{% endif %}
+</div>
+{% endblock %}

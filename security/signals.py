@@ -141,7 +141,10 @@ def staff_after(sender, instance, created, **kwargs):
 
 AUDITED_DELETES = ['users.Student', 'users.Staff', 'users.Guardian', 'users.StudentDocument', 'finance.Payment',
                    'finance.Invoice', 'finance.FeePayment', 'finance.Expense', 'admissions.Application',
-                   'welfare.MedicalProfile', 'welfare.Concern', 'welfare.CounsellingNote', 'results.HeadTeacherSignature']
+                   'welfare.MedicalProfile', 'welfare.Concern', 'welfare.CounsellingNote', 'results.HeadTeacherSignature',
+                   'results.TermResult', 'results.ClassApproval', 'finance.FeeStructure', 'finance.FeeDiscount',
+                   'finance.Refund', 'cbt.Exam', 'cbt.Question', 'labs.Lab', 'labs.Breakage', 'moments.Moment',
+                   'academics.Term', 'academics.AcademicSession']
 
 
 # Schools being deleted right now. Their rows go with them (audit trail included),
