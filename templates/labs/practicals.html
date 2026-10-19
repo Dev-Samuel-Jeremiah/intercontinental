@@ -1,0 +1,18 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Practicals{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:home' %}" style="color:inherit;text-decoration:none">Labs &amp; practicals</a></div>
+  <h1 class="fin-title">Practicals <em>library</em></h1>
+  <p class="fin-sub">Experiments with their apparatus, hazards and marking scheme. Plan one for a class to book the lab, take the register and record marks.</p>
+</div><div style="display:flex;gap:.4rem"><a class="fin-btn" href="{% url 'labs:readiness' %}"><i class="bi bi-clipboard2-check"></i> Readiness</a><a class="fin-btn fin-btn-gold" href="{% url 'labs:practical_new' %}"><i class="bi bi-plus-lg"></i> New practical</a></div></div>
+<form method="get" class="panel"><div class="panel-b" style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+  <select name="subject" onchange="this.form.submit()" style="padding:.5rem .7rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit"><option value="">All subjects</option>{% for s in subjects %}<option value="{{ s.id }}" {% if subject == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+</div></form>
+<div class="panel">{% if practicals %}<table class="tbl"><thead><tr><th>Practical</th><th>Subject</th><th>Kind</th><th>Marks</th><th>Done</th><th></th></tr></thead><tbody>
+  {% for p in practicals %}<tr><td class="name"><a href="{% url 'labs:practical' p.id %}" style="color:inherit">{{ p.title }}</a><div class="hint">{% if p.level %}{{ p.level }} · {% endif %}{{ p.lab.name|default:"Any lab" }} · {{ p.duration_minutes }} min</div></td>
+    <td>{{ p.subject.name }}</td><td><span class="chip {% if p.kind == 'MOCK' %}gold{% elif p.kind == 'ASSESSED' %}green{% endif %}">{{ p.get_kind_display }}</span></td><td>{{ p.max_score }}</td><td>{{ p.done }}×</td>
+    <td><a class="fin-btn fin-btn-sm" href="{% url 'labs:practical' p.id %}">Open</a></td></tr>{% endfor %}</tbody></table>
+  {% else %}<div class="empty"><i class="bi bi-journal-plus"></i><p>No practicals yet. Add the experiments your classes do — titration, Hooke's law, food tests…</p><a class="fin-btn fin-btn-gold" href="{% url 'labs:practical_new' %}">New practical</a></div>{% endif %}</div>
+{% endblock %}

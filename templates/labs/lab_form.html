@@ -1,0 +1,32 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if lab %}Edit {{ lab.name }}{% else %}Add a lab{% endif %}{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:home' %}" style="color:inherit;text-decoration:none">Labs &amp; practicals</a></div>
+  <h1 class="fin-title">{% if lab %}{{ lab.name }}{% else %}Add a <em>lab</em>{% endif %}</h1>
+  <p class="fin-sub">The lab is also added to the timetable's rooms (so bookings never clash with lessons) and to Facilities (for chemicals and repairs).</p>
+</div></div>
+<form method="post" class="fin-grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)">{% csrf_token %}
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-building"></i> The room</h3></div><div class="panel-b fin-form">
+    <div class="row2"><div><label for="n">Name</label><input id="n" name="name" required maxlength="80" value="{{ lab.name }}" placeholder="e.g. Chemistry Lab 1"></div>
+      <div><label for="k">Kind</label><select id="k" name="kind">{% for k, l in kinds %}<option value="{{ k }}" {% if lab.kind == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+    <div class="row3"><div><label for="b">Building</label><input id="b" name="building" maxlength="80" value="{{ lab.building }}" placeholder="e.g. Science block"></div>
+      <div><label for="c">Students at once</label><input id="c" type="number" name="capacity" min="1" max="500" value="{{ lab.capacity|default:30 }}"></div>
+      <div><label for="w">Benches / work stations</label><input id="w" type="number" name="workstations" min="0" max="500" value="{{ lab.workstations|default:0 }}"></div></div>
+    <div class="row2"><div><label for="ic">Head of lab</label><select id="ic" name="in_charge"><option value="">— Nobody yet —</option>{% for s in staff %}<option value="{{ s.id }}" {% if lab.in_charge_id == s.id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select></div>
+      <div><label for="ie">Safety inspection every (days)</label><input id="ie" type="number" name="inspect_every_days" min="7" max="365" value="{{ lab.inspect_every_days|default:30 }}"></div></div>
+    <div><label>Lab technicians / attendants</label><div class="lb-multi">{% for s in staff %}<label><input type="checkbox" name="technicians" value="{{ s.id }}" {% if s.id in chosen_techs %}checked{% endif %}> {{ s.full_name }} <span class="hint">{{ s.get_role_display }}</span></label>{% endfor %}</div></div>
+    <div><label>Subjects taught here</label><div class="lb-multi">{% for s in subjects %}<label><input type="checkbox" name="subjects" value="{{ s.id }}" {% if s.id in chosen_subjects %}checked{% endif %}> {{ s.name }}</label>{% endfor %}</div></div>
+    <label style="display:flex;gap:.5rem;align-items:center;color:var(--white)"><input type="checkbox" name="active" style="width:auto" {% if not lab or lab.active %}checked{% endif %}> In use</label>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-shield-plus"></i> Safety information</h3></div><div class="panel-b fin-form">
+    <div><label for="r">Lab rules</label><textarea id="r" name="safety_rules" rows="7" placeholder="No eating or drinking.&#10;Wear goggles and a lab coat at all times.&#10;Tie back long hair.&#10;Report every breakage and spill at once.&#10;Never taste or smell chemicals directly.">{{ lab.safety_rules }}</textarea></div>
+    <div class="row2"><div><label for="fa">First aid kit</label><input id="fa" name="first_aid_kit" maxlength="160" value="{{ lab.first_aid_kit }}" placeholder="Where it is kept"></div>
+      <div><label for="fe">Fire extinguisher</label><input id="fe" name="fire_extinguisher" maxlength="160" value="{{ lab.fire_extinguisher }}" placeholder="Where, and the type (CO₂, powder…)"></div></div>
+    <div class="row2"><div><label for="es">Gas / power / water shut-off</label><input id="es" name="emergency_shutoff" maxlength="160" value="{{ lab.emergency_shutoff }}"></div>
+      <div><label for="ew">Eyewash / clean water</label><input id="ew" name="eyewash" maxlength="160" value="{{ lab.eyewash }}"></div></div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end"><a class="fin-btn" href="{% if lab %}{% url 'labs:lab' lab.id %}{% else %}{% url 'labs:home' %}{% endif %}">Cancel</a><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save lab</button></div>
+  </div></div>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ p.title }}{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<style>@media print{.no-print,.sidebar,header,nav,.topbar{display:none!important}.panel{border:0!important;background:none!important}.lb-pre,.panel *{color:#000!important}body{background:#fff!important}}</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow no-print"><a href="{% url 'labs:practicals' %}" style="color:inherit;text-decoration:none">Practicals library</a></div>
+  <h1 class="fin-title">{{ p.title }}</h1>
+  <p class="fin-sub">{{ p.subject.name }}{% if p.level %} · {{ p.level }}{% endif %} · {{ p.get_kind_display }} · {{ p.duration_minutes }} minutes · marked out of {{ p.max_score }}</p>
+</div><div class="no-print" style="display:flex;gap:.4rem"><button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print sheet</button><a class="fin-btn" href="{% url 'labs:practical_edit' p.id %}"><i class="bi bi-pencil"></i> Edit</a></div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-b">
+    {% if p.hazards %}<div class="lb-warn lb-danger"><i class="bi bi-exclamation-triangle-fill"></i><span><b>Hazards and precautions.</b> <span class="lb-pre" style="color:inherit">{{ p.hazards }}</span></span></div>{% endif %}
+    {% if p.aim %}<h4 class="hint" style="margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Aim</h4><div class="lb-pre">{{ p.aim }}</div>{% endif %}
+    {% if p.apparatus_list %}<h4 class="hint" style="margin:1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Apparatus</h4><ul style="margin:0;padding-left:1.2rem;color:var(--white);line-height:1.7">{% for a in p.apparatus_list %}<li>{{ a }}</li>{% endfor %}</ul>{% endif %}
+    {% if chemicals %}<h4 class="hint" style="margin:1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Chemicals (per group)</h4><ul style="margin:0;padding-left:1.2rem;color:var(--white);line-height:1.7">{% for c in chemicals %}<li>{{ c.chemical.name }} — {{ c.per_group|floatformat:"-2" }} {{ c.chemical.unit }}</li>{% endfor %}</ul>{% endif %}
+    {% if p.procedure %}<h4 class="hint" style="margin:1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Procedure</h4><div class="lb-pre">{{ p.procedure }}</div>{% endif %}
+    {% if p.rubric %}<h4 class="hint" style="margin:1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Marking scheme</h4><table class="tbl"><tbody>{% for r in p.rubric %}<tr><td class="name">{{ r.criterion }}</td><td>{{ r.max }}</td></tr>{% endfor %}<tr><td class="name">Total</td><td><b>{{ p.max_score }}</b></td></tr></tbody></table>{% endif %}
+  </div></div>
+  <div class="no-print">
+    <form method="post" class="panel">{% csrf_token %}<div class="panel-h"><h3><i class="bi bi-calendar-plus"></i> Plan for a class</h3></div><div class="panel-b fin-form">
+      <div class="row2"><div><label>Class</label><select name="school_class" required>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}" required></div></div>
+      <div class="row2"><div><label>Lab</label><select name="lab"><option value="">No booking</option>{% for l in labs %}<option value="{{ l.id }}" {% if p.lab_id == l.id %}selected{% endif %}>{{ l.name }}</option>{% endfor %}</select></div><div><label>Working groups</label><input type="number" name="groups" min="1" max="100" value="8"></div></div>
+      <div class="row2"><div><label>From</label><input type="time" name="start_time"></div><div><label>To</label><input type="time" name="end_time"></div></div>
+      <span class="hint">Give a time to book the lab as well (clashes are checked). The register is ready straight away.</span>
+      <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Plan practical</button></div></form>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Classes</h3></div>
+      {% if sessions %}<table class="tbl"><tbody>{% for s in sessions %}<tr><td>{{ s.date|date:"j M Y" }}</td><td class="name"><a href="{% url 'labs:session' s.id %}" style="color:inherit">{{ s.school_class.name }}</a><div class="hint">{{ s.lab.name|default:"" }}</div></td>
+        <td><span class="chip {% if s.status == 'DONE' %}green{% elif s.status == 'CANCELLED' %}red{% endif %}">{{ s.get_status_display }}</span></td></tr>{% endfor %}</tbody></table>
+      {% else %}<div class="panel-b"><p class="hint" style="margin:0">Not done by any class yet.</p></div>{% endif %}</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ lab.name }}{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div style="display:flex;gap:1rem;align-items:center">
+  <span class="lb-ic" style="width:60px;height:60px;font-size:1.7rem;border-radius:18px"><i class="bi bi-{{ lab.icon }}"></i></span>
+  <div><div class="fin-eyebrow"><a href="{% url 'labs:home' %}" style="color:inherit;text-decoration:none">Labs &amp; practicals</a></div>
+    <h1 class="fin-title" style="margin:0">{{ lab.name }}</h1>
+    <p class="fin-sub" style="margin:.2rem 0 0">{{ lab.get_kind_display }}{% if lab.building %} · {{ lab.building }}{% endif %} · {{ lab.capacity }} students{% if lab.workstations %} · {{ lab.workstations }} benches{% endif %}{% if lab.in_charge %} · Head: {{ lab.in_charge.full_name }}{% endif %}{% if not lab.active %} · <b style="color:var(--red)">not in use</b>{% endif %}</p></div>
+</div>{% if manage %}<a class="fin-btn" href="{% url 'labs:lab_edit' lab.id %}"><i class="bi bi-gear"></i> Lab settings</a>{% endif %}</div>
+
+{% if st.inspection.overdue %}<div class="lb-warn lb-danger"><i class="bi bi-shield-exclamation"></i><span>{% if st.inspection.last %}The safety inspection was due on {{ st.inspection.due|date:"j M Y" }}.{% else %}This lab has never had a safety inspection recorded.{% endif %} <a href="?tab=safety" style="color:inherit;font-weight:700">Record one now</a>.</span></div>
+{% elif st.inspection.failed %}<div class="lb-warn"><i class="bi bi-shield-exclamation"></i><span>The last inspection ({{ st.inspection.last.date|date:"j M" }}) found problems: {% for i in st.inspection.last.failed_items %}{{ i.item }}{% if not forloop.last %}; {% endif %}{% endfor %}.</span></div>{% endif %}
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Equipment value</small><b>₦{{ st.value|floatformat:"0g" }}</b><span class="hint">{{ st.items }} working item{{ st.items|pluralize }}</span></div>
+  <div class="fin-stat"><small>Broken / awaiting repair</small><b style="{% if st.broken %}color:var(--amber){% endif %}">{{ st.broken }}</b></div>
+  <div class="fin-stat"><small>Chemicals</small><b>{{ st.chem_count }}</b><span class="hint">{{ st.chem_low|length }} low · {{ st.chem_expiring|length }} expiring</span></div>
+  <div class="fin-stat"><small>Unpaid breakage charges</small><b>₦{{ st.unpaid|floatformat:"2g" }}</b></div>
+  <div class="fin-stat"><small>Open incidents</small><b style="{% if st.incidents %}color:var(--red){% endif %}">{{ st.incidents }}</b></div>
+</div>
+
+<nav class="lb-tabs">
+  <a href="?tab=schedule" class="{% if tab == 'schedule' %}on{% endif %}"><i class="bi bi-calendar-week"></i> Schedule</a>
+  <a href="?tab=equipment" class="{% if tab == 'equipment' %}on{% endif %}"><i class="bi bi-tools"></i> Equipment{% if st.equip_alerts %} <span class="n">{{ st.equip_alerts }}</span>{% endif %}</a>
+  <a href="?tab=chemicals" class="{% if tab == 'chemicals' %}on{% endif %}"><i class="bi bi-droplet-half"></i> Chemicals{% if st.chem_alerts %} <span class="n">{{ st.chem_alerts }}</span>{% endif %}</a>
+  <a href="?tab=breakages" class="{% if tab == 'breakages' %}on{% endif %}"><i class="bi bi-hammer"></i> Breakages</a>
+  <a href="?tab=safety" class="{% if tab == 'safety' %}on{% endif %}"><i class="bi bi-shield-check"></i> Safety{% if st.incidents %} <span class="n">{{ st.incidents }}</span>{% endif %}</a>
+  <a href="?tab=practicals" class="{% if tab == 'practicals' %}on{% endif %}"><i class="bi bi-journal-check"></i> Practicals</a>
+</nav>
+
+{% if tab == 'schedule' %}
+<details class="lb-add" {% if not week.0.items and not week.1.items %}open{% endif %}><summary><i class="bi bi-calendar-plus"></i> Book this lab</summary>
+  <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="book"><input type="hidden" name="tab" value="schedule">
+    <div class="row4"><div><label>Date</label><input type="date" name="date" min="{{ today|date:'Y-m-d' }}" value="{{ today|date:'Y-m-d' }}" required></div>
+      <div><label>From</label><input type="time" name="start_time" required value="10:00"></div><div><label>To</label><input type="time" name="end_time" required value="11:20"></div>
+      <div><label>Repeat weekly for</label><select name="repeat_weeks">{% for n in "123456789"|make_list %}<option value="{{ n }}">{{ n }} week{{ n|pluralize }}</option>{% endfor %}<option value="12">12 weeks</option><option value="15">15 weeks</option></select></div></div>
+    <div class="row4"><div><label>Class</label><select name="school_class"><option value="">—</option>{% for c in classes %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+      <div><label>Subject</label><select name="subject"><option value="">—</option>{% for s in subjects %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %}</select></div>
+      <div><label>Practical</label><select name="practical"><option value="">—</option>{% for p in practicals %}<option value="{{ p.id }}">{{ p.subject.name }}: {{ p.title|truncatechars:40 }}</option>{% endfor %}</select></div>
+      <div><label>Students</label><input type="number" name="students" min="1" max="{{ lab.capacity }}" placeholder="≤ {{ lab.capacity }}"></div></div>
+    <div><label>For the technician — what to set out</label><textarea name="prep_notes" rows="2" placeholder="e.g. 8 sets of burette, pipette and conical flask; 0.1M HCl and NaOH made up"></textarea></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap"><span class="hint">Clashes with timetabled lessons and other bookings are checked automatically.</span><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Book</button></div>
+  </form></details>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem;gap:.5rem;flex-wrap:wrap">
+  <a class="fin-btn fin-btn-sm" href="?tab=schedule&week={{ prev_week|date:'Y-m-d' }}"><i class="bi bi-chevron-left"></i> Previous week</a>
+  <b style="color:var(--white)">Week of {{ monday|date:"j F Y" }}</b>
+  <a class="fin-btn fin-btn-sm" href="?tab=schedule&week={{ next_week|date:'Y-m-d' }}">Next week <i class="bi bi-chevron-right"></i></a></div>
+<div class="lb-week">{% for d in week %}<div class="lb-day{% if d.today %} today{% endif %}"><h4><span>{{ d.date|date:"D" }}</span><span>{{ d.date|date:"j M" }}</span></h4><div class="items">
+  {% for i in d.items %}<div class="lb-slot {{ i.kind }}"><div class="t">{{ i.start|time:"H:i" }}–{{ i.end|time:"H:i" }}</div><div>{{ i.title }}</div>
+    {% if i.who %}<div class="w">{{ i.who }}</div>{% endif %}
+    {% if i.lb %}{% if i.lb.prep_notes %}<div class="w" title="{{ i.lb.prep_notes }}"><i class="bi bi-box-seam"></i> {{ i.lb.prep_notes|truncatechars:60 }}</div>{% endif %}
+      <div style="margin-top:.25rem;display:flex;gap:.6rem;flex-wrap:wrap">
+        {% if i.lb.prepared %}<span class="chip green" style="font-size:.62rem">Set up</span>{% endif %}
+        {% if manage %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="prepared"><input type="hidden" name="booking" value="{{ i.lb.id }}"><input type="hidden" name="tab" value="schedule"><button type="submit">{% if i.lb.prepared %}Not set up{% else %}Mark set up{% endif %}</button></form>{% endif %}
+        {% if i.lb.session %}<a href="{% url 'labs:session' i.lb.session.id %}" style="color:var(--champagne-lt);font-size:.7rem">Register</a>{% endif %}
+        <form method="post" onsubmit="return confirm('Cancel this booking?')">{% csrf_token %}<input type="hidden" name="action" value="cancel_booking"><input type="hidden" name="booking" value="{{ i.lb.id }}"><input type="hidden" name="tab" value="schedule"><button type="submit">Cancel</button></form>
+      </div>{% endif %}</div>
+  {% empty %}<div class="lb-free">Free all day</div>{% endfor %}</div></div>{% endfor %}</div>
+<p class="hint" style="margin-top:.6rem"><span style="color:#60a5fa">■</span> Timetabled lesson &nbsp; <span style="color:var(--champagne)">■</span> Booking</p>
+<div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-life-preserver"></i> Safety information</h3></div><div class="panel-b">
+  <div class="lb-info"><div><i class="bi bi-bandaid"></i><b>First aid kit</b>{{ lab.first_aid_kit|default:"Not recorded" }}</div>
+    <div><i class="bi bi-fire"></i><b>Fire extinguisher</b>{{ lab.fire_extinguisher|default:"Not recorded" }}</div>
+    <div><i class="bi bi-power"></i><b>Shut-off points</b>{{ lab.emergency_shutoff|default:"Not recorded" }}</div>
+    <div><i class="bi bi-eye"></i><b>Eyewash</b>{{ lab.eyewash|default:"Not recorded" }}</div></div>
+  {% if lab.safety_rules %}<div class="lb-pre" style="margin-top:.8rem">{{ lab.safety_rules }}</div>{% endif %}</div></div>
+
+{% elif tab == 'equipment' %}
+{% if manage %}<details class="lb-add" {% if not equipment %}open{% endif %}><summary><i class="bi bi-plus-circle"></i> Add equipment</summary>
+  <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="equipment"><input type="hidden" name="tab" value="equipment">
+    <div class="row4"><div style="grid-column:span 2"><label>Name</label><input name="name" required maxlength="120" placeholder="e.g. Burette, 50 ml"></div>
+      <div><label>Category</label><select name="category">{% for k, l in categories %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <div><label>Working quantity</label><input type="number" name="quantity" min="0" value="1"></div></div>
+    <div class="row4"><div><label>Cost of one (₦)</label><input name="unit_cost" inputmode="decimal" placeholder="e.g. 4500"></div>
+      <div><label>Warn below</label><input type="number" name="min_quantity" min="0" value="0"></div>
+      <div><label>Where it is kept</label><input name="location" maxlength="120" placeholder="Cupboard B"></div>
+      <div><label>Service every (days)</label><input type="number" name="service_every_days" min="0" value="0"></div></div>
+    <div class="row2"><div><label>Serial / asset tag</label><input name="serial" maxlength="80"></div><div><label>Notes</label><input name="notes" maxlength="255"></div></div>
+    <div style="text-align:right"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-plus-lg"></i> Add</button></div></form></details>{% endif %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-tools"></i> Equipment register</h3><span class="hint">{{ equipment|length }} line{{ equipment|length|pluralize }} · ₦{{ st.value|floatformat:"0g" }}</span></div>
+  {% if equipment %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Item</th><th>Working</th><th>Broken</th><th>Value</th><th>Service</th>{% if manage %}<th>Record</th>{% endif %}</tr></thead><tbody>
+  {% for e in equipment %}<tr><td class="name">{{ e.name }}<div class="hint">{{ e.get_category_display }}{% if e.location %} · {{ e.location }}{% endif %}{% if e.serial %} · {{ e.serial }}{% endif %}</div></td>
+    <td><b style="color:var(--white)">{{ e.quantity }}</b>{% if e.low %} <span class="chip amber">below {{ e.min_quantity }}</span>{% endif %}</td>
+    <td>{% if e.broken %}<span class="chip amber">{{ e.broken }}</span>{% else %}—{% endif %}</td>
+    <td>₦{{ e.value|floatformat:"0g" }}<div class="hint">₦{{ e.unit_cost|floatformat:"0g" }} each</div></td>
+    <td>{% if e.service_every_days %}{% if e.service_due <= today %}<span class="chip red">Due</span>{% else %}{{ e.service_due|date:"j M Y" }}{% endif %}{% else %}—{% endif %}</td>
+    {% if manage %}<td><form method="post" class="lb-inline">{% csrf_token %}<input type="hidden" name="action" value="move"><input type="hidden" name="tab" value="equipment"><input type="hidden" name="equipment" value="{{ e.id }}">
+      <select name="kind" aria-label="What happened">{% for k, l in moves %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select><input type="number" name="quantity" min="0" value="1" aria-label="How many"><input name="note" placeholder="Note" style="width:110px"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div>
+  <p class="hint" style="padding:.6rem 1rem;margin:0">Stock count correction: enter the number of working items you counted. Breakages with a student or a charge go under <a href="?tab=breakages" style="color:var(--champagne-lt)">Breakages</a>.</p>
+  {% else %}<div class="empty"><i class="bi bi-tools"></i><p>No equipment recorded yet.</p></div>{% endif %}</div>
+
+{% elif tab == 'chemicals' %}
+{% if not lab.space %}<div class="lb-warn">Open <a href="{% url 'labs:lab_edit' lab.id %}" style="color:inherit;font-weight:700">Lab settings</a> and save once to link this lab to the chemicals register.</div>{% endif %}
+{% if manage and lab.space %}<details class="lb-add"><summary><i class="bi bi-plus-circle"></i> Add a chemical</summary>
+  <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="chemical"><input type="hidden" name="tab" value="chemicals">
+    <div class="row4"><div style="grid-column:span 2"><label>Name</label><input name="name" required maxlength="120" placeholder="e.g. Hydrochloric acid, 2M"></div><div><label>Formula</label><input name="formula" maxlength="60" placeholder="HCl"></div><div><label>Expires</label><input type="date" name="expires_on"></div></div>
+    <div class="row4"><div><label>Quantity in stock</label><input name="quantity" inputmode="decimal" value="0"></div><div><label>Unit</label><input name="unit" value="ml" maxlength="10"></div><div><label>Reorder at</label><input name="reorder_level" inputmode="decimal" value="0"></div><div><label>Stored</label><input name="storage" maxlength="160" placeholder="Acid cabinet, shelf 2"></div></div>
+    <div><label>Hazards</label><div class="lb-inline">{% for k, l in hazards %}<label style="display:flex;gap:.3rem;align-items:center;font-weight:500;color:var(--white);margin-right:.6rem"><input type="checkbox" name="hazards" value="{{ k }}" style="width:auto"> {{ l }}</label>{% endfor %}</div></div>
+    <div><label>First aid</label><input name="first_aid" maxlength="255" placeholder="e.g. Skin: rinse with plenty of water for 15 minutes"></div>
+    <div style="text-align:right"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-plus-lg"></i> Add</button></div></form></details>{% endif %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-droplet-half"></i> Chemicals in {{ lab.name }}</h3><a class="fin-btn fin-btn-sm" href="{% url 'facilities:chemicals' %}">Full chemicals register</a></div>
+  {% if chemicals %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Chemical</th><th>In stock</th><th>Expires</th><th>Hazards</th>{% if manage %}<th>Record</th>{% endif %}</tr></thead><tbody>
+  {% for c in chemicals %}<tr><td class="name">{{ c.name }}{% if c.formula %} <span class="hint">{{ c.formula }}</span>{% endif %}<div class="hint">{{ c.storage }}</div></td>
+    <td><b style="color:{% if c.reorder_level and c.quantity <= c.reorder_level %}var(--amber){% else %}var(--white){% endif %}">{{ c.quantity|floatformat:"-2" }} {{ c.unit }}</b>{% if c.reorder_level and c.quantity <= c.reorder_level %}<div class="hint">reorder at {{ c.reorder_level|floatformat:"-2" }}</div>{% endif %}</td>
+    <td>{% if c.expires_on %}{% if c.expires_on < today %}<span class="chip red">Expired {{ c.expires_on|date:"j M y" }}</span>{% else %}{{ c.expires_on|date:"j M Y" }}{% endif %}{% else %}—{% endif %}</td>
+    <td>{% for h in c.hazard_labels %}<span class="lb-haz"><i class="bi bi-exclamation-diamond-fill"></i>{{ h }}</span>{% empty %}—{% endfor %}</td>
+    {% if manage %}<td><form method="post" class="lb-inline">{% csrf_token %}<input type="hidden" name="action" value="chemical"><input type="hidden" name="tab" value="chemicals"><input type="hidden" name="chemical" value="{{ c.id }}">
+      <select name="kind" aria-label="What happened"><option value="USE">Used</option><option value="IN">Received</option><option value="DISP">Disposed</option></select><input name="quantity" inputmode="decimal" placeholder="Qty" style="width:64px" aria-label="Quantity"><input name="purpose" placeholder="For what" style="width:110px"><button class="fin-btn fin-btn-sm" type="submit">Save</button></form></td>{% endif %}</tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-droplet"></i><p>No chemicals recorded in this lab.</p></div>{% endif %}</div>
+
+{% elif tab == 'breakages' %}
+<details class="lb-add" {% if not breakages %}open{% endif %}><summary><i class="bi bi-hammer"></i> Record a breakage</summary>
+  <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="breakage"><input type="hidden" name="tab" value="breakages">
+    <div class="row4"><div style="grid-column:span 2"><label>Item from the register</label><select name="equipment"><option value="">— Not in the register —</option>{% for e in equipment %}<option value="{{ e.id }}">{{ e.name }} (₦{{ e.unit_cost|floatformat:"0g" }} each)</option>{% endfor %}</select></div>
+      <div><label>…or describe it</label><input name="item" maxlength="120" placeholder="e.g. Thermometer"></div><div><label>How many</label><input type="number" name="quantity" min="1" value="1"></div></div>
+    <div class="row4"><div style="grid-column:span 2"><label>Student responsible (optional)</label><select name="student"><option value="">— Nobody / not known —</option>{% for s in students %}<option value="{{ s.id }}">{{ s.full_name }}{% if s.class_assigned %} · {{ s.class_assigned.name }}{% endif %}</option>{% endfor %}</select></div>
+      <div><label>Cause</label><select name="cause">{% for k, l in causes %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div></div>
+    <div class="row2"><div><label>What happened</label><input name="description" maxlength="300"></div>
+      <div>{% if manage %}<label>Charge the family (₦)</label><input name="charge" inputmode="decimal" placeholder="0 = no charge"><span class="hint">The family is told and can pay from the family wallet.</span>{% else %}<label>Cost (₦, if not in the register)</label><input name="cost" inputmode="decimal">{% endif %}</div></div>
+    <div style="text-align:right"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Record</button></div></form></details>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-hammer"></i> Breakages</h3></div>
+  {% if breakages %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Date</th><th>Item</th><th>Student</th><th>Cost</th><th>Charge</th><th></th></tr></thead><tbody>
+  {% for b in breakages %}<tr><td>{{ b.date|date:"j M Y" }}</td><td class="name">{{ b.quantity }} × {{ b.item }}<div class="hint">{{ b.get_cause_display }}{% if b.description %} · {{ b.description|truncatechars:60 }}{% endif %}</div></td>
+    <td>{{ b.student.full_name|default:"—" }}</td><td>₦{{ b.cost|floatformat:"2g" }}</td>
+    <td>{% if b.status == 'NONE' %}—{% else %}₦{{ b.charge|floatformat:"2g" }} <span class="chip {% if b.status == 'PAID' %}green{% elif b.status == 'UNPAID' %}amber{% endif %}">{{ b.get_status_display }}</span>{% endif %}</td>
+    <td>{% if manage and b.status == 'UNPAID' %}<form method="post" class="lb-inline">{% csrf_token %}<input type="hidden" name="action" value="settle"><input type="hidden" name="tab" value="breakages"><input type="hidden" name="breakage" value="{{ b.id }}">
+      <button class="fin-btn fin-btn-sm" name="status" value="PAID" type="submit">Paid in cash</button><button class="fin-btn fin-btn-sm" name="status" value="WAIVED" type="submit">Waive</button></form>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-emoji-smile"></i><p>No breakages recorded.</p></div>{% endif %}</div>
+
+{% elif tab == 'safety' %}
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
+  <div>
+    {% if manage %}<details class="lb-add" {% if st.inspection.overdue %}open{% endif %}><summary><i class="bi bi-clipboard2-check"></i> Record a safety inspection</summary>
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="check"><input type="hidden" name="tab" value="safety">
+        <div class="lb-checks">{% for i, item in checklist %}<label><input type="checkbox" name="ok_{{ i }}" checked> <span>{{ item }}</span><input type="text" name="note_{{ i }}" placeholder="Note (if not OK)"></label>{% endfor %}</div>
+        <div class="row2"><div><label>Date</label><input type="date" name="date" value="{{ today|date:'Y-m-d' }}"></div><div><label>Notes</label><input name="notes"></div></div>
+        <div style="text-align:right"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2-all"></i> Save inspection</button></div></form></details>{% endif %}
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard2-check"></i> Inspections</h3><span class="hint">Every {{ lab.inspect_every_days }} days · next due {{ st.inspection.due|date:"j M Y" }}</span></div>
+      {% if checks %}<table class="tbl"><tbody>{% for c in checks %}<tr><td>{{ c.date|date:"j M Y" }}</td><td>{% if c.passed %}<span class="chip green">Passed</span>{% else %}<span class="chip red">{{ c.failed_items|length }} problem{{ c.failed_items|length|pluralize }}</span>{% endif %}</td>
+        <td class="hint">{% for i in c.failed_items %}{{ i.item }}{% if i.note %} ({{ i.note }}){% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}{% if c.notes %} {{ c.notes }}{% endif %}</td></tr>{% endfor %}</tbody></table>
+      {% else %}<div class="panel-b"><p class="hint" style="margin:0">No inspections recorded yet.</p></div>{% endif %}</div>
+  </div>
+  <div>
+    <details class="lb-add"><summary><i class="bi bi-bandaid"></i> Report an incident</summary>
+      <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="incident"><input type="hidden" name="tab" value="safety">
+        <div class="row2"><div><label>What happened</label><select name="kind" required>{% for k, l in incident_kinds %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+          <div><label>How serious</label><select name="severity">{% for k, l in severities %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div></div>
+        <div><label>When</label><input type="datetime-local" name="happened_at"></div>
+        <div><label>Students involved</label><select name="students" multiple size="5">{% for s in students %}<option value="{{ s.id }}">{{ s.full_name }}{% if s.class_assigned %} · {{ s.class_assigned.name }}{% endif %}</option>{% endfor %}</select><span class="hint">Hold Ctrl (or ⌘) to choose several. Their families are told (except for near misses).</span></div>
+        <div><label>Describe it</label><textarea name="description" rows="3" required></textarea></div>
+        <div><label>First aid given</label><textarea name="first_aid" rows="2"></textarea></div>
+        <div style="text-align:right"><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-send"></i> Report</button></div></form></details>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-bandaid"></i> Incidents</h3></div>
+      {% if incidents %}<table class="tbl"><tbody>{% for i in incidents %}<tr><td class="name"><a href="{% url 'labs:incident' i.id %}" style="color:inherit">{{ i.get_kind_display }}</a><div class="hint">{{ i.happened_at|date:"j M Y, H:i" }}</div></td>
+        <td><span class="chip {% if i.severity == 'SERIOUS' %}red{% elif i.severity == 'MODERATE' %}amber{% endif %}">{{ i.severity|title }}</span></td><td>{% if i.closed %}<span class="chip green">Closed</span>{% else %}<span class="chip">Open</span>{% endif %}</td></tr>{% endfor %}</tbody></table>
+      {% else %}<div class="panel-b"><p class="hint" style="margin:0">No incidents. Keep it that way!</p></div>{% endif %}</div>
+  </div>
+</div>
+
+{% else %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-check"></i> Practicals in this lab</h3><a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'labs:practicals' %}"><i class="bi bi-plus-lg"></i> Plan a practical</a></div>
+  {% if recent_sessions %}<table class="tbl"><thead><tr><th>Date</th><th>Practical</th><th>Class</th><th>Status</th></tr></thead><tbody>
+  {% for s in recent_sessions %}<tr><td>{{ s.date|date:"D j M" }}</td><td class="name"><a href="{% url 'labs:session' s.id %}" style="color:inherit">{{ s.practical.title }}</a></td><td>{{ s.school_class.name }}</td>
+    <td><span class="chip {% if s.status == 'DONE' %}green{% elif s.status == 'CANCELLED' %}red{% endif %}">{{ s.get_status_display }}</span></td></tr>{% endfor %}</tbody></table>
+  {% else %}<div class="empty"><i class="bi bi-journal"></i><p>No practicals in this lab yet.</p></div>{% endif %}</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{% if p %}Edit practical{% else %}New practical{% endif %}{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:practicals' %}" style="color:inherit;text-decoration:none">Practicals library</a></div>
+  <h1 class="fin-title">{% if p %}{{ p.title }}{% else %}New <em>practical</em>{% endif %}</h1>
+</div></div>
+<form method="post" class="fin-grid" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">{% csrf_token %}
+  <div class="panel"><div class="panel-b fin-form">
+    <div><label>Title</label><input name="title" required maxlength="160" value="{{ p.title }}" placeholder="e.g. Acid–base titration: HCl against NaOH"></div>
+    <div class="row3"><div><label>Subject</label><select name="subject" required>{% for s in subjects %}<option value="{{ s.id }}" {% if p.subject_id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+      <div><label>Class level</label><input name="level" maxlength="40" value="{{ p.level }}" placeholder="e.g. SS 2"></div>
+      <div><label>Kind</label><select name="kind">{% for k, l in kinds %}<option value="{{ k }}" {% if p.kind == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></div>
+    <div class="row2"><div><label>Usual lab</label><select name="lab"><option value="">Any</option>{% for l in labs %}<option value="{{ l.id }}" {% if p.lab_id == l.id %}selected{% endif %}>{{ l.name }}</option>{% endfor %}</select></div>
+      <div><label>Duration (minutes)</label><input type="number" name="duration_minutes" min="10" max="480" value="{{ p.duration_minutes|default:80 }}"></div></div>
+    <div><label>Aim</label><textarea name="aim" rows="2">{{ p.aim }}</textarea></div>
+    <div><label>Apparatus and materials (one per line)</label><textarea name="apparatus" rows="5" placeholder="Burette, 50 ml&#10;Pipette, 25 ml&#10;Conical flask&#10;Methyl orange indicator">{{ p.apparatus }}</textarea></div>
+    <div><label>Procedure</label><textarea name="procedure" rows="6">{{ p.procedure }}</textarea></div>
+    <div><label>Hazards and precautions (read out before starting)</label><textarea name="hazards" rows="3" placeholder="Wear goggles. Acids are corrosive — rinse spills with water at once.">{{ p.hazards }}</textarea></div>
+  </div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Marking scheme</h3></div><div class="panel-b fin-form">
+      <div><label>One line per thing marked: "What is marked | marks"</label><textarea name="rubric" rows="6">{{ rubric_text }}</textarea>
+        <span class="hint">The total is worked out from these lines. Leave empty to give one overall mark out of the total below.</span></div>
+      <div><label>Total marks (only if there is no scheme above)</label><input type="number" name="max_score" min="1" max="100" value="{{ p.max_score|default:20 }}"></div>
+    </div></div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-droplet-half"></i> Chemicals per group</h3></div><div class="panel-b fin-form">
+      {% for chem_id, qty in chem_rows %}<div class="row2"><select name="chemical"><option value="">—</option>{% for c in all_chemicals %}<option value="{{ c.id }}" {% if chem_id == c.id %}selected{% endif %}>{{ c.name }} ({{ c.unit }})</option>{% endfor %}</select><input name="chemical_qty" inputmode="decimal" value="{{ qty }}" placeholder="Amount per group"></div>{% endfor %}
+      <span class="hint">Deducted from the chemicals register (× the number of groups) when the teacher records the practical. {% if not all_chemicals %}Add chemicals on a lab's Chemicals tab first.{% endif %}</span>
+    </div></div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end"><a class="fin-btn" href="{% if p %}{% url 'labs:practical' p.id %}{% else %}{% url 'labs:practicals' %}{% endif %}">Cancel</a><button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-check2"></i> Save practical</button></div>
+  </div>
+</form>
+{% endblock %}

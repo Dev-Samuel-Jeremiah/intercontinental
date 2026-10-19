@@ -41,6 +41,7 @@ KINDS = {
     'leave': ('Administration', 'calendar2-x-fill'),
     'report': ('Administration', 'file-earmark-text-fill'),
     'moment': ('School Moments', 'images'),
+    'lab': ('Labs & practicals', 'eyedropper'),
 }
 CATEGORIES = sorted({c for c, _ in KINDS.values()})
 

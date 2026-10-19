@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     'notifications.apps.NotificationsConfig',
     'staffchat.apps.StaffchatConfig',
     'moments.apps.MomentsConfig',
+    'labs.apps.LabsConfig',
 ]
 
 MIDDLEWARE = [

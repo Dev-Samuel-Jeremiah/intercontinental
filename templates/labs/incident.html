@@ -1,0 +1,27 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Lab incident{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:lab' inc.lab.id %}?tab=safety" style="color:inherit;text-decoration:none">{{ inc.lab.name }} · Safety</a></div>
+  <h1 class="fin-title">{{ inc.get_kind_display }}</h1>
+  <p class="fin-sub">{{ inc.happened_at|date:"l j F Y, H:i" }} · reported by {{ reporter|default:"—" }}</p>
+</div><div style="display:flex;gap:.4rem"><span class="chip {% if inc.severity == 'SERIOUS' %}red{% elif inc.severity == 'MODERATE' %}amber{% endif %}" style="font-size:.8rem">{{ inc.get_severity_display }}</span>
+  {% if inc.closed %}<span class="chip green" style="font-size:.8rem">Closed</span>{% else %}<span class="chip" style="font-size:.8rem">Open</span>{% endif %}<button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div></div>
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-b">
+    <h4 class="hint" style="margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.6px">What happened</h4><div class="lb-pre">{{ inc.description }}</div>
+    {% if inc.first_aid %}<h4 class="hint" style="margin:1.1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">First aid</h4><div class="lb-pre">{{ inc.first_aid }}</div>{% endif %}
+    {% if inc.action %}<h4 class="hint" style="margin:1.1rem 0 .3rem;text-transform:uppercase;letter-spacing:.6px">Action taken</h4><div class="lb-pre">{{ inc.action }}</div>{% endif %}
+    {% if inc.session %}<p class="hint" style="margin-top:1rem">During <a href="{% url 'labs:session' inc.session.id %}" style="color:var(--champagne-lt)">{{ inc.session.practical.title }}</a>.</p>{% endif %}
+  </div></div>
+  <div>
+    <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Students involved</h3></div><div class="panel-b">
+      {% for s in inc.students.all %}<div style="padding:.3rem 0;color:var(--white)">{{ s.full_name }} <span class="hint">{{ s.class_assigned.name }}</span></div>{% empty %}<p class="hint" style="margin:0">None recorded.</p>{% endfor %}
+      {% if inc.families_told %}<div class="lb-warn lb-good" style="margin:.8rem 0 0"><i class="bi bi-bell"></i> Their families were notified.</div>{% endif %}</div></div>
+    {% if manage and not inc.closed %}<form method="post" class="panel">{% csrf_token %}<div class="panel-h"><h3><i class="bi bi-check2-circle"></i> Close the incident</h3></div><div class="panel-b fin-form">
+      <div><label>What has been done so it does not happen again</label><textarea name="action" rows="4">{{ inc.action }}</textarea></div>
+      <button class="fin-btn fin-btn-gold" type="submit">Close incident</button></div></form>{% endif %}
+  </div>
+</div>
+{% endblock %}

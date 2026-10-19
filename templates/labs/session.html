@@ -1,0 +1,75 @@
+{% extends "dashboard/base.html" %}
+{% block title %}{{ s.practical.title }} · {{ s.school_class.name }}{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<style>
+  .reg td{padding:.45rem .6rem}
+  .reg input,.reg select{padding:.4rem .5rem;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.82rem;width:100%}
+  .reg input.m{width:62px;text-align:center}
+  .reg tr.absent td{opacity:.5}
+  .reg .tot{font-weight:700;color:var(--white);text-align:center}
+  .att{display:inline-flex;border:1px solid var(--rim2);border-radius:9px;overflow:hidden}
+  .att label{position:relative}
+  .att input{position:absolute;opacity:0}
+  .att span{display:block;padding:.3rem .55rem;font-size:.74rem;font-weight:700;color:var(--slate2);cursor:pointer}
+  .att input:checked+span{background:var(--champagne);color:#0a1f44}
+  .att input[value=A]:checked+span{background:var(--red);color:#fff}
+  .att input[value=E]:checked+span{background:#60a5fa;color:#0a1f44}
+</style>
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:practical' s.practical.id %}" style="color:inherit;text-decoration:none">{{ s.practical.subject.name }} practical</a></div>
+  <h1 class="fin-title">{{ s.practical.title }}</h1>
+  <p class="fin-sub">{{ s.school_class.name }} · {{ s.date|date:"l j F Y" }}{% if s.booking %} · {{ s.booking.booking.start_time|time:"H:i" }}–{{ s.booking.booking.end_time|time:"H:i" }}{% endif %}{% if s.lab %} · {{ s.lab.name }}{% endif %}{% if s.teacher %} · {{ s.teacher.full_name }}{% endif %}</p>
+</div><span class="chip {% if s.status == 'DONE' %}green{% elif s.status == 'CANCELLED' %}red{% endif %}" style="font-size:.85rem">{{ s.get_status_display }}</span></div>
+<div class="fin-stats">
+  <div class="fin-stat"><small>Present</small><b>{{ present }} / {{ records|length }}</b></div>
+  <div class="fin-stat"><small>Class average</small><b>{% if average is not None %}{{ average }} / {{ s.practical.max_score }}{% else %}—{% endif %}</b></div>
+  <div class="fin-stat"><small>Groups</small><b>{{ s.groups }}</b></div>
+  <div class="fin-stat"><small>Chemicals</small><b style="font-size:1.1rem">{% if s.chemicals_used %}Deducted{% elif chemicals %}Not yet deducted{% else %}None listed{% endif %}</b></div>
+</div>
+{% if s.practical.hazards %}<div class="lb-warn lb-danger"><i class="bi bi-exclamation-triangle-fill"></i><span><b>Read out before starting:</b> {{ s.practical.hazards }}</span></div>{% endif %}
+{% if not can_mark %}<div class="lb-warn"><i class="bi bi-lock"></i> Only {{ s.teacher.full_name|default:"the teacher running it" }}, the lab staff or an administrator can mark this practical.</div>{% endif %}
+<form method="post">{% csrf_token %}
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-check"></i> Register and marks</h3>
+  {% if can_mark %}<div style="display:flex;gap:.4rem;flex-wrap:wrap"><button type="button" class="fin-btn fin-btn-sm" id="allP">Everyone present</button></div>{% endif %}</div>
+  <div style="overflow-x:auto"><table class="tbl reg"><thead><tr><th>Student</th><th>Attendance</th><th>Bench</th>{% for r in rubric %}<th title="{{ r.criterion }}" style="text-align:center">{{ r.criterion|truncatechars:16 }}<div style="font-weight:400">/{{ r.max }}</div></th>{% empty %}<th style="text-align:center">Mark<div style="font-weight:400">/{{ s.practical.max_score }}</div></th>{% endfor %}{% if rubric %}<th style="text-align:center">Total<div style="font-weight:400">/{{ s.practical.max_score }}</div></th>{% endif %}<th>Remark</th></tr></thead><tbody>
+  {% for r in records %}<tr class="{% if not r.attended %}absent{% endif %}" data-row>
+    <td class="name">{{ r.student.full_name }}</td>
+    <td><span class="att">{% for k, l in statuses %}<label title="{{ l }}"><input type="radio" name="r{{ r.id }}_att" value="{{ k }}" {% if r.attendance == k %}checked{% endif %} {% if not can_mark %}disabled{% endif %}><span>{{ k }}</span></label>{% endfor %}</span></td>
+    <td><input name="r{{ r.id }}_bench" value="{{ r.bench }}" maxlength="10" style="width:60px" {% if not can_mark %}disabled{% endif %}></td>
+    {% for m in r.marks %}<td style="text-align:center"><input class="m crit" name="r{{ r.id }}_c{{ forloop.counter0 }}" value="{% if m is not None %}{{ m|floatformat:'-1' }}{% endif %}" inputmode="decimal" {% if not can_mark %}disabled{% endif %}></td>
+    {% empty %}<td style="text-align:center"><input class="m" name="r{{ r.id }}_score" value="{% if r.score is not None %}{{ r.score|floatformat:'-1' }}{% endif %}" inputmode="decimal" {% if not can_mark %}disabled{% endif %}></td>{% endfor %}
+    {% if rubric %}<td class="tot">{% if r.score is not None %}{{ r.score|floatformat:'-1' }}{% else %}—{% endif %}</td>{% endif %}
+    <td><input name="r{{ r.id }}_remark" value="{{ r.remark }}" maxlength="160" {% if not can_mark %}disabled{% endif %}></td></tr>
+  {% empty %}<tr><td colspan="6" class="hint">No students in {{ s.school_class.name }}.</td></tr>{% endfor %}
+  </tbody></table></div>
+  <div class="panel-b fin-form" style="border-top:1px solid var(--rim)">
+    <label style="display:flex;gap:.55rem;align-items:center;color:var(--white);font-size:.88rem"><input type="checkbox" name="safety_briefing" style="width:auto" {% if s.safety_briefing %}checked{% endif %} {% if not can_mark %}disabled{% endif %}> Hazards and precautions were read out before starting</label>
+    <div><label>Notes</label><textarea name="notes" rows="2" {% if not can_mark %}disabled{% endif %}>{{ s.notes }}</textarea></div>
+    {% if can_mark and s.status != 'CANCELLED' %}<div style="display:flex;gap:.5rem;justify-content:flex-end;flex-wrap:wrap">
+      <button class="fin-btn" type="submit" name="action" value="save"><i class="bi bi-save"></i> Save</button>
+      <button class="fin-btn fin-btn-gold" type="submit" name="finish" value="1"><i class="bi bi-check2-all"></i> Save and mark as done</button></div>{% endif %}
+  </div></div>
+</form>
+{% if can_mark %}<div class="fin-grid" style="grid-template-columns:1fr 1fr">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-droplet-half"></i> Chemicals</h3></div><div class="panel-b">
+    {% if chemicals %}<table class="tbl"><tbody>{% for c in chemicals %}<tr><td class="name">{{ c.chemical.name }}</td><td>{{ c.needed|floatformat:"-2" }} {{ c.chemical.unit }}<div class="hint">{{ c.per_group|floatformat:"-2" }} × {{ s.groups }} groups · {{ c.chemical.quantity|floatformat:"-2" }} in stock</div></td></tr>{% endfor %}</tbody></table>
+      {% if not s.chemicals_used %}<form method="post" style="margin-top:.7rem">{% csrf_token %}<input type="hidden" name="action" value="chemicals"><button class="fin-btn fin-btn-sm" type="submit" onclick="return confirm('Deduct these from the chemicals register?')"><i class="bi bi-dash-circle"></i> Deduct from stock</button></form>
+      {% else %}<p class="hint" style="margin:.6rem 0 0"><i class="bi bi-check2"></i> Deducted from the register.</p>{% endif %}
+    {% else %}<p class="hint" style="margin:0">This practical lists no chemicals.</p>{% endif %}</div></div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-three-dots"></i> Also</h3></div><div class="panel-b" style="display:flex;flex-direction:column;gap:.5rem;align-items:flex-start">
+    {% if s.lab %}<a class="fin-btn fin-btn-sm" href="{% url 'labs:lab' s.lab.id %}?tab=breakages"><i class="bi bi-hammer"></i> Record a breakage</a>
+    <a class="fin-btn fin-btn-sm" href="{% url 'labs:lab' s.lab.id %}?tab=safety"><i class="bi bi-bandaid"></i> Report an incident</a>{% endif %}
+    {% for b in breakages %}<span class="hint">Breakage: {{ b.quantity }} × {{ b.item }}{% if b.student %} ({{ b.student.full_name }}){% endif %}</span>{% endfor %}
+    {% if s.status == 'PLANNED' %}<form method="post" onsubmit="return confirm('Cancel this practical{% if s.booking %} and release the lab booking{% endif %}?')">{% csrf_token %}<input type="hidden" name="action" value="cancel"><button class="fin-btn fin-btn-sm" type="submit" style="color:var(--red)"><i class="bi bi-x-circle"></i> Cancel practical</button></form>{% endif %}
+  </div></div>
+</div>{% endif %}
+<script>
+(function(){
+  var all=document.getElementById('allP');if(all)all.onclick=function(){document.querySelectorAll('input[type=radio][value=P]').forEach(function(r){r.checked=true;r.dispatchEvent(new Event('change',{bubbles:true}));});};
+  document.addEventListener('change',function(e){if(e.target.type!=='radio')return;var tr=e.target.closest('tr');tr.classList.toggle('absent',e.target.value==='A'||e.target.value==='E');});
+  document.addEventListener('input',function(e){if(!e.target.classList.contains('crit'))return;var tr=e.target.closest('tr'),sum=0,any=false;
+    tr.querySelectorAll('.crit').forEach(function(i){var v=parseFloat(i.value);if(!isNaN(v)){sum+=v;any=true;}});var t=tr.querySelector('.tot');if(t)t.textContent=any?(Math.round(sum*10)/10):'—';});
+})();
+</script>
+{% endblock %}

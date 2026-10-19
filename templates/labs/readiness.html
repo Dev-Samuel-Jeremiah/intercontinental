@@ -1,0 +1,39 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Practical readiness{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow"><a href="{% url 'labs:home' %}" style="color:inherit;text-decoration:none">Labs &amp; practicals</a></div>
+  <h1 class="fin-title">WAEC/NECO <em>readiness</em></h1>
+  <p class="fin-sub">Who has done the practicals and how well — so no candidate walks into the external practical unprepared. Students under {{ risk_att }}% attendance or a {{ risk_score }}% average are flagged.</p>
+</div>{% if data %}<button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>{% endif %}</div>
+<form method="get" class="panel"><div class="panel-b" style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap" >
+  <div class="fin-form" style="min-width:180px"><label>Class</label><select name="class" required><option value="">Choose…</option>{% for c in classes %}<option value="{{ c.id }}" {% if school_class.id == c.id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}</select></div>
+  <div class="fin-form" style="min-width:180px"><label>Subject</label><select name="subject" required><option value="">Choose…</option>{% for s in subjects %}<option value="{{ s.id }}" {% if subject.id == s.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}</select></div>
+  <label style="display:flex;gap:.4rem;align-items:center;color:var(--slate2);font-size:.84rem;padding-bottom:.6rem"><input type="checkbox" name="all" value="1" {% if all_terms %}checked{% endif %}> All terms</label>
+  <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-search"></i> Show</button>
+</div></form>
+{% if data %}
+<div class="fin-stats">
+  <div class="fin-stat"><small>Practicals done{% if not all_terms and term %} · {{ term.name }}{% endif %}</small><b>{{ data.sessions|length }}</b></div>
+  <div class="fin-stat"><small>Students</small><b>{{ data.rows|length }}</b></div>
+  <div class="fin-stat"><small>At risk</small><b style="{% if data.at_risk %}color:var(--red){% endif %}">{{ data.at_risk }}</b></div>
+</div>
+<div class="panel"><div class="panel-h"><h3><i class="bi bi-clipboard2-check"></i> {{ subject.name }} — {{ school_class.name }}</h3></div>
+  {% if data.sessions %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Student</th><th>Attended</th><th>Average mark</th><th>Missed</th><th></th></tr></thead><tbody>
+  {% for r in data.rows %}<tr><td class="name">{{ r.student.full_name }}</td>
+    <td>{{ r.attended }} / {{ r.done }}{% if r.attendance is not None %} <span class="chip {% if r.attendance >= risk_att %}green{% else %}red{% endif %}">{{ r.attendance }}%</span>{% endif %}</td>
+    <td>{% if r.average is not None %}<span class="chip {% if r.average >= 70 %}green{% elif r.average >= risk_score %}amber{% else %}red{% endif %}">{{ r.average }}%</span>{% else %}—{% endif %}</td>
+    <td class="hint">{% for m in r.missed %}{{ m.practical.title|truncatechars:30 }} ({{ m.date|date:"j M" }}){% if not forloop.last %}; {% endif %}{% empty %}—{% endfor %}</td>
+    <td>{% if r.at_risk %}<span class="chip red"><i class="bi bi-exclamation-triangle"></i> At risk</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-journal"></i><p>No {{ subject.name }} practicals are marked as done for {{ school_class.name }}{% if not all_terms %} this term{% endif %}.</p></div>{% endif %}
+</div>
+{% if data.sessions and columns and not all_terms %}<form method="post" class="panel" onsubmit="return confirm('Replace that column on the {{ subject.name }} result sheet for {{ school_class.name }} with the practical scores?')">{% csrf_token %}
+  <input type="hidden" name="class" value="{{ school_class.id }}"><input type="hidden" name="subject" value="{{ subject.id }}">
+  <div class="panel-h"><h3><i class="bi bi-box-arrow-right"></i> Send to the result sheet</h3></div><div class="panel-b" style="display:flex;gap:.7rem;align-items:flex-end;flex-wrap:wrap">
+    <div class="fin-form"><label>CA column</label><select name="column">{% for c in columns %}<option value="{{ c.key }}">{{ c.label }} (out of {{ c.max }})</option>{% endfor %}</select></div>
+    <button class="fin-btn fin-btn-gold" type="submit"><i class="bi bi-send"></i> Put practical scores in this column</button>
+    <p class="hint" style="margin:0;flex-basis:100%">Each student's average practical mark this term is scaled to the column's marks. Unexcused absences count as 0; excused ones are left out. Score-entry deadlines and result approvals apply.</p>
+  </div></form>{% endif %}
+{% endif %}
+{% endblock %}

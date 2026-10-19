@@ -1,0 +1,65 @@
+{% include "finance/_fin_styles.html" %}
+<style>
+  .lb-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:1rem;margin-bottom:1.4rem}
+  .lb-card{position:relative;display:flex;flex-direction:column;gap:.8rem;padding:1.1rem 1.2rem;border-radius:18px;border:1px solid var(--rim2);background:var(--surface);text-decoration:none;color:var(--white);transition:.2s}
+  .lb-card:hover{border-color:var(--champagne-border);transform:translateY(-2px);box-shadow:0 14px 30px rgba(0,0,0,.25)}
+  .lb-card.off{opacity:.6}
+  .lb-top{display:flex;gap:.8rem;align-items:center}
+  .lb-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:1.35rem;color:#0a1f44;background:linear-gradient(135deg,var(--champagne-lt),var(--champagne));flex-shrink:0}
+  .lb-top h3{margin:0;font-size:1.05rem}
+  .lb-top .k{font-size:.76rem;color:var(--slate2)}
+  .lb-nums{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+  .lb-nums div{padding:.55rem .6rem;border-radius:11px;background:rgba(0,0,0,.2);text-align:center}
+  .lb-nums b{display:block;font-size:1.05rem;color:var(--white)}
+  .lb-nums small{font-size:.64rem;color:var(--slate);text-transform:uppercase;letter-spacing:.5px}
+  .lb-flags{display:flex;gap:.35rem;flex-wrap:wrap}
+  .lb-today{font-size:.8rem;color:var(--slate2);border-top:1px solid var(--rim);padding-top:.7rem}
+  .lb-today b{color:var(--champagne-lt)}
+  .lb-tabs{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:1rem;border-bottom:1px solid var(--rim);padding-bottom:.6rem}
+  .lb-tabs a{display:inline-flex;gap:.4rem;align-items:center;padding:.5rem .9rem;border-radius:11px;color:var(--slate2);text-decoration:none;font-weight:600;font-size:.84rem}
+  .lb-tabs a.on{background:var(--champagne-dim);color:var(--champagne-lt)}
+  .lb-tabs a .n{min-width:18px;height:18px;padding:0 .3rem;border-radius:99px;background:var(--red);color:#fff;font-size:.64rem;display:inline-grid;place-items:center}
+  .lb-week{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.6rem}
+  .lb-day{border:1px solid var(--rim);border-radius:14px;background:rgba(0,0,0,.14);min-height:200px;display:flex;flex-direction:column}
+  .lb-day.today{border-color:var(--champagne-border)}
+  .lb-day h4{margin:0;padding:.55rem .7rem;font-size:.76rem;color:var(--slate2);border-bottom:1px solid var(--rim);display:flex;justify-content:space-between}
+  .lb-day.today h4{color:var(--champagne-lt)}
+  .lb-day .items{padding:.45rem;display:flex;flex-direction:column;gap:.4rem}
+  .lb-slot{padding:.45rem .55rem;border-radius:10px;font-size:.74rem;line-height:1.35;border-left:3px solid var(--slate)}
+  .lb-slot.lesson{background:rgba(96,165,250,.1);border-left-color:#60a5fa}
+  .lb-slot.booking{background:rgba(244,210,31,.1);border-left-color:var(--champagne)}
+  .lb-slot .t{font-weight:700;color:var(--white)}
+  .lb-slot .w{color:var(--slate2)}
+  .lb-slot form{display:inline}
+  .lb-slot button{border:0;background:none;padding:0;color:var(--slate2);font-size:.7rem;cursor:pointer;text-decoration:underline}
+  .lb-free{font-size:.72rem;color:var(--slate);padding:.3rem .2rem}
+  .lb-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem}
+  .lb-info div{padding:.7rem .8rem;border-radius:12px;background:rgba(0,0,0,.18);font-size:.8rem;color:var(--slate2)}
+  .lb-info b{display:block;color:var(--white);font-size:.84rem;margin-bottom:.15rem}
+  .lb-info i{color:var(--champagne)}
+  details.lb-add{border:1px solid var(--rim2);border-radius:16px;background:var(--surface);margin-bottom:1rem}
+  details.lb-add summary{cursor:pointer;padding:.85rem 1.1rem;font-weight:600;color:var(--white);list-style:none;display:flex;gap:.5rem;align-items:center}
+  details.lb-add summary::-webkit-details-marker{display:none}
+  details.lb-add summary i{color:var(--champagne)}
+  details.lb-add[open] summary{border-bottom:1px solid var(--rim)}
+  details.lb-add .fin-form{padding:1rem 1.1rem}
+  .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem}
+  .row4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem}
+  .lb-inline{display:flex;gap:.3rem;align-items:center;flex-wrap:wrap}
+  .lb-inline select,.lb-inline input{padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem;width:auto}
+  .lb-inline input[type=number]{width:64px}
+  .lb-checks{display:grid;gap:.4rem}
+  .lb-checks label{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,220px);gap:.7rem;align-items:center;padding:.5rem .7rem;border-radius:11px;background:rgba(0,0,0,.16);font-size:.85rem;color:var(--white)!important;font-weight:500!important;margin:0!important}
+  .lb-checks input[type=checkbox]{width:18px;height:18px;accent-color:#4ade80}
+  .lb-checks input[type=text]{padding:.4rem .6rem!important;font-size:.8rem!important}
+  .lb-haz{display:inline-flex;gap:.25rem;align-items:center;font-size:.64rem;padding:.08rem .45rem;border-radius:6px;background:rgba(232,112,112,.14);border:1px solid rgba(232,112,112,.35);color:#f8a5a5;margin:.1rem .15rem 0 0}
+  .lb-multi{max-height:180px;overflow-y:auto;border:1px solid var(--rim2);border-radius:10px;padding:.4rem .6rem;background:rgba(0,0,0,.2)}
+  .lb-multi label{display:flex!important;gap:.5rem;align-items:center;font-weight:500!important;color:var(--white)!important;font-size:.84rem!important;margin:.2rem 0!important}
+  .lb-multi input{width:auto!important}
+  .lb-warn{display:flex;gap:.6rem;align-items:flex-start;padding:.75rem .9rem;border-radius:12px;border:1px solid var(--amber-border);background:var(--amber-dim);color:var(--amber);font-size:.84rem;margin-bottom:1rem}
+  .lb-danger{border-color:var(--red-border);background:var(--red-dim);color:var(--red)}
+  .lb-good{border-color:var(--green-border);background:var(--green-dim);color:var(--green)}
+  .lb-pre{white-space:pre-wrap;line-height:1.6;color:var(--white);font-size:.9rem}
+  @media(max-width:1100px){.lb-week{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media(max-width:700px){.lb-week{grid-template-columns:1fr}.row3,.row4{grid-template-columns:1fr 1fr}.lb-checks label{grid-template-columns:auto 1fr}.lb-checks input[type=text]{grid-column:1/-1}}
+</style>

@@ -1,0 +1,23 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Practicals{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">{% if parent %}My child{% else %}My learning{% endif %}</div>
+  <h1 class="fin-title">{% if parent %}Practicals{% else %}My <em>practicals</em>{% endif %}</h1>
+  <p class="fin-sub">Science and practical lessons {% if parent %}your child has{% else %}you have{% endif %} done, attendance and marks — practicals count in WAEC and NECO.</p>
+</div></div>
+{% for row in rows %}
+  {% if parent %}<h2 style="color:var(--white);font-size:1.15rem;margin:1.2rem 0 .7rem">{{ row.student.full_name }} <span class="hint">{{ row.student.class_assigned.name }}</span></h2>{% endif %}
+  <div class="fin-stats"><div class="fin-stat"><small>Practicals</small><b>{{ row.attended }} / {{ row.total }}</b><span class="hint">attended</span></div></div>
+  {% for c in row.charges %}{% if c.status == 'UNPAID' %}<form method="post" class="lb-warn" style="justify-content:space-between;align-items:center">{% csrf_token %}<input type="hidden" name="breakage" value="{{ c.id }}">
+    <span><i class="bi bi-hammer"></i> Lab breakage charge: <b>₦{{ c.charge|floatformat:"2g" }}</b> — {{ c.quantity }} × {{ c.item }}, {{ c.lab.name }}, {{ c.date|date:"j M Y" }}.</span>
+    {% if parent %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Pay from wallet</button>{% endif %}</form>{% endif %}{% endfor %}
+  {% for subject, recs in row.subjects.items %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-eyedropper"></i> {{ subject }}</h3></div><table class="tbl"><tbody>
+    {% for r in recs %}<tr><td>{{ r.session.date|date:"j M Y" }}</td><td class="name">{{ r.session.practical.title }}</td>
+      <td>{% if r.attended %}<span class="chip green">{{ r.get_attendance_display }}</span>{% elif r.attendance == 'E' %}<span class="chip">Excused</span>{% else %}<span class="chip red">Absent</span>{% endif %}</td>
+      <td>{% if r.score is not None %}<b style="color:var(--white)">{{ r.score|floatformat:"-1" }}</b> / {{ r.session.practical.max_score }}{% else %}—{% endif %}</td>
+      <td class="hint">{{ r.remark }}</td></tr>{% endfor %}</tbody></table></div>
+  {% empty %}<div class="panel"><div class="empty"><i class="bi bi-eyedropper"></i><p>No practicals recorded yet.</p></div></div>{% endfor %}
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Labs & Practicals{% endblock %}
+{% block content %}
+{% include "labs/_styles.html" %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Teaching</div>
+  <h1 class="fin-title">Labs &amp; <em>practicals</em></h1>
+  <p class="fin-sub">Lab bookings, equipment, chemicals, breakages and safety — and every practical students do, with attendance and marks for WAEC and NECO.</p>
+</div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
+  <a class="fin-btn" href="{% url 'labs:readiness' %}"><i class="bi bi-clipboard2-check"></i> WAEC/NECO readiness</a>
+  <a class="fin-btn" href="{% url 'labs:practicals' %}"><i class="bi bi-journal-text"></i> Practicals</a>
+  {% if admin %}<a class="fin-btn fin-btn-gold" href="{% url 'labs:lab_new' %}"><i class="bi bi-plus-lg"></i> Add a lab</a>{% endif %}
+</div></div>
+
+<div class="fin-stats">
+  <div class="fin-stat"><small>Practicals done{% if ov.term %} · {{ ov.term.name }}{% endif %}</small><b>{{ ov.practicals }}</b></div>
+  <div class="fin-stat"><small>Practical attendance</small><b>{% if ov.attendance is not None %}{{ ov.attendance }}%{% else %}—{% endif %}</b></div>
+  <div class="fin-stat"><small>Coming up</small><b>{{ ov.upcoming }}</b></div>
+  <div class="fin-stat"><small>Breakages this term</small><b>{{ ov.breakages }}</b><span class="hint">₦{{ ov.breakage_cost|floatformat:"2g" }}</span></div>
+  <div class="fin-stat"><small>Open incidents</small><b style="{% if ov.open_incidents %}color:var(--red){% endif %}">{{ ov.open_incidents }}</b></div>
+</div>
+
+{% if labs %}
+<div class="lb-cards">
+  {% for lab in labs %}<a class="lb-card{% if not lab.active %} off{% endif %}" href="{% url 'labs:lab' lab.id %}">
+    <div class="lb-top"><span class="lb-ic"><i class="bi bi-{{ lab.icon }}"></i></span>
+      <div><h3>{{ lab.name }}</h3><div class="k">{{ lab.get_kind_display }}{% if lab.building %} · {{ lab.building }}{% endif %} · {{ lab.capacity }} students{% if lab.in_charge %} · {{ lab.in_charge.full_name }}{% endif %}</div></div></div>
+    <div class="lb-nums">
+      <div><b>{{ lab.st.items }}</b><small>Items</small></div>
+      <div><b>₦{{ lab.st.value|floatformat:"0g" }}</b><small>Equipment value</small></div>
+      <div><b>{{ lab.st.chem_count }}</b><small>Chemicals</small></div>
+    </div>
+    <div class="lb-flags">
+      {% if lab.st.inspection.overdue %}<span class="chip red"><i class="bi bi-shield-exclamation"></i> Inspection {% if lab.st.inspection.last %}overdue{% else %}never done{% endif %}</span>
+      {% elif lab.st.inspection.failed %}<span class="chip amber"><i class="bi bi-shield-exclamation"></i> Last inspection failed</span>
+      {% else %}<span class="chip green"><i class="bi bi-shield-check"></i> Inspected {{ lab.st.inspection.last.date|date:"j M" }}</span>{% endif %}
+      {% if lab.st.broken %}<span class="chip amber">{{ lab.st.broken }} broken</span>{% endif %}
+      {% if lab.st.low %}<span class="chip amber">{{ lab.st.low|length }} low on items</span>{% endif %}
+      {% if lab.st.chem_low %}<span class="chip amber">{{ lab.st.chem_low|length }} chemical{{ lab.st.chem_low|length|pluralize }} low</span>{% endif %}
+      {% if lab.st.chem_expiring %}<span class="chip red">{{ lab.st.chem_expiring|length }} expiring</span>{% endif %}
+      {% if lab.st.incidents %}<span class="chip red">{{ lab.st.incidents }} open incident{{ lab.st.incidents|pluralize }}</span>{% endif %}
+    </div>
+    <div class="lb-today">{% if lab.st.today %}<b>Today:</b> {% for lb in lab.st.today %}{{ lb.booking.start_time|time:"H:i" }} {{ lb.school_class.name|default:lb.booking.purpose }}{% if not forloop.last %} · {% endif %}{% endfor %}
+      {% elif lab.st.next %}Next booking: <b>{{ lab.st.next.booking.date|date:"D j M" }}, {{ lab.st.next.booking.start_time|time:"H:i" }}</b> — {{ lab.st.next.booking.purpose }}{% else %}No bookings coming up.{% endif %}</div>
+  </a>{% endfor %}
+</div>
+{% else %}
+<div class="panel"><div class="empty"><i class="bi bi-eyedropper"></i><p>No labs set up yet.{% if admin %} Add your chemistry, physics, biology and other practical rooms to start booking them.{% endif %}</p>
+  {% if admin %}<a class="fin-btn fin-btn-gold" href="{% url 'labs:lab_new' %}"><i class="bi bi-plus-lg"></i> Add a lab</a>{% endif %}</div></div>
+{% endif %}
+
+<div class="fin-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-week"></i> Practicals coming up</h3><a class="fin-btn fin-btn-sm" href="{% url 'labs:practicals' %}">Plan one</a></div>
+    {% if upcoming %}<table class="tbl"><tbody>{% for s in upcoming %}<tr>
+      <td>{{ s.date|date:"D j M" }}</td><td class="name"><a href="{% url 'labs:session' s.id %}" style="color:inherit">{{ s.practical.title }}</a><div class="hint">{{ s.practical.subject.name }} · {{ s.school_class.name }}</div></td>
+      <td class="hint">{{ s.lab.name|default:"No lab" }}</td><td>{% if s.date < today %}<span class="chip amber">Not marked yet</span>{% elif s.date == today %}<span class="chip gold">Today</span>{% endif %}</td></tr>{% endfor %}</tbody></table>
+    {% else %}<div class="panel-b"><p class="hint" style="margin:0">No practicals planned. Open a practical and choose "Plan for a class".</p></div>{% endif %}
+  </div>
+  <div class="panel"><div class="panel-h"><h3><i class="bi bi-bandaid"></i> Open safety incidents</h3></div>
+    {% if incidents %}<table class="tbl"><tbody>{% for i in incidents %}<tr><td class="name"><a href="{% url 'labs:incident' i.id %}" style="color:inherit">{{ i.get_kind_display }}</a><div class="hint">{{ i.lab.name }} · {{ i.happened_at|date:"j M, H:i" }}</div></td>
+      <td><span class="chip {% if i.severity == 'SERIOUS' %}red{% elif i.severity == 'MODERATE' %}amber{% endif %}">{{ i.severity|title }}</span></td></tr>{% endfor %}</tbody></table>
+    {% else %}<div class="panel-b"><p class="hint" style="margin:0"><i class="bi bi-check-circle" style="color:var(--green)"></i> No open incidents.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}
