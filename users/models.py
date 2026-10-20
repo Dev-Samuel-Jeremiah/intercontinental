@@ -104,7 +104,7 @@ class User(AbstractUser):
 
 class Staff(TenantModelMixin, models.Model):
     ROLE_CHOICES = [
-        ('ADMIN','Administrator'),('TEACHER','Teacher'),
+        ('ADMIN','Administrator'),('PROPRIETOR','Proprietor / Proprietress'),('TEACHER','Teacher'),
         ('ACCOUNT','Account Officer'),('LIB','Librarian'),
     ]
     user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='staff_profiles')

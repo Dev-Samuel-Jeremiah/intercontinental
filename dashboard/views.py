@@ -39,6 +39,8 @@ def dashboard_router(request):
     if staff is not None:
         if staff.role == 'ADMIN':
             return redirect('dashboard:admin')
+        if staff.role == 'PROPRIETOR':
+            return redirect('dashboard:proprietor')
         if staff.role == 'TEACHER':
             return redirect('dashboard:teacher')
         return redirect('dashboard:admin')
@@ -129,6 +131,9 @@ def super_admin_dashboard(request):
         'recent_staff':    staff.select_related('user').order_by('-id')[:5],
         'recent_exams':    exams.select_related('subject').prefetch_related('classes').order_by('-id')[:5],
     }
+    from . import insights
+    context.update(ins=insights.super_admin(request), greeting=insights.greeting(),
+                   progress=insights.term_progress(active_term))
     return render(request, 'dashboard/super_admin.html', context)
 
 
@@ -160,6 +165,9 @@ def admin_dashboard(request):
         'recent_staff':    Staff.objects.select_related('user').order_by('-id')[:5],
         'recent_exams':    Exam.objects.order_by('-id')[:5],
     }
+    from . import insights
+    context.update(ins=insights.admin(request), greeting=insights.greeting(),
+                   progress=insights.term_progress(active_term))
     return render(request, 'dashboard/admin.html', context)
 
 
@@ -197,6 +205,9 @@ def teacher_dashboard(request):
         'recent_staff':    Staff.objects.select_related('user').order_by('-id')[:5],
         'recent_exams':    Exam.objects.order_by('-id')[:5],
     }
+    from . import insights
+    context.update(ins=insights.teacher(request, staff), greeting=insights.greeting(), staff=staff,
+                   progress=insights.term_progress(active_term))
     return render(request, 'dashboard/teacher.html', context)
 
 
@@ -321,4 +332,19 @@ def student_dashboard(request):
         'attendance_percentage': attendance_percentage,
         'id_card': id_card,
     }
+    from . import insights
+    context.update(ins=insights.student(request, student, active_term), greeting=insights.greeting())
     return render(request, 'dashboard/student.html', context)
+
+# ─── proprietor / proprietress dashboard ─────────────────────────────────────
+def proprietor_dashboard(request):
+    guard = _require_login(request)
+    if guard:
+        return guard
+    staff = request.user.staff
+    if not (request.user.is_superuser or (staff is not None and staff.role in ('PROPRIETOR', 'ADMIN'))):
+        return redirect('dashboard:router')
+    from . import insights
+    data = insights.proprietor(request)
+    return render(request, 'dashboard/proprietor.html', {'ins': data, 'greeting': insights.greeting(),
+                                                         'active_term': data['term'], 'active_session': data['session']})

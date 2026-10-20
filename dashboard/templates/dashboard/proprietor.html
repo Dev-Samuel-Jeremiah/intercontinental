@@ -1,0 +1,97 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Owner's View{% endblock %}
+{% block content %}
+{% include "dashboard/_dash.html" %}
+<div class="db" style="--acc:#34d399;--acc2:#6ee7b7;--accdim:rgba(52,211,153,.13);--accbd:rgba(52,211,153,.4)">
+
+  <section class="db-hero">
+    <div class="db-hero-row">
+      <div class="db-hello"><span class="db-avatar">{% if request.tenant.logo %}<img src="{{ request.tenant.logo.url }}" alt="">{% else %}<i class="bi bi-gem"></i>{% endif %}</span>
+        <div><div class="db-eyebrow">Proprietor · The owner's view</div>
+          <h1>{{ greeting }}, <em>{{ request.user.first_name|default:request.user.username }}</em></h1>
+          <p>How {{ request.tenant.name }} is doing — money, enrolment, results and growth{% if active_term %} · {{ active_term.name }}, {{ active_session.name }}{% endif %}.</p></div></div>
+      <div class="db-actions">
+        <a class="db-btn" href="{% url 'analytics:fees' %}"><i class="bi bi-cash-stack"></i> Fees</a>
+        <a class="db-btn" href="{% url 'analytics:enrolment' %}"><i class="bi bi-people"></i> Enrolment</a>
+        <a class="db-btn" href="{% url 'analytics:email_reports' %}"><i class="bi bi-envelope-paper"></i> Weekly email</a>
+        <a class="db-btn pri" href="{% url 'analytics:board_pack' %}"><i class="bi bi-file-earmark-bar-graph"></i> Board pack</a>
+      </div>
+    </div>
+    {% if ins.progress %}<div class="db-term"><small>{{ active_term.name }} · week {{ ins.progress.week }} of {{ ins.progress.weeks }}</small><div class="bar"><span style="width:{{ ins.progress.percent }}%"></span></div><small>{{ ins.progress.days_left }} days left</small></div>{% endif %}
+  </section>
+
+  <div class="db-kpis">
+    <a class="db-kpi" href="{% url 'analytics:enrolment' %}"><span class="ic"><i class="bi bi-mortarboard-fill"></i></span><div class="v">{{ ins.enrolment.now|default:0 }}</div><div class="l">Students on roll</div>
+      <div class="s {% if ins.enrolment.change > 0 %}up{% elif ins.enrolment.change < 0 %}down{% endif %}">{% if ins.enrolment.change > 0 %}▲ {{ ins.enrolment.change }}{% elif ins.enrolment.change < 0 %}▼ {{ ins.enrolment.change }}{% else %}No change{% endif %} in 12 months</div></a>
+    <a class="db-kpi" href="{% url 'analytics:fees' %}"><span class="ic"><i class="bi bi-cash-coin"></i></span><div class="v">{% if ins.fees.rate is not None %}{{ ins.fees.rate }}%{% else %}—{% endif %}</div><div class="l">Fees collected</div><div class="s">₦{{ ins.fees.paid|default:0|floatformat:"0g" }} of ₦{{ ins.fees.expected|default:0|floatformat:"0g" }}</div>
+      {% if ins.fees.rate is not None %}<div class="meter"><span style="width:{{ ins.fees.rate }}%"></span></div>{% endif %}</a>
+    <div class="db-kpi"><span class="ic"><i class="bi bi-hourglass-split"></i></span><div class="v" style="font-size:1.55rem">₦{{ ins.fees.outstanding|default:0|floatformat:"0g" }}</div><div class="l">Outstanding</div><div class="s warn">{{ ins.fees.debtors|default:0 }} families owing</div></div>
+    <div class="db-kpi"><span class="ic"><i class="bi bi-graph-up-arrow"></i></span><div class="v" style="font-size:1.55rem;color:{% if ins.money.net < 0 %}var(--red){% else %}var(--green){% endif %}">₦{{ ins.money.net|default:0|floatformat:"0g" }}</div><div class="l">Surplus this term</div><div class="s">income less approved expenses</div></div>
+    <div class="db-kpi"><span class="ic"><i class="bi bi-calendar-check"></i></span><div class="v">{% if ins.attendance_30 is not None %}{{ ins.attendance_30 }}%{% else %}—{% endif %}</div><div class="l">Attendance</div><div class="s">last 30 days</div></div>
+    <div class="db-kpi"><span class="ic"><i class="bi bi-trophy"></i></span><div class="v">{% if ins.results %}{{ ins.results.pass_rate }}%{% else %}—{% endif %}</div><div class="l">Pass rate</div><div class="s">{% if ins.results %}average {{ ins.results.average }} · {{ ins.results.term }}{% else %}no results yet{% endif %}</div></div>
+  </div>
+
+  <div class="db-grid">
+    <div class="db-card c8"><div class="db-card-h"><h3><i class="bi bi-bank"></i> Money this term</h3><a href="{% url 'finance:admin_dashboard' %}">Finance →</a></div>
+      <div class="db-card-b">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-bottom:.8rem">
+          <div><div class="hint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px">Money in</div><b style="font-size:1.4rem;color:var(--green)">₦{{ ins.money.income|default:0|floatformat:"0g" }}</b></div>
+          <div><div class="hint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px">Spent</div><b style="font-size:1.4rem;color:var(--red)">₦{{ ins.money.expenses|default:0|floatformat:"0g" }}</b></div>
+          <div><div class="hint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px">Left over</div><b style="font-size:1.4rem;color:var(--white)">₦{{ ins.money.net|default:0|floatformat:"0g" }}</b></div></div>
+        <div class="db-chart"><canvas id="chMoney"></canvas></div>
+        <p class="hint" style="margin:.5rem 0 0">Payments received each week (last 10 weeks){% if ins.money.since %}; totals since {{ ins.money.since|date:"j M Y" }}{% endif %}.</p></div></div>
+
+    <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-hourglass"></i> How long debts have waited</h3></div>
+      <div class="db-card-b"><div class="db-bars">{% for b in ins.ageing %}<div class="db-hbar" style="grid-template-columns:minmax(0,110px) minmax(0,1fr) 92px"><span>{{ b.label }}</span><span class="tr"><span class="{% if forloop.last %}red{% elif forloop.counter > 2 %}amber{% endif %}" style="width:{% widthratio b.amount ins.fees.outstanding|default:1 100 %}%"></span></span><em>₦{{ b.amount|floatformat:"0g" }}</em></div>{% empty %}<p class="hint" style="margin:0">No debts this term.</p>{% endfor %}</div>
+        {% if ins.ageing %}<p class="hint" style="margin:.7rem 0 0">Counted from each family's last payment (or the start of term).</p>{% endif %}</div></div>
+
+    <div class="db-card c8"><div class="db-card-h"><h3><i class="bi bi-people"></i> Enrolment — last 12 months and the next 3</h3><a href="{% url 'analytics:enrolment' %}">Details →</a></div>
+      <div class="db-card-b"><div class="db-chart"><canvas id="chEnrol"></canvas></div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem"><span class="db-tag green">+{{ ins.enrolment.joined|default:0 }} joined</span><span class="db-tag red">−{{ ins.enrolment.left|default:0 }} left</span>
+          {% if ins.enrolment.retention.withdrawal_rate is not None %}<span class="db-tag amber">{{ ins.enrolment.retention.withdrawal_rate }}% withdrew in 12 months</span>{% endif %}
+          {% for r, n in ins.enrolment.retention.reasons|slice:":3" %}<span class="db-tag">{{ r }} ({{ n }})</span>{% endfor %}</div></div></div>
+
+    <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-cpu"></i> School intelligence</h3><a href="{% url 'schoolai:dashboard' %}">Open →</a></div>
+      <div class="db-card-b" style="display:flex;gap:1rem;align-items:center">
+        <div class="db-ring" style="--p:{{ ins.ai.progress|default:0 }}"><span><b>{{ ins.ai.progress|default:0 }}%</b><small>{{ ins.ai.label|default:"—" }}</small></span></div>
+        <div style="font-size:.82rem;color:var(--slate2);line-height:1.65">{{ ins.ai.years|default:0 }} years of history learned<br>{{ ins.risk.high|default:0 }} students at high risk<br>{{ ins.risk.medium|default:0 }} to keep an eye on</div></div>
+      <div class="db-card-b" style="border-top:1px solid var(--rim)"><div class="hint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.7px;margin-bottom:.4rem">Staff</div>
+        {% for s in ins.staff_mix %}<span class="db-tag acc" style="margin:0 .25rem .3rem 0">{{ s.n }} {{ s.role|title }}</span>{% endfor %}</div></div>
+
+    <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-diagram-3"></i> Sections side by side</h3></div>
+      {% if ins.sections %}<div style="overflow-x:auto"><table class="tbl" style="width:100%"><thead><tr><th style="text-align:left;padding:.6rem 1.1rem">Section</th><th>Students</th><th>Attendance</th><th>Fees paid</th><th>Owing</th></tr></thead><tbody>
+        {% for s in ins.sections %}<tr><td style="padding:.6rem 1.1rem;color:var(--white);font-weight:600">{{ s.name }}</td><td style="text-align:center">{{ s.students }}</td><td style="text-align:center">{{ s.attendance|default:"—" }}{% if s.attendance is not None %}%{% endif %}</td><td style="text-align:center">{{ s.fees|default:"—" }}{% if s.fees is not None %}%{% endif %}</td><td style="text-align:center">₦{{ s.outstanding|floatformat:"0g" }}</td></tr>{% endfor %}</tbody></table></div>
+      {% else %}<div class="db-empty"><i class="bi bi-diagram-3"></i>Set up sections (Nursery &amp; Primary, Secondary…) to compare them here.</div>{% endif %}</div>
+
+    <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-bullseye"></i> Targets</h3><a href="{% url 'analytics:kpis' %}">Set →</a></div>
+      <div class="db-card-b">{% for k in ins.kpis %}<div style="margin-bottom:.7rem"><div style="display:flex;justify-content:space-between;font-size:.84rem;color:var(--white)"><b>{{ k.label }}</b><span style="color:{% if k.met %}var(--green){% else %}var(--slate2){% endif %}">{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %}{% if k.target %} / {{ k.target|floatformat:"-1" }}{% endif %}</span></div>
+        <div class="db-hbar" style="grid-template-columns:1fr"><span class="tr"><span class="{% if k.met %}green{% endif %}" style="width:{{ k.progress|default:0 }}%"></span></span></div></div>{% empty %}<p class="hint" style="margin:0">No targets set yet.</p>{% endfor %}</div></div>
+
+    <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-easel2"></i> Fee collection by class</h3></div>
+      <div class="db-card-b"><div class="db-bars">{% for c in ins.by_class|slice:":8" %}<div class="db-hbar"><span>{{ c.name }}</span><span class="tr"><span class="{% if c.rate < 50 %}red{% elif c.rate < 80 %}amber{% else %}green{% endif %}" style="width:{{ c.rate|default:0 }}%"></span></span><em>{{ c.rate|default:"—" }}{% if c.rate is not None %}%{% endif %}</em></div>{% empty %}<p class="hint" style="margin:0">No bills this term yet.</p>{% endfor %}</div>
+        {% if ins.by_class %}<p class="hint" style="margin:.6rem 0 0">Lowest first.</p>{% endif %}</div></div>
+
+    <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-bar-chart"></i> Results by class{% if ins.results %} · {{ ins.results.term }}{% endif %}</h3></div>
+      {% if ins.results %}<div class="db-card-b"><div class="db-chart sm"><canvas id="chResults"></canvas></div></div>{% else %}<div class="db-empty"><i class="bi bi-journal"></i>No results yet.</div>{% endif %}</div>
+  </div>
+</div>
+{{ ins.collections.weeks|default:"[]"|json_script:"d-weeks" }}
+{{ ins.enrolment.series|default:"[]"|json_script:"d-enrol" }}
+{{ ins.enrolment.forecast|default:"[]"|json_script:"d-ahead" }}
+{{ ins.results.by_class|default:"[]"|json_script:"d-results" }}
+<script>
+(function(){
+  function data(id){try{var v=JSON.parse(document.getElementById(id).textContent);return Array.isArray(v)?v:[];}catch(e){return [];}}
+  var weeks=data('d-weeks'), enrol=data('d-enrol'), ahead=data('d-ahead'), res=data('d-results');
+  var money=function(v){return '₦'+(v>=1e6?(v/1e6).toFixed(1)+'m':v>=1000?Math.round(v/1000)+'k':v);};
+  dbChart('chMoney',{type:'line',data:{labels:weeks.map(function(w){return w.week.slice(5);}),datasets:[{data:weeks.map(function(w){return Number(w.amount);}),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.15)',fill:true,tension:.35}]},
+    options:{scales:{y:{beginAtZero:true,ticks:{callback:money}}}}});
+  var labels=enrol.map(function(p){return p.month.slice(0,7);}).concat(ahead.map(function(p){return p.month.slice(0,7);}));
+  dbChart('chEnrol',{type:'bar',data:{labels:labels,datasets:[{data:enrol.map(function(p){return p.count;}).concat(ahead.map(function(){return null;})),backgroundColor:'rgba(52,211,153,.6)',borderRadius:5},
+    {data:enrol.map(function(){return null;}).concat(ahead.map(function(p){return p.count;})),backgroundColor:'rgba(244,210,31,.35)',borderColor:'#f4d21f',borderWidth:1,borderRadius:5}]},
+    options:{scales:{x:{stacked:true},y:{beginAtZero:true,stacked:false}},plugins:{legend:{display:false},tooltip:{callbacks:{title:function(i){return i[0].label+(i[0].datasetIndex?' (forecast)':'');}}}}}});
+  dbChart('chResults',{type:'bar',data:{labels:res.map(function(r){return r.name;}),datasets:[{data:res.map(function(r){return r.average;}),backgroundColor:res.map(function(r){return r.average>=50?'rgba(52,211,153,.7)':'rgba(232,112,112,.75)';}),borderRadius:6}]},
+    options:{scales:{y:{beginAtZero:true,max:100}}}});
+})();
+</script>
+{% endblock %}

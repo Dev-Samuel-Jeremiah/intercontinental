@@ -40,7 +40,7 @@ def can_manage(user):
 
 
 def can_see_fees(user):
-    return user.is_authenticated and (user.is_superuser or _role(user) in ('ADMIN', 'ACCOUNT'))
+    return user.is_authenticated and (user.is_superuser or _role(user) in ('ADMIN', 'ACCOUNT', 'PROPRIETOR'))
 
 
 def _date(raw):

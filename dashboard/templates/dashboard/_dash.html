@@ -1,0 +1,115 @@
+{# Shared design system for the role dashboards. Set --acc / --acc2 on .db to give each role its own accent. #}
+<style>
+  .db{--acc:#f4d21f;--acc2:#ffe066;--accdim:rgba(244,210,31,.12);--accbd:rgba(244,210,31,.35);display:flex;flex-direction:column;gap:1.1rem}
+  .db *{box-sizing:border-box}
+  .db a{color:inherit}
+  .db .hint{font-size:.78rem;color:var(--slate2)}
+  .db p.hint{line-height:1.5}
+  /* Hero */
+  .db-hero{position:relative;overflow:hidden;border-radius:24px;padding:1.5rem 1.6rem;border:1px solid var(--accbd);
+    background:radial-gradient(circle at 92% -10%,var(--accdim),transparent 50%),radial-gradient(circle at -5% 120%,rgba(96,165,250,.12),transparent 45%),linear-gradient(135deg,var(--surface2,#172f5c),var(--surface))}
+  .db-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;border:1px solid var(--accbd);opacity:.35}
+  .db-hero-row{position:relative;display:flex;gap:1.2rem;align-items:center;justify-content:space-between;flex-wrap:wrap;z-index:1}
+  .db-hello{display:flex;gap:1rem;align-items:center;min-width:0}
+  .db-avatar{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:1.5rem;font-weight:700;color:#0a1f44;
+    background:linear-gradient(135deg,var(--acc2),var(--acc));box-shadow:0 14px 32px var(--accdim);flex-shrink:0;overflow:hidden}
+  .db-avatar img{width:100%;height:100%;object-fit:cover}
+  .db-eyebrow{font-size:.7rem;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--acc2)}
+  .db-hello h1{margin:.15rem 0 0;font-family:var(--serif,'Cormorant Garamond',serif);font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.1;color:var(--white)}
+  .db-hello h1 em{color:var(--acc2);font-style:italic}
+  .db-hello p{margin:.3rem 0 0;color:var(--slate2);font-size:.88rem}
+  .db-actions{display:flex;gap:.45rem;flex-wrap:wrap}
+  .db-btn{display:inline-flex;align-items:center;gap:.45rem;padding:.6rem 1rem;border-radius:12px;border:1px solid var(--rim2);background:rgba(0,0,0,.18);
+    color:var(--white)!important;text-decoration:none;font-weight:600;font-size:.84rem;transition:.15s}
+  .db-btn:hover{border-color:var(--accbd);color:var(--acc2)!important;transform:translateY(-1px)}
+  .db-btn.pri{background:linear-gradient(135deg,var(--acc2),var(--acc));color:#0a1f44!important;border:0;box-shadow:0 10px 24px var(--accdim)}
+  .db-btn .n{min-width:18px;height:18px;padding:0 .3rem;border-radius:99px;background:var(--red);color:#fff;font-size:.66rem;display:inline-grid;place-items:center}
+  .db-term{position:relative;z-index:1;display:flex;gap:1rem;align-items:center;margin-top:1.1rem;flex-wrap:wrap}
+  .db-term .bar{flex:1;min-width:200px;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+  .db-term .bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .db-term small{color:var(--slate2);font-size:.76rem;white-space:nowrap}
+  /* KPI tiles */
+  .db-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.8rem}
+  .db-kpi{position:relative;overflow:hidden;padding:1rem 1.1rem;border-radius:18px;border:1px solid var(--rim2);background:var(--surface);text-decoration:none;display:block}
+  .db-kpi:hover{border-color:var(--accbd)}
+  .db-kpi .ic{position:absolute;right:.9rem;top:.85rem;width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accdim);color:var(--acc2);font-size:1rem}
+  .db-kpi .v{font-family:var(--serif,'Cormorant Garamond',serif);font-size:1.9rem;font-weight:700;line-height:1.1;color:var(--white);font-variant-numeric:lining-nums tabular-nums}
+  .db-kpi .l{font-size:.68rem;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--slate);margin-top:.15rem}
+  .db-kpi .s{font-size:.76rem;color:var(--slate2);margin-top:.35rem}
+  .db-kpi .s.up{color:var(--green)} .db-kpi .s.down{color:var(--red)} .db-kpi .s.warn{color:var(--amber)}
+  .db-kpi .meter{height:5px;border-radius:99px;background:rgba(255,255,255,.07);margin-top:.55rem;overflow:hidden}
+  .db-kpi .meter span{display:block;height:100%;background:var(--acc)}
+  /* Grid and cards */
+  .db-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1rem;align-items:start}
+  .c3{grid-column:span 3}.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:span 12}
+  .db-card{border-radius:20px;border:1px solid var(--rim2);background:var(--surface);overflow:hidden}
+  .db-card-h{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.9rem 1.1rem;border-bottom:1px solid var(--rim)}
+  .db-card-h h3{margin:0;font-size:.95rem;color:var(--white);display:flex;gap:.5rem;align-items:center}
+  .db-card-h h3 i{color:var(--acc2)}
+  .db-card-h a{font-size:.76rem;color:var(--slate2);text-decoration:none}
+  .db-card-h a:hover{color:var(--acc2)}
+  .db-card-b{padding:1rem 1.1rem}
+  .db-empty{padding:1.3rem 1.1rem;text-align:center;color:var(--slate2);font-size:.85rem}
+  .db-empty i{display:block;font-size:1.5rem;color:var(--acc2);margin-bottom:.35rem}
+  /* Rows */
+  .db-row{display:flex;gap:.75rem;align-items:center;padding:.65rem 1.1rem;border-bottom:1px solid var(--rim);text-decoration:none;color:var(--white)}
+  .db-row:last-child{border-bottom:0}
+  a.db-row:hover{background:rgba(255,255,255,.03)}
+  .db-row .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--accdim);color:var(--acc2);flex-shrink:0}
+  .db-row .ico.red{background:var(--red-dim);color:var(--red)} .db-row .ico.green{background:var(--green-dim);color:var(--green)} .db-row .ico.amber{background:var(--amber-dim);color:var(--amber)} .db-row .ico.blue{background:rgba(96,165,250,.14);color:#93c5fd}
+  .db-row .t{flex:1;min-width:0}
+  .db-row .t b{display:block;font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .db-row .t span{display:block;font-size:.74rem;color:var(--slate2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .db-row .end{font-size:.78rem;color:var(--slate2);text-align:right;flex-shrink:0}
+  .db-row .badge{min-width:26px;height:24px;padding:0 .5rem;border-radius:99px;background:var(--red);color:#fff;font-weight:700;font-size:.75rem;display:grid;place-items:center}
+  .db-tag{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;padding:.12rem .5rem;border-radius:99px;border:1px solid var(--rim2);color:var(--slate2);white-space:nowrap}
+  .db-tag.green{border-color:var(--green-border);color:var(--green);background:var(--green-dim)} .db-tag.red{border-color:var(--red-border);color:var(--red);background:var(--red-dim)} .db-tag.amber{border-color:var(--amber-border);color:var(--amber);background:var(--amber-dim)} .db-tag.acc{border-color:var(--accbd);color:var(--acc2);background:var(--accdim)}
+  /* Rings and bars */
+  .db-ring{--p:0;--c:var(--acc);width:92px;height:92px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;
+    background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(255,255,255,.07) 0)}
+  .db-ring span{width:72px;height:72px;border-radius:50%;background:var(--surface);display:grid;place-items:center;text-align:center;line-height:1.1}
+  .db-ring b{font-size:1.25rem;color:var(--white)} .db-ring small{display:block;font-size:.6rem;color:var(--slate);text-transform:uppercase;letter-spacing:.6px}
+  .db-bars{display:flex;flex-direction:column;gap:.6rem}
+  .db-hbar{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr) 54px;gap:.6rem;align-items:center;font-size:.82rem;color:var(--white)}
+  .db-hbar .tr{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .db-hbar .tr span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .db-hbar .tr span.red{background:var(--red)} .db-hbar .tr span.amber{background:var(--amber)} .db-hbar .tr span.green{background:var(--green)}
+  .db-hbar em{font-style:normal;text-align:right;color:var(--slate2)}
+  /* Timeline (lessons) */
+  .db-tl{display:flex;flex-direction:column}
+  .db-tl .it{display:grid;grid-template-columns:62px 14px minmax(0,1fr) auto;gap:.6rem;align-items:center;padding:.55rem 1.1rem;position:relative}
+  .db-tl .it .tm{font-size:.76rem;color:var(--slate2);font-variant-numeric:tabular-nums}
+  .db-tl .it .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--rim2);background:var(--surface);z-index:1}
+  .db-tl .it.done .dot{background:var(--slate);border-color:var(--slate)}
+  .db-tl .it.now{background:var(--accdim)} .db-tl .it.now .dot{background:var(--acc);border-color:var(--acc);box-shadow:0 0 0 4px var(--accdim)}
+  .db-tl .it b{font-size:.88rem;color:var(--white);font-weight:600}
+  .db-tl .it span.sub{display:block;font-size:.74rem;color:var(--slate2)}
+  .db-tl .it.done b{color:var(--slate2)}
+  /* Mini chart holder */
+  .db-chart{position:relative;height:220px}
+  .db-chart.sm{height:150px}
+  /* Quick links grid */
+  .db-links{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.55rem}
+  .db-links a{display:flex;gap:.55rem;align-items:center;padding:.65rem .75rem;border-radius:13px;border:1px solid var(--rim2);background:rgba(0,0,0,.14);text-decoration:none;color:var(--white);font-size:.82rem;font-weight:600}
+  .db-links a:hover{border-color:var(--accbd);color:var(--acc2)}
+  .db-links a i{color:var(--acc2);font-size:1rem}
+  /* Moments strip */
+  .db-mom{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;padding:1rem 1.1rem}
+  .db-mom a{position:relative;aspect-ratio:1;border-radius:12px;background:#050d1f center/cover no-repeat;display:block;overflow:hidden}
+  .db-mom a span{position:absolute;left:0;right:0;bottom:0;padding:.35rem .5rem;font-size:.66rem;color:#fff;background:linear-gradient(transparent,rgba(5,13,31,.85))}
+  @media(max-width:1100px){.c3,.c4,.c5{grid-column:span 6}.c7,.c8{grid-column:span 12}.c6{grid-column:span 12}}
+  @media(max-width:700px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}.db-hero{padding:1.2rem}.db-hbar{grid-template-columns:minmax(0,1fr) 46px}.db-hbar .tr{grid-column:1/-1;order:3}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+  window.dbChart = function (id, cfg) {
+    var el = document.getElementById(id);
+    if (!el || !window.Chart) return;
+    Chart.defaults.color = 'rgba(255,255,255,.55)';
+    Chart.defaults.font.family = 'Outfit, system-ui, sans-serif';
+    Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+    cfg.options = Object.assign({responsive: true, maintainAspectRatio: false,
+      plugins: {legend: {display: false}}}, cfg.options || {});
+    return new Chart(el, cfg);
+  };
+</script>

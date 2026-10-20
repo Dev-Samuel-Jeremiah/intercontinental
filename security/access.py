@@ -11,7 +11,7 @@ refused — and the refusal is written to the audit trail.
 """
 # Staff roles that have an area without needing the switch
 BASELINE = {
-    'can_access_finance': ('ADMIN', 'ACCOUNT'),
+    'can_access_finance': ('ADMIN', 'ACCOUNT', 'PROPRIETOR'),
     'can_approve_payments': ('ADMIN', 'ACCOUNT'),
     'can_access_hostel': ('ADMIN', 'ACCOUNT'),
     'can_manage_boarders': ('ADMIN',),

@@ -313,11 +313,15 @@ def parent_dashboard(request):
         return render(request, "parents/error.html", {"message": "No students found."})
 
  
+    # Brothers and sisters share the parent's email: the family sees every child
+    first = students.first()
+    if first and first.parent_email:
+        students = Student.objects.filter(Q(pk__in=students.values('pk')) | Q(parent_email=first.parent_email))
     selected_student_id = request.GET.get("student")
     if selected_student_id:
         student = get_object_or_404(students, id=selected_student_id)
     else:
-        student = students.first()
+        student = students.order_by('id').first()
  
     # ----------------------------
     # ATTENDANCE
@@ -438,6 +442,10 @@ def parent_dashboard(request):
         "active_term": active_term,
     }
  
+    from dashboard import insights
+    children = list(students.select_related('class_assigned').order_by('id'))
+    context.update(ins=insights.parent(request, children, student, active_term), greeting=insights.greeting(),
+                   children=children)
     return render(request, "parents/dashboard.html", context)
 
 
