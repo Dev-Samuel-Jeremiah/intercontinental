@@ -3,11 +3,16 @@
 {% block content %}
 {% include "dashboard/_dash.html" %}
 <style>
-  .pc-kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.8rem}
-  .pc-kid{display:flex;gap:.8rem;align-items:center;padding:.9rem 1rem;border-radius:18px;border:1px solid var(--rim2);background:var(--surface);text-decoration:none;color:var(--white);transition:.15s}
-  .pc-kid:hover{border-color:var(--accbd);transform:translateY(-2px)}
-  .pc-kid.on{border-color:var(--acc);background:linear-gradient(135deg,var(--accdim),var(--surface) 70%);box-shadow:0 12px 30px var(--accdim)}
-  .pc-kid .ph{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font-weight:700;font-size:1.2rem;color:#0a1f44;background:linear-gradient(135deg,var(--acc2),var(--acc));overflow:hidden;flex-shrink:0}
+  .pc-kids{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+  .pc-kid{display:flex;gap:.85rem;align-items:center;padding:.95rem 1.05rem;border-radius:22px;background:var(--slab);text-decoration:none;color:var(--white);
+    box-shadow:var(--lift);transition:transform .15s,box-shadow .15s}
+  .pc-kid:hover{transform:translateY(-3px);box-shadow:var(--lift-hi)}
+  .pc-kid:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 2px 0 var(--edge)}
+  .pc-kid.on{background:radial-gradient(circle at 0% 0%,var(--accdim),transparent 60%),var(--slab);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1.5px var(--acc),0 6px 0 var(--deep),0 22px 36px -14px var(--acc)}
+  .pc-kid .ph{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font-weight:700;font-size:1.25rem;color:#0a1f44;overflow:hidden;flex-shrink:0;
+    background:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,var(--acc2),var(--acc));text-shadow:0 1px 0 rgba(255,255,255,.45);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -4px 7px rgba(0,0,0,.22),0 4px 0 var(--deep),0 12px 18px -8px rgba(0,0,0,.7)}
   .pc-kid .ph img{width:100%;height:100%;object-fit:cover}
   .pc-kid b{display:block;font-size:.95rem}
   .pc-kid .m{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.35rem}

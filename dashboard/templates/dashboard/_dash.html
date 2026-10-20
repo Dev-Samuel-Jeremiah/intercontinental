@@ -99,6 +99,166 @@
   .db-mom a span{position:absolute;left:0;right:0;bottom:0;padding:.35rem .5rem;font-size:.66rem;color:#fff;background:linear-gradient(transparent,rgba(5,13,31,.85))}
   @media(max-width:1100px){.c3,.c4,.c5{grid-column:span 6}.c7,.c8{grid-column:span 12}.c6{grid-column:span 12}}
   @media(max-width:700px){.c3,.c4,.c5,.c6,.c7,.c8{grid-column:span 12}.db-hero{padding:1.2rem}.db-hbar{grid-template-columns:minmax(0,1fr) 46px}.db-hbar .tr{grid-column:1/-1;order:3}}
+
+  /* ══ 3D layer ═══════════════════════════════════════════════════════════
+     Raised slabs with a visible bottom edge, jelly icon tiles lit from the
+     top-left, press-down buttons, grooved tracks with glossy fills, domed
+     rings and glass-bead dots. Everything follows the role accent. */
+  .db{gap:1.35rem;
+    --deep:color-mix(in srgb,var(--acc) 52%,#0a1124);
+    --edge:#06132c;
+    --slab:linear-gradient(165deg,#1b3768 0%,#12295a 42%,#0d1f45 100%);
+    --lift:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.35),0 6px 0 var(--edge),0 22px 40px -16px rgba(0,0,0,.75);
+    --lift-hi:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -1px 0 rgba(0,0,0,.35),0 9px 0 var(--edge),0 30px 50px -18px rgba(0,0,0,.8)}
+
+  /* Jelly tiles: icons, avatars and children's photos */
+  .db-avatar,.db-kpi .ic,.db-row .ico,.db-card-h h3 i,.db-empty i,.db-links a i,.db .jelly{
+    --j1:var(--acc2);--j2:var(--acc);--jd:var(--deep);
+    background:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,var(--j1),var(--j2));
+    color:#0a1f44;text-shadow:0 1px 0 rgba(255,255,255,.45);border:0;
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -4px 7px rgba(0,0,0,.22),0 4px 0 var(--jd),0 12px 18px -8px rgba(0,0,0,.7)}
+  .db-row .ico.red{--j1:#fca5a5;--j2:#f87171;--jd:#7f1d1d;color:#450a0a}
+  .db-row .ico.green{--j1:#86efac;--j2:#34d399;--jd:#065f46;color:#052e16}
+  .db-row .ico.amber{--j1:#fde68a;--j2:#fbbf24;--jd:#92400e;color:#451a03}
+  .db-row .ico.blue{--j1:#bfdbfe;--j2:#60a5fa;--jd:#1e3a8a;color:#0b1d4a}
+  .db-row .ico.red,.db-row .ico.green,.db-row .ico.amber,.db-row .ico.blue{
+    background:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,var(--j1),var(--j2))}
+  .db-avatar{width:68px;height:68px;border-radius:21px;font-size:1.6rem;transform:rotate(-4deg);
+    box-shadow:inset 0 3px 2px rgba(255,255,255,.6),inset 0 -6px 10px rgba(0,0,0,.22),0 7px 0 var(--deep),0 22px 30px -10px rgba(0,0,0,.75)}
+  .db-kpi .ic{position:relative;right:auto;top:auto;width:42px;height:42px;border-radius:13px;font-size:1.1rem;margin:0 0 .75rem}
+  .db-row .ico{width:38px;height:38px;border-radius:12px}
+  .db-card-h h3 i{width:30px;height:30px;border-radius:10px;display:inline-grid;place-items:center;font-size:.9rem;flex-shrink:0}
+  .db-empty i{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;margin:0 auto .7rem;font-size:1.35rem;color:#0a1f44}
+  .db-links a i{width:32px;height:32px;border-radius:10px;display:inline-grid;place-items:center;font-size:.95rem;color:#0a1f44;flex-shrink:0;
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -3px 5px rgba(0,0,0,.2),0 3px 0 var(--deep),0 8px 12px -6px rgba(0,0,0,.6)}
+
+  /* Hero: a thick glass slab with a floating glossy orb and ring */
+  .db-hero{border:0;border-radius:30px;padding:1.7rem 1.8rem 1.5rem;
+    background:radial-gradient(circle at 92% -10%,var(--accdim),transparent 52%),radial-gradient(circle at -5% 120%,rgba(96,165,250,.14),transparent 45%),var(--slab);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px var(--accbd),0 10px 0 var(--edge),0 10px 0 1px var(--accdim),0 40px 60px -24px rgba(0,0,0,.8)}
+  .db-hero::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.02) 32%,transparent 33%)}
+  .db-hero::after{right:4%;top:-44px;width:124px;height:124px;border:0;opacity:1;
+    background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.85) 0,rgba(255,255,255,0) 18%),radial-gradient(circle at 40% 38%,var(--acc2),var(--acc) 45%,var(--deep) 100%);
+    box-shadow:inset -12px -16px 28px rgba(0,0,0,.35),0 30px 40px -14px rgba(0,0,0,.6);filter:saturate(1.05);opacity:.9;
+    animation:dbFloat 7s ease-in-out infinite}
+  .db-hero-row::before{content:"";position:absolute;right:calc(4% + 128px);top:-16px;width:30px;height:30px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.9) 0,rgba(255,255,255,0) 22%),radial-gradient(circle at 40% 38%,var(--acc2),var(--acc) 50%,var(--deep) 100%);
+    box-shadow:inset -3px -4px 8px rgba(0,0,0,.3),0 10px 14px -6px rgba(0,0,0,.6);animation:dbFloat 5s ease-in-out infinite reverse}
+  @keyframes dbFloat{0%,100%{translate:0 0}50%{translate:0 -10px}}
+  .db-hello h1{text-shadow:0 2px 0 rgba(0,0,0,.35),0 10px 24px rgba(0,0,0,.35)}
+
+  /* Press-down buttons */
+  .db-btn{position:relative;border:0;border-radius:14px;padding:.62rem 1.05rem;
+    background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03)),#132b58;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.06),0 4px 0 var(--edge),0 12px 18px -10px rgba(0,0,0,.7);
+    transition:transform .12s ease,box-shadow .12s ease,color .12s}
+  .db-btn:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px var(--accbd),0 6px 0 var(--edge),0 16px 22px -10px rgba(0,0,0,.75)}
+  .db-btn:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 var(--edge),0 4px 8px -4px rgba(0,0,0,.6)}
+  .db-btn.pri{overflow:hidden;color:#0a1f44!important;text-shadow:0 1px 0 rgba(255,255,255,.4);
+    background:radial-gradient(120% 140% at 25% 0%,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 45%),linear-gradient(160deg,var(--acc2),var(--acc));
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18),0 4px 0 var(--deep),0 14px 22px -10px var(--acc)}
+  .db-btn.pri:hover{color:#0a1f44!important;box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.18),0 6px 0 var(--deep),0 18px 26px -10px var(--acc)}
+  .db-btn.pri:active{box-shadow:inset 0 2px 1px rgba(255,255,255,.45),0 1px 0 var(--deep),0 4px 10px -4px var(--acc)}
+  .db-btn .n{box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 0 #7f1d1d}
+
+  /* Grooves with glossy fills: term bar, meters, horizontal bars */
+  .db-term .bar,.db-kpi .meter,.db-hbar .tr{background:rgba(2,8,24,.55);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.65),inset 0 -1px 0 rgba(255,255,255,.05),0 1px 0 rgba(255,255,255,.07)}
+  .db-term .bar{height:12px;padding:2px}
+  .db-hbar .tr{height:11px;padding:2px}
+  .db-kpi .meter{height:8px;padding:1.5px}
+  .db-term .bar span,.db-kpi .meter span,.db-hbar .tr span{--f1:var(--acc);--f2:var(--acc2);border-radius:99px;
+    background:linear-gradient(180deg,rgba(255,255,255,.55) 0,rgba(255,255,255,.08) 50%,rgba(0,0,0,.08) 100%),linear-gradient(90deg,var(--f1),var(--f2));
+    box-shadow:0 0 12px -2px var(--f1)}
+  .db-hbar .tr span.red{--f1:#ef4444;--f2:#f87171}.db-hbar .tr span.amber{--f1:#f59e0b;--f2:#fbbf24}.db-hbar .tr span.green{--f1:#10b981;--f2:#34d399}
+
+  /* KPI tiles: raised slabs that tilt toward the pointer */
+  .db-kpis{gap:1rem}
+  .db-kpi{border:0;border-radius:22px;padding:1.1rem 1.15rem 1.15rem;background:var(--slab);box-shadow:var(--lift);
+    transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(var(--ty,0));
+    transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s;will-change:transform}
+  .db-kpi::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(160px 120px at var(--mx,30%) var(--my,0%),rgba(255,255,255,.10),transparent 70%)}
+  .db-kpi:hover{--ty:-4px;box-shadow:var(--lift-hi),inset 0 0 0 1px var(--accbd)}
+  .db-kpi .v{background:linear-gradient(180deg,#fff 20%,#b9c6e0);-webkit-background-clip:text;background-clip:text;color:transparent!important;
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+  .db-kpi .v[style*="color"]{background:none;color:inherit!important;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+
+  /* Cards */
+  .db-grid{gap:1.25rem}
+  .db-card{border:0;border-radius:26px;background:var(--slab);box-shadow:var(--lift);overflow:hidden;transition:box-shadow .25s,transform .25s}
+  .db-card:hover{box-shadow:var(--lift-hi)}
+  .db-card-h{border-bottom:0;padding:1rem 1.15rem .85rem;background:linear-gradient(180deg,rgba(255,255,255,.045),transparent);
+    box-shadow:0 1px 0 rgba(0,0,0,.35),0 2px 0 rgba(255,255,255,.04)}
+  .db-card-h h3{font-size:.98rem;letter-spacing:.1px}
+  .db-card-h a{padding:.28rem .6rem;border-radius:99px;background:rgba(0,0,0,.22);box-shadow:inset 0 1px 2px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.06)}
+  .db-card-h a:hover{background:var(--accdim)}
+
+  /* Rows lift into small tiles under the pointer */
+  .db-row{border-bottom:1px solid rgba(0,0,0,.28);box-shadow:0 1px 0 rgba(255,255,255,.03);transition:transform .15s,background .15s,box-shadow .15s,border-radius .15s}
+  a.db-row:hover{position:relative;z-index:1;transform:translateY(-2px) scale(1.01);border-radius:16px;
+    background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));box-shadow:0 4px 0 var(--edge),0 16px 24px -14px rgba(0,0,0,.8)}
+  .db-row .badge{background:radial-gradient(circle at 35% 25%,#fecaca 0,#f87171 35%,#dc2626 100%);
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 3px 0 #7f1d1d,0 6px 10px -4px rgba(220,38,38,.7)}
+  .db-row .badge[style*="rim2"]{background:#24406f!important;box-shadow:inset 0 1px 1px rgba(255,255,255,.15),0 3px 0 var(--edge)}
+
+  /* Pills */
+  .db-tag{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 0 rgba(0,0,0,.35);background:rgba(255,255,255,.04)}
+
+  /* Rings: a domed button inside a raised dial */
+  .db-ring{width:100px;height:100px;position:relative;
+    background:conic-gradient(var(--c) calc(var(--p)*1%),rgba(2,8,24,.6) 0);
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.5),0 5px 0 var(--edge),0 16px 26px -12px rgba(0,0,0,.8)}
+  .db-ring::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.28),transparent 45%);mask:radial-gradient(circle,transparent 39px,#000 40px)}
+  .db-ring span{width:76px;height:76px;position:relative;z-index:1;
+    background:radial-gradient(circle at 35% 25%,#24447c 0,#13295a 55%,#0b1c3e 100%);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.16),inset 0 -4px 8px rgba(0,0,0,.45),0 4px 10px rgba(0,0,0,.55)}
+  .db-ring b{text-shadow:0 2px 0 rgba(0,0,0,.4)}
+
+  /* Lesson timeline: glass beads on a groove */
+  .db-tl .it::before{content:"";position:absolute;left:calc(1.1rem + 62px + .6rem + 6px);top:0;bottom:0;width:2px;background:rgba(0,0,0,.45);box-shadow:1px 0 0 rgba(255,255,255,.05)}
+  .db-tl .it:first-child::before{top:50%}.db-tl .it:last-child::before{bottom:50%}
+  .db-tl .it .dot{width:15px;height:15px;border:0;
+    background:radial-gradient(circle at 35% 30%,#3b5b92 0,#1b3566 60%,#0d1f45 100%);box-shadow:inset 0 1px 1px rgba(255,255,255,.25),0 2px 0 var(--edge)}
+  .db-tl .it.done .dot{background:radial-gradient(circle at 35% 30%,#e2e8f0 0,#94a3b8 45%,#475569 100%)}
+  .db-tl .it.now{background:linear-gradient(90deg,var(--accdim),transparent);box-shadow:inset 3px 0 0 var(--acc)}
+  .db-tl .it.now .dot{width:17px;height:17px;background:radial-gradient(circle at 35% 30%,#fff 0,var(--acc2) 28%,var(--acc) 58%,var(--deep) 100%);
+    box-shadow:0 2px 0 var(--deep),0 0 0 5px var(--accdim),0 0 18px var(--acc);animation:dbPulse 2.2s ease-in-out infinite}
+  @keyframes dbPulse{50%{box-shadow:0 2px 0 var(--deep),0 0 0 9px transparent,0 0 22px var(--acc)}}
+
+  /* Quick links: little keys */
+  .db-links{gap:.75rem}
+  .db-links a{border:0;border-radius:16px;padding:.7rem .8rem;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02)),#12295a;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 0 var(--edge),0 12px 18px -12px rgba(0,0,0,.8);transition:transform .12s,box-shadow .12s}
+  .db-links a:hover{transform:translateY(-2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),inset 0 0 0 1px var(--accbd),0 6px 0 var(--edge),0 16px 22px -12px rgba(0,0,0,.85)}
+  .db-links a:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 1px 0 var(--edge)}
+
+  /* Small tiles inside cards (e.g. a teacher's classes) */
+  .db-tile{padding:.85rem .95rem;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 0 1px rgba(255,255,255,.04),0 4px 0 var(--edge),0 12px 18px -12px rgba(0,0,0,.8)}
+  .db-tile.on{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 1px var(--accbd),0 4px 0 var(--deep),0 12px 22px -10px var(--accdim)}
+
+  /* Moments: photo cards standing up off the page */
+  .db-mom{gap:.7rem}
+  .db-mom a{border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 5px 0 var(--edge),0 14px 20px -10px rgba(0,0,0,.8);transition:transform .2s}
+  .db-mom a:hover{transform:perspective(600px) rotateX(6deg) translateY(-3px)}
+
+  /* Sections rise into place one after another */
+  @media (prefers-reduced-motion:no-preference){
+    .db>*,.db-grid>.db-card,.db-kpis>.db-kpi{animation:dbRise .6s cubic-bezier(.2,.8,.2,1) backwards}
+    .db>*:nth-child(2){animation-delay:.06s}.db>*:nth-child(3){animation-delay:.12s}.db>*:nth-child(4){animation-delay:.18s}
+    .db-kpis>.db-kpi:nth-child(2){animation-delay:.1s}.db-kpis>.db-kpi:nth-child(3){animation-delay:.14s}.db-kpis>.db-kpi:nth-child(4){animation-delay:.18s}.db-kpis>.db-kpi:nth-child(5){animation-delay:.22s}.db-kpis>.db-kpi:nth-child(6){animation-delay:.26s}
+    .db-grid>.db-card:nth-child(2){animation-delay:.16s}.db-grid>.db-card:nth-child(3){animation-delay:.22s}.db-grid>.db-card:nth-child(4){animation-delay:.28s}.db-grid>.db-card:nth-child(n+5){animation-delay:.34s}
+  }
+  @keyframes dbRise{from{transform:perspective(900px) translateY(16px) rotateX(7deg)}}
+  @media (prefers-reduced-motion:reduce){.db-hero::after,.db-hero-row::before,.db-tl .it.now .dot{animation:none}}
+  @media(max-width:700px){
+    .db-hero{border-radius:24px}.db-hero::after{width:74px;height:74px;top:-30px;right:-18px}.db-hero-row::before{display:none}
+    .db-avatar{width:56px;height:56px;border-radius:17px;font-size:1.3rem}
+    .db-kpi,.db-card{border-radius:20px}
+  }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
@@ -108,8 +268,39 @@
     Chart.defaults.color = 'rgba(255,255,255,.55)';
     Chart.defaults.font.family = 'Outfit, system-ui, sans-serif';
     Chart.defaults.borderColor = 'rgba(255,255,255,.06)';
+    Chart.defaults.elements.bar.borderRadius = 8;
+    Chart.defaults.elements.bar.borderSkipped = false;
+    Chart.defaults.elements.point.radius = 3;
+    Chart.defaults.elements.point.hoverRadius = 6;
     cfg.options = Object.assign({responsive: true, maintainAspectRatio: false,
       plugins: {legend: {display: false}}}, cfg.options || {});
+    // Lift the bars and lines off the chart with a soft drop shadow.
+    cfg.plugins = (cfg.plugins || []).concat([{
+      id: 'db3d',
+      beforeDatasetsDraw: function (chart) {
+        var c = chart.ctx; c.save();
+        c.shadowColor = 'rgba(0,0,0,.55)'; c.shadowBlur = 12; c.shadowOffsetY = 6;
+      },
+      afterDatasetsDraw: function (chart) { chart.ctx.restore(); }
+    }]);
     return new Chart(el, cfg);
   };
+
+  // KPI tiles lean toward the pointer (mouse and trackpad only).
+  (function () {
+    if (!window.matchMedia || !matchMedia('(pointer:fine)').matches || matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+    document.addEventListener('pointermove', function (e) {
+      var el = e.target.closest && e.target.closest('.db-kpi');
+      document.querySelectorAll('.db-kpi[data-tilt]').forEach(function (k) {
+        if (k !== el) { k.style.removeProperty('--rx'); k.style.removeProperty('--ry'); k.removeAttribute('data-tilt'); }
+      });
+      if (!el) return;
+      var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+      el.setAttribute('data-tilt', '');
+      el.style.setProperty('--rx', ((0.5 - y) * 10).toFixed(2) + 'deg');
+      el.style.setProperty('--ry', ((x - 0.5) * 12).toFixed(2) + 'deg');
+      el.style.setProperty('--mx', (x * 100).toFixed(0) + '%');
+      el.style.setProperty('--my', (y * 100).toFixed(0) + '%');
+    }, {passive: true});
+  })();
 </script>

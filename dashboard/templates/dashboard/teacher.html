@@ -43,8 +43,8 @@
       {% for task in ins.queue.tasks %}<div class="db-row"><span class="ico green"><i class="bi bi-check2-square"></i></span><div class="t"><b>{{ task.title }}</b><span>{% if task.due_date %}due {{ task.due_date|date:"D j M" }}{% endif %}</span></div></div>{% endfor %}</div>
 
     <div class="db-card c7"><div class="db-card-h"><h3><i class="bi bi-people"></i> My classes today</h3><a href="{% url 'users:select_class_mark' %}">Registers →</a></div>
-      <div class="db-card-b">{% if ins.classes %}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem">{% for c in ins.classes %}
-        <div style="padding:.8rem .9rem;border-radius:14px;border:1px solid {% if c.form %}var(--accbd){% else %}var(--rim2){% endif %};background:rgba(0,0,0,.14)">
+      <div class="db-card-b">{% if ins.classes %}<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.85rem">{% for c in ins.classes %}
+        <div class="db-tile{% if c.form %} on{% endif %}">
           <div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--white)">{{ c.cls.name }}</b>{% if c.form %}<span class="db-tag acc">Form</span>{% endif %}</div>
           <div class="hint" style="margin:.25rem 0 .45rem">{{ c.roll }} student{{ c.roll|pluralize }}</div>
           {% if c.marked %}<span class="db-tag green"><i class="bi bi-check2"></i> {{ c.present }} present</span>{% elif c.form %}<a class="db-tag amber" href="{% url 'users:select_class_mark' %}" style="text-decoration:none">Register not taken</a>{% else %}<span class="db-tag">No register yet</span>{% endif %}</div>{% endfor %}</div>
