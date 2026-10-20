@@ -10,6 +10,30 @@
   .rq .o.ok{border-color:var(--green-border);background:var(--green-dim)}
   .rq .o.bad{border-color:var(--red-border);background:var(--red-dim)}
   .rq .ex{margin-top:.6rem;padding:.6rem .8rem;border-left:3px solid var(--champagne);background:var(--champagne-dim);border-radius:0 10px 10px 0;font-size:.88rem}
+  /* Worked solutions */
+  .sol{margin-top:.8rem;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),#122a58;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 4px 0 #06132c,0 14px 22px -14px rgba(0,0,0,.8);overflow:hidden}
+  .sol summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:.6rem;padding:.7rem .9rem;font-weight:700;font-size:.88rem;color:var(--white)}
+  .sol summary::-webkit-details-marker{display:none}
+  .sol summary .ic{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;color:#0a1f44;flex-shrink:0;
+    background:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,#ffe580,#f4d21f);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -3px 5px rgba(0,0,0,.2),0 3px 0 #8a7300}
+  .sol summary .chev{margin-left:auto;color:var(--slate);transition:transform .2s}
+  .sol[open] summary .chev{transform:rotate(180deg)}
+  .sol .body{padding:.2rem 1rem 1rem}
+  .sol ol{list-style:none;counter-reset:st;margin:.3rem 0 .6rem;padding:0;display:flex;flex-direction:column;gap:.45rem}
+  .sol ol li{counter-increment:st;display:grid;grid-template-columns:26px 1fr;gap:.6rem;align-items:start;font-size:.9rem;line-height:1.55}
+  .sol ol li::before{content:counter(st);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:.75rem;font-weight:800;color:#0a1f44;
+    background:radial-gradient(circle at 35% 30%,#fff 0,#ffe580 30%,#f4d21f 70%,#c9a800 100%);box-shadow:0 2px 0 #8a7300}
+  .sol .ans{display:inline-flex;gap:.4rem;align-items:center;padding:.35rem .75rem;border-radius:99px;font-weight:700;font-size:.85rem;
+    color:var(--green);background:var(--green-dim);box-shadow:inset 0 0 0 1px var(--green-border)}
+  .sol .mine{margin-top:.7rem;padding:.6rem .8rem;border-radius:12px;background:var(--red-dim);box-shadow:inset 0 0 0 1px var(--red-border);font-size:.86rem}
+  .sol .others{margin:.6rem 0 0;padding:0;list-style:none;font-size:.82rem;color:var(--slate2);display:flex;flex-direction:column;gap:.3rem}
+  .sol .tip{margin-top:.7rem;display:flex;gap:.5rem;font-size:.85rem;color:var(--champagne-lt)}
+  .sol .wait{display:flex;gap:.6rem;align-items:center;color:var(--slate2);font-size:.85rem;padding:.2rem 0 .3rem}
+  .sol .wait i{animation:solspin 1s linear infinite}
+  @keyframes solspin{to{transform:rotate(360deg)}}
+  .sol .by{margin-top:.7rem;font-size:.7rem;color:var(--slate)}
 </style>
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Answer review</div>
@@ -21,11 +45,94 @@
     <div class="n">Question {{ forloop.counter }} · {{ i.question.marks|floatformat:"-1" }} mark{{ i.question.marks|pluralize }}{% if i.auto_marked %} · {% if i.right %}<span style="color:var(--green)">correct</span>{% elif i.chosen %}<span style="color:var(--red)">wrong</span>{% else %}<span style="color:var(--amber)">not answered</span>{% endif %}{% endif %}</div>
     <div style="margin:.4rem 0 .5rem">{{ i.question.question_text|safe }}</div>
     {% if i.question.image %}<img src="{{ i.question.image.url }}" alt="" style="max-width:100%;max-height:260px;border-radius:10px;margin-bottom:.4rem">{% endif %}
-    {% if i.auto_marked %}{% for o in i.question.ordered_options %}<div class="o{% if o.is_correct %} ok{% elif i.chosen and o.id == i.chosen.id %} bad{% endif %}">
+    {% if i.auto_marked %}{% for o in i.question.ordered_options %}<div data-o="{{ o.id }}" class="o{% if o.is_correct %} ok{% elif i.chosen and o.id == i.chosen.id %} bad{% endif %}">
         <i class="bi {% if o.is_correct %}bi-check-circle-fill{% elif i.chosen and o.id == i.chosen.id %}bi-x-circle-fill{% else %}bi-circle{% endif %}" style="color:{% if o.is_correct %}var(--green){% elif i.chosen and o.id == i.chosen.id %}var(--red){% else %}var(--slate){% endif %}"></i>
         <span>{{ o.text }}{% if i.chosen and o.id == i.chosen.id %} <span class="hint">— your answer</span>{% endif %}</span></div>{% endfor %}
     {% else %}<div class="o"><i class="bi bi-pencil"></i><span>{{ i.text|default:"(no answer)" }}</span></div><span class="hint">Marked by your teacher.</span>{% endif %}
     {% if i.question.explanation %}<div class="ex"><b>Why:</b> {{ i.question.explanation|linebreaksbr }}</div>{% endif %}
+    {% if i.solvable %}<details class="sol" data-q="{{ i.question.id }}" data-chosen="{{ i.chosen.id|default:'' }}"{% if not i.right %} open{% endif %}>
+      <summary><span class="ic"><i class="bi bi-lightbulb-fill"></i></span>Worked solution<i class="bi bi-chevron-down chev"></i></summary>
+      <div class="body"><div class="wait"><i class="bi bi-arrow-repeat"></i> Working out the solution…</div></div>
+    </details>{% endif %}
   </div>{% endfor %}
 </div>
+{% if any_solvable %}<script>
+(function () {
+  var URL = "{% url 'cbt:review_solutions' attempt.id %}", CSRF = "{{ csrf_token }}", done = {};
+  var boxes = {};
+  document.querySelectorAll('.sol[data-q]').forEach(function (b) { boxes[b.dataset.q] = b; });
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function math(node) {
+    if (window.renderMathInElement) renderMathInElement(node, {delimiters: [{left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}], throwOnError: false});
+  }
+  function optionText(qid, oid) {
+    var o = document.querySelector('.rq [data-o="' + oid + '"] > span');
+    return o ? o.childNodes[0].textContent.trim() : '';
+  }
+  function show(qid, s) {
+    var box = boxes[qid]; if (!box || done[qid]) return; done[qid] = true;
+    var body = box.querySelector('.body'); body.textContent = '';
+    if (s.held) {
+      body.appendChild(el('div', 'wait', 'Your teacher is checking this question, so its solution is not shown yet.'));
+      return;
+    }
+    var ol = el('ol'); (s.steps || []).forEach(function (t) { ol.appendChild(el('li', null, t)); }); body.appendChild(ol);
+    if (s.answer) { var a = el('div', 'ans'); a.appendChild(el('i', 'bi bi-check-circle-fill')); a.appendChild(el('span', null, 'Answer: ' + s.answer)); body.appendChild(a); }
+    var why = s.why_not || {}, mine = box.dataset.chosen;
+    if (mine && why[mine]) {
+      var m = el('div', 'mine'); m.appendChild(el('b', null, 'Why "' + optionText(qid, mine) + '" is not right: ')); m.appendChild(document.createTextNode(why[mine])); body.appendChild(m);
+    }
+    var rest = Object.keys(why).filter(function (k) { return k !== mine; });
+    if (rest.length) {
+      var ul = el('ul', 'others');
+      rest.forEach(function (k) { var li = el('li'); li.appendChild(el('b', null, optionText(qid, k) + ': ')); li.appendChild(document.createTextNode(why[k])); ul.appendChild(li); });
+      body.appendChild(ul);
+    }
+    if (s.tip) { var t = el('div', 'tip'); t.appendChild(el('i', 'bi bi-stars')); t.appendChild(el('span', null, s.tip)); body.appendChild(t); }
+    body.appendChild(el('div', 'by', 'Worked solution written with AI from your teacher\'s answer key.'));
+    math(body);
+  }
+  function failed(ids, message) {
+    ids.forEach(function (qid) {
+      var box = boxes[qid]; if (!box || done[qid]) return;
+      var body = box.querySelector('.body'); body.textContent = '';
+      var w = el('div', 'wait', message + ' ');
+      var b = el('button', 'fin-btn fin-btn-sm', 'Try again'); b.type = 'button'; b.onclick = function () { run(); };
+      w.appendChild(b); body.appendChild(w);
+    });
+  }
+  function ask(write) {
+    var fd = new FormData(); fd.append('write', write ? '1' : '0');
+    return fetch(URL, {method: 'POST', headers: {'X-CSRFToken': CSRF}, body: fd, credentials: 'same-origin'})
+      .then(function (r) { return r.json(); });
+  }
+  function apply(d) { Object.keys(d.solutions || {}).forEach(function (q) { show(q, d.solutions[q]); }); }
+  function run() {
+    Object.keys(boxes).forEach(function (q) {
+      if (!done[q]) boxes[q].querySelector('.body').innerHTML = '<div class="wait"><i class="bi bi-arrow-repeat"></i> Working out the solution…</div>';
+    });
+    var left = Infinity, strikes = 0;
+    (function step(write) {
+      ask(write).then(function (d) {
+        apply(d);
+        var pending = d.pending || [];
+        if (d.retry_after) {
+          pending.forEach(function (q) {
+            if (!done[q]) boxes[q].querySelector('.body').innerHTML = '<div class="wait"><i class="bi bi-hourglass-split"></i> More solutions coming in a few seconds…</div>';
+          });
+          left = Infinity;
+          return setTimeout(function () { step(true); }, d.retry_after * 1000);
+        }
+        if (d.error) return failed(pending, 'The solution could not be prepared just now.');
+        if (!pending.length) return;
+        if (pending.length >= left && ++strikes > 2) return failed(pending, 'The solution could not be prepared just now.');
+        left = pending.length; step(true);
+      }).catch(function () { failed(Object.keys(boxes), 'You seem to be offline.'); });
+    })(false);
+  }
+  run();
+})();
+</script>{% endif %}
 {% endblock %}

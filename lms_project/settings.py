@@ -26,12 +26,14 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
-# Which AI to try first ('openai', 'gemini' or 'claude'); the others are fallbacks
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+# Which AI to try first ('openai', 'gemini', 'claude' or 'groq'); the others are fallbacks
 # when they have a key. Schools can override this per feature under AI settings.
 AI_DEFAULT_PROVIDER = config('AI_DEFAULT_PROVIDER', default='openai')
 OPENAI_MODEL    = config('OPENAI_MODEL', default='gpt-4o-mini')
 GEMINI_MODEL    = config('GEMINI_MODEL', default='gemini-2.0-flash')
 ANTHROPIC_MODEL = config('ANTHROPIC_MODEL', default='claude-sonnet-4-20250514')
+GROQ_MODEL      = config('GROQ_MODEL', default='openai/gpt-oss-120b')
 # Default monthly AI allowance per school, in tokens (about 750 words per 1,000 tokens).
 AI_MONTHLY_TOKENS = config('AI_MONTHLY_TOKENS', default=300000, cast=int)
 
@@ -207,7 +209,7 @@ if TESTING:
     PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
     # Nor a real AI provider (cost, and flaky tests). Tests that need AI set a
     # fake key and replace the network call.
-    OPENAI_API_KEY = GEMINI_API_KEY = ANTHROPIC_API_KEY = ''
+    OPENAI_API_KEY = GEMINI_API_KEY = ANTHROPIC_API_KEY = GROQ_API_KEY = ''
 
 # ── Background work ─────────────────────────────────────────────────────────
 # Bulk email/SMS runs on a small thread pool so requests return immediately.

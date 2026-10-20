@@ -98,10 +98,46 @@ def review_answers(request, attempt_id):
         return redirect('cbt:available_exams')
     items = engine.review(attempt)
     auto = [i for i in items if i['auto_marked']]
+    from . import solutions
+    for i in items:
+        i['solvable'] = solutions.solvable(i['question'])
     return render(request, 'cbt/review_answers.html', {
         'attempt': attempt, 'exam': attempt.exam_part.exam, 'items': items,
         'right': sum(1 for i in auto if i['right']), 'auto_total': len(auto),
+        'any_solvable': any(i['solvable'] for i in items),
     })
+
+
+@login_required
+@require_POST
+def review_solutions(request, attempt_id):
+    """Worked solutions for a review page: the stored ones, plus the next few written by the AI."""
+    from assistant.providers import AIError
+
+    from . import solutions
+    student = getattr(request.user, 'student', None)
+    attempt = get_object_or_404(ExamAttempt.objects.select_related('exam_part__exam__subject', 'student__class_assigned'),
+                                pk=attempt_id, student=student)
+    if not engine.review_open(attempt):
+        return JsonResponse({'error': 'Answers for this exam are not open for review.'}, status=403)
+    questions = [q for q in engine.paper(attempt) if solutions.solvable(q)]
+    have = solutions.existing(questions)
+    missing = [q for q in questions if q.id not in have]
+    error = ''
+    if missing and request.POST.get('write') == '1':
+        try:
+            have.update(solutions.write(request.tenant, missing[:solutions.BATCH], request.user,
+                                        subject=attempt.exam_part.exam.subject.name,
+                                        level=getattr(attempt.student.class_assigned, 'name', '')))
+        except AIError as problem:
+            wait = solutions.retry_after(str(problem))
+            if wait is None:
+                error = str(problem)
+            else:                       # the provider's per-minute limit: the page waits and carries on
+                return JsonResponse({'solutions': {str(qid): solutions.public(s) for qid, s in have.items()},
+                                     'pending': [q.id for q in missing], 'error': '', 'retry_after': wait})
+    return JsonResponse({'solutions': {str(qid): solutions.public(s) for qid, s in have.items()},
+                         'pending': [q.id for q in questions if q.id not in have], 'error': error})
 
 
 @login_required

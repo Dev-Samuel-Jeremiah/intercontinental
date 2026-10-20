@@ -14,7 +14,7 @@ allowance is stopped before the call is made (F174).
 
 Calls go straight to each provider's HTTPS API with `requests`, so no extra
 SDK is needed. Keys come from .env: OPENAI_API_KEY, GEMINI_API_KEY,
-ANTHROPIC_API_KEY.
+ANTHROPIC_API_KEY, GROQ_API_KEY.
 """
 import json
 import logging
@@ -57,7 +57,7 @@ def school_settings(tenant):
 
 def keys():
     return {'openai': getattr(settings, 'OPENAI_API_KEY', ''), 'gemini': getattr(settings, 'GEMINI_API_KEY', ''),
-            'claude': getattr(settings, 'ANTHROPIC_API_KEY', '')}
+            'claude': getattr(settings, 'ANTHROPIC_API_KEY', ''), 'groq': getattr(settings, 'GROQ_API_KEY', '')}
 
 
 def available():
@@ -93,7 +93,7 @@ def check_allowed(tenant):
                       'AI settings.')
     if not available():
         raise AIError('No AI provider is set up on this server yet. Add OPENAI_API_KEY (or GEMINI_API_KEY / '
-                      'ANTHROPIC_API_KEY) to the .env file and restart.')
+                      'ANTHROPIC_API_KEY / GROQ_API_KEY) to the .env file and restart.')
     cap = allowance(tenant)
     if cap and used_this_month(tenant) >= cap:
         raise AIError("This school has used this month's AI allowance. An administrator can raise it under "
@@ -162,7 +162,24 @@ def _claude(system, prompt, json_mode, max_tokens, temperature):
     return AIResult(text, 'claude', model, usage.get('input_tokens', 0), usage.get('output_tokens', 0))
 
 
-CALLERS = {'openai': _openai, 'gemini': _gemini, 'claude': _claude}
+def _groq(system, prompt, json_mode, max_tokens, temperature):
+    """Groq speaks the OpenAI chat format, on open models served very fast."""
+    model = getattr(settings, 'GROQ_MODEL', 'openai/gpt-oss-120b')
+    payload = {'model': model, 'max_tokens': max_tokens, 'temperature': temperature,
+               'messages': [{'role': 'system', 'content': system}, {'role': 'user', 'content': prompt}]}
+    if 'gpt-oss' in model:
+        # A reasoning model: it thinks before answering, so leave room for that.
+        payload.update(reasoning_effort='medium', include_reasoning=False, max_tokens=max(max_tokens, 8000))
+    if json_mode:
+        payload['response_format'] = {'type': 'json_object'}
+    body = _post('https://api.groq.com/openai/v1/chat/completions',
+                 {'Authorization': f'Bearer {keys()["groq"]}', 'Content-Type': 'application/json'}, payload)
+    text = body['choices'][0]['message']['content'] or ''
+    usage = body.get('usage') or {}
+    return AIResult(text, 'groq', model, usage.get('prompt_tokens', 0), usage.get('completion_tokens', 0))
+
+
+CALLERS = {'openai': _openai, 'gemini': _gemini, 'claude': _claude, 'groq': _groq}
 
 
 def parse_json(text):

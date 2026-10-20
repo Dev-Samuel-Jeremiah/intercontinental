@@ -500,3 +500,25 @@ class ExamTimetableEntry(TenantModelMixin, models.Model):
 
     class Meta:
         ordering = ['date', 'sitting', 'subject__name']
+
+
+# ----------------------------
+# Worked solutions (AI)
+# ----------------------------
+class QuestionSolution(TenantModelMixin, models.Model):
+    """A step-by-step solution to one exam question, written once by the AI and shared by every
+    student who reviews it. `key` fingerprints the question and its answer: when a teacher edits
+    either, the old solution no longer matches and a new one is written."""
+    question = models.OneToOneField(Question, on_delete=models.CASCADE, related_name='solution')
+    key = models.CharField(max_length=40)
+    # {"steps": [...], "answer": "...", "why_not": {"B": "..."}, "tip": "..."}
+    data = models.JSONField(default=dict)
+    flagged = models.BooleanField(default=False, help_text='The AI thinks the marked answer may be wrong.')
+    flag_note = models.CharField(max_length=300, blank=True)
+    provider = models.CharField(max_length=10, blank=True)
+    model = models.CharField(max_length=60, blank=True)
+    created_at = models.DateTimeField(auto_now=True)
+    objects = TenantManager()
+
+    def __str__(self):
+        return f'Solution to question {self.question_id}'

@@ -11,7 +11,7 @@ from django.db import models
 
 from tenants.managers import TenantManager, TenantModelMixin
 
-PROVIDERS = [('openai', 'OpenAI'), ('gemini', 'Google Gemini'), ('claude', 'Anthropic Claude')]
+PROVIDERS = [('openai', 'OpenAI'), ('gemini', 'Google Gemini'), ('claude', 'Anthropic Claude'), ('groq', 'Groq')]
 FEATURES = [
     ('lesson_note', 'Lesson note drafts'),
     ('questions', 'Question generator'),
@@ -24,6 +24,7 @@ FEATURES = [
     ('essay_feedback', 'Essay feedback'),
     ('tutor', 'Course tutor'),
     ('safety', 'Content safety checks'),
+    ('exam_solutions', 'Worked solutions in exam review'),
 ]
 
 

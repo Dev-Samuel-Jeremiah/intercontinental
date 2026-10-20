@@ -31,6 +31,7 @@ urlpatterns = [
     path('admin/exams/<int:exam_id>/print/', views_live.print_paper, name='print_paper'),
     path('student/exam/integrity/', views_live.integrity_event, name='integrity_event'),
     path('student/exam/review/<int:attempt_id>/', views_live.review_answers, name='review_answers'),
+    path('student/exam/review/<int:attempt_id>/solutions/', views_live.review_solutions, name='review_solutions'),
     path('admin/exams/access-control/', views.exam_access_control, name='exam_access_control'),
     path('admin/exams/create/', views.create_exam, name='cbt_create_exam'),
     path('student/exam/autosave/', views.autosave_exam_answers, name='autosave_exam_answers'),
