@@ -55,6 +55,10 @@ def _is_admin_or_super(user):
     staff = getattr(user, 'staff', None)
     return staff and staff.role == 'ADMIN'
 
+def _is_staff_member(user):
+    """School staff (or the school admin): the only people who may open any student's results."""
+    return user.is_superuser or getattr(user, 'staff', None) is not None
+
 def _can_enter_scores(user):
     if _is_admin_or_super(user):
         return True
@@ -343,7 +347,27 @@ def _get_days_absent(student, term, session):
 
 
 @login_required
+def my_results(request):
+    """Students and parents: their own published report cards, never anyone else's."""
+    student = getattr(request.user, 'student', None)
+    if student is not None:
+        published = TermResult.objects.filter(student=student, published=True)
+        wanted = published.filter(term_id=request.GET.get('term') or 0)
+        latest = (wanted.first() or published.order_by('-session__start_date', '-term__start_date', '-term_id').first())
+        if latest is None:
+            messages.info(request, 'Your results have not been published yet.')
+            return redirect('dashboard:student')
+        return redirect('results:student_result_detail', latest.session_id, latest.term_id)
+    if getattr(request.user, 'is_parent', False):
+        return redirect('results:dashboard')
+    return redirect('dashboard:router')
+
+
+@login_required
 def term_results(request):
+    # The filterable report sheet is a staff page: it can open any student.
+    if not _is_staff_member(request.user):
+        return my_results(request)
     selected_class   = request.GET.get('class')
     selected_student = request.GET.get('student')
     selected_term    = request.GET.get('term')
@@ -831,6 +855,9 @@ def cbt_scores_reference(request):
 
 @login_required
 def generate_session_results_view(request):
+    if not _can_publish_results(request.user):
+        messages.error(request, 'You do not have permission to generate session results.')
+        return redirect('dashboard:router')
     session = get_active_session()
     if not session:
         messages.error(request, 'No active session found.')
@@ -846,6 +873,8 @@ def generate_session_results_view(request):
 
 @login_required
 def cumulative_results(request):
+    if not _is_staff_member(request.user):
+        return my_results(request)
     selected_class   = request.GET.get('class')
     selected_student = request.GET.get('student')
     selected_session = request.GET.get('session')
@@ -1124,6 +1153,8 @@ def parent_view_results(request):
     Lists all published term results available to view for the parent's
     linked student(s), grouped by session and term.
     """
+    if not getattr(request.user, 'is_parent', False):
+        return redirect('results:my_results' if getattr(request.user, 'student', None) else 'dashboard:router')
     parent_email = getattr(request.user, 'email', None)
     if not parent_email:
         return render(request, 'parents/dashboard.html', {
@@ -1595,6 +1626,8 @@ def batch_results(request):
     result card (identical layout to result_detail.html) on one page.
     Teachers can scroll through or print all at once.
     """
+    if not _is_staff_member(request.user):
+        return my_results(request)
     classes  = Class.objects.all().order_by('name')
     terms    = Term.objects.all()
     sessions = AcademicSession.objects.all().order_by('-name')
@@ -1783,6 +1816,8 @@ def generate_ai_comments_bulk(request):
 
 @login_required
 def get_ai_comment(request):
+    if not _is_staff_member(request.user):
+        return JsonResponse({'status': 'unauthorized'}, status=403)
     student_id = request.GET.get('student_id', '').strip()
     term_id    = request.GET.get('term_id',    '').strip()
     session_id = request.GET.get('session_id', '').strip()

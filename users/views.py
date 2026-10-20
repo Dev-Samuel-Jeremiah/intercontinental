@@ -6,6 +6,7 @@ from datetime import date
 # Django core
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from security.access import allowed, refused
 from django.contrib.auth import (
     authenticate,
     login,
@@ -858,6 +859,10 @@ def reset_student_password(request, student_id):
 # ------------------------
 @login_required
 def generate_student_password_view(request):
+    if not allowed(request.user, 'can_generate_password'):
+        refused(request, 'can_generate_password')
+        messages.error(request, 'You do not have permission to generate passwords.')
+        return redirect('dashboard:router')
     students = Student.objects.all()
 
     if request.method == "POST":
@@ -1286,6 +1291,10 @@ def delete_class(request, class_id):
 # ------------------------
 @login_required
 def assign_subjects(request):
+    if not allowed(request.user, 'can_manage_students'):
+        refused(request, 'can_manage_students')
+        messages.error(request, 'You do not have permission to manage subjects.')
+        return redirect('dashboard:router')
     classes = Class.objects.all()
     subjects = Subject.objects.all()
     selected_class_id = request.GET.get('class')
@@ -1359,6 +1368,10 @@ def assign_subjects(request):
 
 @login_required
 def remove_class_subject(request, class_id, subject_id):
+    if not allowed(request.user, 'can_manage_students'):
+        refused(request, 'can_manage_students')
+        messages.error(request, 'You do not have permission to manage subjects.')
+        return redirect('dashboard:router')
     class_subject = get_object_or_404(
         ClassSubject, 
         school_class_id=class_id, 
@@ -1369,7 +1382,12 @@ def remove_class_subject(request, class_id, subject_id):
     return redirect(f"/subjects/assign/?class={class_id}")
 
 
+@login_required
 def remove_student_subject(request, student_id, subject_id):
+    if not allowed(request.user, 'can_manage_students'):
+        refused(request, 'can_manage_students')
+        messages.error(request, 'You do not have permission to manage subjects.')
+        return redirect('dashboard:router')
     # 1) Remove the assignment
     StudentSubject.objects.filter(
         student_id=student_id,
@@ -1443,6 +1461,9 @@ def select_class_mark(request):
 # -------------------------------------------------
 @login_required
 def select_class_view(request):
+    if not (request.user.is_superuser or request.user.staff is not None):
+        messages.error(request, 'Unauthorized access')
+        return redirect('dashboard:router')
     classes = Class.objects.all()
 
     if request.method == "POST":
@@ -1522,6 +1543,9 @@ def mark_attendance(request, class_id):
 # -------------------------------------------------
 @login_required
 def view_attendance(request, class_id):
+    if not (request.user.is_superuser or request.user.staff is not None):
+        messages.error(request, 'Unauthorized access')
+        return redirect('dashboard:router')
     school_class = get_object_or_404(Class, id=class_id)
     date_filter = request.GET.get("date")
 
@@ -1826,6 +1850,10 @@ def student_subject_manager(request):
       and marks TermResult.is_not_offering=True for unchecked ones
       across all terms/sessions for the active session.
     """
+    if not allowed(request.user, 'can_manage_students'):
+        refused(request, 'can_manage_students')
+        messages.error(request, 'You do not have permission to manage subjects.')
+        return redirect('dashboard:router')
     from results.models import TermResult
     from academics.utils import get_active_session
 

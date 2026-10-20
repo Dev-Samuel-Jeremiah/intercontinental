@@ -5,7 +5,7 @@ def is_super_admin(user):
 def is_admin(user):
     return (
         user.is_authenticated and
-        hasattr(user, 'staff') and
+        getattr(user, 'staff', None) is not None and
         user.staff.role == 'ADMIN'
     )
 
@@ -13,7 +13,7 @@ def is_admin(user):
 def is_teacher(user):
     return (
         user.is_authenticated and
-        hasattr(user, 'staff') and
+        getattr(user, 'staff', None) is not None and
         user.staff.role == 'TEACHER'
     )
 

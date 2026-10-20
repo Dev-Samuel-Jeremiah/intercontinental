@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.contrib import messages
 from django.db.models import Q, Count
@@ -100,9 +100,9 @@ from django.contrib.auth.decorators import login_required
 from .models import Announcement, AnnouncementReaction
 
 @login_required
-def mark_announcement_read(request, pk):
+def mark_announcement_read(request, pk=None, announcement_id=None):
     if request.method == 'POST':
-        announcement = Announcement.objects.get(pk=pk)
+        announcement = get_object_or_404(Announcement, pk=pk or announcement_id)
         # Create or update reaction object
         reaction, created = AnnouncementReaction.objects.get_or_create(
             user=request.user,

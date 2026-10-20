@@ -435,6 +435,8 @@ def message_logs(request):
 
 @login_required
 def get_template_content(request, tpl_id):
+    if not (request.user.is_superuser or getattr(request.user, 'staff', None) is not None):
+        return JsonResponse({'error': 'unauthorized'}, status=403)
     tpl = get_object_or_404(MessageTemplate, id=tpl_id)
     return JsonResponse({
         'subject':    tpl.subject,

@@ -25,6 +25,7 @@ urlpatterns = [
     path('broadsheet/',       views_tools.broadsheet,              name='broadsheet'),
     path('assessment/',       views_assessment.assessment_settings, name='assessment'),
     path('term/',             views.term_results,                  name='term_results'),
+    path('mine/',             views.my_results,                    name='my_results'),
     path('manual-scores/',    views.manual_score_entry,            name='manual_score_entry'),
     path('cbt-scores/',       views.cbt_scores_reference,          name='cbt_scores_reference'),
     path('cumulative/',       views.cumulative_results,            name='cumulative_results'),

@@ -1334,6 +1334,8 @@ def delete_question(request, question_id):
 
 @login_required
 def ajax_exams_by_subject(request):
+    if not (request.user.is_superuser or getattr(request.user, 'staff', None) is not None):
+        return JsonResponse({'exams': []}, status=403)
     subject_id = request.GET.get('subject_id')
     if not subject_id:
         return JsonResponse({'exams': []})
@@ -1417,11 +1419,15 @@ import os
 from django.core.files.base import ContentFile
 from pathlib import Path
 
+@login_required
 def bulk_question_upload(request):
     """
     Enhanced version supporting both Excel/CSV and Word document uploads
     Preserves mathematical formulas and scientific notation from Word
     """
+    if not can_manage_exams(request.user):
+        messages.error(request, "You do not have permission to upload questions.")
+        return redirect('dashboard:router')
     from tenants.middleware import get_current_tenant
 
     # ── Scope ExamPart to the current tenant via its parent Exam ──────────────
@@ -2055,7 +2061,12 @@ def download_question_csv_template(request):
 
 
 
+@login_required
 def exam_results_view(request):
+    # Every student's exam scores: staff only.
+    if not (request.user.is_superuser or getattr(request.user, 'staff', None) is not None):
+        messages.error(request, "Unauthorized access")
+        return redirect('dashboard:router')
     classes = Class.objects.all()
     subjects = Subject.objects.all()
     sessions = AcademicSession.objects.all()

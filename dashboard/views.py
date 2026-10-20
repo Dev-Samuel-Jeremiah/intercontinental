@@ -64,6 +64,8 @@ def super_admin_dashboard(request):
     guard = _require_login(request)
     if guard:
         return guard
+    if not request.user.is_superuser:
+        return redirect('dashboard:router')
 
     from users.models import User, Student, Staff, Subject, Class
     from cbt.models import Exam
@@ -142,6 +144,10 @@ def admin_dashboard(request):
     guard = _require_login(request)
     if guard:
         return guard
+    # The whole school's figures: the school admin and non-teaching staff only.
+    staff = request.user.staff
+    if not (request.user.is_superuser or (staff is not None and staff.role != 'TEACHER')):
+        return redirect('dashboard:router')
 
     from users.models import User, Student, Staff, Subject, Class
     from cbt.models import Exam

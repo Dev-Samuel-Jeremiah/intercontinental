@@ -179,6 +179,9 @@ def update_school_days(request, term_id):
     AJAX endpoint. Accepts POST with 'days' field.
     If days == 0, switches back to auto-calculation.
     """
+    staff = getattr(request.user, 'staff', None)
+    if not (request.user.is_superuser or (staff is not None and staff.role == 'ADMIN')):
+        return JsonResponse({'status': 'unauthorized'}, status=403)
     if request.method != 'POST':
         return JsonResponse({'status': 'method_not_allowed'}, status=405)
 
