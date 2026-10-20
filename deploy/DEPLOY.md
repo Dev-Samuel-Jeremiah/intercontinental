@@ -2,8 +2,17 @@
 
 Ubuntu **24.04** VPS · Nginx · Gunicorn · PostgreSQL 16 · free HTTPS from Let's Encrypt.
 
-**Use Ubuntu 24.04** (Python 3.12). Ubuntu 22.04 ships Python 3.10, which the pinned
-pandas/numpy versions no longer support, so `pip install` would fail there.
+**Use Ubuntu 24.04 or 26.04** (Python 3.12 / 3.14 — both tested). Ubuntu 22.04 ships Python 3.10,
+which the pinned pandas/numpy versions no longer support, so `pip install` would fail there.
+
+On **Ubuntu 26.04**: PostgreSQL is version 18 (use `18` wherever this guide says `16`), and there is
+no `wkhtmltopdf` package — install the official build instead (it also prints report cards better):
+
+```bash
+$ cd /tmp && curl -fsSLO https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-3/wkhtmltox_0.12.6.1-3.jammy_amd64.deb
+$ sudo apt install -y ./wkhtmltox_0.12.6.1-3.jammy_amd64.deb xfonts-75dpi xfonts-base
+$ sudo ln -sf /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
+```
 Run the commands in order. Lines starting with `$` are typed on the server.
 
 **Server size:** 1–2 vCPU and 2 GB RAM is plenty for one school.
