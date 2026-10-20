@@ -17,5 +17,5 @@ qrcode==8.2
 reportlab==5.0.1
 gunicorn==23.0.0
 # Only needed with DB_ENGINE=postgresql / REDIS_URL — harmless otherwise
-psycopg[binary]==3.2.3
+psycopg[binary]==3.3.6
 redis==5.1.1
