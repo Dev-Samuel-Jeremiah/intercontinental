@@ -1,6 +1,9 @@
 # Deploying the portal — intercontinentalschools.com.ng
 
-Ubuntu 22.04/24.04 VPS · Nginx · Gunicorn · SQLite · free HTTPS from Let's Encrypt.
+Ubuntu **24.04** VPS · Nginx · Gunicorn · SQLite · free HTTPS from Let's Encrypt.
+
+**Use Ubuntu 24.04** (Python 3.12). Ubuntu 22.04 ships Python 3.10, which the pinned
+pandas/numpy versions no longer support, so `pip install` would fail there.
 Run the commands in order. Lines starting with `$` are typed on the server.
 
 **Server size:** 1–2 vCPU and 2 GB RAM is plenty for one school.
@@ -88,6 +91,8 @@ Fill in at least:
 | `SECRET_KEY` | run `/srv/intercontinental/venv/bin/python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"` and paste the result |
 | `FIELD_ENCRYPTION_KEY` | run `/srv/intercontinental/venv/bin/python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` — **save a copy somewhere safe**; without it encrypted medical/welfare notes cannot be read |
 | `DEBUG` | `False` |
+| `ADMIN_URL` | a hard-to-guess path for Django's built-in admin, e.g. `manage-7f3k9/` |
+| `GROQ_API_KEY` | the school's key from console.groq.com — runs every AI feature (exam solutions, report comments, tutor, safety checks on student posts) |
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | the school's email account (Gmail: an *App password*) |
 | `ADMIN_EMAIL` | where server error alerts go |
 | `PAYSTACK_*`, `TERMII_*` / `AT_*` | the school's own keys, when you are ready |
@@ -182,6 +187,40 @@ BACKUP_OFFSITE_COMMAND=rclone copy {file} gdrive:intercontinental-backups
 ```
 
 ---
+
+## 10. Watch the site (uptime monitor)
+
+Create a free monitor at [UptimeRobot](https://uptimerobot.com) or
+[Better Stack](https://betterstack.com) for:
+
+```
+https://intercontinentalschools.com.ng/healthz/
+```
+
+It answers `{"status": "ok"}` when the portal and its database are working, and `503` when not,
+so you are emailed or texted within minutes if the site goes down. Server errors (500s) are also
+emailed to `ADMIN_EMAIL` with the details.
+
+## Go-live checklist
+
+Tick every line before telling parents and staff the address.
+
+- [ ] Ubuntu 24.04, `sudo apt upgrade` done, firewall on (`sudo ufw status` shows OpenSSH + Nginx Full only)
+- [ ] `.env`: `DEBUG=False`, a fresh `SECRET_KEY`, `ALLOWED_HOSTS` = the domain(s), `chmod 600 .env`
+- [ ] `FIELD_ENCRYPTION_KEY` set **and a copy stored off the server** (password manager)
+- [ ] `ADMIN_URL` changed from `admin/`
+- [ ] Email works: `../venv/bin/python manage.py sendtestemail you@example.com`
+- [ ] `../venv/bin/python manage.py check --deploy` shows no issues
+- [ ] `../venv/bin/python manage.py security_check` shows no BAD lines (and you understand each WARN)
+- [ ] HTTPS works and http:// redirects to https:// (certbot step 8)
+- [ ] Backup timer enabled **and** off-site copy set (`BACKUP_OFFSITE_DIR` or `BACKUP_OFFSITE_COMMAND`);
+      run one by hand: `../venv/bin/python manage.py backup_database` and confirm the copy arrived
+- [ ] Restore tested once on a spare machine (see *Restoring a backup*)
+- [ ] Uptime monitor on `/healthz/`
+- [ ] Administrator signed in, changed the temporary password and set up two-step sign-in
+- [ ] Paystack: live keys in `.env`, webhook URL `https://<domain>/finance/paystack/webhook/` added in the Paystack dashboard
+- [ ] SMS/WhatsApp keys (if used); WhatsApp needs `WHATSAPP_APP_SECRET` or its webhook refuses messages
+- [ ] Never run `seed_test_data` on the live site (it refuses unless forced) — test data belongs on a copy
 
 ## Releasing an update
 

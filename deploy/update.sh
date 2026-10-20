@@ -26,6 +26,7 @@ $PY manage.py collectstatic --noinput -v 0
 
 echo "→ Checking settings"
 $PY manage.py check --deploy
+$PY manage.py security_check || echo "⚠ Fix the problems marked BAD above"
 
 echo "→ Restarting the portal"
 sudo systemctl restart intercontinental

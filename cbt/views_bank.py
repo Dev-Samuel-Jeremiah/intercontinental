@@ -166,7 +166,8 @@ def bank_add_to_exam(request):
                          + (' Some were already on it.' if n < chosen.count() else ''))
     except bank.BankError as problem:
         messages.error(request, str(problem))
-    return redirect(request.POST.get('next') or 'cbt:bank')
+    from lms_project.redirects import safe_redirect
+    return safe_redirect(request, request.POST.get('next'), 'cbt:bank')
 
 
 @login_required
@@ -185,7 +186,8 @@ def exam_to_bank(request, exam_id):
     messages.success(request, (f'{n} question{"s" if n != 1 else ""} from {exam.title} saved to the bank'
                                + (' and released to students.' if release else ' — hidden from students until you release them.'))
                      if n else 'Every objective question in this exam is already in the bank.')
-    return redirect(request.POST.get('next') or f"{reverse('cbt:bank')}?subject={exam.subject_id}")
+    from lms_project.redirects import safe_redirect
+    return safe_redirect(request, request.POST.get('next'), f"{reverse('cbt:bank')}?subject={exam.subject_id}")
 
 
 @login_required

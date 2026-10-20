@@ -10,11 +10,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from admissions import views as admissions_views
+from lms_project.health import healthz
 from security import media as security_media
 from security import views as security_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Django's own admin; set ADMIN_URL in .env to a hard-to-guess path in production
+    path(settings.ADMIN_URL, admin.site.urls),
+    path('healthz/', healthz, name='healthz'),
     path('', include('users.urls')),
     path('cbt/', include('cbt.urls')),
     path('dashboard/', include('dashboard.urls')),

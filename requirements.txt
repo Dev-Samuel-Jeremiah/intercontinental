@@ -1,16 +1,17 @@
 # Exact versions the portal is tested with. Upgrade on purpose, run the tests,
 # then update these pins.
-Django==5.2.6
+Django==5.2.18
 python-decouple==3.8
 python-dotenv==1.2.2
 django-widget-tweaks==1.5.0
-Pillow==11.0.0
+Pillow==12.3.0
 python-docx==1.2.0
-pandas==3.0.2
+pandas==3.0.6
+numpy==2.4.4
 openpyxl==3.1.5
 xlrd==2.0.2
 requests==2.34.2
-cryptography==48.0.0
+cryptography==50.0.2
 pdfkit==1.0.0
 qrcode==8.2
 reportlab==5.0.1

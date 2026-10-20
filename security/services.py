@@ -1383,6 +1383,15 @@ def security_check():
         out.append(('warn', 'SESSION_COOKIE_SECURE is off.'))
     if not getattr(settings, 'TWO_FACTOR_ENFORCE', True):
         out.append(('warn', 'Two-step sign-in requirements are not enforced (TWO_FACTOR_ENFORCE=False).'))
+    if getattr(settings, 'ADMIN_URL', 'admin/') == 'admin/':
+        out.append(('warn', "Django's admin is at the usual /admin/ address. Set ADMIN_URL to something hard to guess."))
+    if not (getattr(settings, 'BACKUP_OFFSITE_DIR', '') or getattr(settings, 'BACKUP_OFFSITE_COMMAND', '')):
+        out.append(('warn', 'Backups are not copied off the server (BACKUP_OFFSITE_DIR or BACKUP_OFFSITE_COMMAND); '
+                            'a disk failure would lose them with the site.'))
+    if not settings.DEBUG and not any(email for _name, email in getattr(settings, 'ADMINS', [])):
+        out.append(('warn', 'No ADMIN_EMAIL: server errors will not be emailed to anyone.'))
+    if getattr(settings, 'WHATSAPP_TOKEN', '') and not getattr(settings, 'WHATSAPP_APP_SECRET', ''):
+        out.append(('bad', 'WhatsApp is set up without WHATSAPP_APP_SECRET, so its webhook refuses every message.'))
     gi = os.path.join(base, '.gitignore')
     if os.path.exists(os.path.join(base, '.env')) and (not os.path.exists(gi) or '.env' not in open(gi).read()):
         out.append(('bad', '.env exists but is not in .gitignore.'))

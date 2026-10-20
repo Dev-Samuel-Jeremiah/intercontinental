@@ -18,6 +18,8 @@ if not DEBUG and (SECRET_KEY in ('', 'change-me') or len(SECRET_KEY) < 40):
     raise ImproperlyConfigured('Set a real SECRET_KEY in .env before running with DEBUG=False '
                                '(see .env.example for the command that generates one).')
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=Csv())
+# Where Django's built-in admin lives. Use something hard to guess in production, e.g. 'manage-7f3k/'.
+ADMIN_URL = config('ADMIN_URL', default='admin/').strip('/') + '/'
 
 # ── AI keys ──────────────────────────────────────────────────────
 # NOTE: previously loaded twice (once via python-dotenv/os.getenv, once
@@ -385,8 +387,14 @@ SCHOOL_PORTAL_URL = config('SCHOOL_PORTAL_URL', default=SITE_URL)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'},
+    },
     'handlers': {
         'console': {'class': 'logging.StreamHandler'},
+        # Emails ADMIN_EMAIL the details of every server error (live site only)
+        'mail_admins': {'class': 'django.utils.log.AdminEmailHandler', 'level': 'ERROR',
+                        'filters': ['require_debug_false']},
     },
     'root': {
         'handlers': ['console'],
@@ -394,7 +402,7 @@ LOGGING = {
     },
     'loggers': {
         'django.request': {
-            'handlers': ['console'],
+            'handlers': ['console'] + ([] if TESTING else ['mail_admins']),
             'level': 'ERROR',
             'propagate': False,
         },

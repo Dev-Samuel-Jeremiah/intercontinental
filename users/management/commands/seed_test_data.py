@@ -93,8 +93,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--school', help='Subdomain of the school (defaults to the only school).')
+        parser.add_argument('--on-live-site', action='store_true',
+                            help='Allow running with DEBUG=False. Test people and fees would appear to real users.')
 
     def handle(self, *args, **opts):
+        from django.conf import settings
+        if not settings.DEBUG and not opts['on_live_site']:
+            raise CommandError('This adds made-up teachers, students, parents and fee payments. It is for test '
+                               'copies only and is refused on a live site (DEBUG=False). If you really mean it, '
+                               'add --on-live-site.')
         self.t = self._school(opts.get('school'))
         set_current_tenant(self.t)
         if User.objects.filter(tenant=self.t, username=TEACHERS[0][0]).exists():

@@ -59,7 +59,7 @@ def fingerprint(q):
     """Changes whenever the question, its options, its answer or the teacher's note change."""
     parts = [q.question_text or '', q.passage or '', q.explanation or '']
     parts += [f'{o.id}:{o.text}:{int(o.is_correct)}' for o in _options(q)]
-    return hashlib.sha1('\n'.join(parts).encode()).hexdigest()
+    return hashlib.sha1('\n'.join(parts).encode(), usedforsecurity=False).hexdigest()
 
 
 def solvable(q):

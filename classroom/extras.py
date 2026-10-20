@@ -175,7 +175,7 @@ def _shingles(words, k=5):
 
 def _file_hash(f):
     try:
-        h = hashlib.sha1()
+        h = hashlib.sha1(usedforsecurity=False)
         with f.open('rb') as fh:
             for chunk in iter(lambda: fh.read(65536), b''):
                 h.update(chunk)

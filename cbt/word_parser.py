@@ -215,7 +215,7 @@ def _extract_paragraph_image(paragraph, document):
                             ext = image_part.content_type.split('/')[-1]
                             if ext == 'jpeg':
                                 ext = 'jpg'
-                            fname = f"embed_{hashlib.md5(image_bytes[:64]).hexdigest()[:10]}.{ext}"
+                            fname = f"embed_{hashlib.md5(image_bytes[:64], usedforsecurity=False).hexdigest()[:10]}.{ext}"
                             return fname, image_bytes
             return None, None
 
@@ -231,7 +231,7 @@ def _extract_paragraph_image(paragraph, document):
         ext = image_part.content_type.split('/')[-1]
         if ext == 'jpeg':
             ext = 'jpg'
-        fname = f"embed_{hashlib.md5(image_bytes[:64]).hexdigest()[:10]}.{ext}"
+        fname = f"embed_{hashlib.md5(image_bytes[:64], usedforsecurity=False).hexdigest()[:10]}.{ext}"
         return fname, image_bytes
 
     except Exception:

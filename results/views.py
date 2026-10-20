@@ -203,25 +203,12 @@ def _build_pdf_response(request, template, context, filename):
     pdf_context = {**context, 'is_pdf': True}
 
     # print-media-type makes wkhtmltopdf honour the @media print rules in the
-    # template (which hide the on-screen header/download-button chrome and
-    # zero out body padding). Without it wkhtmltopdf renders using the
-    # screen stylesheet, so that extra chrome is included in the output and
-    # pushes the report card onto a second page. page-size/margins pin the
-    # sheet to a single A4 page instead of wkhtmltopdf's Letter default.
-    options = {
-        'enable-local-file-access': None,
-        'quiet':                    '',
-        'print-media-type':         None,
-        'page-size':                'A4',
-        'margin-top':               '5mm',
-        'margin-bottom':            '5mm',
-        'margin-left':              '5mm',
-        'margin-right':             '5mm',
-    }
-    config  = pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf')
-    html    = render(request, template, pdf_context).content.decode()
+    # template (which hide the on-screen header/download-button chrome); the
+    # A4 size and margins keep the sheet on a single page.
+    from lms_project.pdf import A4, html_to_pdf
+    html = render(request, template, pdf_context).content.decode()
     try:
-        pdf  = pdfkit.from_string(html, False, options=options, configuration=config)
+        pdf  = html_to_pdf(html, **A4)
         resp = HttpResponse(pdf, content_type='application/pdf')
         resp['Content-Disposition'] = f'attachment; filename="{filename}"'
         return resp
@@ -1395,7 +1382,6 @@ def teacher_score_view(request):
 # AJAX: Save remarks and skills
 # ---------------------------------------------------------------------------
 
-@csrf_exempt
 @login_required
 def save_teacher_remark(request):
     """Auto-save class teacher remark. Uses csrf_exempt so the JS

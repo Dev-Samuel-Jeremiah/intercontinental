@@ -445,11 +445,9 @@ def receipt_txn(request, txn_id):
     if request.GET.get("pdf"):
         from django.template.loader import render_to_string
         try:
-            import pdfkit
+            from lms_project.pdf import html_to_pdf
             html    = render_to_string("finance/receipt_pdf.html", ctx, request=request)
-            options = {"enable-local-file-access":None,"quiet":""}
-            config  = pdfkit.configuration(wkhtmltopdf="/usr/bin/wkhtmltopdf")
-            pdf     = pdfkit.from_string(html, False, options=options, configuration=config)
+            pdf     = html_to_pdf(html)
             resp    = HttpResponse(pdf, content_type="application/pdf")
             resp["Content-Disposition"] = f'attachment; filename="Receipt_{txn.reference}.pdf"'
             return resp

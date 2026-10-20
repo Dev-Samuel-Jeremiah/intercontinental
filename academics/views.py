@@ -172,7 +172,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
-@csrf_exempt
 @login_required
 def update_school_days(request, term_id):
     """

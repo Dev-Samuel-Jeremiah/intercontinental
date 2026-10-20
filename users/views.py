@@ -185,7 +185,8 @@ def staff_login(request):
             )
             # Respect the 'next' parameter but never redirect back to login
             next_url = request.POST.get('next') or request.GET.get('next', '')
-            if next_url and not next_url.startswith('/staff/login') and not next_url == '/':
+            from lms_project.redirects import is_safe
+            if is_safe(request, next_url) and not next_url.startswith('/staff/login') and not next_url == '/':
                 return redirect(next_url)
             return redirect('dashboard:router')
 

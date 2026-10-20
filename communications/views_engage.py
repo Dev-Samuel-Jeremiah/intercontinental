@@ -367,8 +367,9 @@ def campaign_report(request, campaign_id):
 
 @csrf_exempt
 def delivery_webhook(request, token):
+    import hmac
     expected = getattr(settings, 'SMS_DLR_TOKEN', '')
-    if not expected or token != expected:
+    if not expected or not hmac.compare_digest(token.encode(), expected.encode()):
         raise Http404
     if request.content_type == 'application/json':
         try:

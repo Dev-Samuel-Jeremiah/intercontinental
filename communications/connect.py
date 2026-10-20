@@ -548,7 +548,7 @@ def try_whatsapp(tenant, to, text):
 def check_signature(body, header):
     secret = getattr(settings, 'WHATSAPP_APP_SECRET', '')
     if not secret:
-        return True
+        return False        # without the app secret nothing proves a message came from WhatsApp
     expected = 'sha256=' + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
     return hmac.compare_digest(expected, header or '')
 

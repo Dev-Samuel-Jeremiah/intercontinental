@@ -49,10 +49,9 @@ def sheet_action(request):
             messages.success(request, 'Approved.' if action == 'approve' else 'Sent back to the subject teacher.')
     except release.ReleaseError as problem:
         messages.error(request, str(problem))
-    nxt = request.POST.get('next') or ''
-    if nxt.startswith('/'):
-        return redirect(nxt)
-    return redirect(f"{reverse('results:manual_score_entry')}?class={school_class.id}&subject={subject.id}&term={term.id}")
+    from lms_project.redirects import safe_redirect
+    return safe_redirect(request, request.POST.get('next') or '',
+                         f"{reverse('results:manual_score_entry')}?class={school_class.id}&subject={subject.id}&term={term.id}")
 
 
 @login_required

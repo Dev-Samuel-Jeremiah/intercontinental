@@ -29,11 +29,8 @@ class HistoryError(ValueError):
 
 def html_to_pdf(html):
     """Report card HTML → PDF bytes (wkhtmltopdf, same options as single downloads)."""
-    import pdfkit
-    options = {'enable-local-file-access': None, 'quiet': '', 'print-media-type': None, 'page-size': 'A4',
-               'margin-top': '5mm', 'margin-bottom': '5mm', 'margin-left': '5mm', 'margin-right': '5mm'}
-    return pdfkit.from_string(html, False, options=options,
-                              configuration=pdfkit.configuration(wkhtmltopdf='/usr/bin/wkhtmltopdf'))
+    from lms_project.pdf import A4, html_to_pdf as safe_pdf
+    return safe_pdf(html, **A4)
 
 
 def request_bundle(school_class, term, user, published_only=False):

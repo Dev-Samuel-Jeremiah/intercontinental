@@ -136,7 +136,8 @@ def pick_campus(request):
         request.session['campus_id'] = int(cid)
     else:
         request.session.pop('campus_id', None)
-    return redirect(request.POST.get('next') or 'dashboard:router')
+    from lms_project.redirects import safe_redirect
+    return safe_redirect(request, request.POST.get('next'), 'dashboard:router')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
