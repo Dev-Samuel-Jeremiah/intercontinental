@@ -14,7 +14,7 @@ and the openings already used for classmates this term are passed to the AI
 so a class's report cards don't all start the same way. If a reply still
 repeats an opening, it is asked once more.
 
-Settings (.env): OPENAI_API_KEY (or GEMINI_API_KEY / ANTHROPIC_API_KEY).
+Settings (.env): GROQ_API_KEY (or OPENAI_API_KEY / GEMINI_API_KEY / ANTHROPIC_API_KEY).
 """
 
 from users.models import ENROLLED_STATUSES

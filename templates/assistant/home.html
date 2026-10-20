@@ -8,7 +8,7 @@
   <h1 class="fin-title">Let AI do the <em>first draft</em></h1>
   <p class="fin-sub">Every AI tool here writes a draft for you to check. Nothing reaches a parent until a member of staff has read and approved it.</p>
 </div>{% if is_admin %}<a class="fin-btn" href="{% url 'assistant:settings' %}"><i class="bi bi-sliders"></i> AI settings &amp; usage</a>{% endif %}</div>
-{% if not ready %}<div class="note"><i class="bi bi-plug"></i><span>No AI provider is connected yet. Add <code>OPENAI_API_KEY</code> to the server's .env file and restart.</span></div>
+{% if not ready %}<div class="note"><i class="bi bi-plug"></i><span>No AI provider is connected yet. Add <code>GROQ_API_KEY</code> to the server's .env file and restart.</span></div>
 {% elif not enabled %}<div class="note"><i class="bi bi-pause-circle"></i><span>AI is switched off for this school.{% if is_admin %} Switch it on under AI settings.{% endif %}</span></div>{% endif %}
 <div class="ai-tools">
   <a class="ai-tool" href="{% url 'curriculum:note_new' %}"><i class="bi bi-journal-richtext"></i><h3>Lesson note drafts</h3><p>Open a new lesson note, pick the topic and press "Draft with AI". You edit it before sending it for review.</p></a>

@@ -29,11 +29,13 @@ ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 # Which AI to try first ('openai', 'gemini', 'claude' or 'groq'); the others are fallbacks
 # when they have a key. Schools can override this per feature under AI settings.
-AI_DEFAULT_PROVIDER = config('AI_DEFAULT_PROVIDER', default='openai')
+AI_DEFAULT_PROVIDER = config('AI_DEFAULT_PROVIDER', default='groq')
 OPENAI_MODEL    = config('OPENAI_MODEL', default='gpt-4o-mini')
 GEMINI_MODEL    = config('GEMINI_MODEL', default='gemini-2.0-flash')
 ANTHROPIC_MODEL = config('ANTHROPIC_MODEL', default='claude-sonnet-4-20250514')
 GROQ_MODEL      = config('GROQ_MODEL', default='openai/gpt-oss-120b')
+# Groq's policy-following model for checking what students post (assistant/safety.py).
+GROQ_SAFETY_MODEL = config('GROQ_SAFETY_MODEL', default='openai/gpt-oss-safeguard-20b')
 # Default monthly AI allowance per school, in tokens (about 750 words per 1,000 tokens).
 AI_MONTHLY_TOKENS = config('AI_MONTHLY_TOKENS', default=300000, cast=int)
 

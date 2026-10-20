@@ -6,10 +6,11 @@ questions to the AI tutor.
 
 Two layers:
   1. A short list of phrases checked on the server — always on, no AI needed.
-  2. OpenAI's moderation check, when an OpenAI key is set and AI is switched
-     on for the school. It is free to use; if it can't be reached the post is
-     judged on the phrase list alone (it is never blocked because the check
-     failed).
+  2. An AI check when AI is switched on for the school: Groq's safeguard
+     model (GROQ_API_KEY) reading the post against a written policy, or
+     OpenAI's free moderation check (OPENAI_API_KEY) when there is no Groq key.
+     If it can't be reached the post is judged on the phrase list alone (it is
+     never blocked because the check failed).
 
 A flagged post is held — only its writer and the teacher see it — until the
 teacher releases or deletes it. Anything suggesting a student may hurt
@@ -39,6 +40,20 @@ OPENAI_CATEGORIES = {'self-harm': URGENT, 'self-harm/intent': URGENT, 'self-harm
                      'harassment': 'bullying', 'harassment/threatening': 'threats', 'violence': 'threats',
                      'hate': 'hateful language', 'hate/threatening': 'threats', 'sexual': 'sexual content',
                      'sexual/minors': 'sexual content'}
+LABELS = (URGENT, 'threats', 'bullying', 'hateful language', 'sexual content')
+POLICY = (
+    "You check messages written by school pupils (ages 6-18) on a school learning platform.\n"
+    "Classify the message against this policy.\n"
+    "Categories:\n"
+    "- self-harm: the writer may hurt or kill themselves, or wants to die.\n"
+    "- threats: threatening violence against someone.\n"
+    "- bullying: insulting, humiliating or harassing another person.\n"
+    "- hateful language: attacks on a group (religion, tribe, race, disability...).\n"
+    "- sexual content: sexual talk, requests for pictures, grooming.\n"
+    "Normal school talk, questions about lessons, mild frustration (\"this homework is killing me\") and discussion "
+    "of topics in class (e.g. a history lesson about war) are NOT violations.\n"
+    'Reply with JSON only: {"flagged": true|false, "category": "<one category above, or empty>"}'
+)
 
 
 @dataclass
@@ -65,32 +80,59 @@ def local_check(text):
     return Verdict()
 
 
+def _groq_check(text):
+    """Groq's safeguard model reads the post against POLICY. Returns (Verdict, model, tokens in, tokens out)."""
+    from . import providers
+    model = getattr(settings, 'GROQ_SAFETY_MODEL', 'openai/gpt-oss-safeguard-20b')
+    body = providers._post('https://api.groq.com/openai/v1/chat/completions',
+                           {'Authorization': f'Bearer {settings.GROQ_API_KEY}', 'Content-Type': 'application/json'},
+                           {'model': model, 'temperature': 0, 'max_tokens': 1500, 'reasoning_effort': 'low',
+                            'include_reasoning': False, 'response_format': {'type': 'json_object'},
+                            'messages': [{'role': 'system', 'content': POLICY}, {'role': 'user', 'content': text[:8000]}]})
+    data = providers.parse_json(body['choices'][0]['message']['content'])
+    usage = body.get('usage') or {}
+    category = str(data.get('category') or '').strip().lower()
+    verdict = Verdict(True, category if category in LABELS else 'harmful content') if data.get('flagged') else Verdict()
+    return verdict, model, usage.get('prompt_tokens', 0), usage.get('completion_tokens', 0)
+
+
+def _openai_check(text):
+    """OpenAI's free moderation check."""
+    from . import providers
+    body = providers._post('https://api.openai.com/v1/moderations',
+                           {'Authorization': f'Bearer {settings.OPENAI_API_KEY}', 'Content-Type': 'application/json'},
+                           {'model': 'omni-moderation-latest', 'input': text[:8000]})
+    result = (body.get('results') or [{}])[0]
+    if not result.get('flagged'):
+        return Verdict(), 'omni-moderation-latest', 0, 0
+    cats = [c for c, on in (result.get('categories') or {}).items() if on]
+    labels = [OPENAI_CATEGORIES.get(c, 'harmful content') for c in cats]
+    return (Verdict(True, URGENT if URGENT in labels else (labels[0] if labels else 'harmful content')),
+            'omni-moderation-latest', 0, 0)
+
+
 def ai_check(tenant, text, user=None):
-    """OpenAI's moderation check. Returns a Verdict, or None if it couldn't run."""
+    """The AI safety check (Groq first, else OpenAI). Returns a Verdict, or None if it couldn't run."""
     from . import providers
     from .models import AIUsage
-    if not getattr(settings, 'OPENAI_API_KEY', ''):
+    if getattr(settings, 'GROQ_API_KEY', ''):
+        provider, run = 'groq', _groq_check
+    elif getattr(settings, 'OPENAI_API_KEY', ''):
+        provider, run = 'openai', _openai_check
+    else:
         return None
     if not providers.school_settings(tenant).enabled:
         return None
     try:
-        body = providers._post('https://api.openai.com/v1/moderations',
-                               {'Authorization': f'Bearer {settings.OPENAI_API_KEY}',
-                                'Content-Type': 'application/json'},
-                               {'model': 'omni-moderation-latest', 'input': text[:8000]})
-        result = (body.get('results') or [{}])[0]
+        verdict, model, tokens_in, tokens_out = run(text)
     except Exception as problem:   # never block a post because the check failed
         logger.warning('Moderation check failed: %s', problem)
-        AIUsage.objects.create(tenant=tenant, feature='safety', provider='openai', user=user, ok=False,
+        AIUsage.objects.create(tenant=tenant, feature='safety', provider=provider, user=user, ok=False,
                                error=str(problem)[:255])
         return None
-    AIUsage.objects.create(tenant=tenant, feature='safety', provider='openai', model='omni-moderation-latest',
-                           user=user)
-    if not result.get('flagged'):
-        return Verdict()
-    cats = [c for c, on in (result.get('categories') or {}).items() if on]
-    labels = [OPENAI_CATEGORIES.get(c, 'harmful content') for c in cats]
-    return Verdict(True, URGENT if URGENT in labels else (labels[0] if labels else 'harmful content'))
+    AIUsage.objects.create(tenant=tenant, feature='safety', provider=provider, model=model, user=user,
+                           input_tokens=tokens_in, output_tokens=tokens_out)
+    return verdict
 
 
 def check(tenant, text, user=None):

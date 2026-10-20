@@ -69,7 +69,7 @@ def available():
 def order_for(tenant, feature):
     s = school_settings(tenant)
     first = (s.feature_providers or {}).get(feature) or s.default_provider or \
-        getattr(settings, 'AI_DEFAULT_PROVIDER', 'openai')
+        getattr(settings, 'AI_DEFAULT_PROVIDER', 'groq')
     have = available()
     return ([first] if first in have else []) + [p for p in have if p != first]
 
