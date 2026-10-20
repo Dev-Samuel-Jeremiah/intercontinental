@@ -1385,6 +1385,9 @@ def security_check():
         out.append(('warn', 'Two-step sign-in requirements are not enforced (TWO_FACTOR_ENFORCE=False).'))
     if getattr(settings, 'ADMIN_URL', 'admin/') == 'admin/':
         out.append(('warn', "Django's admin is at the usual /admin/ address. Set ADMIN_URL to something hard to guess."))
+    if not settings.DEBUG and settings.DATABASES['default']['ENGINE'].endswith('sqlite3'):
+        out.append(('warn', 'The live site runs on SQLite. PostgreSQL is the production database '
+                            '(DB_ENGINE=postgresql; see deploy/DEPLOY.md).'))
     if not (getattr(settings, 'BACKUP_OFFSITE_DIR', '') or getattr(settings, 'BACKUP_OFFSITE_COMMAND', '')):
         out.append(('warn', 'Backups are not copied off the server (BACKUP_OFFSITE_DIR or BACKUP_OFFSITE_COMMAND); '
                             'a disk failure would lose them with the site.'))

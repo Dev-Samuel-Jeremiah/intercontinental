@@ -3,7 +3,9 @@
 #          sudo systemctl daemon-reload && sudo systemctl enable --now intercontinental
 [Unit]
 Description=Intercontinental Schools portal (Gunicorn)
-After=network.target
+# Start after PostgreSQL (harmless if the database is SQLite or on another machine)
+After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 User=school

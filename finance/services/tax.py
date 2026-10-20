@@ -155,7 +155,8 @@ def record_remittance(tenant, authority, start, end, *, paid_on=None, reference=
     been paid over yet. The amount is the sum of those deductions, so the
     remittance always agrees with the schedule.
     """
-    rows = list(unremitted(tenant, authority, start, end).select_for_update())
+    # Lock only these rows: PostgreSQL refuses FOR UPDATE on the optional (outer-joined) related tables.
+    rows = list(unremitted(tenant, authority, start, end).select_for_update(of=('self',)))
     if not rows:
         raise ValueError('Nothing withheld in that period is waiting to be paid over.')
     remittance = WhtRemittance.objects.create(

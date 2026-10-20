@@ -1,6 +1,6 @@
 # Deploying the portal — intercontinentalschools.com.ng
 
-Ubuntu **24.04** VPS · Nginx · Gunicorn · SQLite · free HTTPS from Let's Encrypt.
+Ubuntu **24.04** VPS · Nginx · Gunicorn · PostgreSQL 16 · free HTTPS from Let's Encrypt.
 
 **Use Ubuntu 24.04** (Python 3.12). Ubuntu 22.04 ships Python 3.10, which the pinned
 pandas/numpy versions no longer support, so `pip install` would fail there.
@@ -14,7 +14,7 @@ Run the commands in order. Lines starting with `$` are typed on the server.
 /srv/intercontinental/
 ├── app/            the code, cloned from GitHub (the .env file lives here)
 ├── venv/           Python packages
-├── data/           db.sqlite3  ← the database, never inside app/
+├── data/           only used if you run on SQLite instead of PostgreSQL
 ├── media/          public uploads (school logo, branding)
 ├── private_media/  student documents, passports, reports — never public
 ├── static/         CSS/JS/images (collectstatic)
@@ -39,12 +39,48 @@ DNS can take a few minutes to a few hours. Check with `ping intercontinentalscho
 ```bash
 $ sudo apt update && sudo apt upgrade -y
 $ sudo apt install -y python3 python3-venv python3-dev build-essential git nginx sqlite3 \
-                      wkhtmltopdf fonts-dejavu ffmpeg certbot python3-certbot-nginx ufw
+                      wkhtmltopdf fonts-dejavu ffmpeg certbot python3-certbot-nginx ufw \
+                      postgresql postgresql-contrib
 $ sudo ufw allow OpenSSH && sudo ufw allow 'Nginx Full' && sudo ufw --force enable
 $ sudo timedatectl set-timezone Africa/Lagos
 ```
 
-`wkhtmltopdf` makes the result-sheet and report PDFs.
+`wkhtmltopdf` makes the result-sheet and report PDFs. `postgresql` installs the database server
+and the `pg_dump` / `pg_restore` tools the backups use. PostgreSQL only listens on the server itself
+(localhost), so **do not** open port 5432 in the firewall.
+
+### The database
+
+Make up a long password for the database (keep it for `.env` in step 5):
+
+```bash
+$ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Create the database and its user (paste the password where shown):
+
+```bash
+$ sudo -u postgres psql
+postgres=# CREATE ROLE intercontinental LOGIN PASSWORD 'PASTE-THE-PASSWORD';
+postgres=# CREATE DATABASE intercontinental OWNER intercontinental ENCODING 'UTF8' TEMPLATE template0;
+postgres=# \q
+```
+
+Size PostgreSQL for a 2 GB server (adjust if yours is larger: about a quarter of the RAM for
+`shared_buffers`, half for `effective_cache_size`):
+
+```bash
+$ sudo tee /etc/postgresql/16/main/conf.d/intercontinental.conf <<'CONF'
+shared_buffers = 512MB
+effective_cache_size = 1GB
+work_mem = 8MB
+maintenance_work_mem = 128MB
+max_connections = 100
+timezone = 'Africa/Lagos'
+CONF
+$ sudo systemctl restart postgresql
+$ systemctl status postgresql          # "active"
+```
 
 ## 3. Create the app user and folders
 
@@ -91,13 +127,14 @@ Fill in at least:
 | `SECRET_KEY` | run `/srv/intercontinental/venv/bin/python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"` and paste the result |
 | `FIELD_ENCRYPTION_KEY` | run `/srv/intercontinental/venv/bin/python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` — **save a copy somewhere safe**; without it encrypted medical/welfare notes cannot be read |
 | `DEBUG` | `False` |
+| `DB_PASSWORD` | the database password you made in step 2 (`DB_NAME` / `DB_USER` are already `intercontinental`) |
 | `ADMIN_URL` | a hard-to-guess path for Django's built-in admin, e.g. `manage-7f3k9/` |
 | `GROQ_API_KEY` | the school's key from console.groq.com — runs every AI feature (exam solutions, report comments, tutor, safety checks on student posts) |
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | the school's email account (Gmail: an *App password*) |
 | `ADMIN_EMAIL` | where server error alerts go |
 | `PAYSTACK_*`, `TERMII_*` / `AT_*` | the school's own keys, when you are ready |
 
-The domain, SQLite and file locations are already set for this server in `.env.example`.
+The domain, the PostgreSQL connection and file locations are already set for this server in `.env.example`.
 
 ## 6. Create the database and the school
 
@@ -171,7 +208,9 @@ administrators can see the last good backup, start one, download one, and see th
 health. If the timer is ever missed, the site starts a backup itself once the last good one is
 more than a day old, and administrators are notified if a backup fails.
 
-Snapshots go to `/srv/intercontinental/backups/` and are kept for 14 days (`BACKUP_KEEP_DAYS`).
+Each night `pg_dump` writes a compressed dump, `db-YYYYMMDD-HHMMSS.pgdump`, which is checked by reading it
+back before it counts as a good backup. Dumps go to `/srv/intercontinental/backups/` and are kept for
+14 days (`BACKUP_KEEP_DAYS`).
 **Copy them off the server** — a backup on the same disk is lost with the disk. Either mount a
 second disk or network share and set, in `.env`:
 
@@ -208,6 +247,8 @@ Tick every line before telling parents and staff the address.
 - [ ] Ubuntu 24.04, `sudo apt upgrade` done, firewall on (`sudo ufw status` shows OpenSSH + Nginx Full only)
 - [ ] `.env`: `DEBUG=False`, a fresh `SECRET_KEY`, `ALLOWED_HOSTS` = the domain(s), `chmod 600 .env`
 - [ ] `FIELD_ENCRYPTION_KEY` set **and a copy stored off the server** (password manager)
+- [ ] PostgreSQL running with its own long password (`DB_PASSWORD`), port 5432 **not** open in the firewall,
+      `systemctl status postgresql` active, and *Security → Platform & Backups* shows "Database: PostgreSQL 16"
 - [ ] `ADMIN_URL` changed from `admin/`
 - [ ] Email works: `../venv/bin/python manage.py sendtestemail you@example.com`
 - [ ] `../venv/bin/python manage.py check --deploy` shows no issues
@@ -236,15 +277,46 @@ files, checks the settings and restarts the portal.
 
 ## Restoring a backup
 
+The portal is stopped, the current database is kept under another name (so you can go back), and
+the dump is loaded into a fresh, empty database:
+
 ```bash
 $ sudo systemctl stop intercontinental
+$ sudo -u postgres psql -c "ALTER DATABASE intercontinental RENAME TO intercontinental_before_restore"
+$ sudo -u postgres psql -c "CREATE DATABASE intercontinental OWNER intercontinental ENCODING 'UTF8' TEMPLATE template0"
+$ sudo -u postgres pg_restore --no-owner --role=intercontinental -d intercontinental \
+      /srv/intercontinental/backups/db-YYYYMMDD-HHMMSS.pgdump
+$ sudo systemctl start intercontinental
+```
+
+Sign in and check. When you are happy, drop the old copy:
+`sudo -u postgres psql -c "DROP DATABASE intercontinental_before_restore"`.
+
+(On SQLite instead: stop the portal, `gunzip -c db-….sqlite3.gz > /srv/intercontinental/data/db.sqlite3`,
+delete the `-wal` / `-shm` files next to it, start the portal.)
+
+## Moving an existing SQLite portal to PostgreSQL
+
+If the school has already been using the portal on SQLite (or you want to bring the data from a
+test machine), copy everything across — every row keeps its id, so sign-ins, uploaded files,
+results and payments stay exactly as they were:
+
+```bash
+$ sudo systemctl stop intercontinental                     # nothing must change during the copy
 $ sudo -iu school
-$ cp /srv/intercontinental/data/db.sqlite3 /srv/intercontinental/data/db.sqlite3.before-restore
-$ rm -f /srv/intercontinental/data/db.sqlite3-wal /srv/intercontinental/data/db.sqlite3-shm
-$ gunzip -c /srv/intercontinental/backups/db-YYYYMMDD-HHMMSS.sqlite3.gz > /srv/intercontinental/data/db.sqlite3
+$ cd /srv/intercontinental/app
+$ ../venv/bin/python manage.py backup_database             # a last SQLite backup, just in case
+$ nano .env                                                # DB_ENGINE=postgresql + DB_PASSWORD (step 5)
+$ ../venv/bin/python manage.py migrate                     # creates the empty PostgreSQL tables
+$ ../venv/bin/python manage.py copy_sqlite_to_postgres --sqlite /srv/intercontinental/data/db.sqlite3
 $ exit
 $ sudo systemctl start intercontinental
 ```
+
+The copy checks first that both databases are at the same version and that no text is longer than
+PostgreSQL allows, runs in one transaction (all or nothing), and finishes by comparing every
+table's row count. Keep the same `SECRET_KEY` and `FIELD_ENCRYPTION_KEY` so encrypted notes stay
+readable. To go back, set `DB_ENGINE=sqlite` again — the SQLite file is not changed.
 
 ## When something is wrong
 
@@ -255,10 +327,16 @@ $ sudo systemctl start intercontinental
 | Nginx errors | `sudo tail -n 50 /var/log/nginx/intercontinental.error.log` |
 | 502 Bad Gateway | the portal is not running: `sudo systemctl restart intercontinental`, then check its log |
 | Static files missing | rerun `collectstatic` (step 6) and check `/srv/intercontinental/static` exists |
+| Database errors / "connection refused" | `systemctl status postgresql`, then `sudo tail -n 50 /var/log/postgresql/postgresql-16-main.log` |
+| "password authentication failed" | `DB_PASSWORD` in `.env` differs from the one in step 2 — reset it: `sudo -u postgres psql -c "ALTER ROLE intercontinental PASSWORD '…'"` |
 
 ## Notes
 
-- **SQLite** is fine for one school: WAL mode and write queuing are switched on in
-  `lms_project/settings.py`. If the school grows to many thousands of daily users, move to
-  PostgreSQL (`DB_ENGINE=postgresql` in `.env`) — nothing else in the code changes.
+- **PostgreSQL** is the production database: many people can save at once (results entry week,
+  fee deadlines), and Gunicorn runs more workers on it (`deploy/gunicorn.conf.py`). Connections are
+  kept open between requests and checked before reuse (`DB_CONN_MAX_AGE`).
+- A database on another machine (managed PostgreSQL) works too: set `DB_HOST`, `DB_PORT` and
+  `DB_SSLMODE=require`; install `postgresql-client-16` on the app server for backups (`pg_dump` must
+  be the same major version as the server or newer).
+- **SQLite** still works for a small install or local development (`DB_ENGINE=sqlite`).
 - Never commit `.env` or the database. `.gitignore` already keeps them out.

@@ -1,15 +1,22 @@
 """
 Gunicorn settings for the school portal (used by deploy/intercontinental.service).
 
-SQLite allows one writer at a time, so a few workers with a few threads each
-is the right shape: plenty for a single school, without writers queueing up.
+PostgreSQL handles many writers at once, so it gets the usual 2 x CPUs + 1
+workers. SQLite allows one writer at a time, so it keeps a few workers with a
+few threads each: plenty for a single school, without writers queueing up.
 """
 import multiprocessing
+
+from decouple import Config, RepositoryEnv
+
+_env = Config(RepositoryEnv(__import__('pathlib').Path(__file__).resolve().parent.parent / '.env'))
+_postgres = _env('DB_ENGINE', default='sqlite') == 'postgresql'
 
 # Nginx talks to Gunicorn over this socket (systemd creates /run/intercontinental)
 bind = 'unix:/run/intercontinental/gunicorn.sock'
 
-workers = min(3, multiprocessing.cpu_count() + 1)
+# Each worker uses roughly 150–200 MB of memory; the cap keeps a large machine from running out.
+workers = min(9, multiprocessing.cpu_count() * 2 + 1) if _postgres else min(3, multiprocessing.cpu_count() + 1)
 threads = 4
 worker_class = 'gthread'
 

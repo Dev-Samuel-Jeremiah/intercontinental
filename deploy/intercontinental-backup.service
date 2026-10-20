@@ -3,7 +3,7 @@
 #           sudo systemctl daemon-reload && sudo systemctl enable --now intercontinental-backup.timer
 [Unit]
 Description=Intercontinental School — database backup
-After=network-online.target
+After=network-online.target postgresql.service
 
 [Service]
 Type=oneshot

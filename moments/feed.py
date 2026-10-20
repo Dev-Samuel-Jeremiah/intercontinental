@@ -373,7 +373,8 @@ def filter_posts(viewer, qs, category='', class_id='', tag='', saved=False, auth
     if class_id:
         qs = qs.filter(school_class_id=class_id)
     if tag:
-        qs = qs.filter(caption__iregex=r'#' + re.escape(tag) + r'\b')
+        # (?![0-9A-Za-z_]) = end of the word; \b would mean backspace in PostgreSQL's regular expressions
+        qs = qs.filter(caption__iregex=r'#' + re.escape(tag) + r'(?![0-9A-Za-z_])')
     if saved:
         qs = qs.filter(saves__user=viewer.user)
     if author:

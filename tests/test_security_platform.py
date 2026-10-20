@@ -135,8 +135,15 @@ class BackupTests(Base):
         conn.close()
         self.patch = mock.patch('security.platform.database_path', return_value=self.dbfile)
         self.patch.start()
+        # The SQLite snapshot path, whichever database the test suite itself runs on
+        self.engine = [mock.patch('security.platform.is_postgres', return_value=False),
+                       mock.patch('security.platform.is_sqlite', return_value=True)]
+        for p in self.engine:
+            p.start()
 
     def tearDown(self):
+        for p in self.engine:
+            p.stop()
         self.patch.stop()
         self.override.disable()
         self.dbfile.unlink(missing_ok=True)

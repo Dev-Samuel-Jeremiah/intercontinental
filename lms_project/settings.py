@@ -151,9 +151,20 @@ if DB_ENGINE == 'postgresql':
         'ENGINE':   'django.db.backends.postgresql',
         'NAME':     config('DB_NAME'),
         'USER':     config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
+        'PASSWORD': config('DB_PASSWORD', default=''),
         'HOST':     config('DB_HOST', default='localhost'),
         'PORT':     config('DB_PORT', default='5432'),
+        # Keep each worker thread's connection open between requests instead of
+        # reconnecting every time; it is checked before reuse, so a restarted
+        # database never causes errors.
+        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
+        'CONN_HEALTH_CHECKS': True,
+        'OPTIONS': {
+            # 'require' for a database on another machine (managed PostgreSQL)
+            'sslmode': config('DB_SSLMODE', default='prefer'),
+            'connect_timeout': 10,
+            'application_name': SCHOOL_SLUG,
+        },
     }}
 else:
     # SQLite, tuned for a live site with several Gunicorn workers:

@@ -41,11 +41,15 @@ def _get_executor():
     return _executor
 
 
-def _run(func, args, kwargs, tenant):
+def _run(func, args, kwargs, tenant, inline=False):
     from tenants.middleware import clear_current_tenant, set_current_tenant
 
     name = getattr(func, '__name__', str(func))
-    close_old_connections()
+    # A worker thread tidies its own database connection. Run inline (eagerly) it shares the
+    # request's connection, which may be inside a transaction: closing it there would end the
+    # transaction (PostgreSQL really closes it).
+    if not inline:
+        close_old_connections()
     try:
         if tenant is not None:
             set_current_tenant(tenant)
@@ -58,7 +62,8 @@ def _run(func, args, kwargs, tenant):
                          name, getattr(tenant, 'subdomain', '-'))
     finally:
         clear_current_tenant()
-        close_old_connections()
+        if not inline:
+            close_old_connections()
 
 
 def run_in_background(func, *args, tenant=None, **kwargs):
@@ -67,7 +72,7 @@ def run_in_background(func, *args, tenant=None, **kwargs):
     Returns the result when running eagerly, otherwise None.
     """
     if getattr(settings, 'RUN_TASKS_EAGERLY', False):
-        return _run(func, args, kwargs, tenant)
+        return _run(func, args, kwargs, tenant, inline=True)
     # Start only once the request's transaction has committed, otherwise the
     # worker thread can look for rows that aren't visible to it yet (and, on
     # SQLite, trip over a locked table). Outside a transaction this runs

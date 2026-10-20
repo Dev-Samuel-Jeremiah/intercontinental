@@ -4,9 +4,11 @@ security/platform.py
 Keeping the system reliable: daily backups and a health check.
 
 Backups
-  `run_backup()` takes a consistent snapshot of the SQLite database (SQLite's
-  online backup, safe while the site is running), checks it with
-  PRAGMA integrity_check, compresses it into BACKUP_DIR, optionally copies it
+  `run_backup()` takes a consistent snapshot of the database, safe while the
+  site is running — SQLite: the online backup API, checked with PRAGMA
+  integrity_check and gzipped; PostgreSQL: pg_dump in its compressed custom
+  format, checked by reading its table of contents back with pg_restore — and
+  stores it in BACKUP_DIR, optionally copies it
   off the server (BACKUP_OFFSITE_DIR — e.g. a mounted drive — and/or
   BACKUP_OFFSITE_COMMAND — e.g. an rclone upload), records the run, deletes
   snapshots older than BACKUP_KEEP_DAYS and tells the administrators if
@@ -38,7 +40,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.cache import cache
-from django.db import connections
+from django.db import connections, transaction
 from django.utils import timezone
 
 from .models import SystemBackup
@@ -60,6 +62,45 @@ def backup_dir():
 
 def is_sqlite():
     return connections['default'].settings_dict['ENGINE'] == 'django.db.backends.sqlite3'
+
+
+def is_postgres():
+    return connections['default'].settings_dict['ENGINE'] == 'django.db.backends.postgresql'
+
+
+def can_back_up():
+    """True when this server can snapshot its database by itself."""
+    return database_path() is not None or (is_postgres() and shutil.which('pg_dump') is not None)
+
+
+def _pg_env():
+    """Connection details for pg_dump/pg_restore, passed as environment variables (never on the command line)."""
+    db = connections['default'].settings_dict
+    env = dict(os.environ)
+    for var, value in (('PGHOST', db.get('HOST')), ('PGPORT', db.get('PORT')), ('PGUSER', db.get('USER')),
+                       ('PGPASSWORD', db.get('PASSWORD')), ('PGDATABASE', db.get('NAME')),
+                       ('PGSSLMODE', (db.get('OPTIONS') or {}).get('sslmode'))):
+        if value:
+            env[var] = str(value)
+    return env
+
+
+def _postgres_dump(target):
+    """pg_dump → target (custom format, compressed). Returns the integrity note. Raises PlatformError."""
+    if not shutil.which('pg_dump'):
+        raise PlatformError('pg_dump is not installed on this server (apt install postgresql-client).')
+    env = _pg_env()
+    dump = subprocess.run(['pg_dump', '--format=custom', '--compress=6', '--no-owner', '--no-privileges',
+                           '--file', str(target)], env=env, capture_output=True, text=True, timeout=3600)
+    if dump.returncode != 0:
+        target.unlink(missing_ok=True)
+        raise PlatformError(f'pg_dump failed: {(dump.stderr or dump.stdout).strip()[:300]}')
+    listing = subprocess.run(['pg_restore', '--list', str(target)], env=env, capture_output=True, text=True,
+                             timeout=600)
+    tables = sum(1 for line in listing.stdout.splitlines() if ' TABLE DATA ' in line)
+    if listing.returncode != 0 or not tables:
+        raise PlatformError(f'The dump could not be read back: {listing.stderr.strip()[:200] or "no tables in it"}')
+    return f'ok ({tables} tables)'
 
 
 def database_path():
@@ -126,11 +167,34 @@ def _notify_failure(message):
 def _prune():
     cutoff = datetime.now() - timedelta(days=settings.BACKUP_KEEP_DAYS)
     removed = 0
-    for old in list(backup_dir().glob('db-*.sqlite3.gz')) + list(backup_dir().glob('media-*.tar.gz')):
+    for old in (list(backup_dir().glob('db-*.sqlite3.gz')) + list(backup_dir().glob('db-*.pgdump'))
+                + list(backup_dir().glob('media-*.tar.gz'))):
         if datetime.fromtimestamp(old.stat().st_mtime) < cutoff:
             old.unlink()
             removed += 1
     return removed
+
+
+def _sqlite_snapshot(source, target, rec):
+    """SQLite's online backup → integrity check → gzip into target. Raises PlatformError."""
+    with tempfile.TemporaryDirectory() as tmp:
+        snapshot = Path(tmp) / 'db.sqlite3'
+        src = sqlite3.connect(str(source), timeout=30)
+        dst = sqlite3.connect(str(snapshot))
+        try:
+            src.backup(dst)
+        finally:
+            dst.close()
+            src.close()
+        check = sqlite3.connect(str(snapshot))
+        try:
+            rec.integrity = str(check.execute('PRAGMA integrity_check').fetchone()[0])[:120]
+        finally:
+            check.close()
+        if rec.integrity != 'ok':
+            raise PlatformError(f'The snapshot failed its integrity check: {rec.integrity}')
+        with open(snapshot, 'rb') as fh, gzip.open(target, 'wb', compresslevel=6) as gz:
+            shutil.copyfileobj(fh, gz)
 
 
 def run_backup(trigger='SCHEDULE', media=False, user=None):
@@ -139,31 +203,17 @@ def run_backup(trigger='SCHEDULE', media=False, user=None):
     with _Lock():
         rec = SystemBackup.objects.create(kind='DB', trigger=trigger, started_by=user if getattr(user, 'pk', None) else None)
         try:
-            if not is_sqlite():
-                raise PlatformError('Automatic backups here are for SQLite. Use pg_dump for PostgreSQL.')
-            source = database_path()
-            if source is None:
-                raise PlatformError('The database is not a file on this server, so it cannot be snapshotted.')
             stamp = datetime.now().strftime('%Y%m%d-%H%M%S')
-            target = backup_dir() / f'db-{stamp}.sqlite3.gz'
-            with tempfile.TemporaryDirectory() as tmp:
-                snapshot = Path(tmp) / 'db.sqlite3'
-                src = sqlite3.connect(str(source), timeout=30)
-                dst = sqlite3.connect(str(snapshot))
-                try:
-                    src.backup(dst)
-                finally:
-                    dst.close()
-                    src.close()
-                check = sqlite3.connect(str(snapshot))
-                try:
-                    rec.integrity = str(check.execute('PRAGMA integrity_check').fetchone()[0])[:120]
-                finally:
-                    check.close()
-                if rec.integrity != 'ok':
-                    raise PlatformError(f'The snapshot failed its integrity check: {rec.integrity}')
-                with open(snapshot, 'rb') as fh, gzip.open(target, 'wb', compresslevel=6) as gz:
-                    shutil.copyfileobj(fh, gz)
+            if is_postgres():
+                target = backup_dir() / f'db-{stamp}.pgdump'
+                rec.integrity = _postgres_dump(target)[:120]
+            elif not is_sqlite():
+                raise PlatformError('Automatic backups support SQLite and PostgreSQL only.')
+            elif database_path() is None:
+                raise PlatformError('The database is not a file on this server, so it cannot be snapshotted.')
+            else:
+                target = backup_dir() / f'db-{stamp}.sqlite3.gz'
+                _sqlite_snapshot(database_path(), target, rec)
             rec.file_name, rec.size = target.name, target.stat().st_size
             try:
                 rec.offsite = _offsite(target)[:200]
@@ -214,7 +264,7 @@ def running():
 
 def maybe_auto_backup():
     """Called now and then by the site: start a backup in the background if the last good one is over a day old."""
-    if not getattr(settings, 'AUTO_BACKUP', True) or database_path() is None:
+    if not getattr(settings, 'AUTO_BACKUP', True) or not can_back_up():
         return False
     if not cache.add('platform:auto-backup-check', 1, 600):      # at most every 10 minutes per worker
         return False
@@ -260,7 +310,8 @@ def database_integrity():
         return cached
     if not is_sqlite():
         return 'not SQLite'
-    with connections['default'].cursor() as cur:
+    # A savepoint, so a failed check can't spoil the rest of the request's transaction (PostgreSQL)
+    with transaction.atomic(), connections['default'].cursor() as cur:
         cur.execute('PRAGMA quick_check')
         result = str(cur.fetchone()[0])
     cache.set('platform:quick-check', result, 3600)
@@ -302,6 +353,19 @@ def health(tenant=None):
             wal_size = wal.stat().st_size if wal.exists() else 0
             out.append(_check('Database size', 'ok' if wal_size < 200 * 1024 * 1024 else 'warn',
                               f'{_size(db_path.stat().st_size)} (write-ahead log {_size(wal_size)}).'))
+    if is_postgres():
+        try:
+            with transaction.atomic(), connections['default'].cursor() as cur:
+                cur.execute('SELECT pg_database_size(current_database()), current_setting(%s), '
+                            '(SELECT count(*) FROM pg_stat_activity WHERE datname = current_database())',
+                            ['server_version'])
+                size, version, conns = cur.fetchone()
+            out.append(_check('Database', 'ok', f'PostgreSQL {version.split()[0]}: {_size(size)}, {conns} connection(s).'))
+        except Exception as problem:
+            out.append(_check('Database', 'bad', str(problem)[:200]))
+        out.append(_check('Backup tool (pg_dump)', 'ok' if shutil.which('pg_dump') else 'bad',
+                          'Installed.' if shutil.which('pg_dump') else 'Not installed — backups cannot run.',
+                          '' if shutil.which('pg_dump') else 'sudo apt install postgresql-client'))
     try:
         usage = shutil.disk_usage(backup_dir())
         free_pct = 100 * usage.free / usage.total
