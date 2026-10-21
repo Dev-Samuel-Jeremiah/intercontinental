@@ -96,18 +96,10 @@
   .portal span{color:var(--slate2);font-size:.9rem}
   .portal i.go{margin-left:auto;color:var(--champagne);font-size:1.1rem;align-self:center}
 
-  /* Wings */
-  .wings{display:grid;grid-template-columns:repeat(2,1fr);gap:22px}
-  .wing{padding:1.8rem}
-  .wing .row{display:flex;gap:1rem;align-items:center;margin-bottom:1rem}
-  .wing .tag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--champagne);
-    padding:.2rem .6rem;border-radius:99px;background:var(--champagne-dim);box-shadow:inset 0 0 0 1px rgba(244,210,31,.3)}
-  .wing h3{font-size:1.65rem;font-weight:600;margin-top:.3rem}
-  .wing p{color:var(--slate2);margin:0 0 1rem}
-  .wing ul{list-style:none;padding:0;margin:0;display:grid;gap:.4rem;font-size:.92rem}
-  .wing li{display:flex;gap:.5rem;align-items:center}
-  .wing li i{color:var(--champagne)}
-  .logos{border-radius:18px;max-width:420px;box-shadow:0 5px 0 var(--edge),0 18px 30px -14px rgba(0,0,0,.8)}
+  /* The four wings' logos */
+  .logos-band{padding:56px 0 8px}
+  .logos-band .wrap{display:flex;justify-content:center}
+  .logos{width:min(560px,100%);border-radius:20px;box-shadow:0 6px 0 var(--edge),0 22px 36px -16px rgba(0,0,0,.8)}
 
   /* About */
   .about{display:grid;grid-template-columns:1.05fr 1fr;gap:48px;align-items:center}
@@ -167,7 +159,7 @@
     .nav a{padding:.8rem .4rem;box-shadow:0 1px 0 rgba(255,255,255,.05)}
     .nav .btn{margin-top:.8rem;justify-content:center}
     .menu{display:block}
-    .portals .grid,.wings,.events,.gallery,.about,.admit,.foot{grid-template-columns:1fr}
+    .portals .grid,.events,.gallery,.about,.admit,.foot{grid-template-columns:1fr}
     .hero .orb{display:none}
     .shot{min-height:260px}
     section{padding:64px 0}
@@ -237,43 +229,10 @@
     </div>
   </div>
 
-  <!-- Wings -->
-  <section id="wings">
+  <!-- The four wings' logos -->
+  <section id="wings" class="logos-band">
     <div class="wrap">
-      <div class="head">
-        <div>
-          <div class="eyebrow">One school, four wings</div>
-          <h2>Four distinct wings, <em>one standard</em></h2>
-          <p class="lead">From the first steps of early years to the final years of secondary school, every wing shares the same values and the same care.</p>
-        </div>
-        <img class="logos" src="{% static 'images/landing/wings-logos.png' %}" alt="The logos of the four wings: Intercontinental Schools, Darun Noor, Hi-Tech Academy and Mini Explorers" loading="lazy">
-      </div>
-      <div class="wings">
-        <article class="card wing">
-          <div class="row"><span class="jelly"><i class="bi bi-bank"></i></span><span class="tag">Ages 11 – 18</span></div>
-          <h3>Intercontinental Flagship College</h3>
-          <p>A British and Nigerian secondary curriculum with preparation for Cambridge IGCSE, WASSCE, UTME and SAT.</p>
-          <ul><li><i class="bi bi-check2-circle"></i> British Council partner centre</li><li><i class="bi bi-check2-circle"></i> Boarding available</li></ul>
-        </article>
-        <article class="card wing">
-          <div class="row"><span class="jelly"><i class="bi bi-book"></i></span><span class="tag">All ages</span></div>
-          <h3>Darun Noor Islamic Wing</h3>
-          <p>Qur'anic memorisation (Tahfeez), classical Arabic and character education, alongside the full modern curriculum.</p>
-          <ul><li><i class="bi bi-check2-circle"></i> Certified Tajweed teachers</li><li><i class="bi bi-check2-circle"></i> Character mentorship</li></ul>
-        </article>
-        <article class="card wing">
-          <div class="row"><span class="jelly"><i class="bi bi-cpu"></i></span><span class="tag">Junior &amp; senior</span></div>
-          <h3>Hi-Tech STEAM Academy</h3>
-          <p>Robotics, coding, 3D printing and artificial intelligence for young creators and inventors.</p>
-          <ul><li><i class="bi bi-check2-circle"></i> Python and VEX robotics labs</li><li><i class="bi bi-check2-circle"></i> MakerSpace</li></ul>
-        </article>
-        <article class="card wing">
-          <div class="row"><span class="jelly"><i class="bi bi-balloon-heart"></i></span><span class="tag">18 months – 5 years</span></div>
-          <h3>Mini Explorers Early Years</h3>
-          <p>The British Early Years Foundation Stage blended with Montessori learning: curiosity, play and fine-motor skills.</p>
-          <ul><li><i class="bi bi-check2-circle"></i> Child-led Montessori learning</li><li><i class="bi bi-check2-circle"></i> Safe sensory play rooms</li></ul>
-        </article>
-      </div>
+      <img class="logos" src="{% static 'images/landing/wings-logos.png' %}" alt="The logos of the four wings: Intercontinental Schools, Darun Noor, Hi-Tech Academy and Mini Explorers" loading="lazy">
     </div>
   </section>
 
