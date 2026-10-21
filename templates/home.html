@@ -13,7 +13,7 @@
 
 <header class="bar">
   <a class="brand" href="{% url 'users:home' %}">
-    <span class="jelly">{% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="">{% else %}IN{% endif %}</span>
+    <span class="jelly crest-sm"><img src="{% if tenant.logo %}{{ tenant.logo.url }}{% else %}{% static 'images/school-crest.png' %}{% endif %}" alt=""></span>
     <b>{{ tenant.name }}</b>
   </a>
   <a class="btn" href="{% url 'users:home' %}"><i class="bi bi-arrow-left"></i><span>Back to the home page</span></a>
@@ -22,7 +22,7 @@
 <main>
   <div class="panel">
     <div class="head">
-      <span class="jelly"><i class="bi bi-shield-lock"></i></span>
+      <span class="crest"><img src="{% if tenant.logo %}{{ tenant.logo.url }}{% else %}{% static 'images/school-crest.png' %}{% endif %}" alt="{{ tenant.name }} crest"></span>
       <h1>Sign <em>in</em></h1>
       <p>{% if tenant.branding.login_message %}{{ tenant.branding.login_message }}{% else %}Choose who you are, then sign in to your part of the portal.{% endif %}</p>
     </div>

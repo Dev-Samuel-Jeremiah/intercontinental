@@ -1,11 +1,11 @@
-{% load static %}<!DOCTYPE html>
+{% load static school_look %}<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#081a3a">
   <title>{% block title %}Account{% endblock %}{% if tenant %} | {{ tenant.name }}{% endif %}</title>
-  <link rel="icon" href="{% if tenant.logo %}{{ tenant.logo.url }}{% else %}{% static 'images/logo.png' %}{% endif %}" type="image/png">
+  <link rel="icon" href="{% school_crest %}" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -136,6 +136,59 @@
     .back a { display:inline-flex; align-items:center; gap:.45rem; font-size:.85rem; color:var(--text-2); transition:color .2s, gap .2s; }
     .back a:hover { color:var(--gold-lt); gap:.65rem; }
 
+
+    /* ── The portal's 3D look: one centred raised card over the school's own banner picture ── */
+    :root{--edge:#06132c;--deep:#8a7300;--slab:linear-gradient(165deg,#1b3768 0%,#12295a 42%,#0d1f45 100%);
+      --jelly:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,var(--gold-lt),var(--gold) 55%,var(--gold-dk))}
+    .scene{position:fixed;inset:0;z-index:-2;background:var(--scene) center/cover no-repeat}
+    .scene::after{content:"";position:absolute;inset:0;background:radial-gradient(900px 600px at 50% 40%,rgba(8,26,58,.72),rgba(8,26,58,.94)),linear-gradient(0deg,var(--ink),transparent 40%)}
+    body{background:var(--ink);display:flex;flex-direction:column;min-height:100vh}
+    .bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px clamp(16px,4vw,40px)}
+    .bar .brand{display:flex;align-items:center;gap:.7rem;min-width:0;font-weight:700;font-size:.95rem}
+    .bar .brand span{width:40px;height:40px;border-radius:12px;overflow:hidden;background:#fff;padding:3px;flex-shrink:0;
+      box-shadow:0 0 0 2px var(--gold),0 3px 0 2px var(--edge)}
+    .bar .brand img{width:100%;height:100%;object-fit:contain}
+    .bar a.home{display:inline-flex;align-items:center;gap:.45rem;padding:.7rem 1.05rem;border-radius:14px;font-weight:600;font-size:.9rem;
+      background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03)),#132b58;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 4px 0 var(--edge),0 12px 18px -10px rgba(0,0,0,.7);transition:transform .12s}
+    .bar a.home:hover{transform:translateY(-2px)} .bar a.home:active{transform:translateY(3px)}
+    .auth{flex:1;display:flex;align-items:center;justify-content:center;padding:16px 16px 40px;min-height:0}
+    .form-side{display:block;padding:0;width:min(470px,100%)}
+    .card{width:100%;border-radius:28px;background:var(--slab);padding:clamp(1.5rem,4vw,2.3rem);text-align:left;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 -1px 0 rgba(0,0,0,.35),0 7px 0 var(--edge),0 30px 60px -20px rgba(0,0,0,.85)}
+    .crest{display:grid;place-items:center;width:84px;height:84px;margin:0 auto 1.2rem;border-radius:50%;padding:8px;
+      background:radial-gradient(circle at 35% 25%,#fff 0,#f4f1e6 70%,#e6dfc8 100%);
+      box-shadow:0 0 0 4px var(--gold),0 0 0 6px var(--deep),inset 0 -4px 8px rgba(0,0,0,.12),0 8px 0 4px var(--edge),0 22px 30px -10px rgba(0,0,0,.8)}
+    .crest img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+    .card-icon{width:52px;height:52px;border-radius:16px;border:0;color:#0a1f44;background:var(--jelly);text-shadow:0 1px 0 rgba(255,255,255,.45);
+      box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -4px 7px rgba(0,0,0,.22),0 4px 0 var(--deep),0 12px 18px -8px rgba(0,0,0,.7)}
+    .card-icon.ok{--gold-lt:#a7f3d0;--gold:#34d399;--gold-dk:#059669;--deep:#065f46;color:#052e16}
+    .card-icon.bad{--gold-lt:#fca5a5;--gold:#f87171;--gold-dk:#dc2626;--deep:#7f1d1d;color:#450a0a}
+    .card h1{text-shadow:0 2px 0 rgba(0,0,0,.35)}
+    /* the crest leads the card; a status tile (done / link expired) still shows, centred */
+    .card-icon:not(.ok):not(.bad){display:none}
+    .card-icon.ok,.card-icon.bad{margin:0 auto 1.2rem}
+    .card > .eyebrow{display:flex;justify-content:center}
+    .card > .eyebrow::before{display:none}
+    .card > h1,.card > .lead{text-align:center}
+    .input input{border:0;border-radius:14px;background:rgba(2,8,24,.5);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.04),0 1px 0 rgba(255,255,255,.07)}
+    .input input:focus{background:rgba(2,8,24,.6);box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 1px rgba(244,210,31,.45),0 0 16px -4px rgba(244,210,31,.35)}
+    .meter i{background:rgba(2,8,24,.55);box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+    .btn{border-radius:14px;text-shadow:0 1px 0 rgba(255,255,255,.4);
+      background:radial-gradient(120% 140% at 25% 0%,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 45%),linear-gradient(160deg,var(--gold-lt),var(--gold));
+      box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18),0 4px 0 var(--deep),0 14px 22px -10px rgba(244,210,31,.6);transition:transform .12s ease,box-shadow .12s ease}
+    .btn::after{display:none}
+    .btn:hover{transform:translateY(-2px);box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.18),0 6px 0 var(--deep),0 18px 26px -10px rgba(244,210,31,.6)}
+    .btn:active{transform:translateY(3px);box-shadow:inset 0 2px 1px rgba(255,255,255,.45),0 1px 0 var(--deep)}
+    .btn.ghost{border:0;color:var(--text);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03)),#132b58;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.06),0 4px 0 var(--edge),0 12px 18px -10px rgba(0,0,0,.7)}
+    .note{border:0;border-radius:14px;background:rgba(2,8,24,.3);box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+    .note.error{background:rgba(232,112,112,.12);box-shadow:inset 0 0 0 1px rgba(232,112,112,.3)}
+    .note.success{background:rgba(94,203,142,.1);box-shadow:inset 0 0 0 1px rgba(94,203,142,.3)}
+    .steps li::before{border:0;color:#0a1f44;background:var(--jelly);box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 2px 0 var(--deep)}
+    .legal{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px clamp(16px,4vw,40px) 22px;font-size:.8rem;color:var(--text-3)}
+    .legal a:hover{color:var(--gold-lt)}
+    @media (max-width:520px){ .bar a.home span{display:none} }
     @media (max-width:900px) {
       .auth { grid-template-columns:1fr; grid-template-rows:auto 1fr; }
       .brand-panel { padding:1.4rem 16px; border-right:0; border-bottom:1px solid var(--rim); }
@@ -145,37 +198,24 @@
   </style>
   {% block extra_css %}{% endblock %}
 </head>
-<body>
+<body style="--scene:url('{% school_banner %}')">
+<div class="scene" aria-hidden="true"></div>
+<header class="bar">
+  <a class="brand" href="{% url 'users:home' %}"><span><img src="{% school_crest %}" alt=""></span>{{ tenant.name|default:"School Portal" }}</a>
+  <a class="home" href="{% url 'users:staff_login' %}"><i class="bi bi-arrow-left"></i><span>Back to sign-in</span></a>
+</header>
 <main class="auth">
-  <aside class="brand-panel">
-    <span class="orb o1"></span><span class="orb o2"></span>
-    <div class="bp-brand">
-      <div class="bp-logo">
-        {% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="">{% elif tenant %}{{ tenant.name|slice:":2"|upper }}{% else %}T{% endif %}
-      </div>
-      <div>
-        <div class="bp-name">{{ tenant.name|default:"School Portal" }}</div>
-        <div class="bp-sub">{% block panel_sub %}Account Security{% endblock %}</div>
-      </div>
-    </div>
-    <div class="bp-copy">
-      <h2>{% block panel_title %}Your account, <em>protected.</em>{% endblock %}</h2>
-      <p>{% block panel_text %}Every account on the portal is protected with encrypted passwords and secure, time-limited reset links.{% endblock %}</p>
-    </div>
-    <ul class="bp-points">
-      <li><i class="bi bi-shield-lock-fill"></i> Encrypted connection &amp; password storage</li>
-      <li><i class="bi bi-clock-history"></i> Reset links expire automatically</li>
-      <li><i class="bi bi-person-check-fill"></i> Only you can set your new password</li>
-    </ul>
-    <div class="bp-foot">&copy; {% now "Y" %} {{ tenant.name }}</div>
-  </aside>
-
   <section class="form-side">
     <div class="card">
+      <span class="crest"><img src="{% school_crest %}" alt="{{ tenant.name }} crest"></span>
       {% block card %}{% endblock %}
     </div>
   </section>
 </main>
+<footer class="legal">
+  <span>&copy; {% now "Y" %} {{ tenant.name }}</span>
+  <a href="{% url 'privacy_notice' %}">Privacy notice</a>
+</footer>
 
 <script>
 /* Password visibility toggles, strength meter, match check, submit state */
