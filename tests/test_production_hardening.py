@@ -104,3 +104,25 @@ class FirstSignInTests(TenantTestCase):
         page = self.client.get('/dashboard/', HTTP_HOST=host)
         self.assertEqual(page['Location'], '/security/2fa/setup/?required=1')                # two-step next
         self.assertEqual(self.client.get('/security/2fa/setup/?required=1', HTTP_HOST=host).status_code, 200)
+
+
+class TwoStepRemovedTests(TenantTestCase):
+    """A session waiting for a two-step code must not loop once two-step sign-in is switched off or reset."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school, username='head', password='Long-Pass-5531x')
+
+    def test_waiting_session_is_let_through(self):
+        host = self.host(self.school)
+        self.client.force_login(self.admin)
+        session = self.client.session
+        session['sec_2fa'] = 'pending'               # signed in, code not yet entered …
+        session.save()
+        # … and meanwhile the account's two-step sign-in was removed (no TwoFactor exists)
+        page = self.client.get('/dashboard/', HTTP_HOST=host, follow=True)
+        self.assertEqual(page.status_code, 200)
+        self.assertLess(len(page.redirect_chain), 3)
+        self.assertNotIn('sec_2fa', self.client.session)
+        self.assertEqual(self.client.get('/security/2fa/verify/?next=/dashboard/', HTTP_HOST=host).status_code, 302)

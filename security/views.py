@@ -159,6 +159,7 @@ def backup_codes(request):
 def verify(request):
     tf = svc.two_factor_for(request.user)
     if request.session.get('sec_2fa') != 'pending' or not tf:
+        request.session.pop('sec_2fa', None)          # never leave a session waiting for a code that can't come
         return redirect(_safe_next(request, _home(request)))
     if request.method == 'POST':
         if request.POST.get('op') == 'send':

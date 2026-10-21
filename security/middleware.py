@@ -74,7 +74,10 @@ class SecurityGateMiddleware:
         impersonating = bool(session.get('impersonation_id'))
         now = time.time()
         if session.get('sec_2fa') == 'pending' and not impersonating:
-            return redirect(f'/security/2fa/verify/?next={request.get_full_path()}')
+            if svc.two_factor_for(user):
+                return redirect(f'/security/2fa/verify/?next={request.get_full_path()}')
+            # Two-step sign-in was switched off or reset since this sign-in began: nothing left to check
+            session.pop('sec_2fa', None)
         # A forced password change comes first (the password page is all such a user can open);
         # two-step set-up is required straight after it.
         forced_password = getattr(user, 'must_change_password', False)
