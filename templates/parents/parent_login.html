@@ -1,558 +1,94 @@
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parent Login | {{ tenant.name }}</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-  <style>
-    /* ═══════════════════════════════════════════
-       DESIGN TOKENS
-    ═══════════════════════════════════════════ */
-    :root {
-      --ink:              #0a1d40;
-      --surface:          #112850;
-      --surface2:         #172f5c;
-      --surface3:         #1c3766;
-      --rim:              rgba(255,255,255,.06);
-      --rim2:             rgba(255,255,255,.10);
-      --rim3:             rgba(255,255,255,.16);
-
-      --champagne:        #f4d21f;
-      --champagne-lt:     #ffe066;
-      --champagne-dim:    rgba(244,210,31,.12);
-      --champagne-border: rgba(244,210,31,.28);
-
-      --slate:            rgba(255,255,255,.38);
-      --slate2:           rgba(255,255,255,.58);
-      --white:            #f2f5fb;
-
-      --green:            #4ade80;
-      --green-dim:        rgba(74,222,128,.12);
-      --green-border:     rgba(74,222,128,.25);
-
-      --red:              #f87171;
-      --red-dim:          rgba(248,113,113,.12);
-      --red-border:       rgba(248,113,113,.25);
-
-      --blue:             #60a5fa;
-      --blue-dim:         rgba(96,165,250,.12);
-      --blue-border:      rgba(96,165,250,.25);
-
-      --amber:            #fbbf24;
-      --amber-dim:        rgba(251,191,36,.12);
-      --amber-border:     rgba(251,191,36,.25);
-    }
-
-    /* ═══════════════════════════════════════════
-       RESET & BASE
-    ═══════════════════════════════════════════ */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Outfit', system-ui, sans-serif;
-      background: var(--ink);
-      color: var(--white);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    a { text-decoration: none; color: inherit; }
-
-    /* ═══════════════════════════════════════════
-       KEYFRAMES
-    ═══════════════════════════════════════════ */
-    @keyframes riseUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes shimmer {
-      from { background-position: -200% center; }
-      to   { background-position:  200% center; }
-    }
-    @keyframes pulse-dot {
-      0%,100% { opacity:.55; transform:scale(1); }
-      50%      { opacity:1;   transform:scale(1.15); }
-    }
-    @keyframes float-orb {
-      0%,100% { transform: translateY(0) scale(1); }
-      50%      { transform: translateY(-18px) scale(1.04); }
-    }
-
-    /* ═══════════════════════════════════════════
-       LAYOUT
-    ═══════════════════════════════════════════ */
-    .login-wrapper {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-
-    /* ── LEFT PANEL ── */
-    .login-left {
-      position: relative;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: flex-start;
-      padding: 4rem 5%;
-      background: var(--surface2);
-      border-right: 1px solid var(--rim);
-      overflow: hidden;
-    }
-    .left-noise {
-      position: absolute; inset: 0; pointer-events: none; opacity: .022;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 250px;
-    }
-    .left-grid {
-      position: absolute; inset: 0; pointer-events: none;
-      background-image:
-        linear-gradient(rgba(244,210,31,.028) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244,210,31,.028) 1px, transparent 1px);
-      background-size: 56px 56px;
-    }
-    .left-orb-1 {
-      position: absolute; top: -120px; left: -120px;
-      width: 460px; height: 460px; border-radius: 50%; pointer-events: none;
-      background: radial-gradient(circle, rgba(244,210,31,.10) 0%, transparent 65%);
-      animation: float-orb 7s ease-in-out infinite;
-    }
-    .left-orb-2 {
-      position: absolute; bottom: -80px; right: -60px;
-      width: 300px; height: 300px; border-radius: 50%; pointer-events: none;
-      background: radial-gradient(circle, rgba(96,165,250,.06) 0%, transparent 65%);
-      animation: float-orb 9s 2s ease-in-out infinite;
-    }
-
-    .left-content { position: relative; z-index: 1; max-width: 420px; }
-
-    .left-badge {
-      display: inline-flex; align-items: center; gap: .55rem;
-      background: var(--champagne-dim);
-      border: 1px solid var(--champagne-border);
-      border-radius: 50px; padding: .38rem .9rem .38rem .6rem;
-      margin-bottom: 2.2rem;
-    }
-    .left-badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--champagne);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    .left-badge span { font-size: .72rem; font-weight: 600; color: var(--champagne-lt); letter-spacing: .4px; }
-
-    .left-content h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.2rem, 3.5vw, 3rem);
-      font-weight: 700; color: var(--white);
-      line-height: 1.1; letter-spacing: -.3px;
-      margin-bottom: 1rem;
-    }
-    .left-content h1 em {
-      font-style: italic; color: var(--champagne);
-      background: linear-gradient(90deg, var(--champagne), var(--champagne-lt), var(--champagne));
-      background-size: 200% auto;
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      animation: shimmer 4s linear infinite;
-    }
-    .left-content p {
-      font-size: .9rem; color: var(--slate2);
-      line-height: 1.7; margin-bottom: 2.5rem;
-    }
-
-    .left-features { display: flex; flex-direction: column; gap: .75rem; }
-    .left-feature {
-      display: flex; align-items: center; gap: .8rem;
-      padding: .85rem 1rem;
-      background: var(--surface);
-      border: 1px solid var(--rim);
-      border-radius: 12px;
-      transition: border-color .2s;
-    }
-    .left-feature:hover { border-color: var(--champagne-border); }
-    .left-feature:nth-child(1) { animation: riseUp .45s .10s ease both; }
-    .left-feature:nth-child(2) { animation: riseUp .45s .18s ease both; }
-    .left-feature:nth-child(3) { animation: riseUp .45s .26s ease both; }
-    .lf-icon {
-      width: 34px; height: 34px; border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .95rem; flex-shrink: 0;
-    }
-    .lfi-green  { background: var(--green-dim);     color: var(--green); }
-    .lfi-champ  { background: var(--champagne-dim); color: var(--champagne); }
-    .lfi-blue   { background: var(--blue-dim);      color: var(--blue); }
-    .lf-text strong {
-      display: block; font-size: .82rem; font-weight: 700; color: var(--white);
-    }
-    .lf-text span { font-size: .74rem; color: var(--slate2); }
-
-    .left-divider {
-      width: 60px; height: 1px;
-      background: linear-gradient(90deg, var(--champagne), transparent);
-      margin: 2.2rem 0;
-    }
-    .left-school {
-      display: flex; align-items: center; gap: .75rem;
-    }
-    .school-logo-box {
-      width: 40px; height: 40px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--champagne), #c9a800);
-      display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; font-weight: 800; color: #0a1f44; letter-spacing: -.3px;
-      flex-shrink: 0;
-    }
-    .school-name { font-size: .85rem; font-weight: 700; color: var(--white); }
-    .school-sub  { font-size: .71rem; color: var(--slate); }
-
-    /* ── RIGHT PANEL ── */
-    .login-right {
-      display: flex; align-items: center; justify-content: center;
-      padding: 3rem 5%;
-      background: var(--ink);
-      position: relative; overflow: hidden;
-    }
-    .login-right::before {
-      content: "";
-      position: absolute; top: 0; left: 0; bottom: 0; width: 1px;
-      background: linear-gradient(180deg, transparent, var(--rim3) 40%, var(--rim3) 60%, transparent);
-    }
-
-    /* ── LOGIN CARD ── */
-    .login-card {
-      width: 100%; max-width: 420px;
-      background: var(--surface);
-      border: 1px solid var(--rim);
-      border-radius: 20px;
-      overflow: hidden;
-      position: relative;
-      animation: riseUp .5s .05s ease both;
-    }
-    .login-card::before {
-      content: "";
-      position: absolute; top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--champagne-border), transparent);
-    }
-
-    .card-top {
-      padding: 2rem 2rem 1.5rem;
-      border-bottom: 1px solid var(--rim);
-      text-align: center;
-    }
-
-    .back-link {
-      display: inline-flex; align-items: center; gap: .4rem;
-      font-size: .78rem; font-weight: 600; color: var(--slate2);
-      padding: .35rem .75rem;
-      background: var(--surface2);
-      border: 1px solid var(--rim2);
-      border-radius: 8px;
-      margin-bottom: 1.75rem;
-      transition: color .18s, border-color .18s;
-    }
-    .back-link:hover { color: var(--champagne); border-color: var(--champagne-border); }
-
-    .role-icon-wrap {
-      width: 58px; height: 58px; border-radius: 14px;
-      background: var(--champagne-dim);
-      border: 1px solid var(--champagne-border);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1rem;
-      font-size: 1.5rem; color: var(--champagne);
-    }
-
-    .card-top h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.65rem; font-weight: 700; color: var(--white);
-      margin-bottom: .3rem;
-    }
-    .card-top h2 em { font-style: italic; color: var(--champagne); }
-    .card-subtitle { font-size: .8rem; color: var(--slate2); line-height: 1.5; }
-
-    .card-body { padding: 1.75rem 2rem 2rem; }
-
-    /* Messages */
-    .messages { margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
-    .message {
-      display: flex; align-items: center; gap: .55rem;
-      padding: .7rem .9rem;
-      border-radius: 10px;
-      font-size: .8rem; font-weight: 500;
-    }
-    .message i { font-size: .95rem; flex-shrink: 0; }
-    .message.error   { background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
-    .message.success { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
-    .message.info    { background: var(--blue-dim);  border: 1px solid var(--blue-border);  color: var(--blue); }
-    .message.warning { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
-
-    /* Form */
-    .form-group { margin-bottom: 1.2rem; }
-    .form-group label {
-      display: block;
-      font-size: .73rem; font-weight: 600;
-      letter-spacing: .4px; text-transform: uppercase;
-      color: var(--slate2); margin-bottom: .45rem;
-    }
-    .input-wrap { position: relative; }
-    .input-icon {
-      position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
-      font-size: 1rem; color: var(--slate); pointer-events: none;
-      transition: color .18s;
-    }
-    .form-group:focus-within .input-icon { color: var(--champagne); }
-
-    .form-group input {
-      width: 100%;
-      padding: .75rem 2.6rem .75rem 2.4rem;
-      background: var(--surface2);
-      border: 1px solid var(--rim2);
-      border-radius: 10px;
-      color: var(--white);
-      font-size: .88rem; font-family: 'Outfit', sans-serif;
-      outline: none;
-      transition: border-color .18s, box-shadow .18s;
-    }
-    .form-group input::placeholder { color: var(--slate); }
-    .form-group input:focus {
-      border-color: var(--champagne);
-      box-shadow: 0 0 0 3px rgba(244,210,31,.10);
-    }
-
-    .toggle-pw {
-      position: absolute; right: .85rem; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      font-size: 1rem; color: var(--slate); padding: 0;
-      transition: color .18s;
-    }
-    .toggle-pw:hover { color: var(--champagne); }
-
-    .hint {
-      font-size: .71rem; color: var(--slate);
-      margin-top: .4rem; line-height: 1.45;
-    }
-
-    /* Submit */
-    .btn-submit {
-      width: 100%; padding: .9rem;
-      background: linear-gradient(135deg, var(--champagne), #d1ad00);
-      color: #0a1f44; border: none; border-radius: 12px;
-      font-size: .9rem; font-weight: 700; font-family: 'Outfit', sans-serif;
-      cursor: pointer;
-      box-shadow: 0 4px 18px rgba(244,210,31,.22);
-      transition: all .16s; margin-top: .5rem;
-      display: flex; align-items: center; justify-content: center; gap: .55rem;
-    }
-    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 7px 24px rgba(244,210,31,.32); }
-    .btn-submit:active { transform: translateY(0); }
-
-    /* Info note */
-    .info-note {
-      margin-top: 1.4rem;
-      display: flex; align-items: flex-start; gap: .6rem;
-      padding: .8rem 1rem;
-      background: var(--surface2);
-      border: 1px solid var(--rim2);
-      border-radius: 10px;
-      font-size: .75rem; color: var(--slate2); line-height: 1.5;
-    }
-    .info-note i { font-size: .95rem; color: var(--champagne); flex-shrink: 0; margin-top: .05rem; }
-
-    /* Divider */
-    .form-divider {
-      height: 1px; background: var(--rim); margin: 1.5rem 0;
-    }
-
-    /* ═══════════════════════════════════════════
-       RESPONSIVE
-    ═══════════════════════════════════════════ */
-    @media (max-width: 860px) {
-      .login-wrapper { grid-template-columns: 1fr; }
-      .login-left { display: none; }
-      .login-right { padding: 2rem 1.25rem; align-items: flex-start; padding-top: 3rem; }
-      .login-right::before { display: none; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#081a3a">
+<title>Parent sign-in | {{ tenant.name }}</title>
+<link rel="icon" href="{% static 'images/logo.png' %}" type="image/png">
+{% include "_public_3d.html" %}
+<style>
+  .why{display:grid;gap:.55rem;margin:0 0 1.4rem;padding:0;list-style:none}
+  .why li{display:flex;gap:.7rem;align-items:center;font-size:.88rem;color:var(--slate2)}
+  .why li i{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;font-size:.9rem;color:#0a1f44;background:var(--jelly);flex-shrink:0;
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.5),0 2px 0 var(--deep)}
+</style>
 </head>
-<body>
+<body style="--scene:url('{{ home.hero_image }}')">
+<div class="scene" aria-hidden="true"></div>
 
-<div class="login-wrapper">
+<header class="bar">
+  <a class="brand" href="{% url 'users:home' %}">
+    <span class="jelly">{% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="">{% else %}IN{% endif %}</span>
+    <b>{{ tenant.name }}</b>
+  </a>
+  <a class="btn" href="{% url 'users:staff_login' %}"><i class="bi bi-arrow-left"></i><span>Other sign-in options</span></a>
+</header>
 
-  <!-- ════════ LEFT PANEL ════════ -->
-  <div class="login-left">
-    <div class="left-noise"></div>
-    <div class="left-grid"></div>
-    <div class="left-orb-1"></div>
-    <div class="left-orb-2"></div>
-
-    <div class="left-content">
-      <div class="left-badge">
-        <div class="left-badge-dot"></div>
-        <span>Parent &amp; Guardian Portal</span>
-      </div>
-
-      <h1>
-        Your child's school,<br>
-        always <em>within reach</em>
-      </h1>
-      <p>
-        Log in to view results, fund fee wallets, track attendance, approve exeats,
-        and stay connected with the school — all from one secure dashboard.
-      </p>
-
-      <div class="left-features">
-        <div class="left-feature">
-          <div class="lf-icon lfi-green"><i class="bi bi-bar-chart-fill"></i></div>
-          <div class="lf-text">
-            <strong>Academic Results</strong>
-            <span>View scores, grades and term broadsheets instantly</span>
-          </div>
-        </div>
-        <div class="left-feature">
-          <div class="lf-icon lfi-champ"><i class="bi bi-wallet2"></i></div>
-          <div class="lf-text">
-            <strong>Fee Wallet &amp; Payments</strong>
-            <span>Fund your family wallet and track all fee transactions</span>
-          </div>
-        </div>
-        <div class="left-feature">
-          <div class="lf-icon lfi-blue"><i class="bi bi-shield-check-fill"></i></div>
-          <div class="lf-text">
-            <strong>Exeat &amp; Hostel Updates</strong>
-            <span>Approve exeat requests and monitor boarder activity</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="left-divider"></div>
-
-      <div class="left-school">
-        <div class="school-logo-box" style="overflow:hidden">{% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">{% else %}{{ tenant.name|slice:":2"|upper }}{% endif %}</div>
-        <div>
-          <div class="school-name">{{ tenant.name }}</div>
-          <div class="school-sub">Parent Portal</div>
-        </div>
-      </div>
+<main>
+  <div class="panel">
+    <div class="head">
+      <span class="jelly"><i class="bi bi-house-heart"></i></span>
+      <h1>Parent <em>sign-in</em></h1>
+      <p>Your child's school, always within reach.</p>
     </div>
-  </div>
 
-  <!-- ════════ RIGHT PANEL ════════ -->
-  <div class="login-right">
-    <div class="login-card">
+    <ul class="why">
+      <li><i class="bi bi-bar-chart-line"></i>Results and report cards</li>
+      <li><i class="bi bi-wallet2"></i>Fees, the family wallet and receipts</li>
+      <li><i class="bi bi-calendar-check"></i>Attendance, homework and school news</li>
+    </ul>
 
-      <!-- Card Top -->
-      <div class="card-top">
-        <a href="{% url 'users:home' %}" class="back-link">
-          <i class="bi bi-arrow-left"></i>
-          Back to main login
-        </a>
+    <div aria-live="polite">
+      {% for message in messages %}
+      <div class="msg {{ message.tags }}" role="alert"><i class="bi {% if message.tags == 'success' %}bi-check-circle{% else %}bi-exclamation-circle{% endif %}"></i><span>{{ message }}</span></div>
+      {% endfor %}
+    </div>
 
-        <div class="role-icon-wrap">
-          <i class="bi bi-people-fill"></i>
+    <form method="POST" action="" id="parent-login-form" autocomplete="on">
+      {% csrf_token %}
+      <div class="field">
+        <label for="admission_number">Your child's admission number</label>
+        <div class="groove">
+          <i class="bi bi-123"></i>
+          <input id="admission_number" name="admission_number" placeholder="e.g. ISK26001" required type="text"
+                 autocomplete="off" autocapitalize="characters" spellcheck="false">
         </div>
-        <h2>Parent <em>Login</em></h2>
-        <p class="card-subtitle">
-          Enter your child's admission number and your assigned password
-        </p>
       </div>
-
-      <!-- Card Body -->
-      <div class="card-body">
-
-        {% if messages %}
-        <div class="messages">
-          {% for message in messages %}
-          <div class="message {{ message.tags }}">
-            <i class="bi
-              {% if message.tags == 'error' %}bi-x-circle-fill
-              {% elif message.tags == 'success' %}bi-check-circle-fill
-              {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill
-              {% else %}bi-info-circle-fill{% endif %}
-            "></i>
-            {{ message }}
-          </div>
-          {% endfor %}
+      <div class="field">
+        <label for="passwordInput">Password</label>
+        <div class="groove">
+          <i class="bi bi-lock"></i>
+          <input id="passwordInput" name="password" placeholder="The parent password from the school" required type="password"
+                 autocomplete="current-password" autocapitalize="none" spellcheck="false">
+          <button class="eye" id="togglePassword" type="button" aria-label="Show or hide the password"><i class="bi bi-eye" id="toggleIcon"></i></button>
         </div>
-        {% endif %}
+      </div>
+      <button class="btn pri" id="submit-button" type="submit"><span id="button-text">Sign in</span> <i class="bi bi-arrow-right" id="button-icon"></i></button>
+    </form>
 
-        <form method="POST" action="">
-          {% csrf_token %}
+    <p class="alt">Forgot your password? <a href="{% url 'family:magic_request' %}">Sign in with your phone or email instead</a></p>
+    <div class="tip"><i class="bi bi-info-circle"></i><span>Each child has their own parent password, given by the school. If you have lost it, use the phone-or-email option above or ask the school office.</span></div>
+  </div>
+</main>
 
-          <div class="form-group">
-            <label for="admission_number">Student Admission Number</label>
-            <div class="input-wrap">
-              <i class="bi bi-person-badge input-icon"></i>
-              <input
-                type="text"
-                id="admission_number"
-                name="admission_number"
-                autocapitalize="none" autocorrect="off" spellcheck="false"
-                required
-                autocomplete="off"
-                placeholder="Admission number"
-                value="{{ request.POST.admission_number|default:'' }}">
-            </div>
-            <p class="hint">
-              <i class="bi bi-info-circle"></i>
-              Enter your child's admission number exactly as issued by the school.
-            </p>
-          </div>
-
-          <div class="form-group">
-            <label for="passwordInput">Password</label>
-            <div class="input-wrap">
-              <i class="bi bi-lock-fill input-icon"></i>
-              <input
-                type="password"
-                id="passwordInput"
-                name="password"
-                autocapitalize="none" autocorrect="off" spellcheck="false"
-                required
-                placeholder="Enter your password">
-              <button type="button" class="toggle-pw" id="togglePassword" aria-label="Toggle password visibility">
-                <i class="bi bi-eye" id="toggleIcon"></i>
-              </button>
-            </div>
-            <p class="hint">
-              <i class="bi bi-info-circle"></i>
-              Use the password provided by the school or your master password.
-            </p>
-          </div>
-
-          <button type="submit" class="btn-submit">
-            <i class="bi bi-box-arrow-in-right"></i>
-            Sign In to Parent Portal
-          </button>
-        </form>
-        <p style="text-align:center;margin-top:1rem;font-size:.88rem"><a href="{% url 'family:magic_request' %}" style="color:#ffe066">Forgot your password? Sign in with your phone or email instead</a></p>
-
-        <div class="form-divider"></div>
-
-        <div class="info-note">
-          <i class="bi bi-shield-lock-fill"></i>
-          <span>Forgot your password? Please contact the school office directly for a reset. Credentials are managed by your school administrator.</span>
-        </div>
-
-      </div><!-- /card-body -->
-    </div><!-- /login-card -->
-  </div><!-- /login-right -->
-
-</div><!-- /login-wrapper -->
+<footer class="legal">
+  <span>© {% now "Y" %} {{ tenant.name }}</span>
+  <span><a href="{% url 'privacy_notice' %}">Privacy notice</a>{% if tenant.email %} · <a href="mailto:{{ tenant.email }}">Help</a>{% endif %}</span>
+</footer>
 
 <script>
-  const passwordInput  = document.getElementById('passwordInput');
-  const togglePassword = document.getElementById('togglePassword');
-  const toggleIcon     = document.getElementById('toggleIcon');
-
-  togglePassword.addEventListener('click', () => {
-    const isHidden = passwordInput.type === 'password';
-    passwordInput.type = isHidden ? 'text' : 'password';
-    toggleIcon.className = isHidden ? 'bi bi-eye-slash' : 'bi bi-eye';
+  var passwordInput = document.getElementById('passwordInput');
+  document.getElementById('togglePassword').addEventListener('click', function () {
+    var show = passwordInput.type === 'password';
+    passwordInput.type = show ? 'text' : 'password';
+    document.getElementById('toggleIcon').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+  });
+  document.getElementById('parent-login-form').addEventListener('submit', function () {
+    document.getElementById('submit-button').setAttribute('aria-busy', 'true');
+    document.getElementById('button-text').textContent = 'Signing in…';
+    document.getElementById('button-icon').className = 'bi bi-hourglass-split';
   });
 </script>
-
 </body>
 </html>

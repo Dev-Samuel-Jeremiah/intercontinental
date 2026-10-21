@@ -149,6 +149,12 @@ def home(request):
     return render(request, 'landing.html', {'events': events, 'current_year': today.year,
                                             'home': landing_content(request.tenant)})
 
+def _sign_in_context(request, **extra):
+    """The sign-in pages show the school's own banner picture (set under Branding → Website home page)."""
+    from saas_admin.services import landing_content
+    return dict(extra, home=landing_content(getattr(request, 'tenant', None)))
+
+
 def staff_login(request):
     """Staff login view."""
     if request.user.is_authenticated:
@@ -203,7 +209,7 @@ def staff_login(request):
             "Login failed. Please check your credentials or contact the administrator."
         )
 
-    return render(request, 'home.html', {'next': request.GET.get('next', '')})
+    return render(request, 'home.html', _sign_in_context(request, next=request.GET.get('next', '')))
 
 from django.conf import settings
 from django.contrib.auth import login
@@ -254,7 +260,7 @@ def student_login(request):
         except Exception as e:
             messages.error(request, "Login error. Please try again.")
 
-    return render(request, 'home.html')
+    return render(request, 'home.html', _sign_in_context(request))
 
 
 def parent_login(request):
@@ -267,7 +273,7 @@ def parent_login(request):
 
         if not admission_number or not password:
             messages.error(request, "Admission number and password are required.")
-            return render(request, "parents/parent_login.html")
+            return render(request, "parents/parent_login.html", _sign_in_context(request))
 
         # Authenticate via ParentBackend which looks up the student by
         # admission_number (scoped to the current tenant) and verifies
@@ -284,7 +290,7 @@ def parent_login(request):
         else:
             messages.error(request, "Invalid admission number or password. Please check and try again.")
 
-    return render(request, "parents/parent_login.html")
+    return render(request, "parents/parent_login.html", _sign_in_context(request))
 
 
 from announcement.models import Announcement, AnnouncementRead

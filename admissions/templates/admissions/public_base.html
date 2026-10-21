@@ -75,6 +75,37 @@
       background:rgba(255,255,255,.03);border:1px solid var(--rim);color:var(--text-2)}
     .note i{color:var(--gold-lt);margin-top:.1rem}
     .foot{margin-top:2.5rem;font-size:.8rem;color:var(--text-3);text-align:center}
+    /* ── 3D layer: the same raised surfaces, jelly tiles and press-down buttons as the rest of the portal ── */
+    :root{--edge:#06132c;--deep:#8a7300;
+      --slab:linear-gradient(165deg,#1b3768 0%,#12295a 42%,#0d1f45 100%);
+      --jelly:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.62) 0,rgba(255,255,255,0) 40%),linear-gradient(150deg,var(--gold-lt),var(--gold) 55%,var(--gold-dk))}
+    .brand-logo{border:0;color:#0a1f44;background:var(--jelly);transform:rotate(-3deg);text-shadow:0 1px 0 rgba(255,255,255,.45);
+      box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -4px 7px rgba(0,0,0,.22),0 4px 0 var(--deep),0 12px 18px -8px rgba(0,0,0,.7)}
+    .top-links{display:flex;gap:1.2rem;flex-wrap:wrap}
+    .card{border:0;border-radius:24px;background:var(--slab);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.09),inset 0 -1px 0 rgba(0,0,0,.35),0 6px 0 var(--edge),0 22px 40px -16px rgba(0,0,0,.75)}
+    .f-input,input,select,textarea{border:0;border-radius:13px;background:rgba(2,8,24,.5);
+      box-shadow:inset 0 2px 5px rgba(0,0,0,.6),inset 0 -1px 0 rgba(255,255,255,.04),0 1px 0 rgba(255,255,255,.07)}
+    input:focus,select:focus,textarea:focus{box-shadow:inset 0 2px 5px rgba(0,0,0,.6),0 0 0 1px rgba(244,210,31,.45),0 0 16px -4px rgba(244,210,31,.35)}
+    input[type=file]::file-selector-button{border:0;border-radius:10px;color:#0a1f44;font-weight:600;background:var(--jelly);
+      box-shadow:inset 0 1px 1px rgba(255,255,255,.5),0 2px 0 var(--deep)}
+    input[type=checkbox],input[type=radio]{width:auto;box-shadow:none}
+    .btn{border-radius:14px;color:#0a1f44;text-shadow:0 1px 0 rgba(255,255,255,.4);
+      background:radial-gradient(120% 140% at 25% 0%,rgba(255,255,255,.55) 0,rgba(255,255,255,0) 45%),linear-gradient(160deg,var(--gold-lt),var(--gold));
+      box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -3px 6px rgba(0,0,0,.18),0 4px 0 var(--deep),0 14px 22px -10px rgba(244,210,31,.6);
+      transition:transform .12s ease,box-shadow .12s ease}
+    .btn:hover{transform:translateY(-2px);box-shadow:inset 0 2px 1px rgba(255,255,255,.6),inset 0 -3px 6px rgba(0,0,0,.18),0 6px 0 var(--deep),0 18px 26px -10px rgba(244,210,31,.6)}
+    .btn:active{transform:translateY(3px);box-shadow:inset 0 2px 1px rgba(255,255,255,.45),0 1px 0 var(--deep)}
+    .btn.ghost{border:0;color:var(--text);text-shadow:none;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.03)),#132b58;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 0 0 1px rgba(255,255,255,.06),0 4px 0 var(--edge),0 12px 18px -10px rgba(0,0,0,.7)}
+    .btn.ghost:hover{color:var(--gold-lt);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(244,210,31,.35),0 6px 0 var(--edge),0 16px 22px -10px rgba(0,0,0,.75)}
+    .btn.ghost:active{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 1px 0 var(--edge)}
+    .note{border:0;border-radius:14px;background:rgba(2,8,24,.3);box-shadow:inset 0 1px 3px rgba(0,0,0,.45)}
+    .errors{border:0;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(232,112,112,.3)}
+    .big-icon{width:84px;height:84px;margin:0 auto 1.6rem;border-radius:24px;display:grid;place-items:center;font-size:2.1rem;color:#0a1f44;background:var(--jelly);
+      text-shadow:0 1px 0 rgba(255,255,255,.45);
+      box-shadow:inset 0 3px 2px rgba(255,255,255,.6),inset 0 -6px 10px rgba(0,0,0,.22),0 7px 0 var(--deep),0 22px 30px -10px rgba(0,0,0,.75)}
+    .big-icon.ok{--gold-lt:#a7f3d0;--gold:#34d399;--gold-dk:#059669;--deep:#065f46}
     @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
     {% block extra_css %}{% endblock %}
   </style>
@@ -91,9 +122,12 @@
           <span>Admissions</span>
         </div>
       </div>
-      {% block topright %}
-      <a class="link" href="{% url 'apply_status' %}"><i class="bi bi-search"></i> Check application status</a>
-      {% endblock %}
+      <div class="top-links">
+        <a class="link" href="{% url 'users:home' %}"><i class="bi bi-house"></i> Home page</a>
+        {% block topright %}
+        <a class="link" href="{% url 'apply_status' %}"><i class="bi bi-search"></i> Check application status</a>
+        {% endblock %}
+      </div>
     </div>
 
     {% block body %}{% endblock %}

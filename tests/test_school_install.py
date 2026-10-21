@@ -328,3 +328,35 @@ class LandingSettingsTests(TenantTestCase):
         from saas_admin.models import LandingPage
         self.save(self.teacher, {'hero_image': self.picture()})
         self.assertFalse(LandingPage.objects.filter(tenant=self.school).exclude(hero_image='').exists())
+
+
+class SignInPageTests(TenantTestCase):
+    """The sign-in pages share the portal's look and the school's own banner picture."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+
+    def test_sign_in_pages(self):
+        host = self.host(self.school)
+        staff = self.client.get('/staff/login/', HTTP_HOST=host)
+        self.assertContains(staff, 'action="/staff/login/"')
+        for target in ("'/parent/login/'", "'/student/login/'", '/family/login/'):
+            self.assertContains(staff, target)                      # each role signs in at its own page
+        self.assertContains(staff, 'images/landing/campus.jpg')       # the built-in picture until one is uploaded
+        self.assertNotContains(staff, 'cdn.tailwindcss.com')
+        parent = self.client.get('/parent/login/', HTTP_HOST=host)
+        self.assertContains(parent, 'name="admission_number"')
+        self.assertContains(parent, '/family/login/')
+
+    def test_the_uploaded_banner_is_used(self):
+        from saas_admin.models import LandingPage
+        page = LandingPage.objects.create(tenant=self.school, hero_image='landing/our-campus.jpg')
+        html = self.client.get('/staff/login/', HTTP_HOST=self.host(self.school)).content.decode()
+        self.assertIn('/media/landing/our-campus.jpg', html)
+        page.delete()
+
+    def test_a_failed_student_sign_in_says_why(self):
+        page = self.client.post('/student/login/', {'admission_number': 'NOPE1', 'password': 'x'},
+                                HTTP_HOST=self.host(self.school), follow=True)
+        self.assertContains(page, 'Invalid admission number')
