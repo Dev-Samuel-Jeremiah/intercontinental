@@ -51,16 +51,21 @@ def branding(request):
     t = request.tenant
     if request.method == 'POST':
         try:
-            fav = request.FILES.get('favicon')
-            if fav and fav.size > 512 * 1024:
-                raise svc.PlatformError('The icon must be smaller than 500 KB.')
-            svc.save_branding(t, request.POST, fav)
-            messages.success(request, 'Branding saved.')
+            if request.POST.get('action') == 'landing':
+                svc.save_landing(t, request.POST, request.FILES)
+                messages.success(request, 'Home page saved. Open the home page to see it.')
+            else:
+                fav = request.FILES.get('favicon')
+                if fav and fav.size > 512 * 1024:
+                    raise svc.PlatformError('The icon must be smaller than 500 KB.')
+                svc.save_branding(t, request.POST, fav)
+                messages.success(request, 'Branding saved.')
         except svc.PlatformError as problem:
             messages.error(request, str(problem))
         return redirect('platform_school:branding')
     from .models import Branding
-    return render(request, 'saas_admin/school/branding.html', {'b': Branding.objects.filter(tenant=t).first()})
+    return render(request, 'saas_admin/school/branding.html', {'b': Branding.objects.filter(tenant=t).first(),
+                                                               'home': svc.landing_content(t)})
 
 
 # ─────────────────────────────────────────────────────────────────────────────

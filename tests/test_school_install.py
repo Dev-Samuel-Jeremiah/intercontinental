@@ -243,8 +243,88 @@ class LandingPageTests(TenantTestCase):
         self.assertEqual(page.status_code, 200)
         for url in ('/staff/login/', '/student/login/', '/parent/login/', '/apply/'):
             self.assertContains(page, f'href="{url}', msg_prefix=url)
+        CalendarEvent.objects.create(tenant=self.school, title='PTA general meeting', kind='PTA',
+                                     start_date=today + timedelta(days=7), audience='PARENTS')
+        page = self.client.get('/', HTTP_HOST=self.host(self.school))
         self.assertContains(page, 'Inter-house sports')          # upcoming, for everyone
+        self.assertContains(page, 'PTA general meeting')         # for parents and students
+        self.assertNotContains(page, '1998')
         self.assertNotContains(page, 'Staff training day')       # staff-only events stay private
         self.assertNotContains(page, 'Last year prize giving')   # past events are not shown
         self.assertNotContains(page, 'cdn.tailwindcss.com')      # no prototyping CDN on the live site
         self.assertContains(page, f'© {today.year}')
+
+
+class LandingSettingsTests(TenantTestCase):
+    """Administrators change the home page's background (picture or video) and campus photos under Branding."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school)
+        self.teacher = make_teacher(self.school)
+        self.addCleanup(self._clean_files)
+
+    def _clean_files(self):
+        from saas_admin.models import LandingPage
+        for page in LandingPage.objects.all():
+            for f in ('hero_image', 'hero_video', 'photo1', 'photo2', 'photo3'):
+                if getattr(page, f):
+                    getattr(page, f).delete(save=False)
+
+    @staticmethod
+    def picture(name='p.png'):
+        from io import BytesIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        buf = BytesIO()
+        Image.new('RGB', (40, 30), (20, 60, 120)).save(buf, 'PNG')
+        return SimpleUploadedFile(name, buf.getvalue(), content_type='image/png')
+
+    def save(self, user, data):
+        self.client.force_login(user)
+        return self.client.post('/account/branding/', dict(action='landing', **data), HTTP_HOST=self.host(self.school))
+
+    def home(self):
+        self.client.logout()
+        return self.client.get('/', HTTP_HOST=self.host(self.school)).content.decode()
+
+    def test_background_picture_photos_and_captions(self):
+        self.save(self.admin, {'hero_image': self.picture('banner.png'), 'photo2': self.picture('robots.png'),
+                               'photo2_label': 'Clubs', 'photo2_title': 'Robotics club'})
+        html = self.home()
+        self.assertIn('/media/landing/banner', html)
+        self.assertIn('/media/landing/robots', html)
+        self.assertIn('Robotics club', html)
+        self.assertIn('gallery-lab.jpg', html)                      # untouched slots keep the built-in photo
+        self.save(self.admin, {'remove_hero_image': '1', 'remove_photo2': '1'})
+        html = self.home()
+        self.assertIn('images/landing/campus.jpg', html)
+        self.assertIn('gallery-makerspace.jpg', html)
+
+    def test_background_video(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        mp4 = SimpleUploadedFile('clip.mp4', b'\x00\x00\x00\x18ftypmp42' + b'\x00' * 64, content_type='video/mp4')
+        self.save(self.admin, {'hero_video': mp4, 'use_video': '1'})
+        html = self.home()
+        self.assertIn('<video class="bg"', html)
+        self.assertIn('/media/landing/clip', html)
+        self.save(self.admin, {})                                     # switched off: back to the picture
+        self.assertNotIn('<video class="bg"', self.home())
+
+    def test_bad_files_are_refused(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from saas_admin.models import LandingPage
+        fake_png = SimpleUploadedFile('x.png', b'not really a picture', content_type='image/png')
+        fake_mp4 = SimpleUploadedFile('x.mp4', b'<html>not a video</html>', content_type='video/mp4')
+        script = SimpleUploadedFile('x.svg', b'<svg onload=alert(1)>', content_type='image/svg+xml')
+        for data in ({'hero_image': fake_png}, {'hero_video': fake_mp4}, {'photo1': script}):
+            page = self.save(self.admin, data)
+            self.assertEqual(page.status_code, 302)
+        page = LandingPage.objects.filter(tenant=self.school).first()
+        self.assertFalse(page and (page.hero_image or page.hero_video or page.photo1))
+
+    def test_only_administrators(self):
+        from saas_admin.models import LandingPage
+        self.save(self.teacher, {'hero_image': self.picture()})
+        self.assertFalse(LandingPage.objects.filter(tenant=self.school).exclude(hero_image='').exists())

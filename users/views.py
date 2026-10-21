@@ -140,11 +140,14 @@ def home(request):
     if request.user.is_authenticated:
         return redirect('dashboard:router')
     from curriculum.models import CalendarEvent
+    from saas_admin.services import landing_content
     today = timezone.localdate()
-    # Only events meant for everyone are shown to the public
-    events = list(CalendarEvent.objects.filter(tenant=request.tenant, audience='ALL', start_date__gte=today)
-                  .order_by('start_date', 'start_time')[:4]) if request.tenant else []
-    return render(request, 'landing.html', {'events': events, 'current_year': today.year})
+    # The School Calendar's upcoming (or still running) events for everyone and for families — never staff-only ones
+    events = list(CalendarEvent.objects.filter(tenant=request.tenant, audience__in=('ALL', 'PARENTS'))
+                  .filter(Q(start_date__gte=today) | Q(end_date__gte=today))
+                  .order_by('start_date', 'start_time')[:6]) if request.tenant else []
+    return render(request, 'landing.html', {'events': events, 'current_year': today.year,
+                                            'home': landing_content(request.tenant)})
 
 def staff_login(request):
     """Staff login view."""

@@ -74,7 +74,8 @@
 
   /* Hero */
   .hero{position:relative;min-height:min(100vh,860px);display:flex;align-items:center;padding:120px 0 80px;overflow:hidden}
-  .hero .bg{position:absolute;inset:0;z-index:-2;background:url("{% static 'images/landing/campus.jpg' %}") center/cover no-repeat}
+  .hero .bg{position:absolute;inset:0;z-index:-2;background:url("{{ home.hero_image }}") center/cover no-repeat}
+  .hero video.bg{width:100%;height:100%;object-fit:cover}
   .hero::before{content:"";position:absolute;inset:0;z-index:-1;
     background:linear-gradient(100deg,rgba(8,26,58,.97) 0%,rgba(8,26,58,.88) 45%,rgba(8,26,58,.55) 100%),linear-gradient(0deg,var(--ink) 0%,transparent 30%)}
   .hero .orb{position:absolute;right:8%;top:16%;width:180px;height:180px;border-radius:50%;pointer-events:none;
@@ -117,6 +118,7 @@
   .date small{font-size:.66rem;font-weight:700;letter-spacing:1px;text-transform:uppercase}
   .event h3{font-family:var(--sans);font-size:1.02rem;font-weight:600}
   .event p{margin:.2rem 0 0;color:var(--slate2);font-size:.86rem}
+  .event p.desc{color:var(--slate);font-size:.82rem}
 
   /* Gallery */
   .gallery{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:20px}
@@ -190,7 +192,8 @@
 <main id="top">
   <!-- Hero -->
   <section class="hero">
-    <div class="bg" role="img" aria-label="The school campus"></div>
+    {% if home.hero_video %}<video class="bg" autoplay muted loop playsinline preload="metadata" poster="{{ home.hero_image }}" aria-hidden="true"><source src="{{ home.hero_video }}"></video>
+    {% else %}<div class="bg" role="img" aria-label="The school campus"></div>{% endif %}
     <span class="orb"></span><span class="orb s"></span>
     <div class="wrap">
       <div class="eyebrow">Welcome to</div>
@@ -203,7 +206,6 @@
       <div class="facts">
         <span><b>4</b>wings</span>
         <span><b>18 mo – 18 yrs</b>from early years to sixth form</span>
-        <span><b>Est. 1998</b>in Kano</span>
       </div>
     </div>
   </section>
@@ -268,6 +270,7 @@
           <div>
             <h3>{{ e.title }}</h3>
             <p>{{ e.start_date|date:"l j F" }}{% if e.end_date and e.end_date != e.start_date %} – {{ e.end_date|date:"j F" }}{% endif %}{% if e.start_time %} · {{ e.start_time|time:"g:i A" }}{% endif %}{% if e.venue %} · {{ e.venue }}{% endif %}</p>
+            {% if e.description %}<p class="desc">{{ e.description|truncatechars:140 }}</p>{% endif %}
           </div>
         </article>
         {% endfor %}
@@ -281,9 +284,7 @@
     <div class="wrap">
       <div class="head"><div><div class="eyebrow">Campus life</div><h2>A place to <em>focus and belong</em></h2></div></div>
       <div class="gallery">
-        <figure class="shot" style="margin:0"><img src="{% static 'images/landing/gallery-lab.jpg' %}" alt="Students doing a chemistry experiment in the science lab" loading="lazy"><figcaption><small>Academics</small><b>Science &amp; innovation</b></figcaption></figure>
-        <figure class="shot" style="margin:0"><img src="{% static 'images/landing/gallery-makerspace.jpg' %}" alt="Pupils building robots in the MakerSpace" loading="lazy"><figcaption><small>Hi-Tech Academy</small><b>The MakerSpace</b></figcaption></figure>
-        <figure class="shot" style="margin:0"><img src="{% static 'images/landing/gallery-sports.jpg' %}" alt="Students playing football on the school field" loading="lazy"><figcaption><small>Sports</small><b>Pitches &amp; courts</b></figcaption></figure>
+        {% for p in home.photos %}<figure class="shot" style="margin:0"><img src="{{ p.url }}" alt="{{ p.title }}" loading="lazy"><figcaption><small>{{ p.label }}</small><b>{{ p.title }}</b></figcaption></figure>{% endfor %}
       </div>
     </div>
   </section>
@@ -327,7 +328,7 @@
       <div>
         <a class="brand" href="#top" style="margin-bottom:1rem">
           <span class="jelly">{% if tenant.logo %}<img src="{{ tenant.logo.url }}" alt="">{% else %}IN{% endif %}</span>
-          <span><b>{{ tenant.name|default:"Intercontinental Schools Kano" }}</b><small>Est. 1998 · Kano</small></span>
+          <span><b>{{ tenant.name|default:"Intercontinental Schools Kano" }}</b><small>School Portal</small></span>
         </a>
         <p>{% if tenant.motto %}{{ tenant.motto }}{% else %}Nurturing confident, principled young people across our four wings in Kano.{% endif %}</p>
       </div>

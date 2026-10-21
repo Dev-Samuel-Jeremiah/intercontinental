@@ -481,3 +481,27 @@ class Campus(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class LandingPage(models.Model):
+    """What the public home page shows: the hero background (a picture or a looping video) and the
+    three campus-life photos. Anything left empty falls back to the built-in pictures."""
+    tenant = models.OneToOneField(TENANT, on_delete=models.CASCADE, related_name='landing')
+    hero_image = models.ImageField(upload_to='landing/', blank=True, null=True,
+                                   help_text='Background picture of the top banner (also the poster while a video loads)')
+    hero_video = models.FileField(upload_to='landing/', blank=True, null=True,
+                                  help_text='Optional short MP4/WebM video that plays silently on a loop behind the banner')
+    use_video = models.BooleanField(default=False)
+    photo1 = models.ImageField(upload_to='landing/', blank=True, null=True)
+    photo1_label = models.CharField(max_length=40, blank=True)
+    photo1_title = models.CharField(max_length=60, blank=True)
+    photo2 = models.ImageField(upload_to='landing/', blank=True, null=True)
+    photo2_label = models.CharField(max_length=40, blank=True)
+    photo2_title = models.CharField(max_length=60, blank=True)
+    photo3 = models.ImageField(upload_to='landing/', blank=True, null=True)
+    photo3_label = models.CharField(max_length=40, blank=True)
+    photo3_title = models.CharField(max_length=60, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Home page of {self.tenant}'

@@ -18,4 +18,56 @@
     <button class="fin-btn fin-btn-gold" type="submit">Save</button>
   </form>
 </div>
+
+<style>
+  .home-form .slot{display:grid;grid-template-columns:150px 1fr;gap:1rem;align-items:start;padding:.9rem 0;border-top:1px solid var(--rim)}
+  .home-form .thumb{width:150px;height:96px;border-radius:12px;object-fit:cover;background:#050d1f;box-shadow:0 3px 0 #06132c}
+  .home-form video.thumb{display:block}
+  .home-form .rm{display:flex;gap:.4rem;align-items:center;font-size:.8rem;color:var(--slate2);margin-top:.35rem}
+  .home-form .rm input{width:auto}
+  .home-form .hint{font-size:.78rem;color:var(--slate2)}
+  @media(max-width:640px){.home-form .slot{grid-template-columns:1fr}}
+</style>
+<form method="post" enctype="multipart/form-data" class="panel fin-form home-form" style="padding:1.2rem;margin-top:1.2rem">{% csrf_token %}
+  <input type="hidden" name="action" value="landing">
+  <h3 style="margin:0 0 .3rem">Website home page</h3>
+  <p class="hint" style="margin:0 0 .6rem">What visitors see at <a href="/" target="_blank" rel="noopener">{{ request.get_host }}</a> before they sign in. Leave anything empty to keep the built-in picture.</p>
+
+  <h4 style="margin:.8rem 0 0">Top banner background</h4>
+  <div class="slot">
+    <img class="thumb" src="{{ home.hero_image }}" alt="Current background picture">
+    <div>
+      <label>Background picture (JPG, PNG or WebP, under 5 MB — a wide photo, at least 1600 px across)</label>
+      <input type="file" name="hero_image" accept="image/jpeg,image/png,image/webp">
+      {% if home.page.hero_image %}<label class="rm"><input type="checkbox" name="remove_hero_image" value="1"> Go back to the built-in picture</label>{% endif %}
+    </div>
+  </div>
+  <div class="slot">
+    {% if home.page.hero_video %}<video class="thumb" src="{{ home.page.hero_video.url }}" muted loop autoplay playsinline></video>{% else %}<div class="thumb" style="display:grid;place-items:center;color:var(--slate2)"><i class="bi bi-camera-video" style="font-size:1.6rem"></i></div>{% endif %}
+    <div>
+      <label>Background video (optional — MP4 or WebM, under 20 MB; plays silently on a loop)</label>
+      <input type="file" name="hero_video" accept="video/mp4,video/webm">
+      <label class="rm"><input type="checkbox" name="use_video" value="1" {% if home.page.use_video %}checked{% endif %}> Show the video instead of the picture (the picture still shows while the video loads, and on phones that save data)</label>
+      {% if home.page.hero_video %}<label class="rm"><input type="checkbox" name="remove_hero_video" value="1"> Delete the video</label>{% endif %}
+      <p class="hint" style="margin:.4rem 0 0">Tip: 10–20 seconds of calm footage without sound works best. Text sits on top of it, so avoid busy or very bright clips.</p>
+    </div>
+  </div>
+
+  <h4 style="margin:1rem 0 0">Campus life photos</h4>
+  {% for p in home.photos %}{% with n=forloop.counter %}
+  <div class="slot">
+    <img class="thumb" src="{{ p.url }}" alt="Campus photo {{ n }}">
+    <div>
+      <label>Photo {{ n }} (JPG, PNG or WebP, under 5 MB)</label>
+      <input type="file" name="photo{{ n }}" accept="image/jpeg,image/png,image/webp">
+      <div class="row2" style="margin-top:.5rem">
+        <div><label>Small label</label><input name="photo{{ n }}_label" maxlength="40" value="{% if n == 1 %}{{ home.page.photo1_label|default:'' }}{% elif n == 2 %}{{ home.page.photo2_label|default:'' }}{% else %}{{ home.page.photo3_label|default:'' }}{% endif %}" placeholder="{{ p.label }}"></div>
+        <div><label>Title</label><input name="photo{{ n }}_title" maxlength="60" value="{% if n == 1 %}{{ home.page.photo1_title|default:'' }}{% elif n == 2 %}{{ home.page.photo2_title|default:'' }}{% else %}{{ home.page.photo3_title|default:'' }}{% endif %}" placeholder="{{ p.title }}"></div>
+      </div>
+      {% if n == 1 and home.page.photo1 or n == 2 and home.page.photo2 or n == 3 and home.page.photo3 %}<label class="rm"><input type="checkbox" name="remove_photo{{ n }}" value="1"> Go back to the built-in photo</label>{% endif %}
+    </div>
+  </div>
+  {% endwith %}{% endfor %}
+  <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.8rem">Save home page</button>
+</form>
 {% endblock %}

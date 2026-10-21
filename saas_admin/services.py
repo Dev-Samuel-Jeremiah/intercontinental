@@ -87,6 +87,92 @@ def save_branding(tenant, data, favicon=None):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# The public home page: hero background (picture or video) and campus photos
+# ─────────────────────────────────────────────────────────────────────────────
+
+LANDING_PHOTO_DEFAULTS = [
+    ('images/landing/gallery-lab.jpg', 'Academics', 'Science & innovation'),
+    ('images/landing/gallery-makerspace.jpg', 'Hi-Tech Academy', 'The MakerSpace'),
+    ('images/landing/gallery-sports.jpg', 'Sports', 'Pitches & courts'),
+]
+IMAGE_LIMIT = 5 * 1024 * 1024
+VIDEO_LIMIT = 20 * 1024 * 1024        # nginx accepts uploads up to 20 MB on this page
+
+
+def _check_image(upload, what):
+    import os
+    from PIL import Image, UnidentifiedImageError
+    if os.path.splitext(upload.name)[1].lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
+        raise PlatformError(f'{what}: use a JPG, PNG or WebP picture.')
+    if upload.size > IMAGE_LIMIT:
+        raise PlatformError(f'{what}: the picture must be smaller than 5 MB.')
+    try:
+        Image.open(upload).verify()
+    except (UnidentifiedImageError, OSError, SyntaxError):
+        raise PlatformError(f'{what}: that file is not a picture we can read.')
+    upload.seek(0)
+
+
+def _check_video(upload):
+    import os
+    ext = os.path.splitext(upload.name)[1].lower()
+    if ext not in ('.mp4', '.webm'):
+        raise PlatformError('Background video: use an MP4 or WebM file.')
+    if upload.size > VIDEO_LIMIT:
+        raise PlatformError('Background video: it must be smaller than 20 MB — a short, silent clip of 10–20 seconds is best.')
+    head = upload.read(16)
+    upload.seek(0)
+    if not ((ext == '.mp4' and head[4:8] == b'ftyp') or (ext == '.webm' and head[:4] == b'\x1a\x45\xdf\xa3')):
+        raise PlatformError('Background video: that file is not a real MP4 or WebM video.')
+
+
+def _replace(obj, field, upload):
+    old = getattr(obj, field)
+    if old:
+        old.delete(save=False)
+    setattr(obj, field, upload)
+
+
+def save_landing(tenant, data, files):
+    """Save the home-page settings from the Branding page. Raises PlatformError with a plain message."""
+    from .models import LandingPage
+    page, _ = LandingPage.objects.get_or_create(tenant=tenant)
+    uploads = {name: files.get(name) for name in ('hero_image', 'hero_video', 'photo1', 'photo2', 'photo3')}
+    names = {'hero_image': 'Background picture', 'photo1': 'Campus photo 1', 'photo2': 'Campus photo 2',
+             'photo3': 'Campus photo 3'}
+    for name, upload in uploads.items():                   # check everything before changing anything
+        if upload:
+            _check_video(upload) if name == 'hero_video' else _check_image(upload, names[name])
+    for name, upload in uploads.items():
+        if upload:
+            _replace(page, name, upload)
+        elif data.get(f'remove_{name}') and getattr(page, name):
+            _replace(page, name, None)
+    page.use_video = bool(data.get('use_video')) and bool(page.hero_video)
+    for n in (1, 2, 3):
+        setattr(page, f'photo{n}_label', (data.get(f'photo{n}_label') or '').strip()[:40])
+        setattr(page, f'photo{n}_title', (data.get(f'photo{n}_title') or '').strip()[:60])
+    page.save()
+    return page
+
+
+def landing_content(tenant):
+    """What the home page shows, with the built-in pictures wherever nothing was uploaded."""
+    from django.templatetags.static import static
+    from .models import LandingPage
+    page = LandingPage.objects.filter(tenant=tenant).first() if tenant else None
+    hero_image = page.hero_image.url if page and page.hero_image else static('images/landing/campus.jpg')
+    video = page.hero_video.url if page and page.use_video and page.hero_video else ''
+    photos = []
+    for n, (default, label, title) in enumerate(LANDING_PHOTO_DEFAULTS, start=1):
+        img = getattr(page, f'photo{n}') if page else None
+        photos.append({'url': img.url if img else static(default),
+                       'label': (getattr(page, f'photo{n}_label') if page else '') or label,
+                       'title': (getattr(page, f'photo{n}_title') if page else '') or title})
+    return {'hero_image': hero_image, 'hero_video': video, 'photos': photos, 'page': page}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Help centre, tours, notices, export, backup/restore
 # ─────────────────────────────────────────────────────────────────────────────
 
