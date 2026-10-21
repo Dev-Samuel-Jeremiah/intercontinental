@@ -139,7 +139,12 @@ def home(request):
     """School portal home — redirect to dashboard if logged in, else show the school's landing page."""
     if request.user.is_authenticated:
         return redirect('dashboard:router')
-    return render(request, 'landing.html')
+    from curriculum.models import CalendarEvent
+    today = timezone.localdate()
+    # Only events meant for everyone are shown to the public
+    events = list(CalendarEvent.objects.filter(tenant=request.tenant, audience='ALL', start_date__gte=today)
+                  .order_by('start_date', 'start_time')[:4]) if request.tenant else []
+    return render(request, 'landing.html', {'events': events, 'current_year': today.year})
 
 def staff_login(request):
     """Staff login view."""

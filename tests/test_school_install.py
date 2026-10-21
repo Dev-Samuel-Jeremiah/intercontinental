@@ -217,3 +217,34 @@ class SchoolToolsTests(Base):
         call_command('nightly_backup', stdout=out)
         self.assertIn('backups: 1', out.getvalue())
         self.assertEqual(Backup.objects.filter(tenant=self.school, kind='AUTO').count(), 1)
+
+
+class LandingPageTests(TenantTestCase):
+    """The public landing page: the portal's own look, sign-in for all three kinds of user, real events only."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+
+    def test_landing_page(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from curriculum.models import CalendarEvent
+        from tenants.middleware import set_current_tenant
+        set_current_tenant(self.school)
+        today = timezone.localdate()
+        CalendarEvent.objects.create(tenant=self.school, title='Inter-house sports', kind='SPORTS',
+                                     start_date=today + timedelta(days=5), audience='ALL')
+        CalendarEvent.objects.create(tenant=self.school, title='Staff training day', kind='MEETING',
+                                     start_date=today + timedelta(days=6), audience='STAFF')
+        CalendarEvent.objects.create(tenant=self.school, title='Last year prize giving', kind='OTHER',
+                                     start_date=today - timedelta(days=30), audience='ALL')
+        page = self.client.get('/', HTTP_HOST=self.host(self.school))
+        self.assertEqual(page.status_code, 200)
+        for url in ('/staff/login/', '/student/login/', '/parent/login/', '/apply/'):
+            self.assertContains(page, f'href="{url}', msg_prefix=url)
+        self.assertContains(page, 'Inter-house sports')          # upcoming, for everyone
+        self.assertNotContains(page, 'Staff training day')       # staff-only events stay private
+        self.assertNotContains(page, 'Last year prize giving')   # past events are not shown
+        self.assertNotContains(page, 'cdn.tailwindcss.com')      # no prototyping CDN on the live site
+        self.assertContains(page, f'© {today.year}')
