@@ -75,8 +75,11 @@ class SecurityGateMiddleware:
         now = time.time()
         if session.get('sec_2fa') == 'pending' and not impersonating:
             return redirect(f'/security/2fa/verify/?next={request.get_full_path()}')
-        if getattr(settings, 'TWO_FACTOR_ENFORCE', True) and not impersonating and session.get('sec_2fa') != 'ok' \
-                and session.get('sec_2fa_free', 0) < now:
+        # A forced password change comes first (the password page is all such a user can open);
+        # two-step set-up is required straight after it.
+        forced_password = getattr(user, 'must_change_password', False)
+        if getattr(settings, 'TWO_FACTOR_ENFORCE', True) and not impersonating and not forced_password \
+                and session.get('sec_2fa') != 'ok' and session.get('sec_2fa_free', 0) < now:
             if svc.required_2fa(user) and not svc.two_factor_for(user):
                 if not request.path.startswith('/security/'):
                     messages.info(request, 'Your school requires two-step sign-in for your account. '

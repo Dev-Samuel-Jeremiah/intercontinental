@@ -56,7 +56,9 @@ def get_school():
     return tenant
 
 
-_ALLOWED_WHILE_FORCED = ('/change-password/', '/logout/', '/static/', '/media/')
+# While a new password is required: the password page itself, and the two-step sign-in pages
+# (someone who already uses two-step must be able to finish signing in first).
+_ALLOWED_WHILE_FORCED = ('/change-password/', '/logout/', '/static/', '/media/', '/security/2fa/')
 
 
 class TenantMiddleware:

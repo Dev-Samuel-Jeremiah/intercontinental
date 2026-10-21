@@ -77,3 +77,30 @@ class HardeningTests(TenantTestCase):
         self.assertIn('disable-local-file-access', options)
         self.assertNotIn('enable-local-file-access', options)
         self.assertIn('<head><base href="https://portal.test/">', html)
+
+
+class FirstSignInTests(TenantTestCase):
+    """A new administrator on the live site: new password first, then two-step set-up — never a loop."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school, username='head', password='Temp-Pass-4421x')
+        self.admin.must_change_password = True
+        self.admin.save(update_fields=['must_change_password'])
+
+    @override_settings(TWO_FACTOR_ENFORCE=True)
+    def test_password_first_then_two_step(self):
+        host = self.host(self.school)
+        page = self.client.post('/staff/login/', {'username': 'head', 'password': 'Temp-Pass-4421x'}, HTTP_HOST=host)
+        self.assertEqual(page['Location'], '/change-password/')
+        self.assertEqual(self.client.get('/change-password/', HTTP_HOST=host).status_code, 200)   # the form, not a redirect
+        self.assertEqual(self.client.get('/dashboard/', HTTP_HOST=host)['Location'], '/change-password/')
+        self.client.post('/change-password/', {'current_password': 'Temp-Pass-4421x',
+                                               'new_password': 'A-much-Longer-pass-9931!',
+                                               'confirm_password': 'A-much-Longer-pass-9931!'}, HTTP_HOST=host)
+        self.admin.refresh_from_db()
+        self.assertFalse(self.admin.must_change_password)
+        page = self.client.get('/dashboard/', HTTP_HOST=host)
+        self.assertEqual(page['Location'], '/security/2fa/setup/?required=1')                # two-step next
+        self.assertEqual(self.client.get('/security/2fa/setup/?required=1', HTTP_HOST=host).status_code, 200)
