@@ -1,0 +1,169 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Scan{% endblock %}
+{% block content %}
+{% include "dashboard/_dash.html" %}
+<style>
+  .viewer [hidden],.controls [hidden]{display:none!important}   /* the button and overlay styles must not undo hidden */
+  .scan-wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:1.25rem;align-items:start}
+  .viewer{position:relative;border-radius:26px;overflow:hidden;background:#020814;aspect-ratio:4/3;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),0 6px 0 #06132c,0 22px 40px -16px rgba(0,0,0,.75)}
+  .viewer video{width:100%;height:100%;object-fit:cover;display:block}
+  .viewer .frame{position:absolute;inset:14% 22%;border-radius:22px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(2,8,20,.45),inset 0 0 0 3px rgba(244,210,31,.85)}
+  .viewer .frame::after{content:"";position:absolute;left:8%;right:8%;top:50%;height:2px;background:linear-gradient(90deg,transparent,#ffe580,transparent);
+    box-shadow:0 0 12px #f4d21f;animation:sweep 2.2s ease-in-out infinite}
+  @keyframes sweep{0%,100%{transform:translateY(-70px)}50%{transform:translateY(70px)}}
+  .viewer .idle{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:1.5rem;color:var(--slate2)}
+  .viewer .idle i{font-size:2.4rem;color:var(--acc2);display:block;margin-bottom:.6rem}
+  .controls{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem}
+  .result{display:flex;gap:.8rem;align-items:center;padding:.85rem 1rem;border-bottom:1px solid rgba(0,0,0,.28);animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(-6px)}}
+  .result .ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;font-size:1.1rem}
+  .result b{display:block;font-size:.92rem}
+  .result span{font-size:.78rem;color:var(--slate2)}
+  .result.in .ico{background:linear-gradient(150deg,#86efac,#34d399);color:#052e16;box-shadow:0 3px 0 #065f46}
+  .result.out .ico{background:linear-gradient(150deg,#fde68a,#fbbf24);color:#451a03;box-shadow:0 3px 0 #92400e}
+  .result.same .ico{background:linear-gradient(150deg,#cbd5e1,#94a3b8);color:#0f172a;box-shadow:0 3px 0 #475569}
+  .result.bad .ico{background:linear-gradient(150deg,#fca5a5,#f87171);color:#450a0a;box-shadow:0 3px 0 #7f1d1d}
+  .flash{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s}
+  .flash.ok{background:rgba(52,211,153,.35);opacity:1}.flash.bad{background:rgba(248,113,113,.35);opacity:1}
+  @media(max-width:900px){.scan-wrap{grid-template-columns:1fr}}
+  @media (prefers-reduced-motion:reduce){.viewer .frame::after{animation:none}}
+</style>
+
+<div class="db" style="--acc:#f4d21f;--acc2:#ffe580;--accdim:rgba(244,210,31,.12);--accbd:rgba(244,210,31,.35)">
+  <section class="db-hero">
+    <div class="db-hero-row">
+      <div class="db-hello"><span class="db-avatar"><i class="bi bi-qr-code-scan"></i></span>
+        <div><div class="db-eyebrow">Scanner</div>
+          <h1>Scan a <em>code</em></h1>
+          <p>{% if can_gate %}Students' ID cards at the gate · {% endif %}the reception code to clock in or out · report-card verification codes.</p></div></div>
+    </div>
+  </section>
+
+  <div class="scan-wrap">
+    <div>
+      <div class="viewer" id="viewer">
+        <video id="video" playsinline muted></video>
+        <div class="frame" id="frame" hidden></div>
+        <div class="flash" id="flash"></div>
+        <div class="idle" id="idle"><div><i class="bi bi-camera-video"></i>Press <b>Start scanning</b> and allow the camera.<br><span class="hint">Hold the code inside the gold square.</span></div></div>
+      </div>
+      <div class="controls">
+        <button class="db-btn pri" id="start" type="button"><i class="bi bi-play-fill"></i> Start scanning</button>
+        <button class="db-btn" id="stop" type="button" hidden><i class="bi bi-stop-fill"></i> Stop</button>
+        <button class="db-btn" id="flip" type="button" hidden><i class="bi bi-arrow-repeat"></i> Switch camera</button>
+      </div>
+      <p class="hint" style="margin-top:.8rem">The scanner keeps going after each card, so you can scan a queue. Only codes from this school's portal are acted on; anything else is just shown.</p>
+    </div>
+
+    <div class="db-card">
+      <div class="db-card-h"><h3><i class="bi bi-list-check"></i> This session</h3><span class="hint" id="count">0 scans</span></div>
+      <div id="results"><div class="db-empty" id="none"><i class="bi bi-upc-scan"></i>Scans will appear here.</div></div>
+      {% if can_gate %}<div class="db-card-b" style="padding-top:.6rem"><a class="hint" href="{% url 'idcards:gate_scan_log' %}">Today's gate log →</a></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
+<script>
+(function () {
+  var video = document.getElementById('video'), startBtn = document.getElementById('start'), stopBtn = document.getElementById('stop'),
+      flipBtn = document.getElementById('flip'), idle = document.getElementById('idle'), frame = document.getElementById('frame'),
+      flash = document.getElementById('flash'), results = document.getElementById('results'), count = document.getElementById('count');
+  var stream = null, facing = 'environment', timer = null, detector = null, canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', {willReadFrequently: true});
+  var recent = {}, busy = false, total = 0;
+  var SITE = '{{ site_url|escapejs }}';
+  // School scan codes: recognised by their path, always sent to this site (cards may carry another address)
+  var SCAN_PATHS = [/^\/idcards\/scan\/[0-9a-f-]{36}\/$/i, /^\/idcards\/reception\/scan\/[0-9a-f-]{36}\/$/i];
+
+  if (window.BarcodeDetector) {
+    BarcodeDetector.getSupportedFormats().then(function (f) { if (f.indexOf('qr_code') > -1) detector = new BarcodeDetector({formats: ['qr_code']}); });
+  }
+
+  function add(kind, title, sub) {
+    var none = document.getElementById('none'); if (none) none.remove();
+    var row = document.createElement('div'); row.className = 'result ' + kind;
+    var ico = document.createElement('span'); ico.className = 'ico';
+    ico.innerHTML = '<i class="bi ' + ({in: 'bi-box-arrow-in-right', out: 'bi-box-arrow-right', same: 'bi-arrow-repeat', bad: 'bi-x-lg'}[kind] || 'bi-info-lg') + '"></i>';
+    var txt = document.createElement('div'); var b = document.createElement('b'); b.textContent = title;
+    var s = document.createElement('span'); s.textContent = sub; txt.appendChild(b); txt.appendChild(s);
+    row.appendChild(ico); row.appendChild(txt); results.insertBefore(row, results.firstChild);
+    total++; count.textContent = total + (total === 1 ? ' scan' : ' scans');
+  }
+  function signal(ok) {
+    flash.className = 'flash ' + (ok ? 'ok' : 'bad'); setTimeout(function () { flash.className = 'flash'; }, 350);
+    if (navigator.vibrate) navigator.vibrate(ok ? 80 : [60, 60, 60]);
+    try {
+      var a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain();
+      o.frequency.value = ok ? 880 : 220; g.gain.value = .08; o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + .12);
+    } catch (e) {}
+  }
+
+  function handle(text) {
+    var now = Date.now();
+    if (recent[text] && now - recent[text] < 5000) return;          // the same code is read many times a second
+    recent[text] = now;
+    var url;
+    try { url = new URL(text, location.origin); } catch (e) { url = null; }
+    var path = url ? url.pathname : '';
+    if (url && /^https?:$/.test(url.protocol) && SCAN_PATHS.some(function (re) { return re.test(path); })) {
+      busy = true;
+      fetch(path + '?format=json', {credentials: 'same-origin', headers: {'Accept': 'application/json'}})
+        .then(function (r) { return r.headers.get('content-type').indexOf('json') > -1 ? r.json() : {ok: false, message: r.status === 404 ? 'This code is not active at this school.' : 'This code could not be used.'}; })
+        .then(function (d) {
+          if (!d.ok) { add('bad', 'Not recorded', d.message); signal(false); return; }
+          add(d.repeat ? 'same' : (d.direction === 'IN' ? 'in' : 'out'), d.message, d.kind + (d.repeat ? ' · already recorded' : ''));
+          signal(true);
+        })
+        .catch(function () { add('bad', 'No connection', 'Check the internet connection and scan again.'); signal(false); })
+        .then(function () { busy = false; });
+      return;
+    }
+    var site = SITE ? new URL(SITE) : null;
+    if (url && (url.origin === location.origin || (site && url.origin === site.origin))) {
+      add('in', 'Opening…', path); signal(true); stop();
+      location.href = path + url.search;                            // another page of this portal (e.g. verify a report card)
+      return;
+    }
+    add('bad', "Not a code from this school's portal", text.slice(0, 120)); signal(false);   // never opened
+  }
+
+  function tick() {
+    if (!stream || busy || video.readyState < 2) return;
+    if (detector) {
+      detector.detect(video).then(function (codes) { if (codes.length) handle(codes[0].rawValue); }).catch(function () {});
+    } else if (window.jsQR) {
+      var w = video.videoWidth, h = video.videoHeight; if (!w) return;
+      var scale = Math.min(1, 640 / w); canvas.width = w * scale; canvas.height = h * scale;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var code = jsQR(img.data, img.width, img.height, {inversionAttempts: 'dontInvert'});
+      if (code && code.data) handle(code.data);
+    }
+  }
+
+  function start() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      add('bad', 'No camera available', 'Open the portal over https on a phone or a computer with a camera.'); return;
+    }
+    navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: facing}}, audio: false}).then(function (s) {
+      stream = s; video.srcObject = s; video.play();
+      idle.hidden = true; frame.hidden = false; startBtn.hidden = true; stopBtn.hidden = false; flipBtn.hidden = false;
+      timer = setInterval(tick, 220);
+    }).catch(function (e) {
+      add('bad', 'Camera not allowed', e && e.name === 'NotAllowedError' ? 'Allow the camera for this site in your browser, then try again.' : 'No camera could be opened.');
+    });
+  }
+  function stop() {
+    clearInterval(timer); timer = null;
+    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+    stream = null; idle.hidden = false; frame.hidden = true; startBtn.hidden = false; stopBtn.hidden = true; flipBtn.hidden = true;
+  }
+  startBtn.addEventListener('click', start);
+  stopBtn.addEventListener('click', stop);
+  flipBtn.addEventListener('click', function () { facing = facing === 'environment' ? 'user' : 'environment'; stop(); start(); });
+  window.addEventListener('pagehide', stop);
+})();
+</script>
+{% endblock %}

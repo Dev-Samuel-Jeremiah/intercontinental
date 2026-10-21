@@ -1,3 +1,5 @@
+from django.http import JsonResponse
+from django.conf import settings
 from users.models import ENROLLED_STATUSES
 import logging
 
@@ -213,6 +215,10 @@ def reissue_card(request, uid):
 
 @login_required
 def gate_scan(request, uid):
+    if request.GET.get('format') == 'json':
+        problem = _gate_problem(request, uid)
+        if problem:
+            return JsonResponse({'ok': False, 'message': problem})
     if not _can_operate_gate(request.user):
         return render(request, 'idcards/scan_error.html',
                        {'message': "Your account isn't authorised to operate the gate scanner. "
@@ -229,7 +235,20 @@ def gate_scan(request, uid):
                        {'message': f"This ID card has been deactivated. Please issue a new card for {card.holder_name}."})
 
     log = record_gate_scan(card, operator_user=request.user)
+    if request.GET.get('format') == 'json':       # the in-portal scanner keeps scanning and shows this
+        return JsonResponse(_scan_json(log, card.holder_name, 'Gate'))
     return render(request, 'idcards/gate_scan_result.html', {'log': log, 'card': card})
+
+
+def _gate_problem(request, uid):
+    if not _can_operate_gate(request.user):
+        return "Your account can't record gate scans. An administrator can switch on 'Can Mark Attendance' for you."
+    card = IDCard.objects.filter(card_uid=uid, card_type='STUDENT').first()
+    if card is None:
+        return "This code doesn't match any student ID card."
+    if not card.is_active:
+        return f'This card has been deactivated. Issue a new card for {card.holder_name}.'
+    return ''
 
 
 @login_required
@@ -278,7 +297,30 @@ def reception_clock(request, uid):
                        {'message': "Only staff accounts can clock in/out. Students and parents "
                                    "should not scan this code."})
     log = record_staff_clock(staff, station=station)
+    if request.GET.get('format') == 'json':
+        return JsonResponse(_scan_json(log, staff.full_name, 'Staff clock'))
     return render(request, 'idcards/reception_clock_result.html', {'log': log, 'staff': staff})
+
+
+def _scan_json(log, name, kind):
+    when = timezone.localtime(log.scanned_at)
+    word = {'IN': 'in', 'OUT': 'out'}.get(log.direction, log.direction.lower())
+    repeat = bool(getattr(log, 'repeat', False))
+    return {'ok': True, 'kind': kind, 'name': name, 'direction': log.direction, 'time': when.strftime('%H:%M'),
+            'repeat': repeat,
+            'message': (f'{name} was already scanned {word} at {when:%H:%M}' if repeat
+                        else f'{name} — {word} at {when:%H:%M}')}
+
+
+@login_required
+def scanner(request):
+    """The camera scanner opened from the top bar: student ID cards at the gate, the reception code to clock
+    in or out, and any other code from this portal (e.g. a report card's verification code)."""
+    if request.user.staff is None and not request.user.is_superuser:
+        messages.error(request, 'The scanner is for staff.')
+        return redirect('dashboard:router')
+    return render(request, 'idcards/scanner.html', {'can_gate': _can_operate_gate(request.user),
+                                                    'site_url': settings.SITE_URL})
 
 
 @login_required

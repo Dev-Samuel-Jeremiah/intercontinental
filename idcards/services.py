@@ -52,6 +52,11 @@ def record_gate_scan(card, operator_user=None):
     today = timezone.localdate()
     last_log = (GateScanLog.objects.filter(student=student, scanned_at__date=today)
                 .order_by('scanned_at').last())
+    if repeat_scan(last_log):
+        # The same card read again moments later (a camera reads a code many times a second):
+        # keep the first record — no flip from IN to OUT, no second email to the parent.
+        last_log.repeat = True
+        return last_log
     direction = _next_direction(last_log)
 
     log = GateScanLog.objects.create(

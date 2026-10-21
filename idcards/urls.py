@@ -19,6 +19,8 @@ urlpatterns = [
     path('reception-qr/<uuid:uid>.png', views.reception_qr_image, name='reception_qr_image'),
 
     # Gate scan (student arrival/departure)
+    # The camera scanner opened from the top bar
+    path('scanner/', views.scanner, name='scanner'),
     path('scan/<uuid:uid>/', views.gate_scan, name='gate_scan'),
     path('gate-log/', views.gate_scan_log, name='gate_scan_log'),
 
