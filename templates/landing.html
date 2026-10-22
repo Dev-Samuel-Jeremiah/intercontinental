@@ -169,6 +169,16 @@
   .legal{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:40px;padding-top:20px;color:var(--slate);font-size:.82rem;
     box-shadow:0 -1px 0 rgba(255,255,255,.06)}
 
+  /* Floating scroll buttons (every screen size) */
+  .scroller{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));z-index:60;display:flex;flex-direction:column;gap:10px}
+  .scroller button{width:48px;height:48px;border-radius:15px;border:0;cursor:pointer;display:grid;place-items:center;font-size:1.25rem;color:#0a1f44;
+    background:var(--jelly);text-shadow:0 1px 0 rgba(255,255,255,.45);
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.55),inset 0 -4px 7px rgba(0,0,0,.22),0 4px 0 var(--deep),0 12px 18px -8px rgba(0,0,0,.75);
+    transition:transform .12s ease,box-shadow .12s ease,opacity .25s ease,visibility .25s}
+  .scroller button:hover{transform:translateY(-2px)}
+  .scroller button:active{transform:translateY(3px);box-shadow:inset 0 2px 1px rgba(255,255,255,.45),0 1px 0 var(--deep)}
+  .scroller button.gone{opacity:0;visibility:hidden;transform:scale(.8);pointer-events:none}
+  @media (max-width:560px){ .scroller button{width:44px;height:44px;border-radius:14px;font-size:1.1rem} }
   /* Phones and tablets */
   @media (max-width:960px){
     .nav{display:none;position:absolute;top:72px;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;padding:8px 16px 18px;background:rgba(8,26,58,.97)}
@@ -379,6 +389,11 @@
   </div>
 </footer>
 
+<div class="scroller" aria-label="Scroll the page">
+  <button type="button" id="to-top" class="gone" aria-label="Back to the top"><i class="bi bi-arrow-up"></i></button>
+  <button type="button" id="to-next" aria-label="Down to the next section"><i class="bi bi-arrow-down"></i></button>
+</div>
+
 <script>
   (function () {
     var menu = document.getElementById('menu'), nav = document.getElementById('nav');
@@ -388,6 +403,28 @@
       menu.innerHTML = open ? '<i class="bi bi-x-lg"></i>' : '<i class="bi bi-list"></i>';
     });
     nav.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { nav.classList.remove('open'); menu.innerHTML = '<i class="bi bi-list"></i>'; }); });
+  })();
+
+  // Scroll buttons: up goes to the top, down goes to the next section
+  (function () {
+    var up = document.getElementById('to-top'), down = document.getElementById('to-next');
+    var smooth = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    function sections() { return Array.prototype.slice.call(document.querySelectorAll('main > section, main > div.portals, footer')); }
+    function update() {
+      var y = window.scrollY, max = document.documentElement.scrollHeight - window.innerHeight;
+      up.classList.toggle('gone', y < 200);
+      down.classList.toggle('gone', y > max - 80);
+    }
+    up.addEventListener('click', function () { window.scrollTo({top: 0, behavior: smooth ? 'smooth' : 'auto'}); });
+    down.addEventListener('click', function () {
+      var offset = 90, y = window.scrollY + offset + 5;
+      var next = sections().find(function (el) { return el.getBoundingClientRect().top + window.scrollY > y; });
+      var target = next ? next.getBoundingClientRect().top + window.scrollY - 76 : document.documentElement.scrollHeight;
+      window.scrollTo({top: target, behavior: smooth ? 'smooth' : 'auto'});
+    });
+    window.addEventListener('scroll', update, {passive: true});
+    window.addEventListener('resize', update);
+    update();
   })();
 </script>
 </body>
