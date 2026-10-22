@@ -117,6 +117,8 @@ MIDDLEWARE = [
     'security.middleware.SecurityGateMiddleware',
     'security.middleware.SecurityHeadersMiddleware',
     'security.middleware.PlatformHeartbeatMiddleware',
+    # Pages of sidebar sections the school has hidden from a staff role
+    'dashboard.menu.MenuAccessMiddleware',
     # Last, so it sees a view's error first: a form that fails on bad input shows a message, not "Server error"
     'lms_project.friendly_errors.FriendlyFormErrorsMiddleware',
 ]
@@ -137,6 +139,7 @@ TEMPLATES = [{
         'academics.context_processors.active_academic_context',
         'tenants.context_processors.tenant_context',
         'saas_admin.context_processors.platform',
+        'dashboard.menu.context',
     ]},
 }]
 

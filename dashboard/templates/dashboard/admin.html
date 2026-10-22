@@ -20,6 +20,7 @@
     {% if progress %}<div class="db-term"><small>Week {{ progress.week }} of {{ progress.weeks }}</small><div class="bar"><span style="width:{{ progress.percent }}%"></span></div><small>{{ progress.days_left }} days to the end of term</small></div>{% endif %}
   </section>
 
+    {% if 'admin:kpis' not in menu_hidden %}
   <div class="db-kpis">
     <a class="db-kpi" href="{% url 'users:attendance_home' %}"><span class="ic"><i class="bi bi-calendar-check-fill"></i></span><div class="v">{% if ins.attendance.rate is not None %}{{ ins.attendance.rate }}%{% else %}—{% endif %}</div><div class="l">Students present</div>
       <div class="s">{{ ins.attendance.present|default:0 }} in · {{ ins.attendance.absent|default:0 }} absent · {{ ins.attendance.late|default:0 }} late</div></a>
@@ -29,8 +30,10 @@
     <a class="db-kpi" href="{% url 'analytics:fees' %}"><span class="ic"><i class="bi bi-cash-coin"></i></span><div class="v">{% if ins.fees.rate is not None %}{{ ins.fees.rate }}%{% else %}—{% endif %}</div><div class="l">Fees collected</div><div class="s">{{ ins.fees.debtors|default:0 }} families owing</div></a>
     <a class="db-kpi" href="{% url 'schoolai:students' %}?band=HIGH"><span class="ic"><i class="bi bi-person-exclamation"></i></span><div class="v" style="{% if ins.risk.high %}color:var(--red){% endif %}">{{ ins.risk.high|default:0 }}</div><div class="l">Students at risk</div><div class="s">{{ ins.risk.medium|default:0 }} more to watch</div></a>
   </div>
+    {% endif %}
 
   <div class="db-grid">
+    {% if 'admin:today' not in menu_hidden %}
     <div class="db-card c8"><div class="db-card-h"><h3><i class="bi bi-sun"></i> Today</h3><a href="{% url 'users:attendance_home' %}">Registers →</a></div>
       <div class="db-card-b" style="display:flex;gap:1.3rem;align-items:center;flex-wrap:wrap">
         <div class="db-ring" style="--p:{{ ins.attendance.rate|default:0 }};--c:{% if ins.attendance.rate >= 90 %}var(--green){% elif ins.attendance.rate >= 75 %}var(--amber){% else %}var(--red){% endif %}"><span><b>{% if ins.attendance.rate is not None %}{{ ins.attendance.rate|floatformat:0 }}%{% else %}—{% endif %}</b><small>present</small></span></div>
@@ -45,11 +48,15 @@
         {% if ins.welfare.sick_bay %}<a class="db-tag amber" href="{% url 'welfare:sick_bay' %}" style="text-decoration:none"><i class="bi bi-hospital"></i> {{ ins.welfare.sick_bay }} in the sick bay now</a>{% endif %}
         {% if ins.welfare.concerns %}<a class="db-tag red" href="{% url 'welfare:safeguarding' %}" style="text-decoration:none"><i class="bi bi-shield-exclamation"></i> {{ ins.welfare.concerns }} welfare concern{{ ins.welfare.concerns|pluralize }} open</a>{% endif %}</div>{% endif %}
     </div>
+    {% endif %}
 
+    {% if 'admin:waiting' not in menu_hidden %}
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-inboxes"></i> Waiting for you</h3></div>
       {% for a in ins.approvals %}<a class="db-row" href="{{ a.url }}"><span class="ico amber"><i class="bi bi-{{ a.icon }}"></i></span><div class="t"><b>{{ a.label }}</b></div><span class="badge">{{ a.count }}</span></a>
       {% empty %}<div class="db-empty"><i class="bi bi-check2-all"></i>Nothing waiting for a decision.</div>{% endfor %}</div>
+    {% endif %}
 
+    {% if 'admin:results' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-bar-chart"></i> Results{% if ins.results %} · {{ ins.results.term }}{% endif %}</h3><a href="{% url 'analytics:home' %}">Analytics →</a></div>
       {% if ins.results %}<div class="db-card-b"><div style="display:flex;gap:1.2rem;margin-bottom:.6rem">
           <div><b style="font-size:1.6rem;color:var(--white)">{{ ins.results.average }}</b><div class="hint" style="font-size:.7rem">school average</div></div>
@@ -57,28 +64,37 @@
           <div><b style="font-size:1.6rem;color:var(--white)">{{ ins.results.students }}</b><div class="hint" style="font-size:.7rem">students</div></div></div>
         <div class="db-chart sm"><canvas id="chClasses"></canvas></div></div>
       {% else %}<div class="db-empty"><i class="bi bi-journal"></i>No results entered yet.</div>{% endif %}</div>
+    {% endif %}
 
+    {% if 'admin:support' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-cpu"></i> Students to support</h3><a href="{% url 'schoolai:students' %}">All →</a></div>
       {% for p in ins.risk.top %}<a class="db-row" href="{% url 'users:student_profile' p.student.id %}"><span class="ico {% if p.band == 'HIGH' %}red{% else %}amber{% endif %}"><i class="bi bi-person"></i></span>
         <div class="t"><b>{{ p.student.full_name }} <span class="hint" style="font-weight:400">· {{ p.student.class_assigned.name }}</span></b><span>{% for r in p.reasons %}{{ r.label }} {{ r.value }}{% if not forloop.last %} · {% endif %}{% endfor %}</span></div>
         <span class="end" style="color:{% if p.band == 'HIGH' %}var(--red){% else %}var(--amber){% endif %};font-weight:700">{% widthratio p.value 1 100 %}%</span></a>
       {% empty %}<div class="db-empty"><i class="bi bi-cpu"></i>The school AI has no concerns yet — it learns as results come in.</div>{% endfor %}</div>
+    {% endif %}
 
+    {% if 'admin:fees' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-cash-stack"></i> Fees this term</h3><a href="{% url 'finance:admin_dashboard' %}">Finance →</a></div>
       {% if ins.fees.expected %}<div class="db-card-b"><div style="display:flex;gap:1rem;align-items:center;margin-bottom:.6rem">
           <div class="db-ring" style="--p:{{ ins.fees.rate|default:0 }};--c:var(--green)"><span><b>{{ ins.fees.rate|floatformat:0 }}%</b><small>collected</small></span></div>
           <div style="font-size:.84rem;color:var(--slate2);line-height:1.7"><b style="color:var(--white)">₦{{ ins.fees.paid|floatformat:"0g" }}</b> of ₦{{ ins.fees.expected|floatformat:"0g" }}<br>₦{{ ins.fees.outstanding|floatformat:"0g" }} outstanding<br>₦{{ ins.collections.this_week|floatformat:"0g" }} this week · {{ ins.collections.pending }} pending</div></div>
         <div class="db-chart sm"><canvas id="chCollect"></canvas></div></div>
       {% else %}<div class="db-empty"><i class="bi bi-cash"></i>No bills for this term yet.</div>{% endif %}</div>
+    {% endif %}
 
+    {% if 'admin:events' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-calendar-event"></i> Coming up</h3><a href="{% url 'curriculum:calendar' %}">Calendar →</a></div>
       {% for e in ins.events %}<div class="db-row"><span class="ico blue" style="flex-direction:column;line-height:1"><b style="font-size:.85rem">{{ e.start_date|date:"j" }}</b><small style="font-size:.55rem">{{ e.start_date|date:"M" }}</small></span><div class="t"><b>{{ e.title }}</b><span>{{ e.start_date|date:"l" }}{% if e.start_time %} · {{ e.start_time|time:"H:i" }}{% endif %}{% if e.venue %} · {{ e.venue }}{% endif %}</span></div></div>
       {% empty %}<div class="db-empty"><i class="bi bi-calendar"></i>Nothing on the calendar for the next three weeks.</div>{% endfor %}</div>
+    {% endif %}
 
+    {% if 'admin:targets' not in menu_hidden %}
     {% if ins.kpis %}<div class="db-card c12"><div class="db-card-h"><h3><i class="bi bi-bullseye"></i> School targets</h3><a href="{% url 'analytics:kpis' %}">Set targets →</a></div>
       <div class="db-card-b"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.9rem 1.4rem">{% for k in ins.kpis %}<div>
         <div style="display:flex;justify-content:space-between;font-size:.84rem;color:var(--white)"><b>{{ k.label }}</b><span class="{% if k.met %}up{% endif %}" style="color:{% if k.met %}var(--green){% else %}var(--slate2){% endif %}">{% if k.value is not None %}{{ k.value }}{% else %}—{% endif %}{% if k.target %} / {{ k.target|floatformat:"-1" }}{% endif %}</span></div>
         <div class="db-hbar" style="grid-template-columns:1fr"><span class="tr"><span class="{% if k.met %}green{% endif %}" style="width:{{ k.progress|default:0 }}%"></span></span></div></div>{% endfor %}</div></div></div>{% endif %}
+    {% endif %}
   </div>
 </div>
 {{ ins.results.by_class|json_script:"d-classes" }}

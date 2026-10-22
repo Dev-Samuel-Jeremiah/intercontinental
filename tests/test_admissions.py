@@ -145,9 +145,13 @@ class PipelineTests(TenantTestCase):
         self.assertEqual(float(self.application.exam_score), 72.5)
         self.assertEqual(float(self.application.total_score), 90.5)
 
-    def test_a_teacher_without_admin_rights_can_still_screen(self):
+    def test_teachers_screen_only_when_the_school_allows_it(self):
+        from dashboard import menu
         teacher = make_teacher(self.school)
         self.client.force_login(teacher)
+        response = self.client.get('/admissions/', HTTP_HOST=self.host(self.school))
+        self.assertEqual(response.status_code, 302)                  # Admissions is hidden from teachers at first
+        menu.save(self.school, 'TEACHER', [])                         # the school shows teachers everything
         response = self.client.get('/admissions/', HTTP_HOST=self.host(self.school))
         self.assertEqual(response.status_code, 200)
 

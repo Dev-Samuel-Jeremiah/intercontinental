@@ -20,6 +20,7 @@ urlpatterns = [
     path('platform/', views.platform_page, name='platform'),
     path('platform/backups/<str:name>/', views.backup_download, name='backup_download'),
     path('roles/', views.roles, name='roles'),
+    path('menu/', views.menu_access, name='menu_access'),
     path('privacy/', views.privacy, name='privacy'),
     path('consents/', views.consents, name='consents'),
     path('requests/', views.requests_list, name='requests'),

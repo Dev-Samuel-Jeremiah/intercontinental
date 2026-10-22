@@ -461,3 +461,21 @@ class PasswordHelpRequest(TenantModelMixin, models.Model):
     @property
     def matched(self):
         return self.user_id is not None if self.kind == 'STAFF' else self.student_id is not None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# What each staff role sees in the sidebar and on its dashboard (dashboard/menu.py)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class MenuRule(TenantModelMixin, models.Model):
+    role = models.CharField(max_length=20, help_text='Staff role: TEACHER, ACCOUNT, LIB or PROPRIETOR')
+    hidden = models.JSONField(default=list, blank=True,
+                              help_text='Sidebar links (e.g. "admissions:board") and dashboard cards '
+                                        '(e.g. "teacher:exams") this role does not see')
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
+    objects = TenantManager()
+
+    class Meta:
+        unique_together = ('tenant', 'role')

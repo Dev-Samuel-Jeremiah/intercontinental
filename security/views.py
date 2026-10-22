@@ -832,3 +832,55 @@ def password_help(request):
     return render(request, 'security/password_help.html', {
         'rows': rows, 'status': status, 'statuses': PasswordHelpRequest.STATUSES, 'kinds': PasswordHelpRequest.KINDS,
         'shown': shown, 'waiting': PasswordHelpRequest._default_manager.filter(tenant=t, status='OPEN').count()})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# What each staff role sees (sidebar and dashboard)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@admin_only
+def menu_access(request):
+    from dashboard import menu
+    from users.models import Staff
+    from .models import MenuRule
+    t = request.tenant
+    role = request.POST.get('role') or request.GET.get('role') or 'TEACHER'
+    if role not in dict(menu.ROLES):
+        role = 'TEACHER'
+    role_label = dict(menu.ROLES)[role]
+    sections = menu.sections_for(role)
+    dash = menu.DASHBOARD_OF[role]
+    cards = menu.CARDS[dash]
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'save')
+        before = menu.saved_hidden(t, role)
+        if action == 'reset':
+            MenuRule._default_manager.filter(tenant=t, role=role).delete()
+            after = menu.default_hidden(role)
+            messages.success(request, f'{role_label} are back to the recommended menu.')
+        else:
+            shown = set(request.POST.getlist('show')) if action == 'save' else None
+            every = {i['name'] for g in sections for i in g['items']} | {f'{dash}:{k}' for k, _ in cards}
+            after = set(menu.save(t, role, [] if shown is None else every - shown, request.user))
+            messages.success(request, f'Saved. {role_label} now see {len(every - after)} of {len(every)} '
+                                      f'links and dashboard cards.' if shown is not None
+                             else f'{role_label} now see everything their role allows.')
+        if before != set(after):
+            svc.log_event('PERMISSIONS', f'Menu and dashboard changed for {role_label.lower()}', request=request,
+                          changes={'hidden': [sorted(before), sorted(after)]})
+        return redirect(f"{request.path}?role={role}")
+
+    hidden = menu.saved_hidden(t, role)
+    for g in sections:
+        for i in g['items']:
+            i['on'] = i['name'] not in hidden
+        g['shown'] = sum(1 for i in g['items'] if i['on'])
+    card_rows = [{'key': f'{dash}:{k}', 'label': label, 'on': f'{dash}:{k}' not in hidden} for k, label in cards]
+    return render(request, 'security/menu_access.html', {
+        'roles': menu.ROLES, 'role': role, 'role_label': role_label, 'sections': sections, 'cards': card_rows,
+        'dash_label': {'teacher': 'Teacher dashboard', 'admin': 'Office dashboard',
+                       'proprietor': 'Proprietor dashboard'}[dash],
+        'customised': MenuRule._default_manager.filter(tenant=t, role=role).exists(),
+        'staff_count': Staff.objects.filter(tenant=t, role=role).count(),
+    })

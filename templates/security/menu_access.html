@@ -1,0 +1,102 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Menu &amp; dashboard{% endblock %}
+{% block content %}
+<div class="fin-head"><div>
+  <div class="fin-eyebrow">Security &amp; privacy</div>
+  <h1 class="fin-title">Menu &amp; <em>dashboard</em></h1>
+  <p class="fin-sub">Choose what each kind of staff sees in the sidebar and on their dashboard. A section or link you untick disappears for that role, and its pages are closed to them too. Administrators always see everything.</p>
+</div></div>
+{% include "security/_nav.html" %}
+<style>
+  .ma-roles{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.1rem}
+  .ma-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:1.2rem;align-items:start}
+  @media(max-width:1000px){.ma-grid{grid-template-columns:1fr}}
+  .ma-sec{border-top:1px solid var(--rim)}
+  .ma-sec:first-child{border-top:0}
+  .ma-sec summary{display:flex;align-items:center;gap:.7rem;padding:.8rem 1.1rem;cursor:pointer;list-style:none}
+  .ma-sec summary::-webkit-details-marker{display:none}
+  .ma-sec summary b{flex:1;color:var(--white);font-size:.92rem}
+  .ma-sec summary .hint{font-size:.76rem}
+  .ma-sec summary .bi-chevron-down{color:var(--slate2);transition:transform .15s}
+  .ma-sec[open] summary .bi-chevron-down{transform:rotate(180deg)}
+  .ma-sec.off summary b{color:var(--slate2);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25)}
+  .ma-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.15rem .8rem;padding:0 1.1rem .9rem 2.9rem}
+  .ma-row{display:flex;align-items:center;gap:.55rem;padding:.3rem .2rem;border-radius:6px;font-size:.84rem;color:var(--slate2);cursor:pointer}
+  .ma-row:hover{color:var(--white)}
+  .ma-row:has(input:checked){color:var(--white)}
+  .ma-sec input[type=checkbox],.ma-cards input[type=checkbox]{width:16px;height:16px;accent-color:#f4d21f;flex-shrink:0;margin:0}
+  .ma-cards{display:grid;gap:.2rem;padding:.6rem 1.1rem 1rem}
+  .ma-tools{display:flex;gap:.4rem;flex-wrap:wrap}
+  .ma-save{position:sticky;bottom:12px;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:1rem;padding:.8rem 1rem;border-radius:16px;
+    background:rgba(8,26,58,.92);backdrop-filter:blur(8px);box-shadow:0 0 0 1px var(--rim2),0 12px 30px -12px rgba(0,0,0,.8);z-index:5}
+</style>
+
+<div class="ma-roles" role="tablist" aria-label="Staff role">
+  {% for v, l in roles %}<a class="fin-btn{% if v == role %} fin-btn-gold{% endif %}" role="tab" aria-selected="{% if v == role %}true{% else %}false{% endif %}" href="?role={{ v }}">{{ l }}</a>{% endfor %}
+</div>
+
+<form method="post" id="ma-form">{% csrf_token %}<input type="hidden" name="role" value="{{ role }}">
+<div class="ma-grid">
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-layout-sidebar"></i> {{ role_label }}: sidebar</h3>
+      <div class="ma-tools"><button class="fin-btn fin-btn-sm" type="button" data-all="1">Tick all</button><button class="fin-btn fin-btn-sm" type="button" data-all="0">Untick all</button></div></div>
+    <p class="hint" style="margin:0;padding:.2rem 1.1rem .7rem">{{ staff_count }} member{{ staff_count|pluralize }} of staff with this role. {% if customised %}Changed by your school.{% else %}Using the recommended menu.{% endif %} Links that only administrators can ever use are not listed.</p>
+    {% for g in sections %}
+    <details class="ma-sec{% if not g.shown %} off{% endif %}">
+      <summary>
+        <input type="checkbox" class="ma-all" aria-label="Show the whole {{ g.label }} section" {% if g.shown %}checked{% endif %} data-some="{% if g.shown and g.shown < g.items|length %}1{% endif %}">
+        <b>{{ g.label }}</b><span class="hint"><span class="ma-n">{{ g.shown }}</span> of {{ g.items|length }}</span><i class="bi bi-chevron-down"></i>
+      </summary>
+      <div class="ma-items">
+        {% for i in g.items %}<label class="ma-row"><input type="checkbox" name="show" value="{{ i.name }}"{% if i.on %} checked{% endif %}><span>{{ i.label }}</span></label>{% endfor %}
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+
+  <div class="panel">
+    <div class="panel-h"><h3><i class="bi bi-grid-1x2"></i> {{ dash_label }}</h3></div>
+    <p class="hint" style="margin:0;padding:.2rem 1.1rem 0">The cards {{ role_label|lower }} see when they sign in.</p>
+    <div class="ma-cards">
+      {% for c in cards %}<label class="ma-row"><input type="checkbox" name="show" value="{{ c.key }}"{% if c.on %} checked{% endif %}><span>{{ c.label }}</span></label>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="ma-save">
+  <button class="fin-btn fin-btn-gold" type="submit" name="action" value="save"><i class="bi bi-check2-circle"></i> Save for {{ role_label|lower }}</button>
+  <button class="fin-btn" type="submit" name="action" value="reset" onclick="return confirm('Go back to the recommended menu for {{ role_label|lower }}?')"><i class="bi bi-arrow-counterclockwise"></i> Recommended</button>
+  <span class="hint">Changes apply the next time they open a page.</span>
+</div>
+</form>
+
+<script>
+(function () {
+  function sync(sec) {
+    var boxes = sec.querySelectorAll('.ma-items input'), on = 0;
+    boxes.forEach(function (b) { if (b.checked) on++; });
+    var all = sec.querySelector('.ma-all');
+    all.checked = on > 0; all.indeterminate = on > 0 && on < boxes.length;
+    sec.querySelector('.ma-n').textContent = on;
+    sec.classList.toggle('off', on === 0);
+  }
+  document.querySelectorAll('.ma-sec').forEach(function (sec) {
+    var all = sec.querySelector('.ma-all');
+    all.indeterminate = all.dataset.some === '1';
+    all.addEventListener('click', function (e) { e.stopPropagation(); });     // ticking does not open the section
+    all.addEventListener('change', function () {
+      sec.querySelectorAll('.ma-items input').forEach(function (b) { b.checked = all.checked; });
+      sync(sec);
+    });
+    sec.querySelector('.ma-items').addEventListener('change', function () { sync(sec); });
+  });
+  document.querySelectorAll('[data-all]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var on = btn.dataset.all === '1';
+      document.querySelectorAll('.ma-sec input').forEach(function (b) { b.checked = on; });
+      document.querySelectorAll('.ma-sec').forEach(sync);
+    });
+  });
+})();
+</script>
+{% endblock %}
