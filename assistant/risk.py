@@ -121,7 +121,7 @@ def students_for(user, tenant, school_class=None):
     qs = Student.objects.filter(tenant=tenant, status__in=ENROLLED_STATUSES).select_related('class_assigned')
     if not can_manage(user):
         staff = getattr(user, 'staff', None)
-        qs = qs.filter(class_assigned__form_teacher=staff) if staff else qs.none()
+        qs = qs.filter(class_assigned__form_teachers=staff) if staff else qs.none()
     if school_class is not None:
         qs = qs.filter(class_assigned=school_class)
     return qs

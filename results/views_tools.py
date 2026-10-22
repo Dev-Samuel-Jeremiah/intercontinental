@@ -261,7 +261,7 @@ def broadsheet(request):
     see_all = _is_admin_or_super(request.user) or getattr(staff, 'can_view_all_results', False)
     classes = Class.objects.filter(tenant=request.tenant).order_by('name')
     if not see_all:
-        classes = classes.filter(form_teacher=staff) if staff else classes.none()
+        classes = classes.filter(form_teachers=staff) if staff else classes.none()
     if not can_view(request.user) or not classes.exists():
         return _deny(request, 'administrators, staff allowed to view all results, and form teachers (for their '
                               'own class) can see broadsheets')

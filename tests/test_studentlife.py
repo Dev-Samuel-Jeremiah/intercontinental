@@ -43,8 +43,9 @@ class Base(TenantTestCase):
         self.jss2 = make_class(self.school, 'JSS 2A')
         set_current_tenant(self.school)
         self.teacher = Staff.objects.get(user=self.t_user)
-        self.jss1.level, self.jss1.form_teacher = 'JSS 1', self.teacher
+        self.jss1.level = 'JSS 1'
         self.jss1.save()
+        self.jss1.form_teachers.set([self.teacher])
         self.jss2.level = 'JSS 2'
         self.jss2.save()
         self.ada = make_student(self.school, 'A/001', full_name='Ada Obi', school_class=self.jss1,

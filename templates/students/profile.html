@@ -199,7 +199,7 @@
           <dt>Admission no.</dt><dd>{{ student.admission_number }}</dd>
           <dt>Date of birth</dt><dd>{% if student.date_of_birth %}{{ student.date_of_birth|date:"j F Y" }}{% else %}—{% endif %}</dd>
           <dt>Gender</dt><dd>{{ student.gender|default:"—" }}</dd>
-          <dt>Class</dt><dd>{{ student.class_assigned.name|default:"—" }}{% if student.class_assigned.form_teacher %}<span class="hint"> · form teacher {{ student.class_assigned.form_teacher.full_name }}</span>{% endif %}</dd>
+          <dt>Class</dt><dd>{{ student.class_assigned.name|default:"—" }}{% with ft=student.class_assigned.form_teacher_names %}{% if ft %}<span class="hint"> · form teacher{{ student.class_assigned.form_teachers.all|length|pluralize }} {{ ft }}</span>{% endif %}{% endwith %}</dd>
           <dt>House</dt><dd>{% if student.house %}<span style="color:{{ student.house.colour }}">●</span> {{ student.house.name }}{% else %}—{% endif %}</dd>
           <dt>Term</dt><dd>{{ student.current_term }}{% if student.current_session %} · {{ student.current_session }}{% endif %}</dd>
           <dt>Address</dt><dd>{{ student.address|default:"—"|linebreaksbr }}</dd>

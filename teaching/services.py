@@ -66,13 +66,13 @@ def teaches(staff, cls, subject=None):
     q = StaffSubjectClass.objects.filter(staff=staff, school_class=cls)
     if subject:
         q = q.filter(subject=subject)
-    return q.exists() or cls.form_teacher_id == staff.pk
+    return q.exists() or cls.has_form_teacher(staff)
 
 
 def my_classes(staff):
     from users.models import Class
     ids = set(StaffSubjectClass.objects.filter(staff=staff).values_list('school_class_id', flat=True))
-    ids |= set(Class.objects.filter(form_teacher=staff).values_list('pk', flat=True))
+    ids |= set(Class.objects.filter(form_teachers=staff).values_list('pk', flat=True))
     return list(Class.objects.filter(pk__in=ids).order_by('name'))
 
 
@@ -314,7 +314,7 @@ def apply_remarks(staff, cls, subject, term, data, admin=False):
     from results.models import SubjectTeacherRemark, TeacherRemark
     if subject and not (admin or teaches(staff, cls, subject)):
         raise TeachError('You do not teach this subject in this class.')
-    if not subject and not (admin or cls.form_teacher_id == staff.pk):
+    if not subject and not (admin or cls.has_form_teacher(staff)):
         raise TeachError("Only the form teacher writes the class teacher's remark.")
     n = 0
     for st in class_students(cls):

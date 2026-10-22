@@ -57,8 +57,9 @@ def class_arms(request):
                 arm = ' '.join((request.POST.get('arm') or '').split())
                 roster.check_level_and_arm(level, arm)
                 cls.level, cls.arm = level, arm
-                cls.form_teacher = Staff.objects.filter(pk=request.POST.get('form_teacher') or 0).first()
-                cls.save(update_fields=['level', 'arm', 'form_teacher'])
+                cls.save(update_fields=['level', 'arm'])
+                ids = [i for i in request.POST.getlist('form_teachers') if i.isdigit()]
+                cls.form_teachers.set(Staff.objects.filter(tenant=request.tenant, pk__in=ids))
                 messages.success(request, f'{cls.name} saved.')
         except roster.RosterError as problem:
             messages.error(request, str(problem))
@@ -211,7 +212,7 @@ def class_register(request):
     if not can_view(request.user):
         return _deny(request, 'print registers')
     classes = Class.objects.order_by('level', 'arm', 'name')
-    cls = Class.objects.filter(pk=request.GET.get('class') or 0).select_related('form_teacher').first()
+    cls = Class.objects.filter(pk=request.GET.get('class') or 0).prefetch_related('form_teachers').first()
     try:
         columns = max(0, min(15, int(request.GET.get('columns', 5))))
     except ValueError:

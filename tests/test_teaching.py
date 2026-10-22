@@ -48,8 +48,7 @@ class Base(TenantTestCase):
         set_current_tenant(self.school)
         self.teacher = Staff.objects.get(user=self.t_user)
         self.other = Staff.objects.get(user=self.o_user)
-        self.jss1.form_teacher = self.teacher
-        self.jss1.save()
+        self.jss1.form_teachers.set([self.teacher])
         self.ada = make_student(self.school, 'A/001', full_name='Ada Obi', school_class=self.jss1,
                                 parent_email='mum@example.com')
         self.chi = make_student(self.school, 'A/003', full_name='Chi Eze', school_class=self.jss1,

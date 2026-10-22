@@ -272,8 +272,8 @@ def teachers_for(evening, student):
     for ssc in StaffSubjectClass.objects.filter(tenant_id=student.tenant_id, school_class=cls) \
             .select_related('subject'):
         subjects[ssc.staff_id].add(ssc.subject.name)
-    if cls.form_teacher_id:
-        subjects[cls.form_teacher_id].add('Form teacher')
+    for ft_id in cls.form_teachers.values_list('pk', flat=True):
+        subjects[ft_id].add('Form teacher')
     allowed = set(evening.teachers.values_list('pk', flat=True))
     ids = [i for i in subjects if not allowed or i in allowed]
     staff = Staff.objects.filter(tenant_id=student.tenant_id, pk__in=ids).order_by('full_name')
@@ -376,11 +376,11 @@ def evening_teachers(evening):
     tt = published_timetable(evening.tenant)
     lessons = TimetableSlot.objects.filter(timetable=tt) if tt else TimetableSlot.objects.none()
     ssc = StaffSubjectClass.objects.filter(tenant_id=evening.tenant_id)
-    forms = Class.objects.filter(tenant_id=evening.tenant_id, form_teacher__isnull=False)
+    forms = Class.objects.filter(tenant_id=evening.tenant_id, form_teachers__isnull=False)
     if class_ids:
         lessons, ssc, forms = (lessons.filter(school_class_id__in=class_ids), ssc.filter(school_class_id__in=class_ids),
                                forms.filter(pk__in=class_ids))
     ids |= set(lessons.values_list('teacher_id', flat=True))
     ids |= set(ssc.values_list('staff_id', flat=True))
-    ids |= set(forms.values_list('form_teacher_id', flat=True))
+    ids |= set(forms.values_list('form_teachers', flat=True))
     return list(Staff.objects.filter(tenant_id=evening.tenant_id, pk__in=ids).order_by('full_name'))

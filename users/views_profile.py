@@ -56,8 +56,7 @@ def student_profile_view(request, student_id):
         messages.error(request, 'Only staff can open student profiles.')
         return redirect('dashboard:router')
     student = get_object_or_404(Student.objects.select_related('class_assigned', 'current_session',
-                                                               'user', 'house',
-                                                               'class_assigned__form_teacher'),
+                                                               'user', 'house'),
                                 pk=student_id)
     session, term = get_active_session(), get_active_term()
     fees_allowed = can_see_fees(request.user)
@@ -110,8 +109,7 @@ def _ai_outlook(request, student):
     except Exception:
         return None
     user = request.user
-    form_teacher = bool(student.class_assigned and student.class_assigned.form_teacher_id
-                        and student.class_assigned.form_teacher.user_id == user.pk)
+    form_teacher = bool(student.class_assigned and student.class_assigned.has_form_teacher(user))
     if not (can_manage(user) or form_teacher):
         return None
     preds = {p.kind: p for p in Prediction.objects.filter(tenant_id=student.tenant_id, student=student)}

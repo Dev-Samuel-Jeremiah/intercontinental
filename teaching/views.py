@@ -89,7 +89,7 @@ def home(request):
 
 @_staff_only
 def class_dashboard(request, class_id=None):
-    classes = Class.objects.filter(tenant=request.tenant, form_teacher=request.me) if not request.admin else \
+    classes = Class.objects.filter(tenant=request.tenant, form_teachers=request.me) if not request.admin else \
         Class.objects.filter(tenant=request.tenant)
     cls = get_object_or_404(classes, pk=class_id) if class_id else classes.order_by('name').first()
     if not cls:
@@ -239,7 +239,7 @@ def comments(request):
         return redirect('teaching:comments')
     return render(request, 'teaching/comments.html', {
         'items': svc.comments_for(request.me), 'bands': CommentTemplate.BANDS, 'pairs': _teaching_pairs(request),
-        'form_classes': Class.objects.filter(tenant=request.tenant, form_teacher=request.me) if not request.admin
+        'form_classes': Class.objects.filter(tenant=request.tenant, form_teachers=request.me) if not request.admin
         else Class.objects.filter(tenant=request.tenant)})
 
 
@@ -260,7 +260,7 @@ def remarks(request):
         return redirect(request.get_full_path())
     if subject and not (request.admin or svc.teaches(request.me, cls, subject)):
         return _deny(request, 'You do not teach that subject in that class.')
-    if not subject and not (request.admin or cls.form_teacher_id == request.me.pk):
+    if not subject and not (request.admin or cls.has_form_teacher(request.me)):
         return _deny(request, "Only the form teacher writes the class teacher's remark.")
     svc.ensure_comments(request.tenant)
     bank = list(svc.comments_for(request.me))

@@ -64,7 +64,7 @@ def at_risk(request):
         classes = Class.objects.filter(tenant=request.tenant).order_by('name')
     else:
         staff = request.user.staff_profiles.filter(tenant=request.tenant).first()
-        classes = Class.objects.filter(tenant=request.tenant, form_teacher=staff).order_by('name')
+        classes = Class.objects.filter(tenant=request.tenant, form_teachers=staff).order_by('name')
     school_class = classes.filter(pk=_pk(request.GET.get('class') or request.POST.get('class'))).first()
     students = risk.students_for(request.user, request.tenant, school_class)
     rows = risk.assess(students, request.tenant, with_fees=can_see_fees(request.user))

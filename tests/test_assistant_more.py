@@ -161,8 +161,7 @@ class RiskTests(Base):
 
     def test_teachers_see_their_form_class_and_get_suggestions(self):
         staff = Staff.objects.get(user=self.teacher)
-        self.jss2a.form_teacher = staff
-        self.jss2a.save()
+        self.jss2a.form_teachers.set([staff])
         self.fake({'steps': ['Talk to Ada privately this week.', 'Call the family.', 'Arrange extra maths help.']})
         self.client.force_login(self.teacher)
         page = self._get('/assistant/at-risk/')

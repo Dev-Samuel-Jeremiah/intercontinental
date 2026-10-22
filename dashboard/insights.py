@@ -328,7 +328,7 @@ def teacher(request, staff):
             marks = Attendance.objects.filter(tenant=t, school_class=c, date=today, subject__isnull=True)
             present = marks.filter(status='P').count()
             out.append({'cls': c, 'roll': roll, 'marked': marks.exists(), 'present': present,
-                        'form': c.form_teacher_id == staff.pk})
+                        'form': c.has_form_teacher(staff)})
         return out
 
     def queue():
@@ -363,7 +363,7 @@ def teacher(request, staff):
     form_ids = []
     try:
         from users.models import Class
-        form_ids = list(Class.objects.filter(tenant=t, form_teacher=staff).values_list('pk', flat=True))
+        form_ids = list(Class.objects.filter(tenant=t, form_teachers=staff).values_list('pk', flat=True))
     except Exception:
         pass
     return {

@@ -16,7 +16,7 @@
       <label>Child and teacher</label>
       <select name="teacher" required onchange="document.getElementById('st').value=this.selectedOptions[0].dataset.student||''">
         <option value="">Choose…</option>
-        {% for child, teachers in choices %}<optgroup label="{{ child.full_name }}">{% for t in teachers %}<option value="{{ t.pk }}" data-student="{{ child.pk }}">{{ t.full_name }}{% if child.class_assigned.form_teacher_id == t.pk %} (form teacher){% endif %}</option>{% empty %}<option disabled>No teachers listed for this class yet</option>{% endfor %}</optgroup>{% endfor %}
+        {% for child, teachers in choices %}<optgroup label="{{ child.full_name }}">{% for t in teachers %}<option value="{{ t.pk }}" data-student="{{ child.pk }}">{{ t.full_name }}{% if t in child.class_assigned.form_teachers.all %} (form teacher){% endif %}</option>{% empty %}<option disabled>No teachers listed for this class yet</option>{% endfor %}</optgroup>{% endfor %}
       </select>
       <input type="hidden" name="student" id="st">
       <label>Subject</label><input name="subject" required maxlength="160">

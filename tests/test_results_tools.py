@@ -256,8 +256,7 @@ class BroadsheetTests(Base):
         self.client.force_login(teacher)
         self.assertEqual(self._get('/results/broadsheet/').status_code, 302)
         set_current_tenant(self.school)
-        self.jss1.form_teacher = Staff.objects.get(user=teacher)
-        self.jss1.save()
+        self.jss1.form_teachers.set([Staff.objects.get(user=teacher)])
         self.assertEqual(self._get('/results/broadsheet/').status_code, 200)
 
 

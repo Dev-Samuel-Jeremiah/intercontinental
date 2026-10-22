@@ -220,7 +220,7 @@ class PageTests(SchoolWithHistory):
         self.assertContains(self.get(self.admin, '/school-ai/models/FAIL_RISK/'), 'Versions')
         self.assertRedirects(self.get(self.teacher, '/school-ai/'), '/school-ai/ask/', fetch_redirect_response=False)
         self.assertRedirects(self.get(self.teacher, '/school-ai/students/'), '/school-ai/ask/', fetch_redirect_response=False)
-        Class.objects.filter(pk=self.cls.pk).update(form_teacher=Staff.objects.get(user=self.teacher))
+        self.cls.form_teachers.set([Staff.objects.get(user=self.teacher)])
         page = self.get(self.teacher, '/school-ai/students/').content.decode()
         mine = [s for s in self.students if s.class_assigned_id == self.cls.pk]
         theirs = [s for s in self.students if s.class_assigned_id != self.cls.pk]

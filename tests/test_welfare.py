@@ -55,8 +55,7 @@ class Base(TenantTestCase):
         cfg.nurses.add(self.nurse)
         cfg.counsellors.add(self.counsellor)
         self.jss1 = make_class(self.school, 'JSS 1A')
-        self.jss1.form_teacher = self.tstaff
-        self.jss1.save()
+        self.jss1.form_teachers.set([self.tstaff])
         self.ada = make_student(self.school, 'A/001', full_name='Ada Obi', school_class=self.jss1,
                                 parent_email='mum@example.com')
         self.chi = make_student(self.school, 'A/003', full_name='Chi Eze', school_class=self.jss1,

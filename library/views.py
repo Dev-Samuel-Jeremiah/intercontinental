@@ -471,7 +471,7 @@ def reading(request):
         return redirect('library:reading')
     pending = ReadingLog.objects.filter(tenant=t, approved=False).select_related('student__class_assigned')
     if not lib:
-        pending = pending.filter(student__class_assigned__form_teacher=staff)
+        pending = pending.filter(student__class_assigned__form_teachers=staff)
     return render(request, 'library/reading.html', {
         'pending': pending[:100], 'lib': lib,
         'challenges': ReadingChallenge.objects.filter(tenant=t).prefetch_related('classes')[:20],

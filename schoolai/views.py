@@ -28,7 +28,7 @@ def _is_admin(user, tenant):
 
 
 def _form_class_ids(user, tenant):
-    return list(Class.objects.filter(tenant=tenant, form_teacher__user=user).values_list('pk', flat=True))
+    return list(Class.objects.filter(tenant=tenant, form_teachers__user=user).values_list('pk', flat=True).distinct())
 
 
 def admin_only(view):

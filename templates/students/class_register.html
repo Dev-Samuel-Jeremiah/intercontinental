@@ -51,7 +51,7 @@
   <h2>{{ school.name }}</h2>
   <div class="sub">{{ opts.title }} — {{ cls.name }}</div>
   <div class="meta">
-    <span>Form teacher: <b>{{ cls.form_teacher.full_name|default:"________________" }}</b></span>
+    <span>Form teacher{{ cls.form_teachers.all|length|pluralize }}: <b>{{ cls.form_teacher_names|default:"________________" }}</b></span>
     <span>{{ students|length }} student{{ students|length|pluralize }} · {{ boys }} boy{{ boys|pluralize }} · {{ girls }} girl{{ girls|pluralize }}</span>
     <span>Printed {{ today|date:"j M Y" }}</span>
   </div>

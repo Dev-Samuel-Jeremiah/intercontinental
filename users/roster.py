@@ -127,7 +127,7 @@ def classes_by_level(tenant):
     groups = defaultdict(list)
     for cls in (Class.objects.filter(tenant=tenant)
                 .annotate(enrolled=Count('student', filter=Q(student__status__in=ENROLLED_STATUSES)))
-                .select_related('form_teacher').order_by('level', 'arm', 'name')):
+                .prefetch_related('form_teachers').order_by('level', 'arm', 'name')):
         groups[cls.level or cls.name].append(cls)
     return sorted(groups.items(), key=lambda kv: _natural(kv[0]))
 

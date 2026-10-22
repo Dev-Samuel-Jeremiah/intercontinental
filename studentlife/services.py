@@ -55,11 +55,12 @@ def safeguarding_emails(tenant):
     return sorted(set(emails))
 
 
-def form_teacher_email(student):
+def form_teacher_emails(student):
+    """The email addresses of the student's form teachers (a class can have several)."""
     cls = student.class_assigned
-    if cls and cls.form_teacher_id and cls.form_teacher.user.email:
-        return cls.form_teacher.user.email
-    return None
+    if not cls:
+        return []
+    return [s.user.email for s in cls.form_teachers.select_related('user') if s.user.email]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,8 +293,7 @@ def check_in(student, data):
         c.flagged = True
         c.save(update_fields=['flagged'])
         to = set(safeguarding_emails(student.tenant))
-        if form_teacher_email(student):
-            to.add(form_teacher_email(student))
+        to.update(form_teacher_emails(student))
         why = 'asked to talk to someone' if c.wants_talk else 'has been feeling low'
         for e in sorted(to):
             _email(e, f'Wellbeing: {student.full_name} {why}',

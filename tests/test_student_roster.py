@@ -309,6 +309,28 @@ class PageTests(RosterBase):
     def _get(self, path):
         return self.client.get(path, HTTP_HOST=self.host(self.school))
 
+    def test_a_class_can_have_several_form_teachers(self):
+        from teaching.services import my_classes, teaches
+        from users.models import Staff
+        users = [make_teacher(self.school, username=f'ft{i}', full_name=f'Form Teacher {i}') for i in range(3)]
+        staff = list(Staff.objects.filter(user__in=users).order_by('full_name'))
+        other = make_school('beta')
+        outsider = Staff.objects.get(user=make_teacher(other, username='outsider'))
+        set_current_tenant(self.school)
+        self.client.force_login(self.admin)
+        data = {'action': 'update', 'class_id': self.jss1.id, 'level': 'JSS 1', 'arm': 'A',
+                'form_teachers': [s.pk for s in staff] + [outsider.pk]}
+        page = self._post('/classes/arms/', data, follow=True)
+        self.assertContains(page, 'Form teachers: Form Teacher 0, Form Teacher 1, Form Teacher 2')
+        self.assertEqual(set(self.jss1.form_teachers.all()), set(staff))          # another school's staff ignored
+        for s in staff:
+            self.assertTrue(teaches(s, self.jss1))
+            self.assertIn(self.jss1, my_classes(s))
+        data['form_teachers'] = [staff[0].pk]                                       # untick two
+        self._post('/classes/arms/', data)
+        self.assertEqual(list(self.jss1.form_teachers.all()), [staff[0]])
+        self.assertFalse(teaches(staff[1], self.jss1))
+
     def test_a_name_too_long_shows_a_message_not_an_error_page(self):
         self.client.force_login(self.admin)
         page = self._post('/classes/arms/', {'action': 'arms', 'level': 'Grade 1', 'arms': 'Y' * 31}, follow=True)

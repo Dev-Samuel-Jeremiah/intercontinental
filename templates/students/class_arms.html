@@ -15,12 +15,28 @@
   .arm input,.arm select{padding:.4rem .55rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.8rem;width:100%}
   .arm select{grid-column:1/-1}
   .arm button{grid-column:1/-1}
+  /* Form teachers: tick as many as the class needs */
+  .ft{grid-column:1/-1;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2)}
+  .ft[open]{border-color:var(--champagne-bdr,rgba(244,210,31,.35))}
+  .ft summary{display:flex;align-items:center;gap:.45rem;padding:.42rem .55rem;cursor:pointer;list-style:none;font-size:.8rem;color:var(--white)}
+  .ft summary::-webkit-details-marker{display:none}
+  .ft summary .ft-sum{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ft summary .ft-sum.none{color:var(--slate2)}
+  .ft summary .bi-chevron-down{transition:transform .15s;color:var(--slate2)}
+  .ft[open] summary .bi-chevron-down{transform:rotate(180deg)}
+  .ft-box{padding:.2rem .45rem .5rem;border-top:1px solid var(--rim2)}
+  .arm .ft-find{margin:.35rem 0;font-size:.78rem}
+  .ft-list{max-height:190px;overflow-y:auto;display:grid;gap:.1rem}
+  .ft-row{display:flex;align-items:center;gap:.5rem;padding:.32rem .35rem;border-radius:6px;font-size:.8rem;color:var(--slate2);cursor:pointer}
+  .ft-row:hover{background:rgba(255,255,255,.05);color:var(--white)}
+  .arm .ft-row input{width:auto;margin:0;accent-color:#f4d21f;flex-shrink:0}
+  .ft-row:has(input:checked){color:var(--white);font-weight:600}
 </style>
 <div class="fin-head">
   <div>
     <div class="fin-eyebrow">Academics</div>
     <h1 class="fin-title">Classes &amp; <em>arms</em></h1>
-    <p class="fin-sub">Year groups and their arms — JSS 1A, 1B, 1C — each with a form teacher.</p>
+    <p class="fin-sub">Year groups and their arms — JSS 1A, 1B, 1C — each with one or more form teachers.</p>
   </div>
   <div style="display:flex;gap:.6rem;flex-wrap:wrap">
     {% if unlevelled %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="fill">
@@ -50,12 +66,20 @@
     {% for c in classes %}
     <div class="arm">
       <div class="arm-top"><b>{{ c.name }}</b><span class="count">{{ c.enrolled }}</span></div>
-      <div class="hint">{% if c.form_teacher %}Form teacher: {{ c.form_teacher.full_name }}{% else %}No form teacher{% endif %}</div>
+      {% with names=c.form_teacher_names %}<div class="hint">{% if names %}Form teacher{{ c.form_teachers.all|length|pluralize }}: {{ names }}{% else %}No form teacher{% endif %}</div>{% endwith %}
       <form method="post">{% csrf_token %}
         <input type="hidden" name="action" value="update"><input type="hidden" name="class_id" value="{{ c.id }}">
         <input name="level" value="{{ c.level }}" placeholder="Level" maxlength="40">
         <input name="arm" value="{{ c.arm }}" placeholder="Arm" maxlength="30">
-        <select name="form_teacher"><option value="">— form teacher —</option>{% for s in staff %}<option value="{{ s.id }}"{% if c.form_teacher_id == s.id %} selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select>
+        <details class="ft">
+          <summary><i class="bi bi-people"></i><span class="ft-sum{% if not c.form_teacher_names %} none{% endif %}">{{ c.form_teacher_names|default:"Choose form teachers" }}</span><i class="bi bi-chevron-down"></i></summary>
+          <div class="ft-box">
+            {% if staff|length > 8 %}<input class="ft-find" type="search" placeholder="Find a teacher…" aria-label="Find a teacher">{% endif %}
+            <div class="ft-list">
+              {% for s in staff %}<label class="ft-row"><input type="checkbox" name="form_teachers" value="{{ s.id }}"{% if s in c.form_teachers.all %} checked{% endif %}><span>{{ s.full_name }}</span></label>{% empty %}<span class="hint">No staff yet.</span>{% endfor %}
+            </div>
+          </div>
+        </details>
         <button class="fin-btn fin-btn-sm" type="submit">Save</button>
       </form>
     </div>
@@ -65,4 +89,20 @@
 {% empty %}
 <div class="panel"><div class="empty"><i class="bi bi-building"></i><p>No classes yet. Add a level and its arms above.</p></div></div>
 {% endfor %}
+<script>
+  // Form teacher picker: show the ticked names on the closed list, and filter by name
+  document.querySelectorAll('.ft').forEach(function (box) {
+    var sum = box.querySelector('.ft-sum'), find = box.querySelector('.ft-find');
+    box.addEventListener('change', function () {
+      var names = Array.prototype.map.call(box.querySelectorAll('.ft-list input:checked'),
+        function (i) { return i.nextElementSibling.textContent; });
+      sum.textContent = names.length ? names.join(', ') : 'Choose form teachers';
+      sum.classList.toggle('none', !names.length);
+    });
+    if (find) find.addEventListener('input', function () {
+      var q = find.value.trim().toLowerCase();
+      box.querySelectorAll('.ft-row').forEach(function (row) { row.hidden = q && row.textContent.toLowerCase().indexOf(q) < 0; });
+    });
+  });
+</script>
 {% endblock %}

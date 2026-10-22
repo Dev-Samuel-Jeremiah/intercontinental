@@ -377,7 +377,7 @@ def wellbeing(request):
         messages.success(request, 'Marked as followed up.')
         return redirect('studentlife:wellbeing')
     lead = _safeguarding(request)
-    classes = Class.objects.filter(tenant=request.tenant) if lead else Class.objects.filter(form_teacher=staff)
+    classes = Class.objects.filter(tenant=request.tenant) if lead else Class.objects.filter(form_teachers=staff)
     students = list(Student.objects.filter(class_assigned__in=classes, status__in=ENROLLED_STATUSES))
     flagged = Checkin.objects.filter(student__in=students, flagged=True, followed_up_at__isnull=True) \
         .select_related('student__class_assigned')
@@ -475,7 +475,7 @@ def class_goals(request):
         g.save(update_fields=['teacher_comment'])
         return redirect('studentlife:class_goals')
     classes = Class.objects.filter(tenant=request.tenant) if can_manage(request.user) else \
-        Class.objects.filter(form_teacher=staff)
+        Class.objects.filter(form_teachers=staff)
     items = Goal.objects.filter(student__class_assigned__in=classes).exclude(status=Goal.DROPPED) \
         .select_related('student__class_assigned')
     return render(request, 'studentlife/class_goals.html', {'items': items})

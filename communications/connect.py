@@ -161,8 +161,8 @@ DAY_CODES = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
 def chat_teachers(student):
     ids = set()
     cls = student.class_assigned
-    if cls and cls.form_teacher_id:
-        ids.add(cls.form_teacher_id)
+    if cls:
+        ids.update(cls.form_teachers.values_list('pk', flat=True))
     if cls:
         ids.update(StaffSubjectClass.objects.filter(school_class=cls).values_list('staff_id', flat=True))
     return list(Staff.objects.filter(pk__in=ids, user__is_active=True).order_by('full_name'))

@@ -448,10 +448,10 @@ def check_thresholds(student):
             tell_family(student, f'{th.name}: {student.full_name}',
                         f'{student.full_name} has reached {total} {word} points this term — {th.name}. '
                         f'{th.action}')
-        teacher = getattr(student.class_assigned, 'form_teacher', None)
+        cls = student.class_assigned
         to = set(_emails(tenant, 'discipline_team') if th.kind == 'DEMERIT' else [])
-        if teacher and teacher.user.email:
-            to.add(teacher.user.email)
+        if cls:
+            to.update(s.user.email for s in cls.form_teachers.select_related('user') if s.user.email)
         for e in to:
             _email(e, f'{th.name}: {student.full_name}',
                    f'<p>{escape(student.full_name)} has {total} {word} points this term. Next step: '

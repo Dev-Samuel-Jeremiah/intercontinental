@@ -138,14 +138,27 @@ class Class(TenantModelMixin, models.Model):
     level       = models.CharField(max_length=40, blank=True,
                                    help_text='The year group, e.g. "JSS 1". Arms share a level.')
     arm         = models.CharField(max_length=30, blank=True, help_text='e.g. "A", "Gold", "Bright Sparks".')
-    form_teacher = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, blank=True,
-                                     related_name='form_classes')
+    form_teachers = models.ManyToManyField('Staff', blank=True, related_name='form_classes',
+                                           help_text='A class can have more than one form teacher.')
     objects = TenantManager()
     class Meta:
         unique_together = ('tenant', 'name')
         verbose_name_plural = 'Classes'
     def __str__(self):
         return self.name
+
+    def has_form_teacher(self, staff):
+        """Is this staff member (or user) one of the class's form teachers?"""
+        if staff is None or not self.pk:
+            return False
+        if isinstance(staff, Staff):
+            return any(s.pk == staff.pk for s in self.form_teachers.all())
+        return any(s.user_id == getattr(staff, 'pk', None) for s in self.form_teachers.all())
+
+    @property
+    def form_teacher_names(self):
+        """'Mrs Bello, Mr Okafor', or '' when none is set."""
+        return ', '.join(s.full_name for s in self.form_teachers.all())
 
 
 STATUS_OPTIONS  = [('Active','Active'),('Suspended','Suspended'),('Withdrawn','Withdrawn'),

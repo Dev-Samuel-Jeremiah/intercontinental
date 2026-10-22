@@ -280,8 +280,9 @@ def teachers_of(student):
     for link in StaffSubjectClass.objects.filter(school_class=cls).select_related('staff__user', 'subject'):
         if link.staff.user.is_active:
             out.setdefault(link.staff_id, [link.staff, [], False])[1].append(link.subject.name)
-    if cls.form_teacher_id and cls.form_teacher.user.is_active:
-        out.setdefault(cls.form_teacher_id, [cls.form_teacher, [], False])[2] = True
+    for ft in cls.form_teachers.select_related('user'):
+        if ft.user.is_active:
+            out.setdefault(ft.pk, [ft, [], False])[2] = True
     rows = [tuple(v) for v in out.values()]
     return sorted(rows, key=lambda r: (not r[2], r[0].full_name))
 

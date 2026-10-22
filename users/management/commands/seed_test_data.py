@@ -210,8 +210,7 @@ class Command(BaseCommand):
                 dept.save(update_fields=['hod'])
             self.teachers.append(staff)
         for staff, cls in zip(self.teachers, self.classes.values()):   # first four are form teachers
-            cls.form_teacher = staff
-            cls.save(update_fields=['form_teacher'])
+            cls.form_teachers.set([staff])
 
     def _houses(self):
         self.houses = []
@@ -458,4 +457,4 @@ class Command(BaseCommand):
           f'{", ".join(u for u, *_ in TEACHERS)})  password {TEACHER_PASSWORD}')
         w(f'  Students  admission number ISK26001 … ISK26010  password {STUDENT_PASSWORD}')
         w(f'  Parents   child\'s admission number ISK26001 … ISK26010  password {PARENT_PASSWORD}')
-        w('  Form teachers: ' + ', '.join(f'{c.name} → {c.form_teacher.full_name}' for c in self.classes.values()))
+        w('  Form teachers: ' + ', '.join(f'{c.name} → {c.form_teacher_names}' for c in self.classes.values()))
