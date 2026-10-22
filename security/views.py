@@ -760,3 +760,75 @@ def backup_download(request, name):
         return redirect('security:platform')
     svc.log_event('EXPORT', f'Backup file downloaded: {name}', request=request)
     return FileResponse(open(path, 'rb'), as_attachment=True, filename=name, content_type='application/gzip')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Password help (no email on the account)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def password_help_ask(request):
+    """Public: ask the school office to reset a password. The answer is the same
+    whether or not the account exists."""
+    from . import password_help as ph
+    from .models import PasswordHelpRequest
+    t = getattr(request, 'tenant', None)
+    if t is None:
+        raise Http404
+    sent = False
+    if request.method == 'POST':
+        if request.POST.get('website'):                     # honeypot for bots
+            raise Http404
+        try:
+            ph.ask(t, request.POST, request)
+            sent = True
+        except ph.PasswordHelpError as problem:
+            messages.error(request, str(problem))
+    kind = request.POST.get('kind') or request.GET.get('who', '').upper()
+    return render(request, 'security/password_help_ask.html', {
+        'tenant': t, 'sent': sent, 'kinds': PasswordHelpRequest.KINDS,
+        'kind': kind if kind in dict(PasswordHelpRequest.KINDS) else 'STAFF',
+        'form': {} if sent else request.POST})
+
+
+@admin_only
+def password_help(request):
+    """Requests from people with no email, and resets done at the office."""
+    from . import password_help as ph
+    from .models import PasswordHelpRequest
+    t = request.tenant
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        try:
+            if action == 'decline':
+                req = get_object_or_404(PasswordHelpRequest._default_manager, pk=request.POST.get('pk'), tenant=t)
+                ph.decline(req, request.user, request)
+                messages.success(request, f'Request from {req.name} declined.')
+                return redirect('security:password_help')
+            if not request.POST.get('identity_checked'):
+                raise ph.PasswordHelpError('Tick the box to confirm you have checked who they are first.')
+            if action == 'desk':
+                req, password = ph.at_desk(t, request.POST, request.user, request)
+            else:
+                req = get_object_or_404(PasswordHelpRequest._default_manager, pk=request.POST.get('pk'), tenant=t)
+                password = ph.reset(req, request.user, request)
+            request.session['password_help_shown'] = {'pk': req.pk, 'password': password}
+        except ph.PasswordHelpError as problem:
+            messages.error(request, str(problem))
+        return redirect('security:password_help')
+
+    shown = request.session.pop('password_help_shown', None)          # shown once, never stored anywhere else
+    if shown:
+        shown['req'] = PasswordHelpRequest._default_manager.filter(pk=shown['pk'], tenant=t).first()
+        shown['label'] = ph.account_label(shown['req']) if shown['req'] else ''
+    status = request.GET.get('status', 'OPEN')
+    rows = PasswordHelpRequest._default_manager.filter(tenant=t).select_related('user', 'student', 'handled_by')
+    if status in dict(PasswordHelpRequest.STATUSES):
+        rows = rows.filter(status=status)
+    rows = list(rows[:200])
+    for r in rows:
+        r.account = ph.account_label(r)
+        r.phone_on_file = ph.phone_on_file(r)
+        r.allowed = ph.can_reset(request.user, r)
+    return render(request, 'security/password_help.html', {
+        'rows': rows, 'status': status, 'statuses': PasswordHelpRequest.STATUSES, 'kinds': PasswordHelpRequest.KINDS,
+        'shown': shown, 'waiting': PasswordHelpRequest._default_manager.filter(tenant=t, status='OPEN').count()})

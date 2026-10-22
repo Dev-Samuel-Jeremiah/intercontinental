@@ -67,7 +67,7 @@
       <button class="btn pri" id="submit-button" type="submit"><span id="button-text">Sign in</span> <i class="bi bi-arrow-right" id="button-icon"></i></button>
     </form>
 
-    <p class="alt">Forgot your password? <a href="{% url 'family:magic_request' %}">Sign in with your phone or email instead</a></p>
+    <p class="alt">Forgot your password? <a href="{% url 'family:magic_request' %}">Sign in with your phone or email instead</a>, or <a href="{% url 'security:password_help_ask' %}?who=parent">ask the school to reset it</a>.</p>
     <div class="tip"><i class="bi bi-info-circle"></i><span>Each child has their own parent password, given by the school. If you have lost it, use the phone-or-email option above or ask the school office.</span></div>
   </div>
 </main>

@@ -63,7 +63,8 @@
       <button class="btn pri" id="submit-button" type="submit"><span id="button-text">Sign in as staff</span> <i class="bi bi-arrow-right" id="button-icon"></i></button>
     </form>
 
-    <p class="alt" id="parent-alt" hidden>New parent, or forgot your password? <a href="{% url 'family:magic_request' %}">Sign in with your phone or email</a></p>
+    <p class="alt" id="parent-alt" hidden>New parent, or forgot your password? <a href="{% url 'family:magic_request' %}">Sign in with your phone or email</a>, or <a href="{% url 'security:password_help_ask' %}?who=parent">ask the school to reset it</a></p>
+    <p class="alt" id="noemail-alt">Forgot your password and no email on your account? <a href="{% url 'security:password_help_ask' %}" id="noemail-link">Ask the school to reset it</a></p>
   </div>
 </main>
 
@@ -95,6 +96,8 @@
     document.getElementById('portal-login-form').action = c.action;
     document.getElementById('button-text').textContent = c.btn;
     document.getElementById('parent-alt').hidden = !c.parent;
+    document.getElementById('noemail-alt').hidden = !!c.parent;
+    document.getElementById('noemail-link').search = role === 'student' ? '?who=student' : '';
   }
   function togglePassword(btn) {
     var p = document.getElementById('password-input'), show = p.type === 'password';

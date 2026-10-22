@@ -63,7 +63,7 @@
       <button class="btn {% if sent %}{% else %}pri{% endif %}" type="submit" style="width:100%">{% if sent %}<i class="bi bi-arrow-repeat"></i> Send again{% else %}Send me a sign-in link or code <i class="bi bi-send"></i>{% endif %}</button>
     </form>
 
-    <div class="tip"><i class="bi bi-shield-check"></i><span>We only send links and codes to contacts the school already has on file. Nothing is sent to anyone else.</span></div>
+    <div class="tip"><i class="bi bi-shield-check"></i><span>We only send links and codes to contacts the school already has on file. Nothing is sent to anyone else. No contact on file? <a href="{% url 'security:password_help_ask' %}?who=parent" style="color:var(--champagne-lt)">Ask the school to reset your password</a>.</span></div>
   </div>
 </main>
 

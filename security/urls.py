@@ -15,6 +15,7 @@ urlpatterns = [
     path('', views.overview, name='overview'),
     path('settings/', views.settings_page, name='settings'),
     path('people/', views.people, name='people'),
+    path('password-help/', views.password_help, name='password_help'),
     path('audit/', views.audit, name='audit'),
     path('platform/', views.platform_page, name='platform'),
     path('platform/backups/<str:name>/', views.backup_download, name='backup_download'),
@@ -32,4 +33,5 @@ urlpatterns = [
     path('family/', views.family, name='family'),
     # Public
     path('disclosure/', views.disclosure, name='disclosure'),
+    path('forgot-password/no-email/', views.password_help_ask, name='password_help_ask'),
 ]

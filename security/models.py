@@ -427,3 +427,37 @@ class SystemBackup(models.Model):
     @property
     def seconds(self):
         return (self.finished_at - self.started_at).total_seconds() if self.finished_at else None
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Password help: for people with no email address on their account
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PasswordHelpRequest(TenantModelMixin, models.Model):
+    """Someone who cannot reset their password by email asks the school office.
+    An administrator checks who they are, then gives them a temporary password."""
+    KINDS = [('STAFF', 'Staff member'), ('STUDENT', 'Student'), ('PARENT', 'Parent')]
+    STATUSES = [('OPEN', 'Waiting'), ('DONE', 'Password reset'), ('DECLINED', 'Declined')]
+    kind = models.CharField(max_length=7, choices=KINDS)
+    identifier = models.CharField(max_length=150, help_text='Staff username, or the admission number')
+    name = models.CharField(max_length=120)
+    phone = models.CharField(max_length=30, blank=True)
+    note = models.CharField(max_length=500, blank=True)
+    user = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name='+',
+                             help_text='The staff or student account it matched')
+    student = models.ForeignKey('users.Student', on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    status = models.CharField(max_length=8, choices=STATUSES, default='OPEN')
+    from_desk = models.BooleanField(default=False, help_text='Reset at the office, not asked for online')
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    handled_at = models.DateTimeField(null=True, blank=True)
+    handled_by = models.ForeignKey(USER, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+
+    objects = TenantManager()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    @property
+    def matched(self):
+        return self.user_id is not None if self.kind == 'STAFF' else self.student_id is not None
