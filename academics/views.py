@@ -130,6 +130,68 @@ def manage_terms(request, session_id):
 
 
 
+def _term_problem(term, start, end, resume):
+    """What is wrong with these dates for this term, or None."""
+    if not start or not end:
+        return "Start date and end date are required (use the date picker)."
+    if start >= end:
+        return "The term must start before it ends."
+    if resume and resume <= end:
+        return "Next term's resumption date must be after this term ends."
+    for other in term.session.terms.exclude(pk=term.pk):
+        if other.start_date and other.end_date and start <= other.end_date and other.start_date <= end:
+            return (f"These dates overlap {other.name} "
+                    f"({other.start_date:%d %b %Y} – {other.end_date:%d %b %Y}). Correct that term first if it is wrong.")
+    return None
+
+
+@login_required
+def edit_term(request, term_id):
+    """Correct a term's dates (and its next-term resumption date, or make it the active term)."""
+    from django.utils.dateparse import parse_date
+
+    if not _is_school_admin(request):
+        messages.error(request, "You do not have permission to edit terms.")
+        return redirect("dashboard:router")
+
+    term = get_object_or_404(Term.objects.select_related("session"), id=term_id)
+    session = term.session
+
+    if request.method == "POST":
+        def day(field):
+            try:
+                return parse_date(request.POST.get(field, "").strip())
+            except ValueError:
+                return None
+        start, end, resume = day("start_date"), day("end_date"), day("resumption_date_next_term")
+        make_active = request.POST.get("is_active") == "on"
+        problem = _term_problem(term, start, end, resume)
+        if not problem and make_active and not session.is_active:
+            problem = "This term's session is not the active session, so the term cannot be made active."
+        if problem:
+            messages.error(request, problem)
+        else:
+            before = {"start": term.start_date, "end": term.end_date, "resumption": term.resumption_date_next_term,
+                      "active": term.is_active}
+            term.start_date, term.end_date, term.resumption_date_next_term = start, end, resume
+            term.is_active = term.is_active or make_active      # switch to another term by activating that one
+            term.save()                                          # recounts the school days
+            after = {"start": term.start_date, "end": term.end_date, "resumption": term.resumption_date_next_term,
+                     "active": term.is_active}
+            changes = {k: [str(before[k]), str(after[k])] for k in before if before[k] != after[k]}
+            if changes:
+                from security.services import log_event
+                log_event("UPDATED", f"Term corrected: {term}", request=request, obj=term, changes=changes)
+            note = ""
+            if (session.start_date and start < session.start_date) or (session.end_date and end > session.end_date):
+                note = (f" Note: these dates fall outside the session's own dates "
+                        f"({session.start_date or '?'} – {session.end_date or '?'}).")
+            messages.success(request, f"{term.name} updated. School days now: {term.number_of_school_days}.{note}")
+            return redirect("academics:manage_terms", session_id=session.id)
+
+    return render(request, "academics/edit_term.html", {"term": term, "session": session, "form": request.POST})
+
+
 @login_required
 def manage_public_holidays(request):
     """School-scoped public holidays — each school manages its own calendar."""

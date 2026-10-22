@@ -6,6 +6,7 @@ app_name = "academics"
 urlpatterns = [
     path("sessions/", views.manage_sessions, name="manage_sessions"),
     path("sessions/<int:session_id>/terms/", views.manage_terms, name="manage_terms"),
+    path("terms/<int:term_id>/edit/", views.edit_term, name="edit_term"),
     path(
         "holidays/",
         views.manage_public_holidays,
