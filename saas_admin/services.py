@@ -95,6 +95,8 @@ LANDING_PHOTO_DEFAULTS = [
     ('images/landing/gallery-makerspace.jpg', 'Hi-Tech Academy', 'The MakerSpace'),
     ('images/landing/gallery-sports.jpg', 'Sports', 'Pitches & courts'),
 ]
+# Intercontinental Schools, Government House (Tarauni), Kano — the secondary school as mapped on OpenStreetMap
+DEFAULT_MAP_LOCATION = '11.978936,8.553712'
 IMAGE_LIMIT = 5 * 1024 * 1024
 VIDEO_LIMIT = 20 * 1024 * 1024        # nginx accepts uploads up to 20 MB on this page
 
@@ -149,6 +151,8 @@ def save_landing(tenant, data, files):
         elif data.get(f'remove_{name}') and getattr(page, name):
             _replace(page, name, None)
     page.use_video = bool(data.get('use_video')) and bool(page.hero_video)
+    if 'map_location' in data:
+        page.map_location = (data.get('map_location') or '').strip()[:200]
     for n in (1, 2, 3):
         setattr(page, f'photo{n}_label', (data.get(f'photo{n}_label') or '').strip()[:40])
         setattr(page, f'photo{n}_title', (data.get(f'photo{n}_title') or '').strip()[:60])
@@ -169,7 +173,13 @@ def landing_content(tenant):
         photos.append({'url': img.url if img else static(default),
                        'label': (getattr(page, f'photo{n}_label') if page else '') or label,
                        'title': (getattr(page, f'photo{n}_title') if page else '') or title})
-    return {'hero_image': hero_image, 'hero_video': video, 'photos': photos, 'page': page}
+    from urllib.parse import quote
+    where = (page.map_location if page and page.map_location else '') or DEFAULT_MAP_LOCATION
+    q = quote(where)
+    return {'hero_image': hero_image, 'hero_video': video, 'photos': photos, 'page': page,
+            'map_location': where,
+            'map_embed': f'https://www.google.com/maps?q={q}&z=17&output=embed',
+            'map_link': f'https://www.google.com/maps/dir/?api=1&destination={q}'}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

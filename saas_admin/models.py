@@ -501,6 +501,8 @@ class LandingPage(models.Model):
     photo3 = models.ImageField(upload_to='landing/', blank=True, null=True)
     photo3_label = models.CharField(max_length=40, blank=True)
     photo3_title = models.CharField(max_length=60, blank=True)
+    map_location = models.CharField(max_length=200, blank=True,
+                                    help_text='Where the map on the home page points: "latitude,longitude" or an address')
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

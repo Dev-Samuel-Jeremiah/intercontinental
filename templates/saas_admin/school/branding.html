@@ -68,6 +68,14 @@
     </div>
   </div>
   {% endwith %}{% endfor %}
+  <h4 style="margin:1rem 0 0">Map</h4>
+  <div class="slot" style="grid-template-columns:1fr">
+    <div>
+      <label>Map location — where the round map on the home page points</label>
+      <input name="map_location" maxlength="200" value="{{ home.page.map_location|default:'' }}" placeholder="{{ home.map_location }}">
+      <p class="hint" style="margin:.4rem 0 0">Leave empty to use the school's mapped location. To move the pin: open Google Maps, right-click the exact spot, click the numbers at the top of the menu to copy them (e.g. <code>11.978936, 8.553712</code>) and paste them here. An address also works. <a href="{{ home.map_link }}" target="_blank" rel="noopener">Check the current pin →</a></p>
+    </div>
+  </div>
   <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.8rem">Save home page</button>
 </form>
 {% endblock %}

@@ -253,6 +253,9 @@ class LandingPageTests(TenantTestCase):
         self.assertNotContains(page, 'Last year prize giving')   # past events are not shown
         self.assertNotContains(page, 'cdn.tailwindcss.com')      # no prototyping CDN on the live site
         self.assertContains(page, f'© {today.year}')
+        self.assertContains(page, 'https://www.google.com/maps?q=11.978936%2C8.553712&amp;z=17&amp;output=embed')
+        self.assertContains(page, 'google.com/maps/dir/?api=1&amp;destination=11.978936%2C8.553712')
+        self.assertIn('https://www.google.com', page['Content-Security-Policy'].split('frame-src')[1].split(';')[0])
 
 
 class LandingSettingsTests(TenantTestCase):
@@ -323,6 +326,12 @@ class LandingSettingsTests(TenantTestCase):
             self.assertEqual(page.status_code, 302)
         page = LandingPage.objects.filter(tenant=self.school).first()
         self.assertFalse(page and (page.hero_image or page.hero_video or page.photo1))
+
+    def test_map_location_can_be_moved(self):
+        self.save(self.admin, {'map_location': '12.0001, 8.5002'})
+        self.assertIn('maps?q=12.0001%2C%208.5002', self.home())
+        self.save(self.admin, {'map_location': ''})
+        self.assertIn('maps?q=11.978936%2C8.553712', self.home())
 
     def test_only_administrators(self):
         from saas_admin.models import LandingPage

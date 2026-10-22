@@ -123,7 +123,7 @@ CSP_SOURCES = {
     'media-src': ["'self'", 'blob:'],
     'connect-src': ["'self'", 'https://*.facebook.com', 'https://api.paystack.co'],
     'frame-src': ["'self'", 'https://checkout.paystack.com', 'https://www.youtube.com', 'https://www.youtube-nocookie.com',
-                  'https://player.vimeo.com'],
+                  'https://player.vimeo.com', 'https://www.google.com'],      # google.com: the home page's map
     'worker-src': ["'self'", 'blob:'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
