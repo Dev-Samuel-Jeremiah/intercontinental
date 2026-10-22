@@ -1,5 +1,5 @@
 """
-Password help for people with no email: anyone can ask the school office (the answer never says
+Password help for students and parents (staff use email): they ask the school office (the answer never says
 whether the account exists), an administrator checks who they are and gives a temporary password
 that is shown once, and only school administrators can do it.
 """
@@ -44,15 +44,21 @@ class PasswordHelpTests(TenantTestCase):
         self.assertContains(page, "Your child's admission number")
 
     def test_asking_never_says_whether_the_account_exists(self):
-        known = self.ask('STAFF', self.teacher.username)
-        unknown = self.ask('STAFF', 'nobody-here', ip='10.0.0.2')
+        known = self.ask('STUDENT', 'A1')
+        unknown = self.ask('STUDENT', 'nobody-here', ip='10.0.0.2')
         for page in (known, unknown):
             self.assertContains(page, 'Your request has reached the school office.')
         rows = {r.identifier: r for r in PasswordHelpRequest.objects.all()}
-        self.assertEqual(rows[self.teacher.username].user, self.teacher)
+        self.assertEqual(rows['A1'].user, self.ada.user)
         self.assertFalse(rows['nobody-here'].matched)
-        self.ask('STAFF', self.teacher.username.upper())              # asking again while it waits
+        self.ask('STUDENT', 'a1')                                        # asking again while it waits
         self.assertEqual(PasswordHelpRequest.objects.count(), 2)
+
+    def test_staff_cannot_ask_online(self):
+        page = self.ask('STAFF', self.teacher.username)
+        self.assertContains(page, 'Staff reset their password by email')
+        self.assertNotContains(self.client.get(ASK, HTTP_HOST=self.host(self.school)), 'value="STAFF"')
+        self.assertFalse(PasswordHelpRequest.objects.exists())
 
     def test_too_many_requests_from_one_connection(self):
         for n in range(5):
@@ -62,8 +68,8 @@ class PasswordHelpTests(TenantTestCase):
         self.assertEqual(PasswordHelpRequest.objects.count(), 5)
 
     def test_staff_reset_shows_the_password_once_and_forces_a_change(self):
-        self.ask('STAFF', self.teacher.username)
-        req = PasswordHelpRequest.objects.get()
+        req = PasswordHelpRequest.objects.create(tenant=self.school, kind='STAFF', identifier=self.teacher.username,
+                                                 name='Teacher One', user=self.teacher)
         refused = self.as_admin('post', {'action': 'reset', 'pk': req.pk})          # identity box not ticked
         self.assertContains(refused, 'checked who they are')
         page = self.as_admin('post', {'action': 'reset', 'pk': req.pk, 'identity_checked': '1'})
@@ -99,7 +105,7 @@ class PasswordHelpTests(TenantTestCase):
         missing = self.as_admin('post', {'action': 'desk', 'kind': 'STAFF', 'identifier': 'ghost', 'identity_checked': '1'})
         self.assertContains(missing, 'No staff username or admission number matches')
         self.assertEqual(PasswordHelpRequest.objects.count(), 1)
-        self.ask('STAFF', self.teacher.username)
+        self.ask('STUDENT', 'A1')
         req = PasswordHelpRequest.objects.get(from_desk=False)
         self.as_admin('post', {'action': 'decline', 'pk': req.pk})
         req.refresh_from_db()
@@ -109,21 +115,21 @@ class PasswordHelpTests(TenantTestCase):
         self.client.force_login(self.teacher)
         self.assertEqual(self.client.get(DESK, HTTP_HOST=self.host(self.school)).status_code, 302)
         other = make_school('beta')
-        make_teacher(other, username='betateacher')
+        make_student(other, 'B1', 'Bello Musa')
         set_current_tenant(other)
-        foreign = PasswordHelpRequest.objects.create(tenant=other, kind='STAFF', identifier='betateacher', name='X')
+        foreign = PasswordHelpRequest.objects.create(tenant=other, kind='PARENT', identifier='B1', name='X')
         self.client.force_login(self.admin)
         resp = self.client.post(DESK, {'action': 'reset', 'pk': foreign.pk, 'identity_checked': '1'},
                                 HTTP_HOST=self.host(self.school))
         self.assertEqual(resp.status_code, 404)
-        self.ask('STAFF', 'betateacher')                                         # another school's username
+        self.ask('PARENT', 'B1')                                                 # another school's pupil
         self.assertFalse(PasswordHelpRequest.objects.get(tenant=self.school).matched)
 
     def test_an_admin_role_cannot_reset_the_main_administrator(self):
         office = make_teacher(self.school, username='office', full_name='Office Admin')
         Staff.objects.filter(user=office).update(role='ADMIN')
-        self.ask('STAFF', self.admin.username)
-        req = PasswordHelpRequest.objects.get()
+        req = PasswordHelpRequest.objects.create(tenant=self.school, kind='STAFF', identifier=self.admin.username,
+                                                 name='Someone', user=self.admin)
         page = self.as_admin('post', {'action': 'reset', 'pk': req.pk, 'identity_checked': '1'}, user=office)
         self.assertContains(page, "Only the school&#x27;s main administrator")
         self.admin.refresh_from_db()

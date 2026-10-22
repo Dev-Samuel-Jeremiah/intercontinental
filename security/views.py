@@ -767,8 +767,8 @@ def backup_download(request, name):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def password_help_ask(request):
-    """Public: ask the school office to reset a password. The answer is the same
-    whether or not the account exists."""
+    """Public, students and parents only: ask the school office to reset a password.
+    The answer is the same whether or not the account exists."""
     from . import password_help as ph
     from .models import PasswordHelpRequest
     t = getattr(request, 'tenant', None)
@@ -785,8 +785,8 @@ def password_help_ask(request):
             messages.error(request, str(problem))
     kind = request.POST.get('kind') or request.GET.get('who', '').upper()
     return render(request, 'security/password_help_ask.html', {
-        'tenant': t, 'sent': sent, 'kinds': PasswordHelpRequest.KINDS,
-        'kind': kind if kind in dict(PasswordHelpRequest.KINDS) else 'STAFF',
+        'tenant': t, 'sent': sent, 'kinds': ph.PUBLIC_KINDS,
+        'kind': kind if kind in dict(ph.PUBLIC_KINDS) else 'STUDENT',
         'form': {} if sent else request.POST})
 
 

@@ -1,7 +1,8 @@
 """
 security/password_help.py
 ─────────────────────────
-Password resets for people with no email address on their account.
+Password resets for students and parents, who have no email address on their account.
+Staff reset theirs by email; an administrator can still reset a staff password at the office.
 
 The person asks online (or at the office). An administrator checks who they
 are and gives them a temporary password in person or by phone. Nothing is
@@ -21,6 +22,8 @@ from . import services as svc
 from .models import PasswordHelpRequest
 
 PER_IP_PER_HOUR = 5
+# Only students and parents can ask online. Staff reset their password by email.
+PUBLIC_KINDS = [('STUDENT', 'Student'), ('PARENT', 'Parent')]
 
 
 class PasswordHelpError(Exception):
@@ -49,7 +52,9 @@ def ask(tenant, data, request=None):
     """A public request. Returns the request, or None when it was quietly dropped
     (a repeat of one still waiting). Never reveals whether the account exists."""
     kind = data.get('kind', '')
-    if kind not in dict(PasswordHelpRequest.KINDS):
+    if kind == 'STAFF':
+        raise PasswordHelpError('Staff reset their password by email, using "Forgot it?" on the sign-in page.')
+    if kind not in dict(PUBLIC_KINDS):
         raise PasswordHelpError('Choose who the password is for.')
     identifier = (data.get('identifier') or '').strip()[:150]
     name = (data.get('name') or '').strip()[:120]
