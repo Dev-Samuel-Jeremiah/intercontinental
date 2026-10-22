@@ -68,6 +68,19 @@ class ArmTests(RosterBase):
         created, _ = roster.create_arms(self.school, 'SS 1', 'Gold, Diamond')
         self.assertEqual([c.name for c in created], ['SS 1 Gold', 'SS 1 Diamond'])
 
+    def test_an_arm_name_can_have_spaces(self):
+        for text, arms in (('A, B, C', ['A', 'B', 'C']), ('A B C', ['A', 'B', 'C']),
+                           ('BRIGHT SPARKS', ['BRIGHT SPARKS']), ('Bright  Sparks, Amazon', ['Bright Sparks', 'Amazon']),
+                           ('Gold; Diamond', ['Gold', 'Diamond'])):
+            self.assertEqual(roster.split_arms(text), arms, text)
+        created, _ = roster.create_arms(self.school, 'Grade 1', 'BRIGHT SPARKS')
+        self.assertEqual([(c.name, c.level, c.arm) for c in created], [('Grade 1 BRIGHT SPARKS', 'Grade 1', 'BRIGHT SPARKS')])
+
+    def test_names_that_do_not_fit_are_refused_before_saving(self):
+        with self.assertRaisesMessage(roster.RosterError, 'at most 30 characters'):
+            roster.create_arms(self.school, 'Grade 1', 'Amazon, ' + 'X' * 31)
+        self.assertFalse(Class.objects.filter(name='Grade 1 Amazon').exists())      # none of the list was made
+
     def test_bad_input_is_refused(self):
         for level, arms in (('', 'A'), ('JSS 1', '')):
             with self.assertRaises(roster.RosterError):
@@ -295,6 +308,15 @@ class PageTests(RosterBase):
 
     def _get(self, path):
         return self.client.get(path, HTTP_HOST=self.host(self.school))
+
+    def test_a_name_too_long_shows_a_message_not_an_error_page(self):
+        self.client.force_login(self.admin)
+        page = self._post('/classes/arms/', {'action': 'arms', 'level': 'Grade 1', 'arms': 'Y' * 31}, follow=True)
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, 'at most 30 characters')
+        page = self._post('/classes/arms/', {'action': 'update', 'class_id': self.jss1.id, 'level': 'JSS 1',
+                                             'arm': 'Z' * 31}, follow=True)
+        self.assertContains(page, 'at most 30 characters')
 
     def test_the_pages_load_for_an_admin(self):
         self.client.force_login(self.admin)

@@ -39,7 +39,7 @@
       <div style="flex:2 1 260px"><label>Arms</label><input name="arms" placeholder="A, B, C — or Gold, Diamond" required></div>
       <button class="fin-btn fin-btn-gold" type="submit" style="height:42px"><i class="bi bi-check2"></i> Create</button>
     </form>
-    <p class="hint" style="margin-top:.6rem">“JSS 1” with “A, B, C” creates JSS 1A, JSS 1B and JSS 1C. Classes that already exist are left as they are.</p>
+    <p class="hint" style="margin-top:.6rem">“JSS 1” with “A, B, C” creates JSS 1A, JSS 1B and JSS 1C. Separate arms with commas; an arm can have spaces, e.g. “Bright Sparks, Amazon”. Classes that already exist are left as they are.</p>
   </div>
 </div>
 
@@ -54,7 +54,7 @@
       <form method="post">{% csrf_token %}
         <input type="hidden" name="action" value="update"><input type="hidden" name="class_id" value="{{ c.id }}">
         <input name="level" value="{{ c.level }}" placeholder="Level" maxlength="40">
-        <input name="arm" value="{{ c.arm }}" placeholder="Arm" maxlength="10">
+        <input name="arm" value="{{ c.arm }}" placeholder="Arm" maxlength="30">
         <select name="form_teacher"><option value="">— form teacher —</option>{% for s in staff %}<option value="{{ s.id }}"{% if c.form_teacher_id == s.id %} selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select>
         <button class="fin-btn fin-btn-sm" type="submit">Save</button>
       </form>

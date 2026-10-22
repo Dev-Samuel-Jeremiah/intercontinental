@@ -53,8 +53,10 @@ def class_arms(request):
                                  if n else 'Every class already has a level.')
             elif action == 'update':
                 cls = get_object_or_404(Class, pk=request.POST.get('class_id'))
-                cls.level = (request.POST.get('level') or '').strip()[:40]
-                cls.arm = (request.POST.get('arm') or '').strip()[:10]
+                level = ' '.join((request.POST.get('level') or '').split())
+                arm = ' '.join((request.POST.get('arm') or '').split())
+                roster.check_level_and_arm(level, arm)
+                cls.level, cls.arm = level, arm
                 cls.form_teacher = Staff.objects.filter(pk=request.POST.get('form_teacher') or 0).first()
                 cls.save(update_fields=['level', 'arm', 'form_teacher'])
                 messages.success(request, f'{cls.name} saved.')

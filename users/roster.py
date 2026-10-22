@@ -44,17 +44,36 @@ def arm_class_name(level, arm):
     return f'{level}{arm}' if len(arm) <= 2 and level[-1:].isdigit() else f'{level} {arm}'
 
 
+def split_arms(text):
+    """'A, B, C' → three arms; 'A B C' → three (letters only); 'Bright Sparks' → one arm.
+    Commas (or semicolons, or new lines) separate arms, so an arm's name may contain spaces."""
+    text = (text or '').strip()
+    if re.search(r'[,;\n]', text):
+        parts = re.split(r'[,;\n]+', text)
+    else:
+        words = text.split()
+        parts = words if words and all(len(w) <= 2 for w in words) else [text]
+    return [' '.join(p.split()) for p in parts if p.strip()]
+
+
 def create_arms(tenant, level, arms):
     """Create one class per arm of a level. Returns (created, already_there)."""
-    level = (level or '').strip()
-    names = [a.strip() for a in re.split(r'[,\s]+', arms or '') if a.strip()]
+    level = ' '.join((level or '').split())
+    names = split_arms(arms)
     if not level:
         raise RosterError('Give the level, e.g. "JSS 1".')
     if not names:
         raise RosterError('List the arms, e.g. "A, B, C".')
     if len(names) > 26:
         raise RosterError('That is more arms than a level usually has — check the list.')
+    _check_lengths(level, names)
     created, existing = [], []
+    with transaction.atomic():
+        _create_each(tenant, level, names, created, existing)
+    return created, existing
+
+
+def _create_each(tenant, level, names, created, existing):
     for arm in names:
         name = arm_class_name(level, arm)
         cls = Class.objects.filter(tenant=tenant, name__iexact=name).first()
@@ -65,7 +84,32 @@ def create_arms(tenant, level, arms):
             existing.append(cls)
         else:
             created.append(Class.objects.create(tenant=tenant, name=name, level=level, arm=arm))
-    return created, existing
+
+
+LEVEL_MAX = Class._meta.get_field('level').max_length
+ARM_MAX = Class._meta.get_field('arm').max_length
+NAME_MAX = Class._meta.get_field('name').max_length
+
+
+def _check_lengths(level, arms):
+    """Refuse names that will not fit, before anything is saved."""
+    if len(level) > LEVEL_MAX:
+        raise RosterError(f'The level "{level}" is too long: use at most {LEVEL_MAX} characters.')
+    for arm in arms:
+        if len(arm) > ARM_MAX:
+            raise RosterError(f'The arm "{arm}" is too long: use at most {ARM_MAX} characters.')
+        name = arm_class_name(level, arm)
+        if len(name) > NAME_MAX:
+            raise RosterError(f'The class name "{name}" would be too long: keep level and arm '
+                              f'together under {NAME_MAX} characters.')
+
+
+def check_level_and_arm(level, arm):
+    """For changing one class's level and arm by hand."""
+    if len(level) > LEVEL_MAX:
+        raise RosterError(f'The level is too long: use at most {LEVEL_MAX} characters.')
+    if len(arm) > ARM_MAX:
+        raise RosterError(f'The arm "{arm}" is too long: use at most {ARM_MAX} characters.')
 
 
 def fill_levels(tenant):

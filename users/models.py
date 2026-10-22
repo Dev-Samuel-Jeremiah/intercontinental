@@ -137,7 +137,7 @@ class Class(TenantModelMixin, models.Model):
     description = models.TextField(blank=True, null=True)
     level       = models.CharField(max_length=40, blank=True,
                                    help_text='The year group, e.g. "JSS 1". Arms share a level.')
-    arm         = models.CharField(max_length=10, blank=True, help_text='e.g. "A", "Gold".')
+    arm         = models.CharField(max_length=30, blank=True, help_text='e.g. "A", "Gold", "Bright Sparks".')
     form_teacher = models.ForeignKey('Staff', on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='form_classes')
     objects = TenantManager()

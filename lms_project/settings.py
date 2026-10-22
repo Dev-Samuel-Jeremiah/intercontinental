@@ -117,6 +117,8 @@ MIDDLEWARE = [
     'security.middleware.SecurityGateMiddleware',
     'security.middleware.SecurityHeadersMiddleware',
     'security.middleware.PlatformHeartbeatMiddleware',
+    # Last, so it sees a view's error first: a form that fails on bad input shows a message, not "Server error"
+    'lms_project.friendly_errors.FriendlyFormErrorsMiddleware',
 ]
 
 ROOT_URLCONF = 'lms_project.tenant_urls'

@@ -36,8 +36,8 @@ ERRORS = {
         'icon': 'bi-compass', 'tone': 'gold', 'label': 'Page not found',
     },
     500: {
-        'title': 'Something went wrong on our side',
-        'message': 'An unexpected error occurred and our team has been notified. Please try again in a moment.',
+        'title': 'Sorry, that didn’t work',
+        'message': 'The portal is still running: only this one action failed. Go back and try again. If it keeps happening, tell the ICT office the reference below so they can fix it.',
         'icon': 'bi-tools', 'tone': 'red', 'label': 'Server error',
     },
     'csrf': {
