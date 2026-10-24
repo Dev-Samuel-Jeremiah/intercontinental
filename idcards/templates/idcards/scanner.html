@@ -110,9 +110,14 @@
     if (url && /^https?:$/.test(url.protocol) && SCAN_PATHS.some(function (re) { return re.test(path); })) {
       busy = true;
       fetch(path + '?format=json', {credentials: 'same-origin', headers: {'Accept': 'application/json'}})
-        .then(function (r) { return r.headers.get('content-type').indexOf('json') > -1 ? r.json() : {ok: false, message: r.status === 404 ? 'This code is not active at this school.' : 'This code could not be used.'}; })
+        .then(function (r) {
+          if ((r.headers.get('content-type') || '').indexOf('json') > -1) return r.json();
+          if (r.redirected && /login|sign-?in/i.test(r.url)) return {ok: false, message: 'You have been signed out. Sign in again, then scan.'};
+          if (r.status === 404) return {ok: false, message: 'This code is not active at this school.'};
+          return {ok: false, message: 'The portal could not record this scan' + (r.status >= 400 ? ' (error ' + r.status + ')' : '') + '. Try again; if it keeps happening, tell the ICT office.'};
+        })
         .then(function (d) {
-          if (!d.ok) { add('bad', 'Not recorded', d.message); signal(false); return; }
+          if (!d.ok) { add('bad', 'Not recorded', (d.message || 'The portal could not record this scan.') + (d.reference ? ' Reference ' + d.reference + '.' : '')); signal(false); return; }
           add(d.repeat ? 'same' : (d.direction === 'IN' ? 'in' : 'out'), d.message, d.kind + (d.repeat ? ' · already recorded' : ''));
           signal(true);
         })

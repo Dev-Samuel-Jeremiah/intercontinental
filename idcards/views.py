@@ -290,12 +290,23 @@ def gate_scan_log(request):
 
 @login_required
 def reception_clock(request, uid):
-    station = get_object_or_404(ReceptionStation, station_uid=uid, is_active=True)
+    as_json = request.GET.get('format') == 'json'           # the in-portal scanner: always answer with a reason
+    station = ReceptionStation.objects.filter(station_uid=uid, is_active=True).first()
+    if station is None:
+        if as_json:
+            return JsonResponse({'ok': False, 'message': 'This clock-in code is old or switched off. '
+                                                         'Print the current Clock-in QR poster.'})
+        raise Http404
     staff = request.user.staff
     if staff is None:
-        return render(request, 'idcards/scan_error.html',
-                       {'message': "Only staff accounts can clock in/out. Students and parents "
-                                   "should not scan this code."})
+        if request.user.is_superuser:
+            message = ("The main administrator account has no staff record, so it can't clock in or out. "
+                       "Sign in with your own staff account to clock in.")
+        else:
+            message = "Only staff can clock in or out. Students and parents should not scan this code."
+        if as_json:
+            return JsonResponse({'ok': False, 'message': message})
+        return render(request, 'idcards/scan_error.html', {'message': message})
     from safety.staff_attendance import ClockClosed
     try:
         log = record_staff_clock(staff, station=station)

@@ -58,3 +58,14 @@ class ScannerTests(TenantTestCase):
         data = self.get(self.teacher, f'/idcards/reception/scan/{station.station_uid}/?format=json').json()
         self.assertEqual((data['ok'], data['kind'], data['direction']), (True, 'Staff clock', 'IN'))
         self.assertEqual(StaffClockLog.objects.filter(staff=Staff.objects.get(user=self.teacher)).count(), 1)
+
+    def test_reception_clock_explains_why_not(self):
+        station = ReceptionStation.get_or_create_default(self.school)
+        data = self.get(self.admin, f'/idcards/reception/scan/{station.station_uid}/?format=json').json()
+        self.assertFalse(data['ok'])
+        self.assertIn('main administrator account has no staff record', data['message'])
+        old = self.get(self.teacher, f'/idcards/reception/scan/{uuid.uuid4()}/?format=json').json()
+        self.assertFalse(old['ok'])
+        self.assertIn('old or switched off', old['message'])
+        self.assertEqual(self.get(self.teacher, f'/idcards/reception/scan/{uuid.uuid4()}/').status_code, 404)
+        self.assertEqual(StaffClockLog.objects.count(), 0)
