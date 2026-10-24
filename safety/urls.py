@@ -20,5 +20,6 @@ urlpatterns = [
     path('pass/<uuid:token>/qr.png', views.visit_qr, name='visit_qr'),
     path('staff/leave/', views.staff_leave, name='staff_leave'),
     path('staff/attendance/', views.staff_attendance, name='staff_attendance'),
+    path('staff/attendance/times/', views.staff_hours, name='staff_hours'),
     path('clock/', views.phone_clock, name='phone_clock'),
 ]

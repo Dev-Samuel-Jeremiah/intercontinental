@@ -498,17 +498,51 @@ def staff_attendance(request):
     first = day.replace(day=1)
     last = day.replace(day=_cal.monthrange(day.year, day.month)[1])
     month, school_days = sa.month_summary(request.tenant, first, last)
-    from users.attendance import settings_for
-    cfg = settings_for(request.tenant)
-    late_after = (datetime.combine(day, cfg.school_starts_at)
-                  + timedelta(minutes=cfg.late_grace_minutes or 0)).time()
+    cfg = sa.hours(request.tenant)
     today = timezone.localdate()
     return render(request, 'safety/staff_attendance.html', {
         'day': day, 'rows': rows, 'counts': counts, 'closed': closed, 'month': month,
-        'school_days': school_days, 'first': first,
+        'school_days': school_days, 'first': first, 'cfg': cfg, 'off_kind': sa.off_day(request.tenant, day),
         'prev_day': day - timedelta(days=1), 'next_day': day + timedelta(days=1) if day < today else None,
-        'is_today': day == today, 'late_after': late_after,
-        'clocked_in': counts['present'] + counts['late'],
+        'is_today': day == today, 'late_after': sa.late_after(cfg, day),
+        'clocked_in': counts['present'] + counts['late'] + counts['visit'],
+        'any_visits': any(r['visits'] for r in month),
+    })
+
+
+@login_required
+def staff_hours(request):
+    """Staff attendance times and working days, set by an administrator."""
+    if not can_manage(request.user):
+        return _deny(request, 'a school administrator can set staff attendance times')
+    cfg = sa.hours(request.tenant)
+    if request.method == 'POST':
+        def clock(field):
+            hh, mm = (int(x) for x in (request.POST.get(field) or '').split(':')[:2])
+            return time(hh, mm)
+        try:
+            starts, ends = clock('staff_starts_at'), clock('staff_ends_at')
+            grace = int(request.POST.get('staff_late_grace_minutes') or 0)
+        except (ValueError, TypeError):
+            messages.error(request, 'Enter the start and closing times, e.g. 07:30 and 16:00.')
+            return redirect('safety:staff_hours')
+        days = ''.join(sorted({d for d in request.POST.getlist('working_days') if d in '0123456' and len(d) == 1}))
+        if ends <= starts:
+            messages.error(request, 'Closing time must be after the start time.')
+        elif not 0 <= grace <= 180:
+            messages.error(request, 'The grace before "late" must be between 0 and 180 minutes.')
+        elif not days:
+            messages.error(request, 'Tick at least one working day.')
+        else:
+            cfg.staff_starts_at, cfg.staff_ends_at, cfg.staff_late_grace_minutes = starts, ends, grace
+            cfg.working_days, cfg.off_day_clock_in = days, bool(request.POST.get('off_day_clock_in'))
+            cfg.save()
+            messages.success(request, f'Saved. Staff are due by {sa.late_after(cfg, timezone.localdate()):%H:%M} '
+                                      f'and finish at {ends:%H:%M}.')
+            return redirect('safety:staff_hours')
+    return render(request, 'safety/staff_hours.html', {
+        'cfg': cfg, 'days': [(str(i), name, str(i) in cfg.working_days) for i, name in enumerate(sa.DAY_NAMES)],
+        'late_after': sa.late_after(cfg, timezone.localdate()),
     })
 
 

@@ -141,4 +141,6 @@ def record_staff_clock(staff, station=None):
         last_log.repeat = True
         return last_log
     direction = _next_direction(last_log)
+    from safety.staff_attendance import check_clock_in
+    check_clock_in(staff, direction)            # raises ClockClosed on a day off the school does not take
     return StaffClockLog.objects.create(staff=staff, station=station, direction=direction)

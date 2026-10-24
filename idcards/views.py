@@ -296,7 +296,13 @@ def reception_clock(request, uid):
         return render(request, 'idcards/scan_error.html',
                        {'message': "Only staff accounts can clock in/out. Students and parents "
                                    "should not scan this code."})
-    log = record_staff_clock(staff, station=station)
+    from safety.staff_attendance import ClockClosed
+    try:
+        log = record_staff_clock(staff, station=station)
+    except ClockClosed as closed:
+        if request.GET.get('format') == 'json':
+            return JsonResponse({'ok': False, 'message': str(closed)})
+        return render(request, 'idcards/scan_error.html', {'message': str(closed)})
     if request.GET.get('format') == 'json':
         return JsonResponse(_scan_json(log, staff.full_name, 'Staff clock'))
     return render(request, 'idcards/reception_clock_result.html', {'log': log, 'staff': staff})

@@ -1255,6 +1255,9 @@
         {% if 'safety:staff_attendance' not in menu_hidden %}<a href="{% url 'safety:staff_attendance' %}" class="nav-item" data-tooltip="Staff Attendance">
           <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Attendance Register</span>
         </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}{% if 'safety:staff_hours' not in menu_hidden %}<a href="{% url 'safety:staff_hours' %}" class="nav-item" data-tooltip="Times &amp; Working Days">
+          <i class="bi bi-clock-fill"></i><span class="ni-label">Times &amp; Working Days</span>
+        </a>{% endif %}{% endif %}
         {% if 'idcards:reception_qr_page' not in menu_hidden %}<a href="{% url 'idcards:reception_qr_page' %}" class="nav-item" data-tooltip="Reception QR">
           <i class="bi bi-qr-code"></i><span class="ni-label">Clock-in QR Poster</span>
         </a>{% endif %}

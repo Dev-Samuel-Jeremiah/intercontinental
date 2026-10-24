@@ -64,6 +64,11 @@ def clock_by_phone(staff, lat, lon, accuracy):
                          f'{cfg.clock_radius_m} m to clock in.')
     last = (StaffClockLog.objects.filter(tenant_id=staff.tenant_id, staff=staff,
                                          scanned_at__date=timezone.localdate()).order_by('scanned_at').last())
+    from safety.staff_attendance import ClockClosed, check_clock_in
+    try:
+        check_clock_in(staff, _next_direction(last))
+    except ClockClosed as closed:
+        raise ClockError(str(closed))
     return StaffClockLog.objects.create(tenant_id=staff.tenant_id, staff=staff, direction=_next_direction(last),
                                         method='PHONE', latitude=lat, longitude=lon, distance_m=dist)
 

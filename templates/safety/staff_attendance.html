@@ -99,7 +99,7 @@
     <div class="sa-eyebrow">Staff &middot; Attendance register</div>
     <h1 class="sa-title">Staff <em>attendance</em></h1>
     <div class="sa-sub">
-      <span>{{ day|date:"l j F Y" }} &middot; late after {{ late_after|time:"H:i" }}</span>
+      <span>{{ day|date:"l j F Y" }} &middot; {% if off_kind %}{{ off_kind|lower }}{% else %}late after {{ late_after|time:"H:i" }} &middot; closing {{ cfg.staff_ends_at|time:"H:i" }}{% endif %}</span>
       {% if is_today %}<span class="sa-live">Live &middot; updates every minute</span>{% endif %}
     </div>
   </div>
@@ -113,11 +113,12 @@
     <a class="sa-btn gold" href="{% url 'idcards:reception_qr_page' %}"><i class="bi bi-qr-code"></i> Clock-in QR</a>
     <a class="sa-btn" href="{% url 'idcards:staff_attendance_log' %}?date={{ day|date:'Y-m-d' }}"><i class="bi bi-list-ul"></i> Scan log</a>
     <a class="sa-btn" href="{% url 'safety:staff_leave' %}"><i class="bi bi-calendar-plus"></i> Leave</a>
+    <a class="sa-btn" href="{% url 'safety:staff_hours' %}"><i class="bi bi-clock"></i> Times &amp; days</a>
     <button class="sa-btn" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
   </div>
 </div>
 
-{% if closed %}<div class="sa-banner"><i class="bi bi-moon-stars"></i> School closed — weekend or public holiday. Anyone who clocked in still shows below.</div>{% endif %}
+{% if closed %}<div class="sa-banner"><i class="bi bi-moon-stars"></i> {% if off_kind == 'Holiday' %}Public holiday{% else %}Not a working day{% endif %}. {% if cfg.off_day_clock_in %}Staff who came in are shown as visits: not late, not absent, and not counted as a working day.{% else %}Clock-ins are switched off on days off.{% endif %}</div>{% endif %}
 
 <div class="sa-stats">
   <div class="sa-stat" style="--c:var(--green)"><small><i class="bi bi-box-arrow-in-right"></i> Clocked in</small><b>{{ clocked_in }}</b><span>{% if counts.late %}{{ counts.late }} late{% else %}none late{% endif %}</span></div>
@@ -126,7 +127,7 @@
   {% else %}
   <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-exclamation-triangle"></i> Didn't clock out</small><b>{{ counts.no_clock_out }}</b><span>no closing scan</span></div>
   {% endif %}
-  <div class="sa-stat" style="--c:var(--blue)"><small><i class="bi bi-box-arrow-right"></i> Clocked out</small><b>{{ counts.clocked_out }}</b><span>closing scan recorded</span></div>
+  <div class="sa-stat" style="--c:var(--blue)"><small><i class="bi bi-box-arrow-right"></i> Clocked out</small><b>{{ counts.clocked_out }}</b><span>{% if counts.left_early %}{{ counts.left_early }} before {{ cfg.staff_ends_at|time:"H:i" }}{% else %}closing scan recorded{% endif %}</span></div>
   <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-alarm"></i> Late</small><b>{{ counts.late|default:0 }}</b><span>after {{ late_after|time:"H:i" }}</span></div>
   <div class="sa-stat" style="--c:#60a5fa"><small><i class="bi bi-calendar2-x"></i> On leave</small><b>{{ counts.leave|default:0 }}</b><span>approved leave</span></div>
   <div class="sa-stat" style="--c:var(--red)"><small><i class="bi bi-person-x"></i> Absent</small><b>{{ counts.absent|default:0 }}</b><span>no scan, no leave</span></div>
@@ -145,6 +146,7 @@
         <button type="button" data-f="out">Out</button>
         <button type="button" data-f="absent">Absent</button>
         <button type="button" data-f="leave">Leave</button>
+        {% if closed or counts.visit %}<button type="button" data-f="visit">Visits</button>{% endif %}
       </div>
     </div>
   </div>
@@ -165,14 +167,15 @@
             {% elif r.state == 'late' %}<span class="sa-chip amber"><i class="bi bi-alarm"></i> Late</span>
             {% elif r.state == 'leave' %}<span class="sa-chip blue"><i class="bi bi-calendar2-x"></i> {{ r.leave.get_leave_type_display }}</span>
             {% elif r.state == 'absent' %}<span class="sa-chip red"><i class="bi bi-x-lg"></i> Absent</span>
-            {% elif r.state == 'closed' %}<span class="sa-chip grey">School closed</span>
+            {% elif r.state == 'visit' %}<span class="sa-chip blue"><i class="bi bi-cup-hot"></i> {{ r.visit_kind }} visit</span>
+            {% elif r.state == 'closed' %}<span class="sa-chip grey">Day off</span>
             {% else %}<span class="sa-muted">—</span>{% endif %}
           </td>
           <td data-label="Clock in">
             {% if r.arrived %}<span class="sa-time">{{ r.arrived|time:"H:i" }}</span><span class="sa-meta">{{ r.method }}</span>{% else %}<span class="sa-muted">—</span>{% endif %}
           </td>
           <td data-label="Clock out">
-            {% if r.left %}<span class="sa-time">{{ r.left|time:"H:i" }}</span>
+            {% if r.left %}<span class="sa-time">{{ r.left|time:"H:i" }}</span>{% if r.left_early %}<span class="sa-meta" style="color:var(--amber)">left early</span>{% endif %}
             {% elif r.on_site %}<span class="sa-chip gold sa-onsite">On site</span>
             {% elif r.no_clock_out %}<span class="sa-chip amber"><i class="bi bi-exclamation-triangle"></i> Not clocked out</span>
             {% else %}<span class="sa-muted">—</span>{% endif %}
@@ -194,7 +197,7 @@
   <div class="sa-panel-h"><h3><i class="bi bi-calendar-month"></i> {{ first|date:"F Y" }} so far</h3><span class="sa-muted" style="font-size:.8rem">{{ school_days }} school day{{ school_days|pluralize }}</span></div>
   <div style="overflow-x:auto">
     <table class="sa-table">
-      <thead><tr><th>Staff</th><th style="text-align:right">Present</th><th style="text-align:right">Leave</th><th style="text-align:right">Absent</th><th style="text-align:right">Rate</th></tr></thead>
+      <thead><tr><th>Staff</th><th style="text-align:right">Present</th><th style="text-align:right">Leave</th><th style="text-align:right">Absent</th>{% if any_visits %}<th style="text-align:right">Off-day visits</th>{% endif %}<th style="text-align:right">Rate</th></tr></thead>
       <tbody>
         {% for r in month %}
         <tr>
@@ -202,15 +205,16 @@
           <td data-label="Present" style="text-align:right">{{ r.present }}</td>
           <td data-label="Leave" style="text-align:right">{{ r.leave }}</td>
           <td data-label="Absent" style="text-align:right;{% if r.absent %}color:var(--red){% endif %}">{{ r.absent }}</td>
+          {% if any_visits %}<td data-label="Off-day visits" style="text-align:right">{{ r.visits|default:"—" }}</td>{% endif %}
           <td data-label="Rate">{% if r.rate is not None %}<div class="sa-rate"><div class="sa-bar"><i style="width:{{ r.rate }}%"></i></div><b>{{ r.rate }}%</b></div>{% else %}<span class="sa-muted" style="display:block;text-align:right">—</span>{% endif %}</td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" class="sa-empty">No staff yet.</td></tr>
+        <tr><td colspan="6" class="sa-empty">No staff yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
-  <div class="sa-foot">Rate leaves out days on approved leave. Weekends and public holidays are not school days.</div>
+  <div class="sa-foot">Rate leaves out days on approved leave. Only working days count ({{ cfg.working_days|length }} a week, set under <a href="{% url 'safety:staff_hours' %}" style="color:var(--champagne-lt)">Times &amp; days</a>); public holidays are days off. Weekend and holiday clock-ins show as off-day visits.</div>
 </div>
 
 <script>
@@ -228,6 +232,7 @@
     out: r => r.dataset.out === '1',
     absent: r => r.dataset.state === 'absent',
     leave: r => r.dataset.state === 'leave',
+    visit: r => r.dataset.state === 'visit',
   };
   function apply() {
     const term = q.value.trim().toLowerCase();

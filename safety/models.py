@@ -29,6 +29,17 @@ class SafetySettings(TenantModelMixin, models.Model):
     school_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     clock_radius_m = models.PositiveIntegerField(default=150,
                                                  help_text='How close to the school a phone must be.')
+    # Staff attendance: working hours and days
+    staff_starts_at = models.TimeField(default=datetime.time(8, 0), help_text='When staff are due at work.')
+    staff_late_grace_minutes = models.PositiveSmallIntegerField(
+        default=0, help_text='Clock-ins within this many minutes after the start are not late.')
+    staff_ends_at = models.TimeField(default=datetime.time(16, 0),
+                                     help_text='Closing time: clocking out before it is leaving early.')
+    working_days = models.CharField(max_length=7, default='01234',
+                                    help_text='Days staff are due at work: 0 = Monday … 6 = Sunday.')
+    off_day_clock_in = models.BooleanField(
+        default=True, help_text='Staff may clock in on weekends and public holidays. These are recorded as '
+                                'visits: never late or absent, and not counted as working days.')
     updated_at = models.DateTimeField(auto_now=True)
     objects = TenantManager()
 
