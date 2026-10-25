@@ -6,7 +6,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">{% if trip.route %}{{ trip.route.name }}{% else %}{{ trip.field_trip.title }}{% endif %} · {{ trip.date|date:"D j M" }}</div>
   <h1 class="fin-title"><em>{{ trip.get_leg_display }} trip</em></h1>
-  <p class="fin-sub">{{ att.on|length }} of {{ att.expected|length }} on board{% if att.still_on and att.on|length != att.still_on|length %} · {{ att.still_on|length }} still on{% endif %}{% if trip.ended_at %} · ended {{ trip.ended_at|time:"H:i" }}{% endif %}</p>
+  <p class="fin-sub">{{ att.on|length }} of {{ att.expected|length }} on board{% if att.still_on and att.on|length != att.still_on|length %} · {{ att.still_on|length }} still on{% endif %}{% if trip.ended_at %} · ended {{ trip.ended_at|time:"g:i A" }}{% endif %}</p>
 </div>{% if trip.route %}<div style="display:flex;gap:.4rem"><a class="fin-btn fin-btn-sm{% if leg == 'AM' %} fin-btn-gold{% endif %}" href="?leg=AM">Morning</a><a class="fin-btn fin-btn-sm{% if leg == 'PM' %} fin-btn-gold{% endif %}" href="?leg=PM">Afternoon</a></div>{% endif %}</div>
 {% if not trip.ended_at %}
 <p id="gps" class="hint" style="margin:-.6rem 0 1rem"><i class="bi bi-geo-alt"></i> Sharing the bus position with parents while this page is open…</p>

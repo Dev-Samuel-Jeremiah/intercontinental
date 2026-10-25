@@ -56,7 +56,7 @@
         <div class="alert alert-success">
             <strong>Submitted!</strong><br>
             You have already submitted this assignment on
-            {{ submission.submitted_at|date:"M d, Y H:i" }}.
+            {{ submission.submitted_at|date:"M d, Y g:i A" }}.
         </div>
 
         {% if submission.file %}

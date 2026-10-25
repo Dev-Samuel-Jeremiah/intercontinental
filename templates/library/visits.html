@@ -15,7 +15,7 @@
     {% if stats.by_hour %}<p class="hint" style="margin-top:.6rem">Busiest hours: {% for h, n in stats.by_hour %}{{ h }}:00 ({{ n }}){% if not forloop.last %} · {% endif %}{% endfor %}</p>{% endif %}
     </div></div>
     <div class="panel"><div class="panel-h"><h3>Recent</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-      {% for v in recent %}<tr><td>{{ v.at|date:"D j M H:i" }}</td><td class="name">{% if v.student %}{{ v.student.full_name }}{% else %}{{ v.school_class }} ({{ v.headcount }}){% endif %}</td><td>{{ v.get_purpose_display }}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
+      {% for v in recent %}<tr><td>{{ v.at|date:"D j M g:i A" }}</td><td class="name">{% if v.student %}{{ v.student.full_name }}{% else %}{{ v.school_class }} ({{ v.headcount }}){% endif %}</td><td>{{ v.get_purpose_display }}</td></tr>{% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
     </tbody></table></div></div>
   </div>
   <div style="display:grid;gap:1.2rem">

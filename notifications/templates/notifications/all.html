@@ -73,7 +73,7 @@
     <div class="na-tx">
       <div class="na-t">{{ n.title }}</div>
       {% if n.body %}<div class="na-b">{{ n.body }}</div>{% endif %}
-      <div class="na-m"><span title="{{ n.when|date:'l j F Y, H:i' }}">{{ n.when|naturaltime }}</span><span>· {{ n.category }}</span>{% if n.for %}<span class="for">· {{ n.for }}</span>{% endif %}</div>
+      <div class="na-m"><span title="{{ n.when|date:'l j F Y, g:i A' }}">{{ n.when|naturaltime }}</span><span>· {{ n.category }}</span>{% if n.for %}<span class="for">· {{ n.for }}</span>{% endif %}</div>
     </div>
     {% if n.unread %}<span class="na-new">New</span>{% endif %}
   {% if n.url %}</a>{% else %}</div>{% endif %}

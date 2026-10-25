@@ -30,14 +30,14 @@
 {% if problems %}<div class="panel" style="border-color:var(--red-border)"><div class="panel-b"><b style="color:var(--red)"><i class="bi bi-exclamation-triangle"></i> {{ problems|length }} problem{{ problems|length|pluralize }} to fix</b>{% for p in problems|slice:":6" %}<div class="hint">{{ p }}</div>{% endfor %}{% if problems|length > 6 %}<a class="hint" href="{% url 'timetable:reports' tt.id %}">see all</a>{% endif %}</div></div>{% endif %}
 <div class="panel"><div class="panel-b" style="overflow-x:auto">
   <table class="tg"><thead><tr><th style="width:110px">Period</th>{% for c, l in days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
-    {% for r in rows %}<tr><th><b>{{ r.slot.name }}</b><div class="hint" style="font-weight:400">{{ r.slot.start_time|time:"H:i" }}–{{ r.slot.end_time|time:"H:i" }}</div></th>
+    {% for r in rows %}<tr><th><b>{{ r.slot.name }}</b><div class="hint" style="font-weight:400">{{ r.slot.start_time|time:"g:i A" }}–{{ r.slot.end_time|time:"g:i A" }}</div></th>
       {% if r.slot.is_break %}<td class="brk" colspan="{{ days|length }}">BREAK</td>
       {% else %}{% for cell in r.cells %}<td data-day="{{ cell.day }}" data-slot="{{ r.slot.id }}">{% if cell.entry %}<div class="ls" draggable="true" data-id="{{ cell.entry.id }}"><b>{{ cell.entry.subject.name }}</b><small>{{ cell.entry.teacher.full_name }}{% if cell.entry.room %} · {{ cell.entry.room.name }}{% endif %}</small></div>{% endif %}</td>{% endfor %}{% endif %}
     </tr>{% endfor %}
   </tbody></table>
 </div></div>
 {% if changes %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent changes</h3></div><table class="tbl"><tbody>
-  {% for c in changes %}<tr><td class="name">{{ c.school_class.name }} · {{ c.subject.name }}</td><td>{{ c.from_day }} {{ c.from_slot.name }} → <b>{{ c.to_day }} {{ c.to_slot.name }}</b></td><td class="hint">{{ c.changed_at|date:"j M H:i" }}{% if c.notified_at %} · teacher told{% endif %}</td></tr>{% endfor %}
+  {% for c in changes %}<tr><td class="name">{{ c.school_class.name }} · {{ c.subject.name }}</td><td>{{ c.from_day }} {{ c.from_slot.name }} → <b>{{ c.to_day }} {{ c.to_slot.name }}</b></td><td class="hint">{{ c.changed_at|date:"j M g:i A" }}{% if c.notified_at %} · teacher told{% endif %}</td></tr>{% endfor %}
 </tbody></table></div>{% endif %}
 <div id="tip"></div><div id="toast"></div>
 <script>

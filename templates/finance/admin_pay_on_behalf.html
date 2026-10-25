@@ -959,7 +959,7 @@ body{
                 <tbody>
                     {% for txn in txns %}
                     <tr>
-                        <td>{{ txn.created_at|date:"d M Y H:i" }}</td>
+                        <td>{{ txn.created_at|date:"d M Y g:i A" }}</td>
 
                         <td>{{ txn.description|truncatechars:50 }}</td>
 

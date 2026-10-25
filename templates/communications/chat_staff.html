@@ -11,7 +11,7 @@
 <div class="panel"><div class="panel-b">
   <table class="tbl" data-no-export><tbody>
   {% for c in convs %}<tr><td class="name"><a href="{% url 'communications:chat_thread' c.pk %}">{{ c.subject }}</a>{% if c.unread %} <span class="chip gold">{{ c.unread }} new</span>{% endif %}{% if c.closed %} <span class="chip">Closed</span>{% endif %}</td>
-    <td>{{ c.student.full_name }}</td><td>{{ c.parent.get_full_name|default:c.student.parent_name }}</td><td>{{ c.last_at|date:"j M H:i" }}</td></tr>
+    <td>{{ c.student.full_name }}</td><td>{{ c.parent.get_full_name|default:c.student.parent_name }}</td><td>{{ c.last_at|date:"j M g:i A" }}</td></tr>
   {% empty %}<tr><td class="empty">No conversations yet.</td></tr>{% endfor %}
   </tbody></table>
 </div></div>

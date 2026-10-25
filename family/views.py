@@ -168,7 +168,7 @@ def book(request):
                 appt = svc.book(request.user, child, staff, day, start, request.POST.get('mode'),
                                 request.POST.get('reason'))
                 messages.success(request, f'Booked with {staff.full_name} on {appt.date:%A %d %B} at '
-                                          f'{appt.start:%H:%M}. A confirmation email is on its way.')
+                                          f'{appt.start:%-I:%M %p}. A confirmation email is on its way.')
         except svc.FamilyError as problem:
             messages.error(request, str(problem))
         return redirect('family:book')

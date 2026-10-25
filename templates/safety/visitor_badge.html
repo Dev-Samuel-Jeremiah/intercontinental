@@ -26,7 +26,7 @@
         <div class="nm">{{ v.name }}</div>
         {% if v.organisation %}<div class="ln">{{ v.organisation }}</div>{% endif %}
         <div class="ln"><b>Visiting:</b> {% if v.host %}{{ v.host.full_name }}{% else %}{{ v.get_purpose_display }}{% endif %}</div>
-        <div class="ln"><b>In:</b> {{ v.checked_in_at|date:"j M Y, H:i" }}</div>
+        <div class="ln"><b>In:</b> {{ v.checked_in_at|date:"j M Y, g:i A" }}</div>
         <div class="ln">Valid today only · must be worn at all times</div>
       </div>
     </div>

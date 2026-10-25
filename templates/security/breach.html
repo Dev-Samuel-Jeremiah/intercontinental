@@ -4,11 +4,11 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Personal data breach</div>
   <h1 class="fin-title">{{ b.reference }} — <em>{{ b.title }}</em></h1>
-  <p class="fin-sub">Discovered {{ b.discovered_at|date:"j M Y H:i" }} · <span class="chip">{{ b.get_status_display }}</span> · {{ b.get_severity_display }}</p>
+  <p class="fin-sub">Discovered {{ b.discovered_at|date:"j M Y g:i A" }} · <span class="chip">{{ b.get_status_display }}</span> · {{ b.get_severity_display }}</p>
 </div><a class="fin-btn" href="{% url 'security:breaches' %}">All breaches</a></div>
 {% include "security/_nav.html" %}
 {% if not b.reported_at and not b.not_reported_reason and b.status != 'CLOSED' %}
-<div class="panel" style="border-color:var(--red-border)"><div class="panel-b"><b style="color:var(--red)">NDPC deadline: {{ b.deadline|date:"l j M Y, H:i" }}</b> {% if b.hours_left > 0 %}— {{ b.hours_left }} hours left.{% else %}— passed. Report now and explain the delay.{% endif %}
+<div class="panel" style="border-color:var(--red-border)"><div class="panel-b"><b style="color:var(--red)">NDPC deadline: {{ b.deadline|date:"l j M Y, g:i A" }}</b> {% if b.hours_left > 0 %}— {{ b.hours_left }} hours left.{% else %}— passed. Report now and explain the delay.{% endif %}
 <p class="hint" style="margin-top:.3rem">Report if the breach is likely to put people at risk. If it is not, record why below — that decision is part of the record.</p></div></div>{% endif %}
 <div class="fin-grid">
   <div>
@@ -16,7 +16,7 @@
       <p style="white-space:pre-wrap">{{ b.description }}</p>
       <p style="margin-top:.6rem"><b>Data:</b> {{ b.data_types|default:"—" }} · <b>People:</b> {{ b.people_affected }}{% if b.children_involved %} (children){% endif %}</p>
       {% if b.containment %}<p style="margin-top:.6rem"><b>Containment:</b> {{ b.containment }}</p>{% endif %}
-      <p class="hint" style="margin-top:.6rem">{% if b.contained_at %}Contained {{ b.contained_at|date:"j M H:i" }}. {% endif %}{% if b.reported_at %}Reported to NDPC {{ b.reported_at|date:"j M H:i" }}{% if b.ndpc_reference %} (ref {{ b.ndpc_reference }}){% endif %}. {% endif %}{% if b.people_notified_at %}People told {{ b.people_notified_at|date:"j M" }}. {% endif %}{% if b.not_reported_reason %}Not reported: {{ b.not_reported_reason }}{% endif %}</p>
+      <p class="hint" style="margin-top:.6rem">{% if b.contained_at %}Contained {{ b.contained_at|date:"j M g:i A" }}. {% endif %}{% if b.reported_at %}Reported to NDPC {{ b.reported_at|date:"j M g:i A" }}{% if b.ndpc_reference %} (ref {{ b.ndpc_reference }}){% endif %}. {% endif %}{% if b.people_notified_at %}People told {{ b.people_notified_at|date:"j M" }}. {% endif %}{% if b.not_reported_reason %}Not reported: {{ b.not_reported_reason }}{% endif %}</p>
     </div></div>
     {% if b.status != 'CLOSED' %}
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-task"></i> Steps</h3></div><div class="panel-b" style="display:grid;gap:1rem">
@@ -28,7 +28,7 @@
     </div></div>
     {% endif %}
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Timeline</h3></div><div class="panel-b">
-      {% for a in b.actions.all %}<p style="margin:.3rem 0"><span class="hint">{{ a.at|date:"j M H:i" }} · {{ a.by.username|default:"System" }}</span><br>{{ a.text }}</p>{% endfor %}
+      {% for a in b.actions.all %}<p style="margin:.3rem 0"><span class="hint">{{ a.at|date:"j M g:i A" }} · {{ a.by.username|default:"System" }}</span><br>{{ a.text }}</p>{% endfor %}
       <form method="post" class="fin-form" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="op" value="note"><textarea name="text" rows="2" placeholder="What was done"></textarea><button class="fin-btn fin-btn-sm">Add to timeline</button></form>
     </div></div>
   </div>

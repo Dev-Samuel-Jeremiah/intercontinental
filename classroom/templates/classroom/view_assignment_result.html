@@ -87,7 +87,7 @@
     <hr>
 
     {% if submission %}
-        <p><strong>Submitted At:</strong> {{ submission.submitted_at|date:"M d, Y H:i" }}</p>
+        <p><strong>Submitted At:</strong> {{ submission.submitted_at|date:"M d, Y g:i A" }}</p>
         <p><strong>Grade:</strong> 
             {% if submission.grade is not None %}
                 <span class="grade">{{ submission.final_grade }} / 10</span>{% if submission.penalty_percent %} <small style="opacity:.7">({{ submission.grade }} less {{ submission.penalty_percent }}% for {{ submission.late_days }} late day{{ submission.late_days|pluralize }})</small>{% endif %}

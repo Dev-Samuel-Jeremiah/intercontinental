@@ -20,7 +20,7 @@
 {% else %}
 <div class="panel">
   <div class="chat" id="chat">
-    {% for m in chat %}<div class="msg {{ m.role }}">{{ m.text }}<small>{% if m.role == 'user' %}You{% else %}Tutor{% endif %} · {{ m.created_at|date:"j M H:i" }}</small></div>
+    {% for m in chat %}<div class="msg {{ m.role }}">{{ m.text }}<small>{% if m.role == 'user' %}You{% else %}Tutor{% endif %} · {{ m.created_at|date:"j M g:i A" }}</small></div>
     {% empty %}<div class="hint" style="text-align:center;padding:2rem">Try: "Can you explain photosynthesis simply?" or "I'm stuck on simultaneous equations — where do I start?"</div>{% endfor %}
   </div>
   <form method="post" class="panel-b" style="display:flex;gap:.6rem;border-top:1px solid var(--rim)">{% csrf_token %}

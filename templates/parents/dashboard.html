@@ -63,7 +63,7 @@
       {% empty %}<div class="db-empty">No homework due in the next two weeks.</div>{% endfor %}</div>
 
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-pencil-square"></i> Exams coming up</h3></div>
-      {% for e in upcoming_exams|slice:":5" %}<div class="db-row"><span class="ico"><i class="bi bi-clock"></i></span><div class="t"><b>{{ e.title }}</b><span>{{ e.subject.name }} · {{ e.start_time|date:"D j M, H:i" }}</span></div><span class="end">{{ e.days_left }}d</span></div>
+      {% for e in upcoming_exams|slice:":5" %}<div class="db-row"><span class="ico"><i class="bi bi-clock"></i></span><div class="t"><b>{{ e.title }}</b><span>{{ e.subject.name }} · {{ e.start_time|date:"D j M, g:i A" }}</span></div><span class="end">{{ e.days_left }}d</span></div>
       {% empty %}<div class="db-empty"><i class="bi bi-pencil"></i>No exams scheduled.</div>{% endfor %}</div>
 
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-megaphone"></i> From the school</h3><a href="{% url 'announcements:announcement_list' %}">All →</a></div>

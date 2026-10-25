@@ -275,7 +275,7 @@ def add_board_photo(section, upload, title=''):
     upload.seek(0)
     if not (head.startswith(b'\xff\xd8\xff') or head.startswith(b'\x89PNG') or head[8:12] == b'WEBP'):
         raise ExtrasError("That file isn't a photo.")
-    title = (title or '').strip()[:255] or f'Board notes — {timezone.localtime():%d %b %Y, %H:%M}'
+    title = (title or '').strip()[:255] or f'Board notes — {timezone.localtime():%d %b %Y, %-I:%M %p}'
     return Material.objects.create(tenant_id=section.tenant_id, section=section, title=title, file=upload,
                                    description='Photo of the board')
 

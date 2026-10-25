@@ -493,7 +493,7 @@ def send_duty_reminders(tenant, day):
         if a.staff.user.email:
             _email(a.staff.user.email, f'Duty {day:%A %d %b}: {a.post.name}',
                    f'<p>You are on duty: <b>{escape(a.post.name)}</b>{", " + escape(a.post.location) if a.post.location else ""}'
-                   f', {a.post.start_time:%H:%M}–{a.post.end_time:%H:%M} on {day:%A %d %B}.</p>')
+                   f', {a.post.start_time:%-I:%M %p}–{a.post.end_time:%-I:%M %p} on {day:%A %d %B}.</p>')
         a.reminded = True
         a.save(update_fields=['reminded'])
         n += 1

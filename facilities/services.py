@@ -800,7 +800,7 @@ def check_in(point, user, all_clear=True, note='', guard_name=''):
         for e in _emails(point.tenant):
             _email(e, f'Security: problem at {point.name}',
                    f'<p>{escape(entry.guard_name or "A guard")} reported a problem at {escape(point.name)} at '
-                   f'{timezone.localtime(entry.at):%H:%M}: {escape(entry.note or "no details")}</p>')
+                   f'{timezone.localtime(entry.at):%-I:%M %p}: {escape(entry.note or "no details")}</p>')
     return entry
 
 
@@ -900,7 +900,7 @@ def clashes(space, starts, ends, exclude=None):
     qs = HireBooking.objects.filter(space=space, status__in=('ENQUIRY', 'CONFIRMED'), starts__lt=ends, ends__gt=starts)
     if exclude:
         qs = qs.exclude(pk=exclude.pk)
-    out += [f'{b.event} ({b.client}) {timezone.localtime(b.starts):%d %b %H:%M}' for b in qs]
+    out += [f'{b.event} ({b.client}) {timezone.localtime(b.starts):%d %b %-I:%M %p}' for b in qs]
     if space.teaching_room_id:
         from timetable.models import RoomBooking
         s, e = timezone.localtime(starts), timezone.localtime(ends)
@@ -909,7 +909,7 @@ def clashes(space, starts, ends, exclude=None):
             a = timezone.make_aware(datetime.combine(rb.date, rb.start_time))
             b = timezone.make_aware(datetime.combine(rb.date, rb.end_time))
             if a < ends and b > starts:
-                out.append(f'School booking: {rb.purpose} {rb.date:%d %b} {rb.start_time:%H:%M}')
+                out.append(f'School booking: {rb.purpose} {rb.date:%d %b} {rb.start_time:%-I:%M %p}')
     return out
 
 
@@ -964,8 +964,8 @@ def invoice_html(b):
         rows.append(('Refundable caution fee', b.caution_fee))
     body = ''.join(f'<tr><td>{escape(d)}</td><td style="text-align:right">₦{a:,.2f}</td></tr>' for d, a in rows)
     return (f'<p>Invoice <b>{b.invoice_number}</b> from {escape(b.tenant.name)} to {escape(b.client)}.</p>'
-            f'<p>{escape(b.event)}: {timezone.localtime(b.starts):%A %d %B %Y %H:%M} to '
-            f'{timezone.localtime(b.ends):%H:%M}{" (" + timezone.localtime(b.ends).strftime("%d %b") + ")" if timezone.localtime(b.ends).date() != timezone.localtime(b.starts).date() else ""}'
+            f'<p>{escape(b.event)}: {timezone.localtime(b.starts):%A %d %B %Y %-I:%M %p} to '
+            f'{timezone.localtime(b.ends):%-I:%M %p}{" (" + timezone.localtime(b.ends).strftime("%d %b") + ")" if timezone.localtime(b.ends).date() != timezone.localtime(b.starts).date() else ""}'
             f'.</p><table border="1" cellpadding="6" cellspacing="0">{body}<tr><td><b>Total</b></td>'
             f'<td style="text-align:right"><b>₦{b.total:,.2f}</b></td></tr><tr><td>Paid</td>'
             f'<td style="text-align:right">₦{b.paid:,.2f}</td></tr><tr><td><b>Balance</b></td>'

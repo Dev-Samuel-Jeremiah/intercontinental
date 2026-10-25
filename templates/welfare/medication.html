@@ -15,7 +15,7 @@
       {% empty %}<tr><td class="empty">No regular medicines today.</td></tr>{% endfor %}
     </tbody></table></div></div>
     <div class="panel"><div class="panel-h"><h3>Log</h3></div><div class="panel-b"><table class="tbl"><tbody>
-      {% for d in doses %}<tr><td>{{ d.given_at|date:"D j M H:i" }}</td><td class="name">{{ d.student.full_name }}<br><small class="hint">{{ d.medicine }} {{ d.dose }}{% if d.reason %} · {{ d.reason }}{% endif %}</small></td><td>{% if d.refused %}<span class="chip">Refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>
+      {% for d in doses %}<tr><td>{{ d.given_at|date:"D j M g:i A" }}</td><td class="name">{{ d.student.full_name }}<br><small class="hint">{{ d.medicine }} {{ d.dose }}{% if d.reason %} · {{ d.reason }}{% endif %}</small></td><td>{% if d.refused %}<span class="chip">Refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>
       {% empty %}<tr><td class="empty">Nothing given yet.</td></tr>{% endfor %}
     </tbody></table></div></div>
   </div>

@@ -22,6 +22,6 @@
 </div>
 {% if tutor_held %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-robot"></i> Messages to the AI tutor that were stopped</h3></div>
   <table class="tbl"><thead><tr><th>Student</th><th>Course</th><th>Message</th><th>When</th></tr></thead><tbody>
-  {% for m in tutor_held %}<tr><td class="name">{{ m.student.get_full_name|default:m.student.username }}</td><td><a href="{% url 'assistant:tutor_admin' m.course_id %}?student={{ m.student_id }}" style="color:inherit">{{ m.course.name }}</a></td><td>{{ m.text|truncatechars:140 }}</td><td>{{ m.created_at|date:"j M H:i" }}</td></tr>{% endfor %}
+  {% for m in tutor_held %}<tr><td class="name">{{ m.student.get_full_name|default:m.student.username }}</td><td><a href="{% url 'assistant:tutor_admin' m.course_id %}?student={{ m.student_id }}" style="color:inherit">{{ m.course.name }}</a></td><td>{{ m.text|truncatechars:140 }}</td><td>{{ m.created_at|date:"j M g:i A" }}</td></tr>{% endfor %}
   </tbody></table></div>{% endif %}
 {% endblock %}

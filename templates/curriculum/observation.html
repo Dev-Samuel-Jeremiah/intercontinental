@@ -28,7 +28,7 @@
     {% if obs.strengths %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-star"></i> Strengths</h3></div><div class="panel-b">{{ obs.strengths|linebreaksbr }}</div></div>{% endif %}
     {% if obs.improvements %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-arrow-up-right"></i> To improve</h3></div><div class="panel-b">{{ obs.improvements|linebreaksbr }}</div></div>{% endif %}
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-chat-left-text"></i> Teacher's response</h3></div><div class="panel-b">
-      {% if obs.acknowledged_at %}<p style="margin-top:0">{{ obs.teacher_response|default:"Acknowledged."|linebreaksbr }}</p><span class="hint">{{ obs.acknowledged_at|date:"j M Y, H:i" }}</span>
+      {% if obs.acknowledged_at %}<p style="margin-top:0">{{ obs.teacher_response|default:"Acknowledged."|linebreaksbr }}</p><span class="hint">{{ obs.acknowledged_at|date:"j M Y, g:i A" }}</span>
       {% elif is_teacher %}<form method="post" class="fin-form">{% csrf_token %}<textarea name="response" rows="4" placeholder="Your comments (optional)"></textarea><button class="fin-btn fin-btn-gold fin-btn-sm" name="action" value="acknowledge">Acknowledge</button></form>
       {% elif obs.shared %}<span class="hint">Shared {{ obs.shared_at|date:"j M" }} — waiting for the teacher.</span>{% else %}<span class="hint">Not shared with the teacher yet.</span>{% endif %}
     </div></div>

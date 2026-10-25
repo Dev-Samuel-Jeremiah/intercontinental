@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Security &amp; privacy</div>
   <h1 class="fin-title">Data protection <em>compliance report</em> {{ r.year }}</h1>
-  <p class="fin-sub">{{ request.tenant.name }} · {{ r.pupils }} pupils on roll · generated {{ generated|date:"j M Y H:i" }}. Evidence for your annual NDPA audit; print it or save it as PDF.</p>
+  <p class="fin-sub">{{ request.tenant.name }} · {{ r.pupils }} pupils on roll · generated {{ generated|date:"j M Y g:i A" }}. Evidence for your annual NDPA audit; print it or save it as PDF.</p>
 </div><div class="no-print" style="display:flex;gap:.5rem"><form method="get"><select name="year" onchange="this.form.submit()" style="padding:.5rem;border-radius:10px;background:rgba(0,0,0,.3);color:var(--white);border:1px solid var(--rim2)">{% for y in years %}<option value="{{ y }}" {% if y == r.year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></form><button class="fin-btn fin-btn-gold" type="button" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div></div>
 {% include "security/_nav.html" %}
 <div class="fin-stats"><div class="fin-stat"><small>Areas in order</small><b>{{ r.score }}/{{ r.total }}</b></div>

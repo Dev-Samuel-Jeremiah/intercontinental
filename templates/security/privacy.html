@@ -17,7 +17,7 @@
     <div><label>Privacy notice</label><textarea name="notice" rows="18">{{ n.notice }}</textarea><p class="hint">## for headings, - for bullet points, a blank line between paragraphs. Purposes and retention periods are added below it automatically.</p></div>
     <label class="pill"><input type="checkbox" name="published" {% if n.published %}checked{% endif %}> Show the notice publicly</label>
     <div style="display:flex;gap:.5rem;flex-wrap:wrap"><button class="fin-btn fin-btn-gold" type="submit">Save</button></div>
-    <p class="hint">Last updated {{ n.updated_at|date:"j M Y H:i" }}{% if n.updated_by %} by {{ n.updated_by.username }}{% endif %}.</p>
+    <p class="hint">Last updated {{ n.updated_at|date:"j M Y g:i A" }}{% if n.updated_by %} by {{ n.updated_by.username }}{% endif %}.</p>
   </form>
   <div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Why the school uses personal data</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:privacy' %}#purpose">New purpose</a></div>

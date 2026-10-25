@@ -125,7 +125,7 @@ class RollCall(TenantModelMixin, models.Model):
         ordering = ['-started_at']
 
     def __str__(self):
-        return f"{self.title} {self.started_at:%d %b %Y %H:%M}"
+        return f"{self.title} {self.started_at:%d %b %Y %-I:%M %p}"
 
     @property
     def is_open(self):

@@ -116,7 +116,7 @@ def _notify_cover(cover_id):
     s = c.slot
     body = (f"<p>Hello {c.cover_teacher.full_name},</p><p>Please cover <b>{s.subject.name}</b> for "
             f"<b>{s.school_class.name}</b> on <b>{c.date:%A %d %B}</b>, {s.time_slot.name} "
-            f"({s.time_slot.start_time:%H:%M}–{s.time_slot.end_time:%H:%M}), for {c.absent_teacher.full_name}.</p>"
+            f"({s.time_slot.start_time:%-I:%M %p}–{s.time_slot.end_time:%-I:%M %p}), for {c.absent_teacher.full_name}.</p>"
             + (f"<p>Note: {c.note}</p>" if c.note else '')
             + "<p>It's on your My Lessons page, where you can take the register.</p>"
             + f"<p>{c.tenant.name}</p>")

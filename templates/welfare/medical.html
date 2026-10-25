@@ -32,7 +32,7 @@
           <div class="row2"><div><label>From</label><input type="date" name="starts" value="{{ today|date:'Y-m-d' }}"></div><div><label>Until</label><input type="date" name="ends"></div></div>
           <label class="pill"><input type="checkbox" name="parent_consent"> Signed parent consent received</label>
           <button class="fin-btn" type="submit">Add</button></form></details>
-      <table class="tbl" data-no-export style="margin-top:.5rem"><tbody>{% for d in doses %}<tr><td>{{ d.given_at|date:"j M H:i" }}</td><td>{{ d.medicine }} {{ d.dose }}{% if d.refused %} <span class="chip">refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>{% endfor %}</tbody></table>
+      <table class="tbl" data-no-export style="margin-top:.5rem"><tbody>{% for d in doses %}<tr><td>{{ d.given_at|date:"j M g:i A" }}</td><td>{{ d.medicine }} {{ d.dose }}{% if d.refused %} <span class="chip">refused</span>{% endif %}</td><td class="hint">{{ d.given_by.get_full_name|default:d.given_by.username }}</td></tr>{% endfor %}</tbody></table>
     </div></div>
     <div class="panel"><div class="panel-h"><h3>Health checks</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
       {% for s in screens %}<tr><td>{{ s.date|date:"j M Y" }}</td><td>{% if s.height_cm %}{{ s.height_cm }} cm{% endif %} {% if s.weight_kg %}{{ s.weight_kg }} kg{% endif %}{% if s.bmi %} · BMI {{ s.bmi }}{% endif %}<br><small class="hint">Eyes {{ s.vision_left|default:"–" }}/{{ s.vision_right|default:"–" }}{% if s.hearing_ok is False %} · hearing concern{% endif %}{% if s.dental_ok is False %} · dental concern{% endif %} {{ s.notes }}</small></td><td>{% if s.refer %}<span class="chip red">Referred</span>{% endif %}</td></tr>

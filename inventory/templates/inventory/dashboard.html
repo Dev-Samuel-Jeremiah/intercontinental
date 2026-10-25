@@ -482,7 +482,7 @@
               <td style="color:var(--white); font-weight:600;">{{ m.quantity }}</td>
               <td>{{ m.performed_by.get_full_name|default:m.performed_by.username }}</td>
               <td style="white-space:nowrap; font-size:.75rem; color:var(--slate);">
-                {{ m.date|date:"M j, H:i" }}
+                {{ m.date|date:"M j, g:i A" }}
               </td>
             </tr>
             {% empty %}

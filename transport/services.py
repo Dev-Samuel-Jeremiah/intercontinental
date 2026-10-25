@@ -200,7 +200,7 @@ def scan(trip, student, kind, user):
         verb = 'got on the school bus' if kind == 'ON' else 'got off the school bus'
         _tell_family(student, f'{student.full_name} {verb}',
                      f'{trip.tenant.name}: {student.full_name.split()[0]} {verb}{where} at '
-                     f'{timezone.localtime(s.at):%H:%M}.', cfg.scan_channel)
+                     f'{timezone.localtime(s.at):%-I:%M %p}.', cfg.scan_channel)
     return s
 
 
@@ -451,14 +451,14 @@ def vehicle_clashes(vehicle, day, depart, back, exclude=None):
     out = []
     for ft in FieldTrip.objects.filter(vehicle=vehicle, date=day).exclude(pk=getattr(exclude, 'pk', None)):
         if _overlaps(day, depart, back, ft.depart, ft.back):
-            out.append(f'{vehicle} is booked for "{ft.title}" {ft.depart:%H:%M}–{ft.back:%H:%M}.')
+            out.append(f'{vehicle} is booked for "{ft.title}" {ft.depart:%-I:%M %p}–{ft.back:%-I:%M %p}.')
     if day.weekday() < 5:
         for r in Route.objects.filter(vehicle=vehicle, active=True):
             for t in (r.morning_departs, r.afternoon_departs):
                 if t:
                     end = (datetime.combine(day, t) + ROUTE_RUN).time()
                     if _overlaps(day, depart, back, t, end):
-                        out.append(f'{vehicle} runs {r.name} at {t:%H:%M}.')
+                        out.append(f'{vehicle} runs {r.name} at {t:%-I:%M %p}.')
     return out
 
 

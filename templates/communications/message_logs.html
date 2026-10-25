@@ -89,7 +89,7 @@
     <tbody>
       {% for log in logs %}
       <tr>
-        <td style="white-space:nowrap;font-size:.75rem;color:var(--slate2);">{{ log.created_at|date:"d M Y H:i" }}</td>
+        <td style="white-space:nowrap;font-size:.75rem;color:var(--slate2);">{{ log.created_at|date:"d M Y g:i A" }}</td>
         <td>
           <span style="font-weight:600;">{{ log.student.full_name }}</span>
           <br><span style="font-size:.72rem;color:var(--slate);">{{ log.student.admission_number }}</span>

@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Hall hire · {{ b.get_status_display }}{% if b.invoice_number %} · {{ b.invoice_number }}{% endif %}</div>
   <h1 class="fin-title"><em>{{ b.event }}</em></h1>
-  <p class="fin-sub">{{ b.client }}{% if b.phone %} · {{ b.phone }}{% endif %}{% if b.email %} · {{ b.email }}{% endif %} · {{ b.space }} · {{ b.starts|date:"l j F Y H:i" }} to {{ b.ends|date:"H:i" }}{% if b.guests %} · {{ b.guests }} guests{% endif %}</p>
+  <p class="fin-sub">{{ b.client }}{% if b.phone %} · {{ b.phone }}{% endif %}{% if b.email %} · {{ b.email }}{% endif %} · {{ b.space }} · {{ b.starts|date:"l j F Y g:i A" }} to {{ b.ends|date:"g:i A" }}{% if b.guests %} · {{ b.guests }} guests{% endif %}</p>
 </div><div class="no-print" style="display:flex;gap:.3rem;flex-wrap:wrap">{% if b.invoice_number %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:invoice_print' b.pk %}" target="_blank"><i class="bi bi-printer"></i> Invoice</a>{% endif %}
   <form method="post" style="display:flex;gap:.3rem">{% csrf_token %}{% if b.status == 'ENQUIRY' %}<button class="fin-btn fin-btn-sm fin-btn-gold" type="submit" name="action" value="confirm">Confirm &amp; invoice</button>{% endif %}{% if b.invoice_number and b.email %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="invoice">Email invoice</button>{% endif %}{% if b.status == 'CONFIRMED' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="DONE">Mark held</button>{% endif %}{% if b.status == 'ENQUIRY' or b.status == 'CONFIRMED' %}<button class="fin-btn fin-btn-sm" type="submit" name="action" value="CANCELLED" onclick="return confirm('Cancel this booking?')">Cancel</button>{% endif %}</form></div></div>
 {% include "facilities/_nav.html" %}

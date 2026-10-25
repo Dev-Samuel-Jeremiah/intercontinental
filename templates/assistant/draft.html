@@ -5,7 +5,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow"><a href="{% url 'assistant:drafts' %}" style="color:inherit">Review queue</a></div>
   <h1 class="fin-title">To the parent of <em>{{ d.student.full_name }}</em></h1>
-  <p class="fin-sub">{{ d.student.class_assigned.name|default:"" }} · {{ d.get_purpose_display }} · {{ d.get_channel_display }} · {{ language }} · written with AI by {{ d.created_by.get_full_name|default:d.created_by.username }} on {{ d.created_at|date:"j M, H:i" }}</p>
+  <p class="fin-sub">{{ d.student.class_assigned.name|default:"" }} · {{ d.get_purpose_display }} · {{ d.get_channel_display }} · {{ language }} · written with AI by {{ d.created_by.get_full_name|default:d.created_by.username }} on {{ d.created_at|date:"j M, g:i A" }}</p>
 </div><span class="chip {% if d.status == 'PENDING' %}amber{% elif d.status == 'SENT' %}green{% else %}red{% endif %}">{{ d.get_status_display }}</span></div>
 <div class="fin-grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)">
   <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
@@ -26,7 +26,7 @@
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-card-checklist"></i> The facts given</h3></div><div class="panel-b">
     <p style="white-space:pre-wrap;margin-top:0">{{ d.brief }}</p>
     <p class="hint">Parent on record: {{ d.student.parent_name|default:"—" }}{% if d.student.parent_email %} · {{ d.student.parent_email }}{% endif %}{% if d.student.parent_phone %} · {{ d.student.parent_phone }}{% endif %}</p>
-    {% if d.reviewed_by %}<p class="hint">{{ d.get_status_display }} by {{ d.reviewed_by.get_full_name|default:d.reviewed_by.username }} on {{ d.reviewed_at|date:"j M, H:i" }}{% if d.review_note %} — {{ d.review_note }}{% endif %}</p>{% endif %}
+    {% if d.reviewed_by %}<p class="hint">{{ d.get_status_display }} by {{ d.reviewed_by.get_full_name|default:d.reviewed_by.username }} on {{ d.reviewed_at|date:"j M, g:i A" }}{% if d.review_note %} — {{ d.review_note }}{% endif %}</p>{% endif %}
   </div></div>
 </div>
 {% endblock %}

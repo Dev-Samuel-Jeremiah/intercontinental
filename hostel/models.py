@@ -391,7 +391,7 @@ class CheckInOut(TenantModelMixin, models.Model):
     def __str__(self):
         return (f"{self.boarder.student.full_name} — "
                 f"{self.get_movement_type_display()} "
-                f"{self.datetime:%d %b %Y %H:%M}")
+                f"{self.datetime:%d %b %Y %-I:%M %p}")
 
     @property
     def is_overdue(self):

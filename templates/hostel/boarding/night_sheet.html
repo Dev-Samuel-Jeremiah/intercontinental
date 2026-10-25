@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Hostel</div>
   <h1 class="fin-title">Night emergency <em>sheet</em>{% if h %} — {{ h.name }}{% endif %}</h1>
-  <p class="fin-sub">For the night warden: every boarder, their bed, who to call, and medical needs. Printed {{ now|date:"j M Y H:i" }}. Keep it private and replace it each term.</p>
+  <p class="fin-sub">For the night warden: every boarder, their bed, who to call, and medical needs. Printed {{ now|date:"j M Y g:i A" }}. Keep it private and replace it each term.</p>
 </div><div class="no-print" style="display:flex;gap:.4rem"><button class="fin-btn fin-btn-gold" onclick="window.print()">Print</button>{% include "hostel/boarding/_hostel_pick.html" %}</div></div>
 {% include "hostel/boarding/_nav.html" %}
 <div class="panel"><div class="panel-b"><table class="tbl" style="font-size:.85rem"><thead><tr><th>Room/bed</th><th>Boarder</th><th>Emergency contact</th><th>Other contacts</th><th>Medical / allergies</th><th>Doctor</th></tr></thead><tbody>

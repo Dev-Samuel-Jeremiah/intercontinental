@@ -15,7 +15,7 @@
     <div style="border-top:1px solid var(--rim2);padding-top:.8rem;margin-top:.8rem">
       <b>{{ kid.full_name }}</b>
       {% if reply %} <span class="chip {% if reply.answer == 'YES' %}ok{% else %}no{% endif %}">{{ reply.get_answer_display }}</span>
-        <div class="hint">Signed "{{ reply.signed_name }}" on {{ reply.created_at|date:"j M Y, H:i" }}</div>{% endif %}
+        <div class="hint">Signed "{{ reply.signed_name }}" on {{ reply.created_at|date:"j M Y, g:i A" }}</div>{% endif %}
       {% if c.open %}
       <form method="post">{% csrf_token %}<input type="hidden" name="form" value="{{ c.f.pk }}"><input type="hidden" name="student" value="{{ kid.pk }}">
         <label class="opt"><input type="radio" name="answer" value="YES" required {% if reply.answer == 'YES' %}checked{% endif %}> I give consent for {{ kid.full_name }}</label>

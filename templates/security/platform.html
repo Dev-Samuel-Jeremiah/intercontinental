@@ -27,7 +27,7 @@
 </style>
 <div class="panel"><div class="pf-hero">
   {% if last %}<span class="ic {% if fresh %}ok{% else %}bad{% endif %}"><i class="bi bi-{% if fresh %}shield-check{% else %}exclamation-octagon{% endif %}"></i></span>
-  <div><h3>Last good backup: {{ last.started_at|date:"l j F Y, H:i" }} <span class="hint">({{ last.started_at|timesince }} ago)</span></h3>
+  <div><h3>Last good backup: {{ last.started_at|date:"l j F Y, g:i A" }} <span class="hint">({{ last.started_at|timesince }} ago)</span></h3>
     <p>{{ last.size|filesizeformat }} · integrity check {{ last.integrity }} · {% if last.offsite and not last.offsite|slice:":6" == "FAILED" %}{{ last.offsite }}{% else %}kept on this server only{% endif %} · backups are kept {{ keep_days }} days{% if auto %} · the site starts one itself if a day is missed{% endif %}.</p></div>
   {% else %}<span class="ic bad"><i class="bi bi-exclamation-octagon"></i></span>
   <div><h3>No backup has been made yet</h3><p>Press <b>Back up now</b>, then set up the daily backup timer on the server (deploy/DEPLOY.md, step 9).</p></div>{% endif %}
@@ -41,7 +41,7 @@
 
 <div class="panel"><div class="panel-h"><h3><i class="bi bi-hdd-stack"></i> Backup history</h3><span class="hint">Latest {{ backups|length }}</span></div>
   {% if backups %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Started</th><th>What</th><th>How</th><th>Size</th><th>Checks</th><th>Off-site</th><th></th></tr></thead><tbody>
-  {% for b in backups %}<tr><td style="white-space:nowrap">{{ b.started_at|date:"j M Y, H:i" }}{% if b.seconds %}<div class="hint">{{ b.seconds|floatformat:0 }} s</div>{% endif %}</td>
+  {% for b in backups %}<tr><td style="white-space:nowrap">{{ b.started_at|date:"j M Y, g:i A" }}{% if b.seconds %}<div class="hint">{{ b.seconds|floatformat:0 }} s</div>{% endif %}</td>
     <td>{{ b.get_kind_display }}</td><td class="hint">{{ b.get_trigger_display }}{% if b.started_by %} · {{ b.started_by.username }}{% endif %}</td>
     <td>{% if b.size %}{{ b.size|filesizeformat }}{% else %}—{% endif %}</td>
     <td>{% if not b.finished_at %}<span class="chip amber">Running</span>{% elif b.ok %}<span class="chip green">OK</span>{% else %}<span class="chip red" title="{{ b.error }}">Failed</span><div class="hint">{{ b.error|truncatechars:80 }}</div>{% endif %}</td>

@@ -15,16 +15,16 @@
     <h2><i class="bi bi-bus-front" style="color:var(--champagne-lt)"></i> {{ c.kid.full_name }}</h2>
     <p class="hint" style="margin:0">{{ c.rider.route.name }} · {{ c.rider.get_direction_display }}{% if c.rider.route.vehicle %} · {{ c.rider.route.vehicle.name }} ({{ c.rider.route.vehicle.plate }}){% endif %}</p>
     {% if c.rider.stop %}<p style="margin:.5rem 0 0">Stop: <b>{{ c.rider.stop.name }}</b>{% if c.rider.stop.landmark %} ({{ c.rider.stop.landmark }}){% endif %}
-      {% if c.rider.stop.morning_time %} · pickup about <b>{{ c.rider.stop.morning_time|time:"H:i" }}</b>{% endif %}{% if c.rider.stop.afternoon_time %} · drop-off about <b>{{ c.rider.stop.afternoon_time|time:"H:i" }}</b>{% endif %}</p>{% endif %}
+      {% if c.rider.stop.morning_time %} · pickup about <b>{{ c.rider.stop.morning_time|time:"g:i A" }}</b>{% endif %}{% if c.rider.stop.afternoon_time %} · drop-off about <b>{{ c.rider.stop.afternoon_time|time:"g:i A" }}</b>{% endif %}</p>{% endif %}
     {% if c.rider.route.driver %}<p class="hint" style="margin:.2rem 0 0">Driver {{ c.rider.route.driver.name }}{% if c.rider.route.attendant %} · attendant {{ c.rider.route.attendant.name }} ({{ c.rider.route.attendant.phone }}){% endif %}</p>{% endif %}
 
     <h2 style="margin-top:1rem">Today</h2>
     {% for t in c.trips %}<div style="margin:.3rem 0"><b>{{ t.get_leg_display }}</b>:
-      {% if t.ended_at %}arrived {{ t.ended_at|time:"H:i" }}{% elif t.started_at %}on the road{% else %}not started{% endif %}
+      {% if t.ended_at %}arrived {{ t.ended_at|time:"g:i A" }}{% elif t.started_at %}on the road{% else %}not started{% endif %}
       {% if t.delay_minutes and not t.ended_at %} — <b style="color:var(--red)">about {{ t.delay_minutes }} min late</b>{% if t.delay_note %} ({{ t.delay_note }}){% endif %}{% endif %}
-      {% if not t.ended_at and t.last_seen %}<div class="map" id="map-{{ t.pk }}" data-url="{% url 'transport:family_position' t.pk %}" data-lat="{{ t.last_lat }}" data-lng="{{ t.last_lng }}"></div><small class="hint" id="seen-{{ t.pk }}">Last seen {{ t.last_seen|time:"H:i" }}</small>{% endif %}
+      {% if not t.ended_at and t.last_seen %}<div class="map" id="map-{{ t.pk }}" data-url="{% url 'transport:family_position' t.pk %}" data-lat="{{ t.last_lat }}" data-lng="{{ t.last_lng }}"></div><small class="hint" id="seen-{{ t.pk }}">Last seen {{ t.last_seen|time:"g:i A" }}</small>{% endif %}
     </div>{% empty %}<p class="hint">No trip yet today.</p>{% endfor %}
-    {% for s in c.scans %}<div class="hint">{{ s.trip.get_leg_display }}: {% if s.kind == 'ON' %}boarded{% else %}got off{% endif %} at {{ s.at|time:"H:i" }}</div>{% endfor %}
+    {% for s in c.scans %}<div class="hint">{{ s.trip.get_leg_display }}: {% if s.kind == 'ON' %}boarded{% else %}got off{% endif %} at {{ s.at|time:"g:i A" }}</div>{% endfor %}
 
     {% if c.bills %}<h2 style="margin-top:1rem">Transport fees</h2>
     <table>{% for b in c.bills %}<tr><td>{{ b.period }}</td><td>{{ b.amount|floatformat:2 }}</td><td>{% if b.status == 'PAID' %}<span class="chip ok">Paid</span>{% else %}

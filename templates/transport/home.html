@@ -23,7 +23,7 @@
       {% empty %}<tr><td colspan="4" class="empty">No routes yet. Add vehicles and drivers first, then a route.</td></tr>{% endfor %}
     </tbody></table></div></div>
     <div class="panel"><div class="panel-h"><h3>Today's trips</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-      {% for t in trips %}<tr><td class="name">{{ t.route.name|default:"Field trip" }} · {{ t.get_leg_display }}</td><td>{% if t.ended_at %}<span class="chip ok">Ended {{ t.ended_at|time:"H:i" }}</span>{% elif t.started_at %}<span class="chip gold">On the road</span>{% else %}<span class="chip">Not started</span>{% endif %}{% if t.delay_minutes %} <span class="chip red">{{ t.delay_minutes }} min late</span>{% endif %}</td></tr>
+      {% for t in trips %}<tr><td class="name">{{ t.route.name|default:"Field trip" }} · {{ t.get_leg_display }}</td><td>{% if t.ended_at %}<span class="chip ok">Ended {{ t.ended_at|time:"g:i A" }}</span>{% elif t.started_at %}<span class="chip gold">On the road</span>{% else %}<span class="chip">Not started</span>{% endif %}{% if t.delay_minutes %} <span class="chip red">{{ t.delay_minutes }} min late</span>{% endif %}</td></tr>
       {% empty %}<tr><td class="empty">No trip has started today.</td></tr>{% endfor %}
     </tbody></table></div></div>
   </div>

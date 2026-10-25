@@ -6,7 +6,7 @@
   {% for o in opps %}
   <div class="card job">
     <h2>{{ o.title }}</h2>
-    <p>{{ o.date|date:"l j F Y" }}{% if o.start_time %}, {{ o.start_time|time:"H:i" }}{% if o.end_time %}–{{ o.end_time|time:"H:i" }}{% endif %}{% endif %}{% if o.left is not None %} · {{ o.left }} place{{ o.left|pluralize }} left{% endif %}</p>
+    <p>{{ o.date|date:"l j F Y" }}{% if o.start_time %}, {{ o.start_time|time:"g:i A" }}{% if o.end_time %}–{{ o.end_time|time:"g:i A" }}{% endif %}{% endif %}{% if o.left is not None %} · {{ o.left }} place{{ o.left|pluralize }} left{% endif %}</p>
     {% if o.details %}<p>{{ o.details|linebreaksbr }}</p>{% endif %}
     {% if o.joined %}<span class="chip ok">You are signed up</span>
       <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ o.pk }}"><input type="hidden" name="action" value="withdraw"><button class="btn ghost" type="submit">Withdraw</button></form>

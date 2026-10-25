@@ -27,7 +27,7 @@
       <a class="fin-btn fin-btn-sm" href="{% url 'teaching:tasks' %}">All tasks</a>
     </div></div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar-week"></i> My next duties</h3></div><div class="panel-b">
-      {% for d in duties %}<p style="margin:.3rem 0">{{ d.date|date:"D j M" }} — {{ d.post.name }} <small class="hint">{{ d.post.start_time|time:"H:i" }}–{{ d.post.end_time|time:"H:i" }}</small></p>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
+      {% for d in duties %}<p style="margin:.3rem 0">{{ d.date|date:"D j M" }} — {{ d.post.name }} <small class="hint">{{ d.post.start_time|time:"g:i A" }}–{{ d.post.end_time|time:"g:i A" }}</small></p>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
     </div></div>
   </div>
 </div>

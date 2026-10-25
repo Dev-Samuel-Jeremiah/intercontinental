@@ -19,7 +19,7 @@
 <div class="eyebrow">{% if log.repeat %}Already clocked {% if log.direction == 'IN' %}in{% else %}out{% endif %}{% else %}Clocked {% if log.direction == 'IN' %}in{% else %}out{% endif %}{% endif %}</div>
 <div class="scan-name">{{ staff.full_name }}</div>
 <div class="scan-sub">{{ staff.get_role_display }}</div>
-<div class="clock">{{ log.scanned_at|time:"H:i" }}</div>
+<div class="clock">{{ log.scanned_at|time:"g:i A" }}</div>
 <div class="scan-sub">{{ log.scanned_at|date:"l, j F Y" }}</div>
 {% if log.repeat %}<div class="chip warn"><i class="bi bi-info-circle"></i> You scanned a moment ago — this scan was not counted again</div>{% else %}<div class="chip ok"><i class="bi bi-check2-circle"></i> Recorded to staff attendance</div>{% endif %}
 <div><span class="next">{% if log.direction == 'IN' %}Have a great day{% else %}See you tomorrow{% endif %}</span></div>

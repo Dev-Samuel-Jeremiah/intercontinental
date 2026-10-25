@@ -109,7 +109,7 @@ Placeholders available: {{student_name}}, {{parent_name}}, {{class_name}}, {{out
         <td><span class="badge {% if q.channel == 'EMAIL' %}bb{% elif q.channel == 'SMS' %}ba{% else %}bg{% endif %}">{{ q.channel }}</span></td>
         <td style="font-size:.78rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ q.subject|default:q.body|truncatechars:40 }}</td>
         <td>{% if q.status == 'SENT' %}<span class="badge bg">✓</span>{% else %}<span class="badge br">✗</span>{% endif %}</td>
-        <td style="font-size:.73rem;color:var(--slate2);">{{ q.sent_at|date:"d M H:i" }}</td>
+        <td style="font-size:.73rem;color:var(--slate2);">{{ q.sent_at|date:"d M g:i A" }}</td>
       </tr>
       {% empty %}<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--slate);">No messages yet.</td></tr>
       {% endfor %}

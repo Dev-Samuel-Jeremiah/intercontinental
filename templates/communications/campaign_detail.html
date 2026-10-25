@@ -645,7 +645,7 @@ tbody td:last-child  { padding-right: 1.5rem; }
 
             <!-- Sent At -->
             <td data-label="Sent At">
-              <span class="date-text">{{ log.sent_at|date:"d M Y H:i"|default:"—" }}</span>
+              <span class="date-text">{{ log.sent_at|date:"d M Y g:i A"|default:"—" }}</span>
             </td>
 
             <!-- Error -->

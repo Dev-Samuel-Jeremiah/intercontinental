@@ -16,7 +16,7 @@
 <div class="panel"><div style="overflow-x:auto"><table class="tbl">
   <thead><tr><th>Time</th><th>Child</th><th>Collected by</th><th>Checked</th><th>Released by</th><th>Family told</th></tr></thead>
   <tbody>{% for r in rows %}
-    <tr><td style="white-space:nowrap">{{ r.released_at|time:"H:i" }}{% if r.early %}<br><span class="chip amber">early</span>{% endif %}</td>
+    <tr><td style="white-space:nowrap">{{ r.released_at|time:"g:i A" }}{% if r.early %}<br><span class="chip amber">early</span>{% endif %}</td>
       <td><a href="{% url 'users:student_profile' r.student.id %}" style="color:var(--white)"><b>{{ r.student.full_name }}</b></a><br><span class="hint">{{ r.student.class_assigned.name|default:"" }}</span></td>
       <td>{{ r.collector_name }}{% if r.relationship %}<br><span class="hint">{{ r.relationship }}</span>{% endif %}{% if r.reason %}<br><span class="hint">{{ r.reason }}</span>{% endif %}</td>
       <td><span class="chip {% if r.checked_by == 'OVERRIDE' %}red{% elif r.checked_by == 'PASS' %}gold{% else %}green{% endif %}">{{ r.get_checked_by_display|lower }}</span>{% if r.override_reason %}<br><span class="hint">{{ r.override_reason }}</span>{% endif %}</td>

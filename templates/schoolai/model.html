@@ -16,7 +16,7 @@
     {% else %}<p class="hint" style="margin:0">No active version yet.</p>{% endif %}</div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Versions</h3></div>
     {% if versions %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Version</th><th>Trained</th><th>Data</th><th>Tested on latest term</th><th>Status</th></tr></thead><tbody>
-    {% for v in versions %}<tr><td class="name">v{{ v.version }}</td><td>{{ v.trained_at|date:"j M Y, H:i" }}</td><td class="hint">{{ v.samples }}{% if v.terms %} · {{ v.terms }} terms{% endif %}</td>
+    {% for v in versions %}<tr><td class="name">v{{ v.version }}</td><td>{{ v.trained_at|date:"j M Y, g:i A" }}</td><td class="hint">{{ v.samples }}{% if v.terms %} · {{ v.terms }} terms{% endif %}</td>
       <td>{% with m=v.metrics.validation %}{% if kind == 'NEXT_AVG' %}±{{ m.mae }} pts{% if v.metrics.previous %} <span class="hint">(active was ±{{ v.metrics.previous.mae }})</span>{% endif %}
         {% elif kind == 'FAIL_RISK' %}AUC {{ m.auc }} · recall {{ m.recall }}{% if v.metrics.previous %} <span class="hint">(active was {{ v.metrics.previous.auc }})</span>{% endif %}
         {% else %}{{ v.metrics.in_12_months }} in 12 months{% endif %}{% endwith %}<div class="hint">{{ v.note }}</div></td>

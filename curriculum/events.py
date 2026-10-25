@@ -96,9 +96,9 @@ def _when(event):
     if event.end_date and event.end_date != event.start_date:
         text += f' to {event.end_date:%A %d %B}'
     if event.start_time:
-        text += f', {event.start_time:%H:%M}'
+        text += f', {event.start_time:%-I:%M %p}'
         if event.end_time:
-            text += f'–{event.end_time:%H:%M}'
+            text += f'–{event.end_time:%-I:%M %p}'
     return text
 
 

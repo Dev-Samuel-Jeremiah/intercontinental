@@ -19,7 +19,7 @@
   </form>
   <div class="panel"><div class="panel-h"><h3>Sent</h3></div><div class="panel-b">
     <table class="tbl" data-no-export><thead><tr><th>When</th><th>Subject</th><th>SMS</th><th>Email</th></tr></thead><tbody>
-    {% for b in history %}<tr><td>{{ b.created_at|date:"j M Y H:i" }}<br><small class="hint">{{ b.sent_by.get_full_name|default:b.sent_by.username }}</small></td><td class="name">{{ b.subject }}<br><small class="hint">{{ b.message|truncatechars:90 }}</small></td>
+    {% for b in history %}<tr><td>{{ b.created_at|date:"j M Y g:i A" }}<br><small class="hint">{{ b.sent_by.get_full_name|default:b.sent_by.username }}</small></td><td class="name">{{ b.subject }}<br><small class="hint">{{ b.message|truncatechars:90 }}</small></td>
       <td>{% if b.finished_at %}{{ b.sms_sent }}{% if b.sms_failed %} <span class="chip red">{{ b.sms_failed }} failed</span>{% endif %}{% else %}<span class="chip amber">Sending…</span>{% endif %}</td>
       <td>{% if b.finished_at %}{{ b.emails_sent }}{% if b.emails_failed %} <span class="chip red">{{ b.emails_failed }} failed</span>{% endif %}{% endif %}</td></tr>
     {% empty %}<tr><td colspan="4" class="empty">None sent.</td></tr>{% endfor %}

@@ -131,7 +131,7 @@
   <div style="overflow-x:auto"><table class="tbl">
     <thead><tr><th>Receipt</th><th>Customer</th><th>Paid by</th><th style="text-align:right">Total</th></tr></thead>
     <tbody>{% for s in recent %}
-      <tr{% if s.status == 'VOIDED' %} style="opacity:.5"{% endif %}><td><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|time:"H:i" }}</span></td>
+      <tr{% if s.status == 'VOIDED' %} style="opacity:.5"{% endif %}><td><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|time:"g:i A" }}</span></td>
       <td>{{ s.buyer }}</td><td>{{ s.get_method_display }}{% if s.status == 'VOIDED' %} <span class="chip red">voided</span>{% endif %}</td>
       <td class="money" style="text-align:right">₦{{ s.total|floatformat:"-2"|intcomma }}</td></tr>
     {% endfor %}</tbody>

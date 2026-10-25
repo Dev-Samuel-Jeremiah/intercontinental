@@ -9,8 +9,8 @@
 </div></div>
 <div class="fin-grid">
   <div style="display:grid;gap:1rem">
-    <div class="panel"><div class="panel-b"><small class="hint">{{ t.created_at|date:"j M Y H:i" }}</small><p>{{ t.body|linebreaksbr }}</p></div></div>
-    {% for m in msgs %}<div class="panel" {% if m.internal %}style="border-style:dashed"{% endif %}><div class="panel-b"><small class="hint">{% if m.author_id == t.parent_id %}Parent{% else %}{{ m.author.get_full_name|default:m.author.username }}{% endif %} · {{ m.created_at|date:"j M H:i" }}{% if m.internal %} · staff note{% endif %}</small><p>{{ m.body|linebreaksbr }}</p></div></div>{% endfor %}
+    <div class="panel"><div class="panel-b"><small class="hint">{{ t.created_at|date:"j M Y g:i A" }}</small><p>{{ t.body|linebreaksbr }}</p></div></div>
+    {% for m in msgs %}<div class="panel" {% if m.internal %}style="border-style:dashed"{% endif %}><div class="panel-b"><small class="hint">{% if m.author_id == t.parent_id %}Parent{% else %}{{ m.author.get_full_name|default:m.author.username }}{% endif %} · {{ m.created_at|date:"j M g:i A" }}{% if m.internal %} · staff note{% endif %}</small><p>{{ m.body|linebreaksbr }}</p></div></div>{% endfor %}
     <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}
       <div><label>Reply</label><textarea name="body" rows="4"></textarea></div>
       <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="internal" value="1" style="width:auto"> Staff note only (the parent will not see it)</label>

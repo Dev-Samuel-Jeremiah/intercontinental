@@ -274,7 +274,7 @@ def workbook(tenant, start, end):
     ws['A1'] = getattr(tenant, 'name', 'School')
     ws['A1'].font = title_font
     ws['A2'] = f'Income and expenditure, {start:%d %b %Y} to {end:%d %b %Y}'
-    ws['A3'] = f'Exported {timezone.localtime():%d %b %Y %H:%M} · cash basis'
+    ws['A3'] = f'Exported {timezone.localtime():%d %b %Y %-I:%M %p} · cash basis'
     ws['A3'].font = Font(italic=True, color='78716C')
     rows = [
         ('Fees received', report['received']),

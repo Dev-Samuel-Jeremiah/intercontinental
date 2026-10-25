@@ -132,7 +132,7 @@
             <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang=en" style="{% if not chosen %}font-weight:700;{% endif %}">English</a>{% for t in translations %} ·
             <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang={{ t.language }}" style="{% if chosen and chosen.id == t.id %}font-weight:700;{% endif %}">{{ t.get_language_display }}</a>{% endfor %}</p>{% endif %}
         <h2>{% if chosen %}{{ chosen.title }}{% else %}{{ announcement.title }}{% endif %}</h2>
-        <p style="color:#666;">Published: {{ announcement.published_at|date:"M d, Y H:i" }}</p>
+        <p style="color:#666;">Published: {{ announcement.published_at|date:"M d, Y g:i A" }}</p>
         <hr>
         <p style="white-space:pre-wrap">{% if chosen %}{{ chosen.message }}{% else %}{{ announcement.message }}{% endif %}</p>
         {% if chosen %}<p style="color:#888;font-size:.8rem;">Translated with AI and checked by the school. <a href="?{% if student %}student={{ student.id }}&amp;{% endif %}lang=en">Read the English original</a>.</p>{% endif %}

@@ -23,7 +23,7 @@
 {% if exam_classes %}<div class="panel" style="border-color:var(--amber-border)"><div class="panel-b" style="color:var(--amber)"><i class="bi bi-pencil-square"></i> Exams today for {{ exam_classes|join:", " }} — their normal lessons are paused.</div></div>{% endif %}
 {% if covers %}<div class="panel" style="border-color:var(--champagne-border)"><div class="panel-h"><h3><i class="bi bi-person-raised-hand"></i> You're covering</h3></div><div class="panel-b"><div class="ls">
   {% for c in covers %}<a class="lc{% if c.register.taken_at %} done{% endif %}" href="{% url 'timetable:take_register' c.slot.id %}?date={{ day|date:'Y-m-d' }}">
-    <span class="t">{{ c.slot.time_slot.name }} · {{ c.slot.time_slot.start_time|time:"H:i" }}–{{ c.slot.time_slot.end_time|time:"H:i" }}</span>
+    <span class="t">{{ c.slot.time_slot.name }} · {{ c.slot.time_slot.start_time|time:"g:i A" }}–{{ c.slot.time_slot.end_time|time:"g:i A" }}</span>
     <b>{{ c.slot.subject.name }}</b><span class="hint">{{ c.slot.school_class.name }} · for {{ c.absent_teacher.full_name }}</span>
     {% if c.note %}<span class="hint" style="color:var(--champagne-lt)">{{ c.note }}</span>{% endif %}
     {% if c.register.taken_at %}<span class="chip green" style="align-self:flex-start">register taken</span>{% else %}<span class="chip gold" style="align-self:flex-start">cover — take the register</span>{% endif %}
@@ -34,10 +34,10 @@
 <div class="ls">
   {% for r in rows %}
   <a class="lc{% if r.taken %} done{% endif %}" href="{% url 'timetable:take_register' r.slot.id %}?date={{ day|date:'Y-m-d' }}">
-    <span class="t">{{ r.slot.time_slot.name }} · {{ r.slot.time_slot.start_time|time:"H:i" }}–{{ r.slot.time_slot.end_time|time:"H:i" }}</span>
+    <span class="t">{{ r.slot.time_slot.name }} · {{ r.slot.time_slot.start_time|time:"g:i A" }}–{{ r.slot.time_slot.end_time|time:"g:i A" }}</span>
     <b>{{ r.slot.subject.name }}</b>
     <span class="hint">{{ r.slot.school_class.name }}</span>
-    {% if r.taken %}<span class="chip green" style="align-self:flex-start">register taken {{ r.register.taken_at|time:"H:i" }}</span>{% else %}<span class="chip amber" style="align-self:flex-start">register not taken</span>{% endif %}
+    {% if r.taken %}<span class="chip green" style="align-self:flex-start">register taken {{ r.register.taken_at|time:"g:i A" }}</span>{% else %}<span class="chip amber" style="align-self:flex-start">register not taken</span>{% endif %}
   </a>
   {% empty %}<div class="panel" style="grid-column:1/-1"><div class="empty"><i class="bi bi-cup-hot"></i><p>No lessons on your timetable this day.</p></div></div>{% endfor %}
 </div>{% endif %}

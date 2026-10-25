@@ -13,7 +13,7 @@
 </div></div>
 {% include "curriculum/_nav.html" %}
 {% if note.review_comment %}<div class="panel" style="border-color:{% if note.status == 'RETURNED' %}var(--red-border){% else %}var(--green-border){% endif %}"><div class="panel-b">
-  <b>{{ note.reviewed_by.full_name|default:"Reviewer" }}</b> <span class="hint">{{ note.reviewed_at|date:"j M Y, H:i" }}</span><p style="margin:.4rem 0 0">{{ note.review_comment|linebreaksbr }}</p></div></div>{% endif %}
+  <b>{{ note.reviewed_by.full_name|default:"Reviewer" }}</b> <span class="hint">{{ note.reviewed_at|date:"j M Y, g:i A" }}</span><p style="margin:.4rem 0 0">{{ note.review_comment|linebreaksbr }}</p></div></div>{% endif %}
 <div class="fin-grid" style="grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">
   <div class="panel"><div class="panel-b" style="line-height:1.7">
     {% if note.topic %}<p class="hint" style="margin-top:0"><i class="bi bi-link-45deg"></i> Scheme topic: week {{ note.topic.week }} — {{ note.topic.topic }}</p>{% endif %}

@@ -59,7 +59,7 @@
   {% for s in sessions %}
   <div class="card">
     <h2><i class="bi bi-people" style="color:var(--champagne-lt)"></i> {{ s.ev.title }}</h2>
-    <p class="hint" style="margin:-.4rem 0 .4rem">{{ s.ev.date|date:"l j F" }} · {{ s.ev.start_time|time:"H:i" }}–{{ s.ev.end_time|time:"H:i" }} · {{ s.ev.slot_minutes }} minutes each{% if s.ev.location %} · {{ s.ev.location }}{% endif %}</p>
+    <p class="hint" style="margin:-.4rem 0 .4rem">{{ s.ev.date|date:"l j F" }} · {{ s.ev.start_time|time:"g:i A" }}–{{ s.ev.end_time|time:"g:i A" }} · {{ s.ev.slot_minutes }} minutes each{% if s.ev.location %} · {{ s.ev.location }}{% endif %}</p>
     {% if s.ev.notes %}<p class="hint">{{ s.ev.notes }}</p>{% endif %}
     {% if not s.ev.is_open %}<div class="msg error">Booking is closed for this session.</div>{% endif %}
     {% for k in s.kids %}
@@ -69,11 +69,11 @@
         <input type="hidden" name="evening" value="{{ s.ev.id }}"><input type="hidden" name="child" value="{{ k.child.id }}"><input type="hidden" name="teacher" value="{{ t.staff.id }}">
         <div class="who"><b>{{ t.staff.full_name }}</b><div class="hint">{{ t.label }}</div></div>
         {% if t.booking %}
-          <span class="booked"><i class="bi bi-check2-circle"></i> {{ t.booking.start_time|time:"H:i" }}</span>
+          <span class="booked"><i class="bi bi-check2-circle"></i> {{ t.booking.start_time|time:"g:i A" }}</span>
           {% if s.ev.is_open %}<input type="hidden" name="id" value="{{ t.booking.id }}"><button class="ghost" name="action" value="cancel" onclick="return confirm('Cancel this slot?')">Cancel</button>{% endif %}
         {% elif not s.ev.is_open %}<span class="hint">Not booked</span>
         {% elif t.free %}
-          <select name="time" required aria-label="Time">{% for f in t.free %}<option value="{{ f|time:'H:i' }}">{{ f|time:"H:i" }}</option>{% endfor %}</select>
+          <select name="time" required aria-label="Time">{% for f in t.free %}<option value="{{ f|time:'H:i' }}">{{ f|time:"g:i A" }}</option>{% endfor %}</select>
           <input name="note" maxlength="255" placeholder="What you'd like to discuss (optional)">
           <button type="submit" name="action" value="book">Book</button>
         {% else %}<span class="hint">Fully booked</span>{% endif %}

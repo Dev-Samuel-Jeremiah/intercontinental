@@ -12,7 +12,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Club</div>
   <h1 class="fin-title">{{ club.name }}</h1>
-  <p class="fin-sub">{{ club.description }}{% if club.meeting_day %} · {{ club.get_meeting_day_display }}{% if club.meeting_time %} {{ club.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if club.venue %} · {{ club.venue }}{% endif %} · patron{{ club.patrons.all|length|pluralize }}: {% for p in club.patrons.all %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}none yet{% endfor %}</p>
+  <p class="fin-sub">{{ club.description }}{% if club.meeting_day %} · {{ club.get_meeting_day_display }}{% if club.meeting_time %} {{ club.meeting_time|time:"g:i A" }}{% endif %}{% endif %}{% if club.venue %} · {{ club.venue }}{% endif %} · patron{{ club.patrons.all|length|pluralize }}: {% for p in club.patrons.all %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}none yet{% endfor %}</p>
 </div><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:clubs' %}"><i class="bi bi-arrow-left"></i> All clubs</a></div>
 {% include "curriculum/_nav.html" %}
 <div class="fin-grid" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)">

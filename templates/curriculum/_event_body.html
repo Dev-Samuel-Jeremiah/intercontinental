@@ -2,7 +2,7 @@
   <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap"><span style="width:12px;height:12px;border-radius:4px;background:{{ ev.colour }}"></span><span class="hint">{{ ev.get_kind_display }}{% if ev.audience == 'STAFF' %} · staff only{% endif %}</span></div>
   <div class="facts">
     <div><i class="bi bi-calendar3"></i> {{ ev.start_date|date:"l j F Y" }}{% if ev.end_date %} – {{ ev.end_date|date:"l j F" }}{% endif %}</div>
-    {% if ev.start_time %}<div><i class="bi bi-clock"></i> {{ ev.start_time|time:"H:i" }}{% if ev.end_time %} – {{ ev.end_time|time:"H:i" }}{% endif %}</div>{% endif %}
+    {% if ev.start_time %}<div><i class="bi bi-clock"></i> {{ ev.start_time|time:"g:i A" }}{% if ev.end_time %} – {{ ev.end_time|time:"g:i A" }}{% endif %}</div>{% endif %}
     {% if ev.venue %}<div><i class="bi bi-geo-alt"></i> {{ ev.venue }}</div>{% endif %}
   </div>
   {% if ev.description %}<p style="line-height:1.55">{{ ev.description }}</p>{% endif %}

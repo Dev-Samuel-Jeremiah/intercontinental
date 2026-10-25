@@ -453,7 +453,7 @@ def generate_payment_receipt_pdf(payment):
 
     data = [
         ["Receipt No.",    payment.reference],
-        ["Date",           payment.approved_at.strftime('%d %B %Y %H:%M') if payment.approved_at else '—'],
+        ["Date",           payment.approved_at.strftime('%d %B %Y %-I:%M %p') if payment.approved_at else '—'],
         ["Student Name",   student.full_name],
         ["Admission No.",  student.admission_number],
         ["Class",          str(student.class_assigned or '—')],
@@ -592,7 +592,7 @@ def export_statement_excel(wallet, from_date=None, to_date=None):
     thin = Side(style='thin', color='E2E8F0')
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
     for row_idx, r in enumerate(rows, 5):
-        ws.cell(row=row_idx, column=1, value=r['date'].strftime('%d %b %Y %H:%M'))
+        ws.cell(row=row_idx, column=1, value=r['date'].strftime('%d %b %Y %-I:%M %p'))
         ws.cell(row=row_idx, column=2, value=r['description'])
         ws.cell(row=row_idx, column=3, value=r['reference'])
         ws.cell(row=row_idx, column=4, value=float(r['credit'])  if r['credit']  else '')

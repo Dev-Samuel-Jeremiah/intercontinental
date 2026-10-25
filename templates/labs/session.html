@@ -19,7 +19,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow"><a href="{% url 'labs:practical' s.practical.id %}" style="color:inherit;text-decoration:none">{{ s.practical.subject.name }} practical</a></div>
   <h1 class="fin-title">{{ s.practical.title }}</h1>
-  <p class="fin-sub">{{ s.school_class.name }} · {{ s.date|date:"l j F Y" }}{% if s.booking %} · {{ s.booking.booking.start_time|time:"H:i" }}–{{ s.booking.booking.end_time|time:"H:i" }}{% endif %}{% if s.lab %} · {{ s.lab.name }}{% endif %}{% if s.teacher %} · {{ s.teacher.full_name }}{% endif %}</p>
+  <p class="fin-sub">{{ s.school_class.name }} · {{ s.date|date:"l j F Y" }}{% if s.booking %} · {{ s.booking.booking.start_time|time:"g:i A" }}–{{ s.booking.booking.end_time|time:"g:i A" }}{% endif %}{% if s.lab %} · {{ s.lab.name }}{% endif %}{% if s.teacher %} · {{ s.teacher.full_name }}{% endif %}</p>
 </div><span class="chip {% if s.status == 'DONE' %}green{% elif s.status == 'CANCELLED' %}red{% endif %}" style="font-size:.85rem">{{ s.get_status_display }}</span></div>
 <div class="fin-stats">
   <div class="fin-stat"><small>Present</small><b>{{ present }} / {{ records|length }}</b></div>

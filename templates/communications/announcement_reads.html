@@ -13,7 +13,7 @@
   <select name="channel" style="max-width:200px"><option value="BOTH">SMS and email</option><option value="EMAIL">Email only</option><option value="SMS">SMS only</option></select>
   <button class="fin-btn fin-btn-gold" type="submit">Remind families who have not read it</button>
 </form>{% endif %}
-{% if reminders %}<p class="hint">Reminders sent: {% for r in reminders %}{{ r.sent_at|date:"j M H:i" }} ({{ r.families }} families){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+{% if reminders %}<p class="hint">Reminders sent: {% for r in reminders %}{{ r.sent_at|date:"j M g:i A" }} ({{ r.families }} families){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
 <div class="panel"><div class="panel-b">
   <table class="tbl"><thead><tr><th>Family</th><th>Children</th><th>Read</th></tr></thead><tbody>
   {% for r in rep.rows %}<tr><td class="name">{{ r.first.parent_name|default:"—" }}</td><td>{% for c in r.children %}{{ c.full_name }}{% if c.class_assigned %} ({{ c.class_assigned.name }}){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</td>

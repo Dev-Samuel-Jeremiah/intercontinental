@@ -10,7 +10,7 @@
     {% if wallet is not None %}<p class="hint">Family wallet: ₦{{ wallet|floatformat:"2g" }}. You can also pay at the bursary.</p>{% endif %}
   </div>{% endif %}
   <div class="card"><h2><i class="bi bi-calendar-event" style="color:var(--champagne-lt)"></i> Meetings</h2>
-    {% for m in coming %}<div style="padding:.5rem 0;border-top:1px solid var(--rim2)"><b>{{ m.title }}</b><div class="hint">{{ m.date|date:"l j F Y" }}, {{ m.time|time:"H:i" }}{% if m.venue %} · {{ m.venue }}{% endif %}</div>{% if m.agenda %}<p style="margin:.3rem 0 0;font-size:.88rem">{{ m.agenda|linebreaksbr }}</p>{% endif %}</div>{% empty %}<p class="hint">No meetings planned.</p>{% endfor %}
+    {% for m in coming %}<div style="padding:.5rem 0;border-top:1px solid var(--rim2)"><b>{{ m.title }}</b><div class="hint">{{ m.date|date:"l j F Y" }}, {{ m.time|time:"g:i A" }}{% if m.venue %} · {{ m.venue }}{% endif %}</div>{% if m.agenda %}<p style="margin:.3rem 0 0;font-size:.88rem">{{ m.agenda|linebreaksbr }}</p>{% endif %}</div>{% empty %}<p class="hint">No meetings planned.</p>{% endfor %}
   </div>
   {% if past %}<div class="card"><h2>Minutes of past meetings</h2>{% for m in past %}<details style="padding:.4rem 0;border-top:1px solid var(--rim2)"><summary><b>{{ m.title }}</b> — {{ m.date|date:"j M Y" }}</summary><p style="font-size:.88rem">{{ m.minutes|linebreaksbr }}</p></details>{% endfor %}</div>{% endif %}
   {% if execs %}<div class="card"><h2>PTA executives</h2>{% for e in execs %}<p style="margin:.3rem 0"><b>{{ e.name }}</b> — {{ e.role }}{% if e.phone %} · <a href="tel:{{ e.phone }}">{{ e.phone }}</a>{% endif %}{% if e.email %} · <a href="mailto:{{ e.email }}">{{ e.email }}</a>{% endif %}</p>{% endfor %}</div>{% endif %}

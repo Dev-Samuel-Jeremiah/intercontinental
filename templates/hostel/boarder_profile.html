@@ -823,15 +823,15 @@ document.addEventListener('DOMContentLoaded',()=>{
                 {% endif %}
               </td>
 
-              <td>{{ mv.datetime|date:"d M Y H:i" }}</td>
+              <td>{{ mv.datetime|date:"d M Y g:i A" }}</td>
 
               <td>
                 {% if mv.expected_return %}
-                  {{ mv.expected_return|date:"d M Y H:i" }}
+                  {{ mv.expected_return|date:"d M Y g:i A" }}
 
                   {% if mv.actual_return %}
                   <div style="color:#4ade80;font-size:.74rem;margin-top:4px;">
-                    Returned {{ mv.actual_return|date:"d M Y H:i" }}
+                    Returned {{ mv.actual_return|date:"d M Y g:i A" }}
                   </div>
                   {% endif %}
 

@@ -18,7 +18,7 @@
   <div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> Needs attention</h3></div><div class="panel-b">
       {% for u in o.admins_no_2fa %}{% if forloop.first %}<p><b>Administrators without two-step sign-in:</b></p>{% endif %}<span class="chip red">{{ u.username }}</span> {% if forloop.last %}<p class="hint" style="margin-top:.4rem">{% if o.cfg.require_2fa == 'NONE' %}Consider requiring it in <a href="{% url 'security:settings' %}">Rules</a>.{% else %}They will be asked to set it up at their next sign-in.{% endif %}</p>{% endif %}{% endfor %}
-      {% for b in o.open_breaches %}<p style="margin:.4rem 0"><a href="{% url 'security:breach' b.pk %}"><span class="chip red">{{ b.reference }}</span> {{ b.title }}</a>{% if not b.reported_at and not b.not_reported_reason %} <span class="hint">— NDPC deadline {{ b.deadline|date:"j M H:i" }}</span>{% endif %}</p>{% endfor %}
+      {% for b in o.open_breaches %}<p style="margin:.4rem 0"><a href="{% url 'security:breach' b.pk %}"><span class="chip red">{{ b.reference }}</span> {{ b.title }}</a>{% if not b.reported_at and not b.not_reported_reason %} <span class="hint">— NDPC deadline {{ b.deadline|date:"j M g:i A" }}</span>{% endif %}</p>{% endfor %}
       {% for r in o.open_requests %}<p style="margin:.4rem 0"><a href="{% url 'security:request' r.pk %}"><span class="chip {% if r.overdue %}red{% else %}amber{% endif %}">{{ r.reference }}</span> {{ r.get_kind_display }} — {{ r.requester_name }}</a> <span class="hint">due {{ r.due_on|date:"j M" }}</span></p>{% endfor %}
       {% if not o.notice or not o.notice.dpo_name %}<p style="margin:.4rem 0"><span class="chip amber">No DPO</span> Name the school's Data Protection Officer in <a href="{% url 'security:privacy' %}">Notice &amp; DPO</a>.</p>{% endif %}
       {% if not o.admins_no_2fa and not o.open_breaches and not o.open_requests and o.notice.dpo_name %}<p class="hint">Nothing needs attention.</p>{% endif %}
@@ -30,7 +30,7 @@
     </div></div>
   </div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-journal-text"></i> Recent sensitive actions</h3><a class="fin-btn fin-btn-sm" href="{% url 'security:audit' %}">Audit trail</a></div>
-    <table class="tbl">{% for e in o.recent %}<tr><td style="white-space:nowrap">{{ e.at|date:"j M H:i" }}</td><td class="name">{{ e.username|default:"System" }}</td><td>{{ e.summary }}</td></tr>{% empty %}<tr><td class="empty">Nothing recorded yet.</td></tr>{% endfor %}</table>
+    <table class="tbl">{% for e in o.recent %}<tr><td style="white-space:nowrap">{{ e.at|date:"j M g:i A" }}</td><td class="name">{{ e.username|default:"System" }}</td><td>{{ e.summary }}</td></tr>{% empty %}<tr><td class="empty">Nothing recorded yet.</td></tr>{% endfor %}</table>
   </div>
 </div>
 {% endblock %}

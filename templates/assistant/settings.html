@@ -34,7 +34,7 @@
     </div></div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Latest requests</h3></div>
       {% if recent %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>When</th><th>Tool</th><th>AI</th><th>Tokens</th></tr></thead><tbody>
-      {% for u in recent %}<tr><td>{{ u.created_at|date:"j M H:i" }}<div class="hint">{{ u.user.username|default:"—" }}</div></td><td>{% for k, v in feature_names.items %}{% if k == u.feature %}{{ v }}{% endif %}{% endfor %}</td>
+      {% for u in recent %}<tr><td>{{ u.created_at|date:"j M g:i A" }}<div class="hint">{{ u.user.username|default:"—" }}</div></td><td>{% for k, v in feature_names.items %}{% if k == u.feature %}{{ v }}{% endif %}{% endfor %}</td>
         <td>{{ u.provider }}{% if not u.ok %} <span class="chip red" title="{{ u.error }}">failed</span>{% endif %}</td><td>{{ u.tokens|intcomma }}</td></tr>{% endfor %}
       </tbody></table></div>{% else %}<div class="empty"><p>No requests yet.</p></div>{% endif %}
     </div>

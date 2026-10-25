@@ -9,7 +9,7 @@
       <div class="db-hello"><span class="db-avatar">{{ staff.full_name|slice:":1"|upper }}</span>
         <div><div class="db-eyebrow">Teacher · My teaching day</div>
           <h1>{{ greeting }}, <em>{{ staff.full_name|default:request.user.username }}</em></h1>
-          <p>{% now "l j F Y" %}{% if ins.day.now %} · <b style="color:var(--acc2)">Now:</b> {{ ins.day.now.slot.school_class.name }} {{ ins.day.now.slot.subject.name }} until {{ ins.day.now.slot.time_slot.end_time|time:"H:i" }}{% elif ins.day.next %} · <b style="color:var(--acc2)">Next:</b> {{ ins.day.next.slot.school_class.name }} {{ ins.day.next.slot.subject.name }} at {{ ins.day.next.slot.time_slot.start_time|time:"H:i" }}{% endif %}</p></div></div>
+          <p>{% now "l j F Y" %}{% if ins.day.now %} · <b style="color:var(--acc2)">Now:</b> {{ ins.day.now.slot.school_class.name }} {{ ins.day.now.slot.subject.name }} until {{ ins.day.now.slot.time_slot.end_time|time:"g:i A" }}{% elif ins.day.next %} · <b style="color:var(--acc2)">Next:</b> {{ ins.day.next.slot.school_class.name }} {{ ins.day.next.slot.subject.name }} at {{ ins.day.next.slot.time_slot.start_time|time:"g:i A" }}{% endif %}</p></div></div>
       <div class="db-actions">
         <a class="db-btn" href="{% url 'users:select_class_mark' %}"><i class="bi bi-clipboard-check"></i> Take register</a>
         <a class="db-btn" href="{% url 'results:manual_score_entry' %}"><i class="bi bi-123"></i> Enter scores</a>
@@ -22,7 +22,7 @@
 
     {% if 'teacher:kpis' not in menu_hidden %}
   <div class="db-kpis">
-    <a class="db-kpi" href="{% url 'timetable:my_lessons' %}"><span class="ic"><i class="bi bi-easel2-fill"></i></span><div class="v">{{ ins.day.rows|length }}</div><div class="l">Lessons today</div><div class="s">{% if ins.day.next %}next at {{ ins.day.next.slot.time_slot.start_time|time:"H:i" }}{% elif ins.day.rows %}all done for today{% else %}none on the timetable{% endif %}</div></a>
+    <a class="db-kpi" href="{% url 'timetable:my_lessons' %}"><span class="ic"><i class="bi bi-easel2-fill"></i></span><div class="v">{{ ins.day.rows|length }}</div><div class="l">Lessons today</div><div class="s">{% if ins.day.next %}next at {{ ins.day.next.slot.time_slot.start_time|time:"g:i A" }}{% elif ins.day.rows %}all done for today{% else %}none on the timetable{% endif %}</div></a>
     <a class="db-kpi" href="{% url 'teaching:home' %}"><span class="ic"><i class="bi bi-inbox-fill"></i></span><div class="v" style="{% if ins.queue.total %}color:var(--amber){% endif %}">{{ ins.queue.total|default:0 }}</div><div class="l">To mark</div><div class="s">{{ ins.queue.submissions|default:0 }} submissions · {{ ins.queue.notes|default:0 }} notes</div></a>
     <div class="db-kpi"><span class="ic"><i class="bi bi-people-fill"></i></span><div class="v">{{ ins.classes|length }}</div><div class="l">My classes</div><div class="s">{{ assignments.count }} subject{{ assignments.count|pluralize }} taught</div></div>
     <div class="db-kpi"><span class="ic"><i class="bi bi-hourglass-split"></i></span><div class="v" style="{% if ins.deadline and ins.deadline.days <= 7 %}color:var(--red){% endif %}">{% if ins.deadline %}{% if ins.deadline.locked %}<i class="bi bi-lock"></i>{% else %}{{ ins.deadline.days }}{% endif %}{% else %}—{% endif %}</div><div class="l">Days to enter scores</div><div class="s">{% if ins.deadline %}{% if ins.deadline.locked %}entry closed{% else %}closes {{ ins.deadline.date|date:"j M" }}{% endif %}{% else %}no deadline set{% endif %}</div></div>
@@ -34,8 +34,8 @@
     {% if 'teacher:today' not in menu_hidden %}
     <div class="db-card c7"><div class="db-card-h"><h3><i class="bi bi-clock"></i> Today's timetable</h3><a href="{% url 'timetable:my_lessons' %}">Registers →</a></div>
       {% if ins.day.rows %}<div class="db-tl">{% for r in ins.day.rows %}<div class="it {{ r.state }}">
-        <span class="tm">{{ r.slot.time_slot.start_time|time:"H:i" }}</span><span class="dot"></span>
-        <div><b>{{ r.slot.school_class.name }} · {{ r.slot.subject.name }}</b><span class="sub">until {{ r.slot.time_slot.end_time|time:"H:i" }}{% if r.slot.room %} · {{ r.slot.room.name }}{% endif %}</span></div>
+        <span class="tm">{{ r.slot.time_slot.start_time|time:"g:i A" }}</span><span class="dot"></span>
+        <div><b>{{ r.slot.school_class.name }} · {{ r.slot.subject.name }}</b><span class="sub">until {{ r.slot.time_slot.end_time|time:"g:i A" }}{% if r.slot.room %} · {{ r.slot.room.name }}{% endif %}</span></div>
         <span>{% if r.taken %}<span class="db-tag green"><i class="bi bi-check2"></i> Register</span>{% elif r.state == 'done' %}<span class="db-tag amber">Register missing</span>{% elif r.state == 'now' %}<span class="db-tag acc">Now</span>{% endif %}</span></div>{% endfor %}</div>
       {% else %}<div class="db-empty"><i class="bi bi-cup-hot"></i>No lessons on the timetable today.</div>{% endif %}</div>
     {% endif %}
@@ -69,7 +69,7 @@
 
     {% if 'teacher:exams' not in menu_hidden %}
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-pencil-square"></i> My exams</h3><a href="{% url 'cbt:cbt_create_exam' %}">New →</a></div>
-      {% for e in ins.exams %}<div class="db-row"><span class="ico {% if e.published %}green{% else %}amber{% endif %}"><i class="bi bi-file-earmark-check"></i></span><div class="t"><b>{{ e.title }}</b><span>{{ e.subject.name }} · {{ e.start_time|date:"D j M, H:i" }}</span></div><span class="db-tag {% if e.published %}green{% else %}amber{% endif %}">{% if e.published %}Live{% else %}Draft{% endif %}</span></div>
+      {% for e in ins.exams %}<div class="db-row"><span class="ico {% if e.published %}green{% else %}amber{% endif %}"><i class="bi bi-file-earmark-check"></i></span><div class="t"><b>{{ e.title }}</b><span>{{ e.subject.name }} · {{ e.start_time|date:"D j M, g:i A" }}</span></div><span class="db-tag {% if e.published %}green{% else %}amber{% endif %}">{% if e.published %}Live{% else %}Draft{% endif %}</span></div>
       {% empty %}<div class="db-empty"><i class="bi bi-pencil"></i>No upcoming exams.</div>{% endfor %}</div>
     {% endif %}
 
@@ -81,7 +81,7 @@
 
     {% if 'teacher:events' not in menu_hidden %}
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-calendar-event"></i> Coming up</h3></div>
-      {% for e in ins.events %}<div class="db-row"><span class="ico" style="flex-direction:column;line-height:1"><b style="font-size:.85rem">{{ e.start_date|date:"j" }}</b><small style="font-size:.55rem">{{ e.start_date|date:"M" }}</small></span><div class="t"><b>{{ e.title }}</b><span>{{ e.start_date|date:"l" }}{% if e.start_time %} · {{ e.start_time|time:"H:i" }}{% endif %}</span></div></div>
+      {% for e in ins.events %}<div class="db-row"><span class="ico" style="flex-direction:column;line-height:1"><b style="font-size:.85rem">{{ e.start_date|date:"j" }}</b><small style="font-size:.55rem">{{ e.start_date|date:"M" }}</small></span><div class="t"><b>{{ e.title }}</b><span>{{ e.start_date|date:"l" }}{% if e.start_time %} · {{ e.start_time|time:"g:i A" }}{% endif %}</span></div></div>
       {% empty %}<div class="db-empty"><i class="bi bi-calendar"></i>Nothing coming up.</div>{% endfor %}</div>
     {% endif %}
   </div>

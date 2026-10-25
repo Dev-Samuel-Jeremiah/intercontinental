@@ -313,7 +313,7 @@ class DetentionSession(TenantModelMixin, models.Model):
         ordering = ['-date', 'starts']
 
     def __str__(self):
-        return f'{self.date:%a %d %b} {self.starts:%H:%M} · {self.room}'
+        return f'{self.date:%a %d %b} {self.starts:%-I:%M %p} · {self.room}'
 
 
 class Detention(TenantModelMixin, models.Model):

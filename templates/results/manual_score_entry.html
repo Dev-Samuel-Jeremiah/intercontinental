@@ -733,7 +733,7 @@ table td.tl { text-align: left; padding-left: 18px; }
   {% if lock %}<div style="display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;padding:.75rem 1rem;margin:0 0 1rem;border-radius:14px;font-size:.86rem;{% if lock.is_locked %}border:1px solid rgba(232,112,112,.35);background:rgba(232,112,112,.08);color:#e87070{% else %}border:1px solid rgba(244,210,31,.3);background:rgba(244,210,31,.07);color:#ffe066{% endif %}">
     <i class="bi {% if lock.is_locked %}bi-lock-fill{% else %}bi-hourglass-split{% endif %}"></i>
     {% if lock.is_locked %}Score entry for this term closed on {{ lock.locks_on|date:"j M Y" }}. You can view scores, but changes won't be saved until an administrator reopens entry.
-    {% elif lock.reopened_until and lock.reopened_until > now %}Entry reopened until {{ lock.reopened_until|date:"j M, H:i" }} — {{ lock.reopen_reason }}
+    {% elif lock.reopened_until and lock.reopened_until > now %}Entry reopened until {{ lock.reopened_until|date:"j M, g:i A" }} — {{ lock.reopen_reason }}
     {% else %}Score entry closes after {{ lock.locks_on|date:"l j M Y" }}.{% endif %}
   </div>{% endif %}
 

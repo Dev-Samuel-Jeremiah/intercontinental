@@ -172,7 +172,7 @@ def payment_approved_notify(sender, instance, **kwargs):
                         <tr><td style="color:#64748b;padding:4px 0;">Method</td>
                             <td>{instance.get_method_display()}</td></tr>
                         <tr><td style="color:#64748b;padding:4px 0;">Date</td>
-                            <td>{instance.approved_at.strftime('%d %B %Y %H:%M') if instance.approved_at else '—'}</td></tr>
+                            <td>{instance.approved_at.strftime('%d %B %Y %-I:%M %p') if instance.approved_at else '—'}</td></tr>
                     </table>
                 </div>
                 <p>Thank you for your payment. You can view your receipt on the parent portal.</p>
@@ -220,27 +220,27 @@ def hostel_movement_notify(sender, instance, created, **kwargs):
                 <p>Dear {parent_name},</p>
                 <p>This is to inform you that <strong>{student.full_name}</strong> 
                 has been checked into the hostel.</p>
-                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %H:%M')}</p>
+                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %-I:%M %p')}</p>
                 <p>If you have any questions, please contact the school office.</p>
             """,
             'EXEAT': f"""
                 <p>Dear {parent_name},</p>
                 <p><strong>{student.full_name}</strong> has been granted an exeat/leave.</p>
-                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %H:%M')}</p>
-                {'<p><strong>Expected Return:</strong> ' + instance.expected_return.strftime('%d %B %Y at %H:%M') + '</p>' if instance.expected_return else ''}
+                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %-I:%M %p')}</p>
+                {'<p><strong>Expected Return:</strong> ' + instance.expected_return.strftime('%d %B %Y at %-I:%M %p') + '</p>' if instance.expected_return else ''}
                 <p><strong>Reason:</strong> {instance.reason or 'Not specified'}</p>
                 <p>Please ensure your child returns to school on time.</p>
             """,
             'CHECK_OUT': f"""
                 <p>Dear {parent_name},</p>
                 <p><strong>{student.full_name}</strong> has checked out of the hostel.</p>
-                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %H:%M')}</p>
+                <p><strong>Date/Time:</strong> {instance.datetime.strftime('%d %B %Y at %-I:%M %p')}</p>
             """,
         }
         sms_map = {
-            'CHECK_IN':  f"{_school_name(student)}: {student.full_name} has checked into the hostel on {instance.datetime.strftime('%d/%m/%Y %H:%M')}.",
+            'CHECK_IN':  f"{_school_name(student)}: {student.full_name} has checked into the hostel on {instance.datetime.strftime('%d/%m/%Y %-I:%M %p')}.",
             'EXEAT':     f"{_school_name(student)}: Exeat granted for {student.full_name}. {'Expected return: ' + instance.expected_return.strftime('%d/%m/%Y') if instance.expected_return else ''} Reason: {(instance.reason or 'N/A')[:50]}",
-            'CHECK_OUT': f"{_school_name(student)}: {student.full_name} has checked out of the hostel on {instance.datetime.strftime('%d/%m/%Y %H:%M')}.",
+            'CHECK_OUT': f"{_school_name(student)}: {student.full_name} has checked out of the hostel on {instance.datetime.strftime('%d/%m/%Y %-I:%M %p')}.",
         }
 
         if parent_email and mv_type in subject_map:

@@ -69,8 +69,8 @@ def _person(role):
 
 def _holds(cond, role):
     """Would this {% if %} condition be true for a member of staff with this role?"""
-    if 'user' not in cond:                           # about the data (e.g. an active session), not the person
-        return True
+    if 'menu_hidden' in cond or not re.search(r'\buser\b(?![s:])', cond):
+        return True                                  # about the data or the menu settings, not the person
     try:
         return Template('{% if ' + cond + ' %}1{% endif %}').render(Context({'user': _person(role)})) == '1'
     except (TemplateSyntaxError, Exception):
@@ -118,9 +118,10 @@ def _clean(text):
 
 def sections_for(role):
     """The sections (and links) this role can see at all — what the settings page offers to hide."""
+    from dashboard.access import ADMIN_ONLY
     out = []
     for g in sidebar():
-        items = [i for i in g['items'] if role in i['roles'] and i['name'] not in LOCKED]
+        items = [i for i in g['items'] if role in i['roles'] and i['name'] not in LOCKED and i['name'] not in ADMIN_ONLY]
         if items:
             out.append({'id': g['id'], 'label': g['label'], 'items': items})
     return out
@@ -186,13 +187,27 @@ def restricted_role(user, tenant):
 
 
 def hidden_for(request):
-    """What the signed-in person must not see, worked out once per request."""
+    """What the school has hidden from the signed-in person's role (these pages are closed too)."""
     if not hasattr(request, '_menu_hidden'):
         tenant = getattr(request, 'tenant', None)
         role = restricted_role(getattr(request, 'user', None), tenant)
         request._menu_hidden = expand(role, saved_hidden(tenant, role)) if role else frozenset()
         request._menu_role = role
     return request._menu_hidden
+
+
+def not_shown(request):
+    """Everything left out of the person's sidebar: what the school hid, plus links they could only be
+    turned away from (admin-only pages, a permission switch they do not have, a job they do not do)."""
+    if not hasattr(request, '_menu_not_shown'):
+        hidden = hidden_for(request)
+        role = request._menu_role
+        if role:
+            from dashboard.access import closed_to
+            user, tenant = request.user, request.tenant
+            hidden = expand(role, set(hidden) | closed_to(user, tenant, user.staff))
+        request._menu_not_shown = hidden
+    return request._menu_not_shown
 
 
 def blocked(role, hidden, view_name):
@@ -217,7 +232,7 @@ def blocked(role, hidden, view_name):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def context(request):
-    return {'menu_hidden': hidden_for(request)}
+    return {'menu_hidden': not_shown(request)}
 
 
 class MenuAccessMiddleware:

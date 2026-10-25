@@ -29,8 +29,8 @@
 <div class="sheets">{% for s in sheets %}<div class="sheet">
   <div class="hd">{% if school.logo %}<img src="{{ school.logo.url }}" alt="">{% endif %}<div><div style="font-weight:800;letter-spacing:.08em;font-size:12px">{{ school.name|upper }}</div><h2>{{ s.title }}</h2><div style="font-size:10px;color:#78716c!important">{{ tt.config.name }}</div></div></div>
   <table><thead><tr><th class="pt" style="background:{{ colour }}">Period</th>{% for c, l in s.days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
-    {% for r in s.rows %}{% if r.slot.is_break %}<tr class="brk"><td class="pt">{{ r.slot.start_time|time:"H:i" }}</td><td colspan="{{ s.days|length }}">{{ r.slot.name|upper }}</td></tr>
-    {% else %}<tr><td class="pt">{{ r.slot.name }}<br><small>{{ r.slot.start_time|time:"H:i" }}–{{ r.slot.end_time|time:"H:i" }}</small></td>{% for cell in r.cells %}<td>{% if cell.entry %}<b>{{ cell.entry.subject.name }}</b><small>{% if s.kind == 'teacher' %}{{ cell.entry.school_class.name }}{% else %}{{ cell.entry.teacher.full_name }}{% endif %}{% if cell.entry.room %} · {{ cell.entry.room.name }}{% endif %}</small>{% endif %}</td>{% endfor %}</tr>{% endif %}{% endfor %}
+    {% for r in s.rows %}{% if r.slot.is_break %}<tr class="brk"><td class="pt">{{ r.slot.start_time|time:"g:i A" }}</td><td colspan="{{ s.days|length }}">{{ r.slot.name|upper }}</td></tr>
+    {% else %}<tr><td class="pt">{{ r.slot.name }}<br><small>{{ r.slot.start_time|time:"g:i A" }}–{{ r.slot.end_time|time:"g:i A" }}</small></td>{% for cell in r.cells %}<td>{% if cell.entry %}<b>{{ cell.entry.subject.name }}</b><small>{% if s.kind == 'teacher' %}{{ cell.entry.school_class.name }}{% else %}{{ cell.entry.teacher.full_name }}{% endif %}{% if cell.entry.room %} · {{ cell.entry.room.name }}{% endif %}</small>{% endif %}</td>{% endfor %}</tr>{% endif %}{% endfor %}
   </tbody></table>
 </div>{% empty %}<div class="panel"><div class="empty"><i class="bi bi-calendar-x"></i><p>Nothing to print yet.</p></div></div>{% endfor %}</div>
 {% endblock %}

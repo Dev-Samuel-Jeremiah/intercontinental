@@ -67,7 +67,7 @@
             {% elif r.state == 'leave' %}<span class="rp-chip blue"><i class="bi bi-calendar2-x"></i> On leave</span>
             {% else %}<span class="rp-chip grey">Not expected</span>{% endif %}
           </td>
-          <td data-label="Submitted">{% if r.report.submitted_at %}<b>{{ r.report.submitted_at|date:"D j M" }}</b><br><small class="rp-muted">{{ r.report.submitted_at|date:"H:i" }}</small>{% else %}<span class="rp-muted">—</span>{% endif %}</td>
+          <td data-label="Submitted">{% if r.report.submitted_at %}<b>{{ r.report.submitted_at|date:"D j M" }}</b><br><small class="rp-muted">{{ r.report.submitted_at|date:"g:i A" }}</small>{% else %}<span class="rp-muted">—</span>{% endif %}</td>
           <td data-label="Summary">{% if r.report and r.report.status != 'DRAFT' %}<div class="rp-snip">{{ r.report.work_done }}</div>{% else %}<span class="rp-muted">—</span>{% endif %}</td>
           <td style="text-align:right">
             {% if r.report and r.report.status != 'DRAFT' %}

@@ -40,8 +40,8 @@
       {% if lab.st.chem_expiring %}<span class="chip red">{{ lab.st.chem_expiring|length }} expiring</span>{% endif %}
       {% if lab.st.incidents %}<span class="chip red">{{ lab.st.incidents }} open incident{{ lab.st.incidents|pluralize }}</span>{% endif %}
     </div>
-    <div class="lb-today">{% if lab.st.today %}<b>Today:</b> {% for lb in lab.st.today %}{{ lb.booking.start_time|time:"H:i" }} {{ lb.school_class.name|default:lb.booking.purpose }}{% if not forloop.last %} · {% endif %}{% endfor %}
-      {% elif lab.st.next %}Next booking: <b>{{ lab.st.next.booking.date|date:"D j M" }}, {{ lab.st.next.booking.start_time|time:"H:i" }}</b> — {{ lab.st.next.booking.purpose }}{% else %}No bookings coming up.{% endif %}</div>
+    <div class="lb-today">{% if lab.st.today %}<b>Today:</b> {% for lb in lab.st.today %}{{ lb.booking.start_time|time:"g:i A" }} {{ lb.school_class.name|default:lb.booking.purpose }}{% if not forloop.last %} · {% endif %}{% endfor %}
+      {% elif lab.st.next %}Next booking: <b>{{ lab.st.next.booking.date|date:"D j M" }}, {{ lab.st.next.booking.start_time|time:"g:i A" }}</b> — {{ lab.st.next.booking.purpose }}{% else %}No bookings coming up.{% endif %}</div>
   </a>{% endfor %}
 </div>
 {% else %}
@@ -57,7 +57,7 @@
     {% else %}<div class="panel-b"><p class="hint" style="margin:0">No practicals planned. Open a practical and choose "Plan for a class".</p></div>{% endif %}
   </div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-bandaid"></i> Open safety incidents</h3></div>
-    {% if incidents %}<table class="tbl"><tbody>{% for i in incidents %}<tr><td class="name"><a href="{% url 'labs:incident' i.id %}" style="color:inherit">{{ i.get_kind_display }}</a><div class="hint">{{ i.lab.name }} · {{ i.happened_at|date:"j M, H:i" }}</div></td>
+    {% if incidents %}<table class="tbl"><tbody>{% for i in incidents %}<tr><td class="name"><a href="{% url 'labs:incident' i.id %}" style="color:inherit">{{ i.get_kind_display }}</a><div class="hint">{{ i.lab.name }} · {{ i.happened_at|date:"j M, g:i A" }}</div></td>
       <td><span class="chip {% if i.severity == 'SERIOUS' %}red{% elif i.severity == 'MODERATE' %}amber{% endif %}">{{ i.severity|title }}</span></td></tr>{% endfor %}</tbody></table>
     {% else %}<div class="panel-b"><p class="hint" style="margin:0"><i class="bi bi-check-circle" style="color:var(--green)"></i> No open incidents.</p></div>{% endif %}
   </div>

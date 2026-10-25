@@ -537,8 +537,8 @@ def staff_hours(request):
             cfg.staff_starts_at, cfg.staff_ends_at, cfg.staff_late_grace_minutes = starts, ends, grace
             cfg.working_days, cfg.off_day_clock_in = days, bool(request.POST.get('off_day_clock_in'))
             cfg.save()
-            messages.success(request, f'Saved. Staff are due by {sa.late_after(cfg, timezone.localdate()):%H:%M} '
-                                      f'and finish at {ends:%H:%M}.')
+            messages.success(request, f'Saved. Staff are due by {sa.late_after(cfg, timezone.localdate()):%-I:%M %p} '
+                                      f'and finish at {ends:%-I:%M %p}.')
             return redirect('safety:staff_hours')
     return render(request, 'safety/staff_hours.html', {
         'cfg': cfg, 'days': [(str(i), name, str(i) in cfg.working_days) for i, name in enumerate(sa.DAY_NAMES)],
@@ -561,7 +561,7 @@ def phone_clock(request):
             log = clock.clock_by_phone(staff, request.POST.get('lat'), request.POST.get('lng'),
                                        request.POST.get('accuracy'))
             return JsonResponse({'ok': True, 'direction': log.get_direction_display(),
-                                 'time': timezone.localtime(log.scanned_at).strftime('%H:%M'),
+                                 'time': timezone.localtime(log.scanned_at).strftime('%-I:%M %p'),
                                  'distance': log.distance_m})
         except clock.ClockError as problem:
             return JsonResponse({'ok': False, 'error': str(problem)}, status=400)

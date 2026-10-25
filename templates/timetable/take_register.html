@@ -18,7 +18,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">{{ slot.school_class.name }} · {{ slot.time_slot.name }}</div>
   <h1 class="fin-title">{{ slot.subject.name }}</h1>
-  <p class="fin-sub">{{ day|date:"l j F" }} · {{ slot.time_slot.start_time|time:"H:i" }}–{{ slot.time_slot.end_time|time:"H:i" }} · {{ slot.teacher.full_name }}{% if register.taken_at %} · last saved {{ register.taken_at|time:"H:i" }}{% endif %}</p>
+  <p class="fin-sub">{{ day|date:"l j F" }} · {{ slot.time_slot.start_time|time:"g:i A" }}–{{ slot.time_slot.end_time|time:"g:i A" }} · {{ slot.teacher.full_name }}{% if register.taken_at %} · last saved {{ register.taken_at|time:"g:i A" }}{% endif %}</p>
 </div><button type="button" class="fin-btn" id="all-present"><i class="bi bi-check-all"></i> Everyone here</button></div>
 <form method="post" class="panel"><div class="panel-b">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}">
   {% for r in rows %}

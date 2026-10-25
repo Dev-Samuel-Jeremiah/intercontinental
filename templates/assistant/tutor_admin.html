@@ -19,11 +19,11 @@
   </div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-chat-dots"></i> Chats</h3></div>
     {% if students %}<table class="tbl"><thead><tr><th>Student</th><th>Questions</th><th>Last</th></tr></thead><tbody>
-    {% for r in students %}<tr><td class="name"><a href="?student={{ r.user.id }}" style="color:inherit">{{ r.user.get_full_name|default:r.user.username }}</a>{% if r.held %} <span class="chip red">{{ r.held }} stopped</span>{% endif %}</td><td>{{ r.count }}</td><td>{{ r.last|date:"j M H:i" }}</td></tr>{% endfor %}
+    {% for r in students %}<tr><td class="name"><a href="?student={{ r.user.id }}" style="color:inherit">{{ r.user.get_full_name|default:r.user.username }}</a>{% if r.held %} <span class="chip red">{{ r.held }} stopped</span>{% endif %}</td><td>{{ r.count }}</td><td>{{ r.last|date:"j M g:i A" }}</td></tr>{% endfor %}
     </tbody></table>{% else %}<div class="empty"><p>No chats yet.</p></div>{% endif %}
   </div>
 </div>
 {% if transcript %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-person"></i> {{ who.user.get_full_name|default:who.user.username }}</h3></div><div class="panel-b">
-  {% for m in transcript %}<div style="padding:.45rem 0;border-bottom:1px solid var(--rim)"><b>{% if m.role == 'user' %}{{ who.user.get_full_name|default:who.user.username }}{% else %}Tutor{% endif %}</b> <span class="hint">{{ m.created_at|date:"j M H:i" }}</span>{% if m.held %} <span class="chip red">stopped by the safety check</span>{% endif %}<div style="white-space:pre-wrap">{{ m.text }}</div></div>{% endfor %}
+  {% for m in transcript %}<div style="padding:.45rem 0;border-bottom:1px solid var(--rim)"><b>{% if m.role == 'user' %}{{ who.user.get_full_name|default:who.user.username }}{% else %}Tutor{% endif %}</b> <span class="hint">{{ m.created_at|date:"j M g:i A" }}</span>{% if m.held %} <span class="chip red">stopped by the safety check</span>{% endif %}<div style="white-space:pre-wrap">{{ m.text }}</div></div>{% endfor %}
 </div></div>{% endif %}
 {% endblock %}

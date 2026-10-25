@@ -26,5 +26,5 @@
     <a class="tile" href="{% url 'communications:chat' %}"><i class="bi bi-chat-left-text"></i><b>Messages</b><span>Talk to a teacher</span></a>
     <a class="tile" href="{% url 'communications:preferences' %}"><i class="bi bi-sliders"></i><b>Preferences</b><span>Language and how we reach you</span></a>
   </div>
-  {% if appointments %}<div class="card"><h2>Coming up</h2>{% for a in appointments %}<p style="margin:.3rem 0">{{ a.date|date:"D j M" }} {{ a.start|time:"H:i" }} — {{ a.staff.full_name }} ({{ a.get_mode_display }})</p>{% endfor %}</div>{% endif %}
+  {% if appointments %}<div class="card"><h2>Coming up</h2>{% for a in appointments %}<p style="margin:.3rem 0">{{ a.date|date:"D j M" }} {{ a.start|time:"g:i A" }} — {{ a.staff.full_name }} ({{ a.get_mode_display }})</p>{% endfor %}</div>{% endif %}
 {% include "family/_end.html" %}

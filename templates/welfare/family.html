@@ -17,7 +17,7 @@
     {% if c.report.praise %}<p class="hint" style="margin:.2rem 0">Praised most for: {% for p in c.report.praise %}{{ p.label|lower }} ({{ p.n }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
     {% for h in c.report.hits %}<p style="margin:.2rem 0"><span class="chip{% if h.threshold.kind == 'MERIT' %} ok{% else %} no{% endif %}">{{ h.threshold.name }}</span></p>{% endfor %}
     {% for i in c.report.incidents %}<p style="margin:.2rem 0;font-size:.9rem">{{ i.date|date:"j M" }} — {{ i.get_category_display }}{% if i.action %} · {{ i.get_action_display }}{% endif %}</p>{% endfor %}
-    {% for d in c.detentions %}<div class="msg">Detention on {{ d.session.date|date:"l j M" }}, {{ d.session.starts|time:"H:i" }}–{{ d.session.ends|time:"H:i" }} in {{ d.session.room }} — {{ d.reason }}</div>{% endfor %}
+    {% for d in c.detentions %}<div class="msg">Detention on {{ d.session.date|date:"l j M" }}, {{ d.session.starts|time:"g:i A" }}–{{ d.session.ends|time:"g:i A" }} in {{ d.session.room }} — {{ d.reason }}</div>{% endfor %}
     {% for p in c.plans %}<p class="hint" style="margin:.4rem 0">Support plan: {{ p.title }} — next review {{ p.review_on|date:"j M Y" }}</p>{% endfor %}
 
     {% if c.accidents or c.screen %}<h2 style="margin-top:1rem">From the school nurse</h2>

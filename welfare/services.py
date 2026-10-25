@@ -255,7 +255,7 @@ def give_dose(student, user, data, plan=None):
                                       given_by=user)
     if not plan:
         tell_family(student, f'Medicine given at school: {student.full_name}',
-                    f'{student.full_name} was given {medicine} ({dose}) at {timezone.localtime(d.given_at):%H:%M}'
+                    f'{student.full_name} was given {medicine} ({dose}) at {timezone.localtime(d.given_at):%-I:%M %p}'
                     f'{" for " + d.reason if d.reason else ""}.')
     return d
 
@@ -319,7 +319,7 @@ def report_accident(tenant, user, data, student=None):
         witnesses=(data.get('witnesses') or '').strip()[:255], reported_by=user)
     if student:
         text = (f'{student.full_name} had an accident at school ({a.get_place_display().lower()}) at '
-                f'{timezone.localtime(at):%H:%M}: {a.injury}.'
+                f'{timezone.localtime(at):%-I:%M %p}: {a.injury}.'
                 f'{" First aid: " + a.first_aid if a.first_aid else ""}')
         sms = None
         if severity != 'MINOR':
@@ -489,10 +489,10 @@ def set_detention(session, student, reason, user, incident=None):
     except IntegrityError:
         raise WelfareError(f'{student.full_name} is already in that detention.')
     tell_family(student, f'Detention: {student.full_name}',
-                f'{student.full_name} has a detention on {session.date:%A %d %B} from {session.starts:%H:%M} to '
-                f'{session.ends:%H:%M} in {session.room}. Reason: {d.reason}. Please arrange collection after it '
+                f'{student.full_name} has a detention on {session.date:%A %d %B} from {session.starts:%-I:%M %p} to '
+                f'{session.ends:%-I:%M %p} in {session.room}. Reason: {d.reason}. Please arrange collection after it '
                 f'ends.', sms=f'{student.tenant.name}: {student.full_name} has detention {session.date:%a %d %b} '
-                              f'{session.starts:%H:%M}-{session.ends:%H:%M}.')
+                              f'{session.starts:%-I:%M %p}-{session.ends:%-I:%M %p}.')
     return d
 
 
@@ -542,7 +542,7 @@ def letter_text(case):
             f'day{"s" if case.days != 1 else ""}).\n\nReason: {case.reason}\n\n'
             f'During the suspension your child should not come to school and should complete any work set. '
             f'{st.full_name.split()[0]} may return after a meeting with you and the school'
-            f'{" on " + timezone.localtime(case.meeting_at).strftime("%A %d %B at %H:%M") if case.meeting_at else ""}.'
+            f'{" on " + timezone.localtime(case.meeting_at).strftime("%A %d %B at %-I:%M %p") if case.meeting_at else ""}.'
             f'\n\nYours faithfully,\n\nThe Principal\n{st.tenant.name}')
 
 

@@ -17,7 +17,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">{{ session.get_mode_display }}{% if session.topic %} · {{ session.topic }}{% endif %}{% if session.difficulty %} · {{ session.difficulty|title }}{% endif %}</div>
   <h1 class="fin-title">{{ session.score }} / {{ session.total }} — <em>{{ session.percent }}%</em></h1>
-  <p class="fin-sub">{% if session.percent == 100 %}Perfect score — brilliant! {% elif session.percent >= 70 %}Great work! {% elif session.percent >= 50 %}Good effort — keep going. {% else %}Keep practising — every mistake is a lesson. {% endif %}{% if utme is not None %}That's roughly <b>{{ utme }}/400</b> on the UTME scale. {% endif %}Finished {{ session.submitted_at|date:"j M Y, H:i" }}.</p>
+  <p class="fin-sub">{% if session.percent == 100 %}Perfect score — brilliant! {% elif session.percent >= 70 %}Great work! {% elif session.percent >= 50 %}Good effort — keep going. {% else %}Keep practising — every mistake is a lesson. {% endif %}{% if utme is not None %}That's roughly <b>{{ utme }}/400</b> on the UTME scale. {% endif %}Finished {{ session.submitted_at|date:"j M Y, g:i A" }}.</p>
 </div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
   {% if missed %}<form method="post" action="{% url 'cbt:practice' %}">{% csrf_token %}<input type="hidden" name="mode" value="MISTAKES"><input type="hidden" name="source" value="{{ session.id }}"><input type="hidden" name="feedback" value="INSTANT"><input type="hidden" name="per_subject" value="60">
     <button class="fin-btn fin-btn-gold fin-btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i> Retry my {{ missed }} mistake{{ missed|pluralize }}</button></form>{% endif %}

@@ -5,7 +5,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow"><a href="{% url 'labs:lab' inc.lab.id %}?tab=safety" style="color:inherit;text-decoration:none">{{ inc.lab.name }} · Safety</a></div>
   <h1 class="fin-title">{{ inc.get_kind_display }}</h1>
-  <p class="fin-sub">{{ inc.happened_at|date:"l j F Y, H:i" }} · reported by {{ reporter|default:"—" }}</p>
+  <p class="fin-sub">{{ inc.happened_at|date:"l j F Y, g:i A" }} · reported by {{ reporter|default:"—" }}</p>
 </div><div style="display:flex;gap:.4rem"><span class="chip {% if inc.severity == 'SERIOUS' %}red{% elif inc.severity == 'MODERATE' %}amber{% endif %}" style="font-size:.8rem">{{ inc.get_severity_display }}</span>
   {% if inc.closed %}<span class="chip green" style="font-size:.8rem">Closed</span>{% else %}<span class="chip" style="font-size:.8rem">Open</span>{% endif %}<button class="fin-btn fin-btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print</button></div></div>
 <div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">

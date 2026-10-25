@@ -27,7 +27,7 @@
   <table class="tbl"><thead><tr><th>Student</th><th>Class</th><th>Answer</th><th>Signed</th><th>Note</th></tr></thead><tbody>
   {% for r in sm.rows %}<tr><td class="name">{{ r.student.full_name }}</td><td>{{ r.student.class_assigned.name|default:"" }}</td>
     <td>{% if r.reply %}{% if r.reply.answer == 'YES' %}<span class="chip green">Yes</span>{% else %}<span class="chip red">No</span>{% endif %}{% else %}<span class="chip">Waiting</span>{% endif %}</td>
-    <td>{% if r.reply %}{{ r.reply.signed_name }}<br><small class="hint">{{ r.reply.created_at|date:"j M H:i" }}</small>{% endif %}</td><td>{{ r.reply.note|default:"" }}</td></tr>{% endfor %}
+    <td>{% if r.reply %}{{ r.reply.signed_name }}<br><small class="hint">{{ r.reply.created_at|date:"j M g:i A" }}</small>{% endif %}</td><td>{{ r.reply.note|default:"" }}</td></tr>{% endfor %}
   </tbody></table>
 </div></div>
 {% endblock %}

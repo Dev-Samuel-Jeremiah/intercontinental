@@ -357,7 +357,7 @@ def book(parent, student, staff, day, start, mode, reason):
         appt = Appointment.objects.create(tenant_id=staff.tenant_id, staff=staff, parent=parent, student=student,
                                           date=day, start=slot['start'], end=slot['end'], mode=mode,
                                           reason=reason[:255], note=slot['location'])
-    when = f'{day:%A %d %B} at {slot["start"]:%H:%M}'
+    when = f'{day:%A %d %B} at {slot["start"]:%-I:%M %p}'
     if staff.user.email:
         _email(staff.user.email, f'Parent appointment: {when}',
                f'<p>A parent of <b>{escape(student.full_name)}</b> booked {appt.get_mode_display().lower()} with you '
@@ -383,7 +383,7 @@ def cancel(appt, user, note=''):
     if to:
         who = appt.staff.full_name if staff_side else 'The parent'
         _email(to, 'Appointment cancelled', f'<p>{escape(who)} cancelled the appointment on '
-                                            f'{appt.date:%A %d %B} at {appt.start:%H:%M}.'
+                                            f'{appt.date:%A %d %B} at {appt.start:%-I:%M %p}.'
                                             f'{" Note: " + escape(note) if note else ""}</p>')
 
 

@@ -25,7 +25,7 @@
 </div>{% endif %}</div>
 <div class="fin-grid">
   <div class="evp">{% include "curriculum/_event_body.html" %}
-    {% if manager and ev.reminder_days %}<p class="hint">{% if ev.reminded_at %}Reminder sent {{ ev.reminded_at|date:"j M, H:i" }}.{% else %}A reminder goes out {{ ev.reminder_days }} day{{ ev.reminder_days|pluralize }} before.{% endif %}</p>{% endif %}
+    {% if manager and ev.reminder_days %}<p class="hint">{% if ev.reminded_at %}Reminder sent {{ ev.reminded_at|date:"j M, g:i A" }}.{% else %}A reminder goes out {{ ev.reminder_days }} day{{ ev.reminder_days|pluralize }} before.{% endif %}</p>{% endif %}
   </div>
   {% if manager and ev.rsvp %}
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Replies</h3><span class="hint">{{ summary.headcount }} coming{% if ev.capacity %} of {{ ev.capacity }} places{% endif %}</span></div>

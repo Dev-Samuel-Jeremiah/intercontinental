@@ -16,7 +16,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow"><a href="{% url 'timetable:meetings' %}" style="color:inherit">Parent meetings</a></div>
   <h1 class="fin-title">{{ ev.title }}</h1>
-  <p class="fin-sub">{{ ev.date|date:"l j F Y" }} · {{ ev.start_time|time:"H:i" }}–{{ ev.end_time|time:"H:i" }} · {{ ev.slot_minutes }}-minute slots{% if ev.location %} · {{ ev.location }}{% endif %}{% if classes %} · {% for c in classes %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %} · every class{% endif %}</p>
+  <p class="fin-sub">{{ ev.date|date:"l j F Y" }} · {{ ev.start_time|time:"g:i A" }}–{{ ev.end_time|time:"g:i A" }} · {{ ev.slot_minutes }}-minute slots{% if ev.location %} · {{ ev.location }}{% endif %}{% if classes %} · {% for c in classes %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %} · every class{% endif %}</p>
 </div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
   <form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="toggle">{% if ev.is_open %}<i class="bi bi-lock"></i> Close booking{% else %}<i class="bi bi-unlock"></i> Open booking{% endif %}</button></form>
   <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
@@ -30,7 +30,7 @@
 </div>
 <div class="panel print"><div class="panel-h"><h3><i class="bi bi-grid-3x3"></i> Who is seeing whom</h3><span class="hint">{{ school.name }}</span></div>
   <div class="panel-b" style="overflow-x:auto">
-  {% if rows %}<table class="mg"><thead><tr><th></th>{% for t in times %}<th>{{ t|time:"H:i" }}</th>{% endfor %}</tr></thead><tbody>
+  {% if rows %}<table class="mg"><thead><tr><th></th>{% for t in times %}<th>{{ t|time:"g:i A" }}</th>{% endfor %}</tr></thead><tbody>
     {% for r in rows %}<tr><td class="who">{{ r.teacher.full_name }}<div class="hint">{{ r.count }} booked</div></td>
       {% for b in r.cells %}{% if b %}<td class="bk" title="{{ b.note }}">{{ b.student.full_name }}<div class="hint">{{ b.student.class_assigned.name }}</div>
         <form method="post" class="noprint">{% csrf_token %}<input type="hidden" name="id" value="{{ b.id }}"><button name="action" value="cancel" title="Cancel this booking" onclick="return confirm('Cancel and tell the parent?')"><i class="bi bi-x-circle"></i></button></form></td>

@@ -556,7 +556,7 @@ class AuditLog(TenantModelMixin, models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.action}  by {self.performed_by}  {self.created_at:%d %b %Y %H:%M}"
+        return f"{self.action}  by {self.performed_by}  {self.created_at:%d %b %Y %-I:%M %p}"
 
 # ── Fee Discounts, Rebates & Scholarships ────────────────────────────────────
 class FeeDiscount(TenantModelMixin, models.Model):

@@ -29,7 +29,7 @@
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Sessions</h3></div>
     {% if evenings %}<table class="tbl"><thead><tr><th>Session</th><th>When</th><th>Booked</th><th></th></tr></thead><tbody>
     {% for ev in evenings %}<tr><td class="name"><a href="{% url 'timetable:meeting_detail' ev.id %}" style="color:inherit">{{ ev.title }}</a>{% if ev.location %}<div class="hint">{{ ev.location }}</div>{% endif %}</td>
-      <td>{{ ev.date|date:"D j M Y" }}<div class="hint">{{ ev.start_time|time:"H:i" }}–{{ ev.end_time|time:"H:i" }} · {{ ev.slot_minutes }} min slots</div></td>
+      <td>{{ ev.date|date:"D j M Y" }}<div class="hint">{{ ev.start_time|time:"g:i A" }}–{{ ev.end_time|time:"g:i A" }} · {{ ev.slot_minutes }} min slots</div></td>
       <td>{{ ev.booked }}</td>
       <td>{% if ev.date < today %}<span class="chip">Past</span>{% elif ev.is_open %}<span class="chip green">Open</span>{% else %}<span class="chip amber">Closed</span>{% endif %}</td></tr>{% endfor %}
     </tbody></table>{% else %}<div class="empty"><i class="bi bi-people"></i><p>No meeting sessions yet.</p></div>{% endif %}

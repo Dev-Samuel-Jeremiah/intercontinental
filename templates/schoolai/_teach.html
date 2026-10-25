@@ -1,5 +1,5 @@
 <form method="post" style="padding:.9rem 1.1rem;border-bottom:1px solid var(--rim)">{% csrf_token %}<input type="hidden" name="id" value="{{ q.id }}">
-  <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap"><b style="color:var(--white)">“{{ q.text }}”</b><span class="hint">{{ q.created_at|date:"j M, H:i" }} · {% if q.audience == 'STAFF' %}staff{% else %}a parent or student{% endif %}</span></div>
+  <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap"><b style="color:var(--white)">“{{ q.text }}”</b><span class="hint">{{ q.created_at|date:"j M, g:i A" }} · {% if q.audience == 'STAFF' %}staff{% else %}a parent or student{% endif %}</span></div>
   {% if q.status == 'ANSWERED' %}<div class="hint" style="margin:.3rem 0">It said: {{ q.answer|truncatechars:200 }}</div>{% endif %}
   <div class="fin-form" style="margin-top:.5rem"><textarea name="answer" rows="3" placeholder="The answer, as you would tell them" required></textarea>
     <div class="row2"><input name="title" maxlength="200" placeholder="Title (optional — defaults to the question)"><select name="audience">{% for k, l in audiences %}<option value="{{ k }}" {% if q.audience == 'STAFF' and k == 'STAFF' or q.audience != 'STAFF' and k == 'ALL' %}selected{% endif %}>Tell: {{ l }}</option>{% endfor %}</select></div>

@@ -174,7 +174,7 @@
                 {% for sub in submissions %}
                 <tr class="{% if sub.grade is None %}not-graded-row{% endif %}">
                     <td>{{ sub.student.get_full_name }}</td>
-                    <td>{{ sub.submitted_at|date:"M d, Y H:i" }}</td>
+                    <td>{{ sub.submitted_at|date:"M d, Y g:i A" }}</td>
                     <td>
                         {% if sub.grade is not None %}
                             <span class="grade-badge graded">{{ sub.final_grade }}</span>{% if sub.penalty_percent %} <small style="opacity:.7" title="{{ sub.grade }} less the late penalty">−{{ sub.penalty_percent }}% late</small>{% endif %}

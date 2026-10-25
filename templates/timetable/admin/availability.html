@@ -19,7 +19,7 @@
   <div class="panel">{% if teacher %}<div class="panel-h"><h3><i class="bi bi-person-x"></i> {{ teacher.full_name }}</h3><span class="hint">tap to mark unavailable</span></div><div class="panel-b" style="overflow-x:auto">
     <form method="post">{% csrf_token %}<input type="hidden" name="teacher" value="{{ teacher.id }}">
       <table class="av"><thead><tr><th></th>{% for c, l in days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
-        {% for row in grid %}<tr><th>{{ row.period.name }}<div class="hint" style="font-weight:400;text-transform:none;letter-spacing:0">{{ row.period.start_time|time:"H:i" }}</div></th>
+        {% for row in grid %}<tr><th>{{ row.period.name }}<div class="hint" style="font-weight:400;text-transform:none;letter-spacing:0">{{ row.period.start_time|time:"g:i A" }}</div></th>
           {% for c in row.cells %}<td><input type="checkbox" name="off" value="{{ c.key }}" id="o{{ c.key }}" {% if c.off %}checked{% endif %}><label for="o{{ c.key }}">available</label></td>{% endfor %}</tr>{% endfor %}
       </tbody></table>
       <button class="fin-btn fin-btn-gold" type="submit" style="margin-top:.8rem">Save</button></form>

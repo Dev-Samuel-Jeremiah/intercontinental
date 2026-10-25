@@ -34,7 +34,7 @@
     <hr>
     <table>
       <tr><td>Receipt</td><td class="r"><b>{{ sale.number }}</b></td></tr>
-      <tr><td>Date</td><td class="r">{{ sale.created_at|date:"j M Y, H:i" }}</td></tr>
+      <tr><td>Date</td><td class="r">{{ sale.created_at|date:"j M Y, g:i A" }}</td></tr>
       <tr><td>Customer</td><td class="r">{{ sale.buyer }}</td></tr>
       {% if sale.student %}<tr><td>Admission no.</td><td class="r">{{ sale.student.admission_number }}</td></tr>{% endif %}
     </table>
@@ -57,7 +57,7 @@
     </table>
     <hr>
     <div class="c">Served by {% if sale.sold_by.get_full_name %}{{ sale.sold_by.get_full_name }}{% else %}{{ sale.sold_by.username|default:"—" }}{% endif %}
-      {% if sale.status == 'VOIDED' %}<br><b style="color:#b91c1c!important">Voided {{ sale.voided_at|date:"j M Y H:i" }} — {{ sale.void_reason }}</b>{% else %}<br>Thank you{% endif %}</div>
+      {% if sale.status == 'VOIDED' %}<br><b style="color:#b91c1c!important">Voided {{ sale.voided_at|date:"j M Y g:i A" }} — {{ sale.void_reason }}</b>{% else %}<br>Thank you{% endif %}</div>
   </div>
 
   <div class="rc-actions">

@@ -45,22 +45,22 @@ def clashes(group):
         if not _overlap(group.start_time, group.end_time, g.start_time, g.end_time):
             continue
         if group.teacher_id and g.teacher_id == group.teacher_id:
-            out.append(f'{g.teacher.full_name} also runs {g.name} {g.start_time:%H:%M}–{g.end_time:%H:%M}.')
+            out.append(f'{g.teacher.full_name} also runs {g.name} {g.start_time:%-I:%M %p}–{g.end_time:%-I:%M %p}.')
         if group.room_id and g.room_id == group.room_id:
-            out.append(f'{g.room.name} is used by {g.name} {g.start_time:%H:%M}–{g.end_time:%H:%M}.')
+            out.append(f'{g.room.name} is used by {g.name} {g.start_time:%-I:%M %p}–{g.end_time:%-I:%M %p}.')
     tt = published_timetable(group.tenant)
     if tt and group.teacher_id:
         for e in TimetableSlot.objects.filter(timetable=tt, teacher_id=group.teacher_id, day=group.day) \
                 .select_related('time_slot', 'school_class', 'subject'):
             if _overlap(group.start_time, group.end_time, e.time_slot.start_time, e.time_slot.end_time):
                 out.append(f'{group.teacher.full_name} teaches {e.school_class.name} {e.subject.name} '
-                           f'{e.time_slot.start_time:%H:%M}–{e.time_slot.end_time:%H:%M}.')
+                           f'{e.time_slot.start_time:%-I:%M %p}–{e.time_slot.end_time:%-I:%M %p}.')
     if tt and group.room_id:
         for e in TimetableSlot.objects.filter(timetable=tt, room_id=group.room_id, day=group.day) \
                 .select_related('time_slot', 'school_class'):
             if _overlap(group.start_time, group.end_time, e.time_slot.start_time, e.time_slot.end_time):
-                out.append(f'{group.room.name} has {e.school_class.name} {e.time_slot.start_time:%H:%M}–'
-                           f'{e.time_slot.end_time:%H:%M}.')
+                out.append(f'{group.room.name} has {e.school_class.name} {e.time_slot.start_time:%-I:%M %p}–'
+                           f'{e.time_slot.end_time:%-I:%M %p}.')
     return out
 
 

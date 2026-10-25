@@ -15,7 +15,7 @@
 <div class="panel" style="max-width:720px"><div class="panel-b">
   <p><b>{{ r.reference }}</b> · {{ r.get_kind_display }} · status: <span class="chip gold">{{ r.get_status_display }}</span></p>
   <p>{{ r.description|linebreaksbr }}</p>
-  {% for m in msgs %}<div style="border-left:3px solid {% if m.from_school %}var(--champagne,#f4d21f){% else %}var(--rim2){% endif %};padding:.3rem .8rem;margin:.5rem 0"><small class="hint">{% if m.from_school %}The school{% else %}You{% endif %}, {{ m.created_at|date:"j M H:i" }}</small><br>{{ m.body|linebreaksbr }}</div>{% endfor %}
+  {% for m in msgs %}<div style="border-left:3px solid {% if m.from_school %}var(--champagne,#f4d21f){% else %}var(--rim2){% endif %};padding:.3rem .8rem;margin:.5rem 0"><small class="hint">{% if m.from_school %}The school{% else %}You{% endif %}, {{ m.created_at|date:"j M g:i A" }}</small><br>{{ m.body|linebreaksbr }}</div>{% endfor %}
 </div></div>
 {% endif %}
 {% endblock %}

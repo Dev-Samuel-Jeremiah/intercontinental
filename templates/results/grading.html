@@ -51,7 +51,7 @@
   {% for row in terms %}<div class="dl">
     <div><b>{{ row.term.name }}</b>
       {% if row.lock %}{% if row.lock.is_locked %}<span class="chip red"><i class="bi bi-lock-fill"></i> closed since {{ row.lock.locks_on|date:"j M" }}</span>
-        {% elif row.lock.reopened_until %}<span class="chip amber">reopened until {{ row.lock.reopened_until|date:"j M H:i" }}</span> <span class="hint">{{ row.lock.reopen_reason }}</span>
+        {% elif row.lock.reopened_until %}<span class="chip amber">reopened until {{ row.lock.reopened_until|date:"j M g:i A" }}</span> <span class="hint">{{ row.lock.reopen_reason }}</span>
         {% else %}<span class="chip gold">closes after {{ row.lock.locks_on|date:"j M Y" }}</span>{% endif %}
       {% else %}<span class="hint">no deadline</span>{% endif %}</div>
     <div style="display:flex;gap:.6rem;flex-wrap:wrap;justify-content:flex-end">

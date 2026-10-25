@@ -413,7 +413,7 @@ def grant_exeat_view(request, student_id):
                 authorized_by=request.user, parent_consent=consent)
     messages.success(request,
         f'Exeat granted to {student.full_name}. '
-        f'Expected return: {expected:%d %b %Y %H:%M}.')
+        f'Expected return: {expected:%d %b %Y %-I:%M %p}.')
     return redirect('hostel:boarder_profile', student_id=student.id)
 
 

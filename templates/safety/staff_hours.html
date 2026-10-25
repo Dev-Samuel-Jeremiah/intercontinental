@@ -27,14 +27,14 @@
 </div>
 
 <div style="max-width:680px">
-  <div class="sh-sum" style="margin-bottom:1rem"><i class="bi bi-alarm"></i><span>Now: due by <b>{{ late_after|time:"H:i" }}</b>{% if cfg.staff_late_grace_minutes %} (start {{ cfg.staff_starts_at|time:"H:i" }} + {{ cfg.staff_late_grace_minutes }} min grace){% endif %}, closing time <b>{{ cfg.staff_ends_at|time:"H:i" }}</b>.</span></div>
+  <div class="sh-sum" style="margin-bottom:1rem"><i class="bi bi-alarm"></i><span>Now: due by <b>{{ late_after|time:"g:i A" }}</b>{% if cfg.staff_late_grace_minutes %} (start {{ cfg.staff_starts_at|time:"g:i A" }} + {{ cfg.staff_late_grace_minutes }} min grace){% endif %}, closing time <b>{{ cfg.staff_ends_at|time:"g:i A" }}</b>.</span></div>
   <div class="panel"><div class="panel-b">
     <form method="post" class="fin-form">{% csrf_token %}
       <div class="row2">
         <div><label for="starts">Work starts at</label><input id="starts" type="time" name="staff_starts_at" value="{{ cfg.staff_starts_at|time:'H:i' }}" required>
           <div class="hint">Clocking in after this (plus the grace) shows as late.</div></div>
         <div><label for="grace">Grace before “late” (minutes)</label><input id="grace" type="number" name="staff_late_grace_minutes" min="0" max="180" value="{{ cfg.staff_late_grace_minutes }}">
-          <div class="hint">e.g. 10 lets 07:30 + 10 = 07:40 still count as on time.</div></div>
+          <div class="hint">e.g. 10 lets 7:30 AM + 10 minutes = 7:40 AM still count as on time.</div></div>
       </div>
       <div><label for="ends">Closing time</label><input id="ends" type="time" name="staff_ends_at" value="{{ cfg.staff_ends_at|time:'H:i' }}" required>
         <div class="hint">Clocking out before this on a working day is shown as “left early”.</div></div>

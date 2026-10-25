@@ -22,7 +22,7 @@
   <div class="panel" {% if not runs %}style="grid-column:1/-1"{% endif %}><div class="panel-h"><h3><i class="bi bi-collection"></i> Groups</h3></div>
     {% if groups %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Group</th><th>When</th><th>Children</th>{% if runs %}<th>Paid</th><th>Still to pay</th>{% endif %}<th></th></tr></thead><tbody>
     {% for g in groups %}<tr><td class="name">{% if runs or g in mine %}<a href="{% url 'timetable:extra_detail' g.id %}" style="color:inherit">{{ g.name }}</a>{% else %}{{ g.name }}{% endif %}<div class="hint">{{ g.teacher.full_name|default:"No teacher yet" }}{% if g.room %} · {{ g.room.name }}{% endif %}</div></td>
-      <td>{{ g.get_day_display }}<div class="hint">{{ g.start_time|time:"H:i" }}–{{ g.end_time|time:"H:i" }}</div></td>
+      <td>{{ g.get_day_display }}<div class="hint">{{ g.start_time|time:"g:i A" }}–{{ g.end_time|time:"g:i A" }}</div></td>
       <td>{{ g.money.count }}{% if g.capacity %} / {{ g.capacity }}{% endif %}</td>
       {% if runs %}<td class="money">₦{{ g.money.paid|floatformat:2|intcomma }}</td><td class="money">{% if g.money.due %}<span style="color:var(--amber)">₦{{ g.money.due|floatformat:2|intcomma }}</span>{% else %}—{% endif %}</td>{% endif %}
       <td>{% if not g.active %}<span class="chip">Closed</span>{% elif g.open_to_parents %}<span class="chip green">Open to parents</span>{% endif %}</td></tr>{% endfor %}

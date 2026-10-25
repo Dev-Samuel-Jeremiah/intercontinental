@@ -13,7 +13,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow"><a href="{% url 'timetable:extras' %}" style="color:inherit">After-school lessons</a></div>
   <h1 class="fin-title">{{ g.name }}</h1>
-  <p class="fin-sub">{{ g.get_day_display }}s {{ g.start_time|time:"H:i" }}–{{ g.end_time|time:"H:i" }}{% if g.room %} · {{ g.room.name }}{% endif %} · {{ g.teacher.full_name|default:"no teacher yet" }}{% if g.term %} · {{ g.term }}{% endif %} · ₦{{ g.fee|floatformat:2|intcomma }} per child</p>
+  <p class="fin-sub">{{ g.get_day_display }}s {{ g.start_time|time:"g:i A" }}–{{ g.end_time|time:"g:i A" }}{% if g.room %} · {{ g.room.name }}{% endif %} · {{ g.teacher.full_name|default:"no teacher yet" }}{% if g.term %} · {{ g.term }}{% endif %} · ₦{{ g.fee|floatformat:2|intcomma }} per child</p>
 </div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
   <button class="fin-btn" onclick="window.print()"><i class="bi bi-printer"></i> Print list</button>
   {% if runs %}<form method="post">{% csrf_token %}<button class="fin-btn" name="action" value="toggle">{% if g.active %}<i class="bi bi-lock"></i> Close group{% else %}<i class="bi bi-unlock"></i> Reopen{% endif %}</button></form>{% endif %}

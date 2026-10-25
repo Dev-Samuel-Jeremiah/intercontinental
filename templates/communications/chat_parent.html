@@ -8,7 +8,7 @@
   {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
   {% if convs %}<div class="card"><h2><i class="bi bi-chat-left-text" style="color:var(--champagne-lt)"></i> Your conversations</h2>
     {% for c in convs %}<div style="padding:.6rem 0;border-top:1px solid var(--rim2)"><a href="{% url 'communications:chat_thread' c.pk %}"><b>{{ c.subject }}</b></a>{% if c.unread %} <span class="chip ok">{{ c.unread }} new</span>{% endif %}{% if c.closed %} <span class="chip">Closed</span>{% endif %}
-      <div class="hint">{{ c.teacher.full_name }} · about {{ c.student.full_name }} · {{ c.last_at|date:"j M, H:i" }}</div></div>{% endfor %}
+      <div class="hint">{{ c.teacher.full_name }} · about {{ c.student.full_name }} · {{ c.last_at|date:"j M, g:i A" }}</div></div>{% endfor %}
   </div>{% endif %}
   {% if enabled %}
   <div class="card"><h2><i class="bi bi-plus-circle" style="color:var(--champagne-lt)"></i> New message</h2>

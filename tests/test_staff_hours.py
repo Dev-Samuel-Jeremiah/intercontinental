@@ -40,7 +40,7 @@ class StaffHoursTests(Base):
 
     def test_the_school_sets_the_times(self):
         page = self.set_hours()
-        self.assertContains(page, 'due by 07:40')
+        self.assertContains(page, 'Staff are due by 7:40 AM and finish at 3:30 PM')
         cfg = settings_for(self.school)
         self.assertEqual((cfg.staff_starts_at, cfg.staff_late_grace_minutes, cfg.staff_ends_at),
                          (time(7, 30), 10, time(15, 30)))

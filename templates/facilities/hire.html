@@ -9,7 +9,7 @@
 {% include "facilities/_nav.html" %}
 <div class="fin-grid">
   <div class="panel"><div class="panel-b"><table class="tbl"><tbody>
-    {% for b in rows %}<tr><td class="name"><a href="{% url 'facilities:booking' b.pk %}">{{ b.event }}</a><br><small class="hint">{{ b.client }} · {{ b.space }} · {{ b.starts|date:"D j M Y H:i" }}</small></td><td class="num">₦{{ b.total|floatformat:0 }}{% if b.balance > 0 and b.status != 'CANCELLED' %}<br><small class="hint">owes ₦{{ b.balance|floatformat:0 }}</small>{% endif %}</td><td><span class="chip{% if b.status == 'CONFIRMED' %} gold{% elif b.status == 'DONE' %} ok{% endif %}">{{ b.get_status_display }}</span></td></tr>
+    {% for b in rows %}<tr><td class="name"><a href="{% url 'facilities:booking' b.pk %}">{{ b.event }}</a><br><small class="hint">{{ b.client }} · {{ b.space }} · {{ b.starts|date:"D j M Y g:i A" }}</small></td><td class="num">₦{{ b.total|floatformat:0 }}{% if b.balance > 0 and b.status != 'CANCELLED' %}<br><small class="hint">owes ₦{{ b.balance|floatformat:0 }}</small>{% endif %}</td><td><span class="chip{% if b.status == 'CONFIRMED' %} gold{% elif b.status == 'DONE' %} ok{% endif %}">{{ b.get_status_display }}</span></td></tr>
     {% empty %}<tr><td class="empty">No bookings yet.</td></tr>{% endfor %}
   </tbody></table></div></div>
   <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}

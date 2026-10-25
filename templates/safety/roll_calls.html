@@ -9,7 +9,7 @@
 </div></div>
 {% if open_roll %}
 <div class="panel" style="border-color:var(--red-border);background:var(--red-dim)"><div class="panel-b" style="display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;align-items:center">
-  <div><b style="color:var(--white);font-size:1.05rem">{{ open_roll.title }}</b> <span class="chip red">{{ open_roll.get_kind_display }}</span><div class="hint">started {{ open_roll.started_at|time:"H:i" }}{% if open_roll.assembly_point %} · {{ open_roll.assembly_point }}{% endif %}</div></div>
+  <div><b style="color:var(--white);font-size:1.05rem">{{ open_roll.title }}</b> <span class="chip red">{{ open_roll.get_kind_display }}</span><div class="hint">started {{ open_roll.started_at|time:"g:i A" }}{% if open_roll.assembly_point %} · {{ open_roll.assembly_point }}{% endif %}</div></div>
   <a class="fin-btn fin-btn-gold" href="{% url 'safety:roll_call' open_roll.id %}"><i class="bi bi-broadcast"></i> Open the live roll call</a>
 </div></div>
 {% else %}
@@ -25,7 +25,7 @@
 {% endif %}
 <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Past roll calls</h3></div>
   <div style="overflow-x:auto"><table class="tbl"><tbody>{% for r in history %}
-    <tr><td style="white-space:nowrap">{{ r.started_at|date:"j M Y, H:i" }}</td><td><a href="{% url 'safety:roll_call' r.id %}" style="color:var(--white)"><b>{{ r.title }}</b></a> <span class="chip {% if r.kind == 'REAL' %}red{% endif %}">{{ r.get_kind_display }}</span></td>
+    <tr><td style="white-space:nowrap">{{ r.started_at|date:"j M Y, g:i A" }}</td><td><a href="{% url 'safety:roll_call' r.id %}" style="color:var(--white)"><b>{{ r.title }}</b></a> <span class="chip {% if r.kind == 'REAL' %}red{% endif %}">{{ r.get_kind_display }}</span></td>
       <td class="hint">took {{ r.started_at|timesince:r.ended_at }}</td></tr>
   {% empty %}<tr><td class="empty"><p class="hint">No roll calls yet.</p></td></tr>{% endfor %}</tbody></table></div></div>
 {% endblock %}

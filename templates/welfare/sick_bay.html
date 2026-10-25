@@ -10,7 +10,7 @@
 <div class="fin-grid">
   <div style="display:grid;gap:1.2rem">
     <div class="panel"><div class="panel-h"><h3>In the sick bay ({{ inside|length }})</h3></div><div class="panel-b">
-      {% for v in inside %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a></b> <span class="hint">{{ v.student.class_assigned|default:"" }} · since {{ v.admitted_at|time:"H:i" }}</span>
+      {% for v in inside %}<div style="padding:.55rem 0;border-bottom:1px solid var(--rim)"><b><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a></b> <span class="hint">{{ v.student.class_assigned|default:"" }} · since {{ v.admitted_at|time:"g:i A" }}</span>
         <div class="hint">{{ v.complaint }}{% if v.temperature %} · {{ v.temperature }}°C{% endif %}{% if v.treatment %} · {{ v.treatment }}{% endif %}</div>
         {% for a in v.student.medical.alerts %}<span class="alert-chip">{{ a }}</span>{% endfor %}
         <form method="post" class="fin-form" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.3rem">{% csrf_token %}<input type="hidden" name="id" value="{{ v.pk }}"><input type="hidden" name="action" value="discharge">
@@ -20,7 +20,7 @@
       {% empty %}<p class="empty">Nobody is in the sick bay.</p>{% endfor %}
     </div></div>
     <div class="panel"><div class="panel-h"><h3>Recent visits</h3></div><div class="panel-b"><table class="tbl"><tbody>
-      {% for v in history %}<tr><td>{{ v.admitted_at|date:"D j M H:i" }}</td><td class="name"><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a><br><small class="hint">{{ v.complaint }}</small></td><td>{{ v.get_outcome_display }}</td></tr>
+      {% for v in history %}<tr><td>{{ v.admitted_at|date:"D j M g:i A" }}</td><td class="name"><a href="{% url 'welfare:medical' v.student_id %}">{{ v.student.full_name }}</a><br><small class="hint">{{ v.complaint }}</small></td><td>{{ v.get_outcome_display }}</td></tr>
       {% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
     </tbody></table></div></div>
   </div>

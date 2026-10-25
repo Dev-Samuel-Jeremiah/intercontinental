@@ -21,7 +21,7 @@
     <div class="clk-msg" id="msg"></div>
   {% endif %}
   <div class="panel" style="margin-top:1rem;text-align:left"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Today</h3></div><div class="panel-b" id="log">
-    {% for l in logs %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ l.get_direction_display }}</b> {{ l.scanned_at|time:"H:i" }} <span class="hint">· {{ l.get_method_display|lower }}</span></div>
+    {% for l in logs %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ l.get_direction_display }}</b> {{ l.scanned_at|time:"g:i A" }} <span class="hint">· {{ l.get_method_display|lower }}</span></div>
     {% empty %}<p class="hint" id="none">Not clocked in yet today.</p>{% endfor %}
   </div></div>
 </div>

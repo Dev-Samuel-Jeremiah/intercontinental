@@ -14,7 +14,7 @@
   <div style="display:grid;gap:1.2rem">
     <div class="panel"><div class="panel-h"><h3>Stops (morning order)</h3></div><div class="panel-b"><table class="tbl" data-no-export>
       <thead><tr><th>#</th><th>Stop</th><th>AM</th><th>PM</th><th></th></tr></thead><tbody>
-      {% for s in stops %}<tr><td>{{ s.order }}</td><td class="name">{{ s.name }}{% if s.landmark %}<br><small class="hint">{{ s.landmark }}</small>{% endif %}</td><td>{{ s.morning_time|time:"H:i"|default:"—" }}</td><td>{{ s.afternoon_time|time:"H:i"|default:"—" }}</td>
+      {% for s in stops %}<tr><td>{{ s.order }}</td><td class="name">{{ s.name }}{% if s.landmark %}<br><small class="hint">{{ s.landmark }}</small>{% endif %}</td><td>{{ s.morning_time|time:"g:i A"|default:"—" }}</td><td>{{ s.afternoon_time|time:"g:i A"|default:"—" }}</td>
         <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="stop_remove"><input type="hidden" name="id" value="{{ s.pk }}"><button class="fin-btn fin-btn-sm" type="submit" onclick="return confirm('Remove this stop?')">Remove</button></form></td></tr>
       {% empty %}<tr><td colspan="5" class="empty">No stops yet.</td></tr>{% endfor %}
     </tbody></table>

@@ -413,5 +413,5 @@ def book_interview(app, when, venue):
     where = f' at {escape(app.interview_venue)}' if app.interview_venue else ''
     send_email(app.email, f'Interview: {app.vacancy.title} at {app.tenant.name}',
                f'<p>Dear {escape(app.full_name)},</p><p>Thank you for applying for <b>{escape(app.vacancy.title)}</b>. '
-               f'We would like to invite you to an interview on <b>{local:%A %d %B %Y at %H:%M}</b>{where}.</p>'
+               f'We would like to invite you to an interview on <b>{local:%A %d %B %Y at %-I:%M %p}</b>{where}.</p>'
                f'<p>Please reply to confirm.</p><p>{escape(app.tenant.name)}</p>')

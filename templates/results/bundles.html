@@ -20,7 +20,7 @@
     </form></div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent</h3></div>
     {% if items %}<table class="tbl"><thead><tr><th>Class</th><th>Term</th><th>Status</th><th></th></tr></thead><tbody>
-    {% for b in items %}<tr><td class="name">{{ b.school_class.name }}<div class="hint">{{ b.created_at|date:"j M H:i" }}{% if b.published_only %} · published only{% endif %}</div></td><td>{{ b.term.name }}</td>
+    {% for b in items %}<tr><td class="name">{{ b.school_class.name }}<div class="hint">{{ b.created_at|date:"j M g:i A" }}{% if b.published_only %} · published only{% endif %}</div></td><td>{{ b.term.name }}</td>
       <td>{% if b.status == 'DONE' %}<span class="chip green">{{ b.count }} report card{{ b.count|pluralize }}</span>{% elif b.status == 'FAILED' %}<span class="chip red" title="{{ b.error }}">failed</span><div class="hint">{{ b.error|truncatechars:80 }}</div>{% else %}<span class="chip amber"><i class="bi bi-hourglass-split"></i> preparing…</span>{% endif %}</td>
       <td>{% if b.status == 'DONE' %}<a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'results:bundle_download' b.id %}"><i class="bi bi-download"></i> ZIP</a>{% endif %}</td></tr>{% endfor %}
     </tbody></table>{% else %}<div class="empty"><i class="bi bi-file-earmark-zip"></i><p>Nothing prepared yet.</p></div>{% endif %}

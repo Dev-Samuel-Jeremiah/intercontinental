@@ -10,7 +10,7 @@
 <div class="fin-grid">
   <div class="panel"><div class="panel-h"><h3>Coming up</h3></div><div class="panel-b"><table class="tbl">
     <thead><tr><th>Date</th><th>Trip</th><th>Bus</th><th>Seats</th><th></th></tr></thead><tbody>
-    {% for f in items %}<tr><td>{{ f.date|date:"D j M" }}<br><small class="hint">{{ f.depart|time:"H:i" }}–{{ f.back|time:"H:i" }}</small></td><td class="name">{{ f.title }}<br><small class="hint">{{ f.destination }}{% if f.consent_form %} · consent: {{ f.consent_form.title }}{% endif %}</small></td><td>{{ f.vehicle|default:"—" }}<br><small class="hint">{{ f.driver.name|default:"" }}</small></td><td>{{ f.seats_needed }}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'transport:run_field_trip' f.pk %}">Trip page</a></td></tr>
+    {% for f in items %}<tr><td>{{ f.date|date:"D j M" }}<br><small class="hint">{{ f.depart|time:"g:i A" }}–{{ f.back|time:"g:i A" }}</small></td><td class="name">{{ f.title }}<br><small class="hint">{{ f.destination }}{% if f.consent_form %} · consent: {{ f.consent_form.title }}{% endif %}</small></td><td>{{ f.vehicle|default:"—" }}<br><small class="hint">{{ f.driver.name|default:"" }}</small></td><td>{{ f.seats_needed }}</td><td><a class="fin-btn fin-btn-sm" href="{% url 'transport:run_field_trip' f.pk %}">Trip page</a></td></tr>
     {% empty %}<tr><td colspan="5" class="empty">Nothing booked.</td></tr>{% endfor %}
   </tbody></table></div></div>
   <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}

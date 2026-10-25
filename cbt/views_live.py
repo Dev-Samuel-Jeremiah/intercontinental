@@ -93,7 +93,7 @@ def review_answers(request, attempt_id):
     if not engine.review_open(attempt):
         exam = attempt.exam_part.exam
         messages.info(request, 'Answers for this exam are not open for review'
-                      + (f' until {timezone.localtime(exam.end_time):%d %b, %H:%M}.' if exam.answer_review == 'AFTER_CLOSE'
+                      + (f' until {timezone.localtime(exam.end_time):%d %b, %-I:%M %p}.' if exam.answer_review == 'AFTER_CLOSE'
                          else '.'))
         return redirect('cbt:available_exams')
     items = engine.review(attempt)

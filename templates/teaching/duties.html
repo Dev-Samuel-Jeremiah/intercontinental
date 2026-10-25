@@ -8,7 +8,7 @@
 </div>{% if admin %}<div style="display:flex;gap:.4rem"><a class="fin-btn" href="?export=csv">CSV</a><a class="fin-btn" href="?export=xlsx">Excel</a></div>{% endif %}</div>
 {% include "teaching/_nav.html" %}
 <div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>My duties</h3></div><div class="panel-b">
-  {% for d in mine %}<span class="chip{% if d.date == today %} gold{% endif %}" style="margin:.15rem">{{ d.date|date:"D j M" }} · {{ d.post.name }} {{ d.post.start_time|time:"H:i" }}</span>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
+  {% for d in mine %}<span class="chip{% if d.date == today %} gold{% endif %}" style="margin:.15rem">{{ d.date|date:"D j M" }} · {{ d.post.name }} {{ d.post.start_time|time:"g:i A" }}</span>{% empty %}<p class="empty">No duties coming up.</p>{% endfor %}
 </div></div>
 <div class="fin-grid">
   {% if admin %}
@@ -26,13 +26,13 @@
       <div class="row2"><div><label>From</label><input type="time" name="start_time" required></div><div><label>To</label><input type="time" name="end_time" required></div></div>
       <div class="row2"><div><label>Where</label><input name="location" maxlength="100"></div><div><label>Staff needed</label><input name="staff_needed" value="1" inputmode="numeric"></div></div>
       <button class="fin-btn" type="submit">Add post</button>
-      {% for p in posts %}<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid var(--rim)"><span>{{ p.name }} <small class="hint">{{ p.start_time|time:"H:i" }}–{{ p.end_time|time:"H:i" }} · {{ p.staff_needed }}</small>{% if not p.active %} <span class="chip">Off</span>{% endif %}</span><span><button class="fin-btn fin-btn-sm" type="submit" form="toggle{{ p.pk }}">{% if p.active %}Turn off{% else %}Turn on{% endif %}</button></span></div>{% endfor %}
+      {% for p in posts %}<div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem 0;border-top:1px solid var(--rim)"><span>{{ p.name }} <small class="hint">{{ p.start_time|time:"g:i A" }}–{{ p.end_time|time:"g:i A" }} · {{ p.staff_needed }}</small>{% if not p.active %} <span class="chip">Off</span>{% endif %}</span><span><button class="fin-btn fin-btn-sm" type="submit" form="toggle{{ p.pk }}">{% if p.active %}Turn off{% else %}Turn on{% endif %}</button></span></div>{% endfor %}
     </form>
     {% for p in posts %}<form id="toggle{{ p.pk }}" method="post" style="display:none">{% csrf_token %}<input type="hidden" name="action" value="post_toggle"><input type="hidden" name="id" value="{{ p.pk }}"></form>{% endfor %}
   </div>
   {% endif %}
   <div class="panel"><div class="panel-h"><h3>Coming up</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-    {% for a in rota %}<tr><td>{{ a.date|date:"D j M" }}</td><td class="name">{{ a.post.name }}<br><small class="hint">{{ a.post.start_time|time:"H:i" }}–{{ a.post.end_time|time:"H:i" }}</small></td><td>{{ a.staff.full_name }}</td>
+    {% for a in rota %}<tr><td>{{ a.date|date:"D j M" }}</td><td class="name">{{ a.post.name }}<br><small class="hint">{{ a.post.start_time|time:"g:i A" }}–{{ a.post.end_time|time:"g:i A" }}</small></td><td>{{ a.staff.full_name }}</td>
       {% if admin %}<td style="white-space:nowrap"><form method="post" style="display:inline-flex;gap:.2rem">{% csrf_token %}<input type="hidden" name="action" value="swap"><input type="hidden" name="id" value="{{ a.pk }}"><select name="staff" style="width:auto;max-width:130px">{% for s in staff %}<option value="{{ s.pk }}" {% if s.pk == a.staff_id %}selected{% endif %}>{{ s.full_name }}</option>{% endfor %}</select><button class="fin-btn fin-btn-sm" type="submit">Swap</button></form>
         <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ a.pk }}"><button class="fin-btn fin-btn-sm" type="submit">✕</button></form></td>{% endif %}</tr>
     {% empty %}<tr><td class="empty">No duties planned.</td></tr>{% endfor %}

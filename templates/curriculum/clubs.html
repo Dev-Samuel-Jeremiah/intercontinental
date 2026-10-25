@@ -11,7 +11,7 @@
   <div class="panel">{% if clubs %}<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>Club</th><th>Patrons</th><th>Meets</th><th>Members</th><th>Meetings</th><th></th></tr></thead><tbody>
     {% for c in clubs %}<tr{% if not c.active %} style="opacity:.55"{% endif %}><td class="name">{{ c.name }}{% if not c.active %} <span class="chip">inactive</span>{% endif %}<div class="hint">{{ c.description|truncatechars:60 }}</div></td>
       <td class="hint">{% for p in c.patrons.all %}{{ p.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
-      <td class="hint">{% if c.meeting_day %}{{ c.get_meeting_day_display }}{% if c.meeting_time %} {{ c.meeting_time|time:"H:i" }}{% endif %}{% endif %}{% if c.venue %}<br>{{ c.venue }}{% endif %}</td>
+      <td class="hint">{% if c.meeting_day %}{{ c.get_meeting_day_display }}{% if c.meeting_time %} {{ c.meeting_time|time:"g:i A" }}{% endif %}{% endif %}{% if c.venue %}<br>{{ c.venue }}{% endif %}</td>
       <td>{{ c.n_members }}{% if c.capacity %}/{{ c.capacity }}{% endif %}</td><td>{{ c.n_meetings }}</td>
       <td><a class="fin-btn fin-btn-sm" href="{% url 'curriculum:club' c.id %}">Open</a></td></tr>{% endfor %}
   </tbody></table></div>{% else %}<div class="empty"><i class="bi bi-people"></i><p>No clubs yet.</p></div>{% endif %}</div>

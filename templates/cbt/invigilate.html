@@ -19,7 +19,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Invigilator console · <span id="clock">live</span></div>
   <h1 class="fin-title">{{ exam.title }}</h1>
-  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, H:i" }}–{{ exam.end_time|date:"H:i" }} · {{ data.total_questions }} questions. Updates every 15 seconds.</p>
+  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, g:i A" }}–{{ exam.end_time|date:"g:i A" }} · {{ data.total_questions }} questions. Updates every 15 seconds.</p>
 </div><div style="display:flex;gap:.4rem;flex-wrap:wrap">
   {% if parts|length > 1 %}{% for p in parts %}<a class="fin-btn fin-btn-sm{% if p.id == part.id %} fin-btn-gold{% endif %}" href="?part={{ p.id }}">{{ p.get_part_type_display }}</a>{% endfor %}{% endif %}
   <a class="fin-btn fin-btn-sm" href="{% url 'cbt:print_paper' exam.id %}"><i class="bi bi-printer"></i> Paper</a>

@@ -421,7 +421,7 @@ table.mtt td {
                     <tr>
                         <td class="mtt-period">
                             <div class="mtt-period-name">{{ slot.name }}</div>
-                            <div class="mtt-period-time">{{ slot.start_time|time:"H:i" }} – {{ slot.end_time|time:"H:i" }}</div>
+                            <div class="mtt-period-time">{{ slot.start_time|time:"g:i A" }} – {{ slot.end_time|time:"g:i A" }}</div>
                         </td>
                         {% for code, label in days %}
                         <td class="mtt-cell">

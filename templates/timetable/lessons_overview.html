@@ -17,10 +17,10 @@
 <div class="fin-grid">
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-triangle"></i> In school but missed a lesson</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
     {% for student, slots in missed %}<tr><td><a href="{% url 'users:student_profile' student.id %}#attendance" style="color:var(--white)"><b>{{ student.full_name }}</b></a><br><span class="hint">{{ student.class_assigned.name|default:"" }}</span></td>
-      <td>{% for s in slots %}<span class="chip red" style="display:inline-block;margin:.1rem">{{ s.time_slot.start_time|time:"H:i" }} {{ s.subject.name }}</span>{% endfor %}</td></tr>
+      <td>{% for s in slots %}<span class="chip red" style="display:inline-block;margin:.1rem">{{ s.time_slot.start_time|time:"g:i A" }} {{ s.subject.name }}</span>{% endfor %}</td></tr>
     {% empty %}<tr><td class="empty"><i class="bi bi-check2-circle"></i><p>Every child marked present at school was in their lessons.</p></td></tr>{% endfor %}</tbody></table></div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-list-check"></i> Lessons</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
-    {% for r in rows %}<tr><td style="white-space:nowrap">{{ r.slot.time_slot.start_time|time:"H:i" }}</td><td><b>{{ r.slot.school_class.name }}</b> {{ r.slot.subject.name }}<br><span class="hint">{{ r.slot.teacher.full_name }}</span></td>
+    {% for r in rows %}<tr><td style="white-space:nowrap">{{ r.slot.time_slot.start_time|time:"g:i A" }}</td><td><b>{{ r.slot.school_class.name }}</b> {{ r.slot.subject.name }}<br><span class="hint">{{ r.slot.teacher.full_name }}</span></td>
       <td>{% if r.taken %}<span class="chip green">taken</span>{% else %}<a class="chip amber" href="{% url 'timetable:take_register' r.slot.id %}?date={{ day|date:'Y-m-d' }}" style="text-decoration:none">not taken</a>{% endif %}</td></tr>
     {% empty %}<tr><td class="hint" style="padding:1rem">No lessons this day.</td></tr>{% endfor %}</tbody></table></div></div>
 </div>{% endif %}

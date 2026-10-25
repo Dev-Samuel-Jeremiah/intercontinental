@@ -93,7 +93,7 @@ def approve(campaign, user):
     campaign.save(update_fields=['approved_by', 'approved_at', 'status'])
     if not later:
         run_in_background(send_campaign, campaign.id, user=user, tenant=campaign.tenant)
-    _tell_author(campaign, 'approved' + (f' and will go out on {timezone.localtime(campaign.scheduled_at):%d %b %Y at %H:%M}'
+    _tell_author(campaign, 'approved' + (f' and will go out on {timezone.localtime(campaign.scheduled_at):%d %b %Y at %-I:%M %p}'
                                          if later else ' and is being sent now'))
     return 'scheduled' if later else 'sending'
 
@@ -635,7 +635,7 @@ def month_items(tenant, year, month):
         local = timezone.localtime(when)
         if first <= local.date() <= last:
             tone = {'SCHEDULED': 'gold', 'PENDING': 'amber', 'SENT': 'green', 'FAILED': 'red'}.get(c.status, '')
-            add(local.date(), kind=c.get_status_display(), title=c.title, time=local.strftime('%H:%M'),
+            add(local.date(), kind=c.get_status_display(), title=c.title, time=local.strftime('%-I:%M %p'),
                 link=f'/communications/campaigns/{c.pk}/', tone=tone)
     for f in ConsentForm.objects.filter(tenant=tenant, deadline__range=(first, last)):
         add(f.deadline, kind='Consent due', title=f.title, time='', link=f'/communications/consent/manage/{f.pk}/',
@@ -645,7 +645,7 @@ def month_items(tenant, year, month):
             tone='')
     for b in EmergencyBroadcast.objects.filter(tenant=tenant, created_at__date__range=(first, last)):
         add(timezone.localtime(b.created_at).date(), kind='Emergency', title=b.subject,
-            time=timezone.localtime(b.created_at).strftime('%H:%M'), link='/communications/emergency/', tone='red')
+            time=timezone.localtime(b.created_at).strftime('%-I:%M %p'), link='/communications/emergency/', tone='red')
     return items
 
 

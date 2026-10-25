@@ -60,7 +60,7 @@ def pass_url(visit):
 def _send_pass(visit_id):
     from communications.services import send_email, send_sms
     v = Visit.objects.select_related('tenant', 'host').get(pk=visit_id)
-    when = f"{v.expected_on:%a %d %b}" + (f" at {v.expected_time:%H:%M}" if v.expected_time else '')
+    when = f"{v.expected_on:%a %d %b}" + (f" at {v.expected_time:%-I:%M %p}" if v.expected_time else '')
     link = pass_url(v)
     text = (f"{v.tenant.name}: you are expected {when}"
             + (f" to see {v.host.full_name}" if v.host else '') + f". Show this pass at the gate: {link}")
@@ -125,7 +125,7 @@ def _tell_host(visit_id):
         when = timezone.localtime(v.checked_in_at)
         send_email(email, f'Your visitor {v.name} has arrived',
                    f'<p>{v.name}' + (f' ({v.organisation})' if v.organisation else '')
-                   + f' arrived at reception at {when:%H:%M} and is waiting for you.</p>')
+                   + f' arrived at reception at {when:%-I:%M %p} and is waiting for you.</p>')
 
 
 def check_out(visit, user=None):

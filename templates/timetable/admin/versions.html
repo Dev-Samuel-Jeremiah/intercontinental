@@ -18,7 +18,7 @@
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Versions</h3></div>
       {% if versions %}<table class="tbl"><thead><tr><th>#</th><th>Saved</th><th>Lessons</th><th></th></tr></thead><tbody>
       {% for v in versions %}<tr><td class="name">v{{ v.number }}</td>
-        <td>{{ v.saved_at|date:"j M Y, H:i" }}<div class="hint">{{ v.label|default:"—" }}{% if v.saved_by %} · {{ v.saved_by.get_full_name|default:v.saved_by.username }}{% endif %}</div></td>
+        <td>{{ v.saved_at|date:"j M Y, g:i A" }}<div class="hint">{{ v.label|default:"—" }}{% if v.saved_by %} · {{ v.saved_by.get_full_name|default:v.saved_by.username }}{% endif %}</div></td>
         <td>{{ v.entry_count }}</td>
         <td style="white-space:nowrap"><a class="fin-btn fin-btn-sm" href="?a={{ v.id }}" title="Compare with the live timetable"><i class="bi bi-arrow-left-right"></i></a>
           <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ v.id }}"><button class="fin-btn fin-btn-sm" name="action" value="restore" title="Restore and publish" onclick="return confirm('Bring back version {{ v.number }} and publish it? The current timetable is kept as a draft.')"><i class="bi bi-arrow-counterclockwise"></i></button></form></td></tr>{% endfor %}

@@ -9,12 +9,12 @@
 {% include "security/_nav.html" %}
 {% if locks %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-lock"></i> Recent failed sign-ins</h3></div>
 <table class="tbl"><thead><tr><th>Account typed</th><th>Failures</th><th>Last</th><th></th></tr></thead><tbody>
-{% for l in locks %}<tr><td class="name">{{ l.identity|default:"(blank)" }}</td><td>{{ l.n }}{% if l.n >= limit %} <span class="chip red">Locked</span>{% endif %}</td><td>{{ l.last|date:"j M H:i" }}</td><td>{% if l.identity %}<form method="post">{% csrf_token %}<input type="hidden" name="op" value="unlock"><input type="hidden" name="identity" value="{{ l.identity }}"><button class="fin-btn fin-btn-sm">Clear</button></form>{% endif %}</td></tr>{% endfor %}
+{% for l in locks %}<tr><td class="name">{{ l.identity|default:"(blank)" }}</td><td>{{ l.n }}{% if l.n >= limit %} <span class="chip red">Locked</span>{% endif %}</td><td>{{ l.last|date:"j M g:i A" }}</td><td>{% if l.identity %}<form method="post">{% csrf_token %}<input type="hidden" name="op" value="unlock"><input type="hidden" name="identity" value="{{ l.identity }}"><button class="fin-btn fin-btn-sm">Clear</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div>{% endif %}
 <div class="panel"><div class="panel-h"><h3><i class="bi bi-people"></i> Staff accounts</h3></div>
 <table class="tbl"><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Two-step sign-in</th><th>Last sign-in</th><th></th></tr></thead><tbody>
 {% for r in rows %}<tr><td class="name">{{ r.name }}{% if r.admin %} <span class="chip gold">Admin</span>{% endif %}</td><td>{{ r.u.username }}</td><td>{{ r.role|default:"—" }}</td>
-<td>{% if r.tf %}<span class="chip green">{{ r.tf.get_method_display }}</span>{% else %}<span class="chip{% if r.admin %} red{% endif %}">Off</span>{% endif %}</td><td>{{ r.u.last_login|date:"j M Y H:i"|default:"never" }}</td>
+<td>{% if r.tf %}<span class="chip green">{{ r.tf.get_method_display }}</span>{% else %}<span class="chip{% if r.admin %} red{% endif %}">Off</span>{% endif %}</td><td>{{ r.u.last_login|date:"j M Y g:i A"|default:"never" }}</td>
 <td>{% if r.tf and r.u != request.user %}<form method="post" onsubmit="return confirm('Reset two-step sign-in for {{ r.u.username|escapejs }}? Do this only after checking it is really them, e.g. they lost their phone.')">{% csrf_token %}<input type="hidden" name="op" value="reset_2fa"><input type="hidden" name="user" value="{{ r.u.pk }}"><button class="fin-btn fin-btn-sm">Reset</button></form>{% endif %}</td></tr>{% endfor %}
 </tbody></table></div>
 <div class="panel"><div class="panel-h"><h3><i class="bi bi-laptop"></i> Signed in now</h3></div>

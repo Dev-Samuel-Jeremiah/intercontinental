@@ -646,7 +646,7 @@
       <button class="fin-btn" type="submit"><i class="bi bi-download"></i> Download ZIP</button>
       <p class="hint">Personal details, guardians, results, attendance, payments, messages, documents and photo — for a parent's data-protection request or a transfer. Every export is logged.</p>
     </form>
-    {% if exports %}<div style="margin-top:.8rem">{% for e in exports %}<div class="hint" style="padding:.25rem 0;border-top:1px solid var(--rim)">{{ e.created_at|date:"j M Y, H:i" }} · {% if e.exported_by.get_full_name %}{{ e.exported_by.get_full_name }}{% else %}{{ e.exported_by.username }}{% endif %} — {{ e.reason }}</div>{% endfor %}</div>{% endif %}
+    {% if exports %}<div style="margin-top:.8rem">{% for e in exports %}<div class="hint" style="padding:.25rem 0;border-top:1px solid var(--rim)">{{ e.created_at|date:"j M Y, g:i A" }} · {% if e.exported_by.get_full_name %}{{ e.exported_by.get_full_name }}{% else %}{{ e.exported_by.username }}{% endif %} — {{ e.reason }}</div>{% endfor %}</div>{% endif %}
   </div></div>
 </div>
 
@@ -655,7 +655,7 @@
   <div class="panel"><div style="overflow-x:auto"><table class="tbl">
     <thead><tr><th>When</th><th>What changed</th><th>Before</th><th>After</th><th>By</th></tr></thead>
     <tbody>{% for c in changes %}
-      <tr><td style="white-space:nowrap">{{ c.changed_at|date:"j M Y, H:i" }}<br><span class="hint">{{ c.source }}</span></td>
+      <tr><td style="white-space:nowrap">{{ c.changed_at|date:"j M Y, g:i A" }}<br><span class="hint">{{ c.source }}</span></td>
         <td><b>{{ c.label }}</b></td>
         <td class="hint" style="max-width:220px">{{ c.old_value|default:"—" }}</td>
         <td style="max-width:220px">{{ c.new_value|default:"—" }}</td>

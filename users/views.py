@@ -1054,7 +1054,7 @@ def export_students_excel(request):
     # Sub-info row
     from django.utils import timezone as tz
     ws.merge_cells("A2:J2")
-    label = f"Generated: {tz.localtime().strftime('%d %B %Y  %H:%M')}"
+    label = f"Generated: {tz.localtime().strftime('%d %B %Y  %-I:%M %p')}"
     if query:
         label += f'  |  Search: "{query}"'
     if selected_class_id:

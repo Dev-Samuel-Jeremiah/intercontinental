@@ -9,7 +9,7 @@
 </div></div>
 <div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>What it is about</h3></div><div class="panel-b"><p>{{ c.allegation|linebreaksbr }}</p></div></div>
 <div class="panel" style="margin-bottom:1.2rem"><div class="panel-h"><h3>Reply</h3></div><div class="panel-b">
-  {% if c.response %}<p>{{ c.response|linebreaksbr }}</p><p class="hint">Sent {{ c.responded_at|date:"j M Y H:i" }}</p>
+  {% if c.response %}<p>{{ c.response|linebreaksbr }}</p><p class="hint">Sent {{ c.responded_at|date:"j M Y g:i A" }}</p>
   {% elif own and not c.closed_at %}
   <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="action" value="respond">
     <textarea name="response" rows="7" required placeholder="Write your reply"></textarea>

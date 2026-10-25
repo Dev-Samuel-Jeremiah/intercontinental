@@ -26,7 +26,7 @@
 </form></div>
 {% include "cbt/_bank_msgs.html" %}
 {% for d, s, c, subs in clashes %}<div class="chip red" style="margin:0 .3rem .5rem 0">{{ d|date:"D j M" }} {{ s }} · {{ c }}: {{ subs|join:", " }}</div>{% endfor %}
-<div class="print panel"><div style="overflow-x:auto"><table class="tt"><thead><tr><th style="width:130px">Day</th><th>Morning · {{ tt.morning_start|time:"H:i" }}</th>{% if tt.afternoon %}<th>Afternoon · {{ tt.afternoon_start|time:"H:i" }}</th>{% endif %}</tr></thead><tbody>
+<div class="print panel"><div style="overflow-x:auto"><table class="tt"><thead><tr><th style="width:130px">Day</th><th>Morning · {{ tt.morning_start|time:"g:i A" }}</th>{% if tt.afternoon %}<th>Afternoon · {{ tt.afternoon_start|time:"g:i A" }}</th>{% endif %}</tr></thead><tbody>
   {% for d in days %}<tr><td><b>{{ d.date|date:"l" }}</b><br>{{ d.date|date:"j M Y" }}</td>
     <td>{% for e in d.AM %}{% include "cbt/_tt_entry.html" %}{% empty %}<span class="hint">—</span>{% endfor %}</td>
     {% if tt.afternoon %}<td>{% for e in d.PM %}{% include "cbt/_tt_entry.html" %}{% empty %}<span class="hint">—</span>{% endfor %}</td>{% endif %}

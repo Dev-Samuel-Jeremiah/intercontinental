@@ -323,10 +323,10 @@ def _scan_json(log, name, kind):
     when = timezone.localtime(log.scanned_at)
     word = {'IN': 'in', 'OUT': 'out'}.get(log.direction, log.direction.lower())
     repeat = bool(getattr(log, 'repeat', False))
-    return {'ok': True, 'kind': kind, 'name': name, 'direction': log.direction, 'time': when.strftime('%H:%M'),
+    return {'ok': True, 'kind': kind, 'name': name, 'direction': log.direction, 'time': when.strftime('%-I:%M %p'),
             'repeat': repeat,
-            'message': (f'{name} was already scanned {word} at {when:%H:%M}' if repeat
-                        else f'{name} — {word} at {when:%H:%M}')}
+            'message': (f'{name} was already scanned {word} at {when:%-I:%M %p}' if repeat
+                        else f'{name} — {word} at {when:%-I:%M %p}')}
 
 
 @login_required

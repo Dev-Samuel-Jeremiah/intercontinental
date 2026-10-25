@@ -693,7 +693,7 @@ tbody td:last-child  { padding-right: 1.5rem; }
                   <span class="badge badge-red"><i class="bi bi-x-circle-fill"></i> Failed</span>
                 {% endif %}
               </td>
-              <td data-label="Date" class="td-date">{{ q.sent_at|date:"d M Y H:i" }}</td>
+              <td data-label="Date" class="td-date">{{ q.sent_at|date:"d M Y g:i A" }}</td>
             </tr>
             {% empty %}
             <tr>

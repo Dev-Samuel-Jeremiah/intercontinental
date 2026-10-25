@@ -1090,7 +1090,7 @@ body, .wallet-wrap * {
       <tbody>
         {% for txn in txns %}
         <tr>
-          <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y H:i" }}</td>
+          <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y g:i A" }}</td>
           <td style="color:var(--slate2);">{{ txn.description|truncatechars:45 }}</td>
           <td><span class="ref">{{ txn.reference }}</span></td>
           <td style="font-weight:700;{% if txn.txn_type == 'CREDIT' %}color:var(--green);{% else %}color:var(--red);{% endif %}">

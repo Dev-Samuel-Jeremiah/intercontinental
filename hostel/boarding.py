@@ -186,12 +186,12 @@ def request_exeat(boarder, user, leave_at, return_by, reason, pickup_person, pic
         for e in _boarder_hostel_staff(boarder):
             _email(e, f'Exeat request: {st.full_name}',
                    f'<p>The family of {escape(st.full_name)} asked for an exeat from '
-                   f'{timezone.localtime(leave_at):%a %d %b %H:%M} to {timezone.localtime(return_by):%a %d %b %H:%M}.'
+                   f'{timezone.localtime(leave_at):%a %d %b %-I:%M %p} to {timezone.localtime(return_by):%a %d %b %-I:%M %p}.'
                    f'</p><p>Reason: {escape(reason)}. Collected by {escape(pickup_person)}.</p>')
     else:
         _tell_family(st, f'Please approve an exeat for {st.full_name}',
                      f'<p>The school has arranged an exeat for <b>{escape(st.full_name)}</b> from '
-                     f'{timezone.localtime(leave_at):%a %d %b %H:%M} to {timezone.localtime(return_by):%a %d %b %H:%M}'
+                     f'{timezone.localtime(leave_at):%a %d %b %-I:%M %p} to {timezone.localtime(return_by):%a %d %b %-I:%M %p}'
                      f' ({escape(reason)}). Please approve it under Boarding on the parent portal.</p>')
     return r
 
@@ -215,7 +215,7 @@ def school_decide(req, user, approve, note=''):
     st = req.boarder.student
     word = 'approved' if approve else 'not approved'
     _tell_family(st, f'Exeat {word}: {st.full_name}',
-                 f'<p>The exeat for {escape(st.full_name)} ({timezone.localtime(req.leave_at):%a %d %b %H:%M}) was '
+                 f'<p>The exeat for {escape(st.full_name)} ({timezone.localtime(req.leave_at):%a %d %b %-I:%M %p}) was '
                  f'<b>{word}</b>.{" " + escape(note) if note else ""}</p>'
                  f'{"<p>Please bring ID when you collect your child.</p>" if approve else ""}')
 
@@ -229,10 +229,10 @@ def sign_out(req, user):
     req.save(update_fields=['movement', 'status'])
     st = req.boarder.student
     _tell_family(st, f'{st.full_name} has left school', f'<p>{escape(st.full_name)} left with '
-                 f'{escape(req.pickup_person)} at {timezone.localtime():%H:%M}. Due back by '
-                 f'{timezone.localtime(req.return_by):%a %d %b %H:%M}.</p>',
+                 f'{escape(req.pickup_person)} at {timezone.localtime():%-I:%M %p}. Due back by '
+                 f'{timezone.localtime(req.return_by):%a %d %b %-I:%M %p}.</p>',
                  sms=f'{st.tenant.name}: {st.full_name} signed out with {req.pickup_person}. '
-                     f'Due back {timezone.localtime(req.return_by):%a %d %b %H:%M}.')
+                     f'Due back {timezone.localtime(req.return_by):%a %d %b %-I:%M %p}.')
 
 
 def sign_in(req, user):
@@ -244,7 +244,7 @@ def sign_in(req, user):
     req.save(update_fields=['status'])
     st = req.boarder.student
     _tell_family(st, f'{st.full_name} is back in school',
-                 f'<p>{escape(st.full_name)} signed back in at {timezone.localtime():%H:%M}.</p>')
+                 f'<p>{escape(st.full_name)} signed back in at {timezone.localtime():%-I:%M %p}.</p>')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -329,7 +329,7 @@ def admit(student, user, complaint, temperature=None, treatment='', tell_parent=
                                     parent_told=tell_parent)
     if tell_parent:
         _tell_family(student, f'{student.full_name} is in the sick bay',
-                     f'<p>{escape(student.full_name)} came to the school sick bay at {timezone.localtime():%H:%M} '
+                     f'<p>{escape(student.full_name)} came to the school sick bay at {timezone.localtime():%-I:%M %p} '
                      f'({escape(complaint)}). The nurse is looking after them and will contact you if needed.</p>',
                      sms=f'{student.tenant.name}: {student.full_name} is in the sick bay ({complaint[:60]}). '
                          f'The nurse will call you if needed.')

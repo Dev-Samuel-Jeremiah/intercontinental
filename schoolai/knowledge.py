@@ -97,7 +97,7 @@ def sync(tenant):
         for e in CalendarEvent.objects.filter(tenant=tenant, start_date__gte=today.replace(year=today.year - 1)):
             when = f'{e.start_date:%A %d %B %Y}' + (f' to {e.end_date:%A %d %B %Y}' if e.end_date and e.end_date != e.start_date else '')
             if e.start_time:
-                when += f', {e.start_time:%H:%M}' + (f'–{e.end_time:%H:%M}' if e.end_time else '')
+                when += f', {e.start_time:%-I:%M %p}' + (f'–{e.end_time:%-I:%M %p}' if e.end_time else '')
             body = f'{e.title}: {when}.' + (f' Venue: {e.venue}.' if e.venue else '') + (f' {e.description}' if e.description else '')
             added += _upsert(tenant, f'calendar:{e.pk}', f'{e.title} ({e.get_kind_display()})', body, 'CALENDAR',
                              aud.get(e.audience, 'ALL'), seen)

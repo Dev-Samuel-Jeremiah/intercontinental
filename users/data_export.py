@@ -146,7 +146,7 @@ def build(student, user, reason):
         z.writestr('README.txt', (
             f"Records held by {student.tenant.name} about {student.full_name} "
             f"({student.admission_number}).\n"
-            f"Exported {timezone.localtime():%d %B %Y %H:%M}.\n\n"
+            f"Exported {timezone.localtime():%d %B %Y %-I:%M %p}.\n\n"
             "record.json        - personal details, guardians, extra details, support needs,\n"
             "                     awards, roles, status and change history\n"
             "results.csv        - every subject score recorded\n"

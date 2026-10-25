@@ -46,15 +46,15 @@
         <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--white)">{{ student.full_name }}</h2>
         <div class="hint">{{ student.admission_number }} · {{ student.class_assigned.name|default:"no class" }}</div>
         <div style="margin-top:.5rem">
-          {% if mark %}{% if mark.status == 'P' %}<span class="chip green">in school today{% if mark.arrived_at %} · arrived {{ mark.arrived_at|time:"H:i" }}{% endif %}</span>{% else %}<span class="chip red">marked absent today</span>{% endif %}{% else %}<span class="chip">not marked today</span>{% endif %}
+          {% if mark %}{% if mark.status == 'P' %}<span class="chip green">in school today{% if mark.arrived_at %} · arrived {{ mark.arrived_at|time:"g:i A" }}{% endif %}</span>{% else %}<span class="chip red">marked absent today</span>{% endif %}{% else %}<span class="chip">not marked today</span>{% endif %}
           {% if early_now %}<span class="chip amber">early pickup</span>{% endif %}
         </div>
-        {% if already %}<div class="chip red" style="margin-top:.5rem;display:inline-block">Already collected today by {{ already.collector_name }} at {{ already.released_at|time:"H:i" }}</div>{% endif %}
+        {% if already %}<div class="chip red" style="margin-top:.5rem;display:inline-block">Already collected today by {{ already.collector_name }} at {{ already.released_at|time:"g:i A" }}</div>{% endif %}
       </div>
     </div>
   </div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-key"></i> Pickup codes for today</h3></div><div class="panel-b">
-    {% for p in passes %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ p.collector_name }}</b>{% if p.relationship %} <span class="hint">· {{ p.relationship }}</span>{% endif %}<div class="hint">until {{ p.expires_at|time:"H:i" }}{% if p.reason %} · {{ p.reason }}{% endif %}</div></div>
+    {% for p in passes %}<div style="padding:.35rem 0;border-bottom:1px solid var(--rim)"><b style="color:var(--white)">{{ p.collector_name }}</b>{% if p.relationship %} <span class="hint">· {{ p.relationship }}</span>{% endif %}<div class="hint">until {{ p.expires_at|time:"g:i A" }}{% if p.reason %} · {{ p.reason }}{% endif %}</div></div>
     {% empty %}<p class="hint">The parent has not issued a code today.</p>{% endfor %}
     {% if locked %}<p class="chip red" style="margin-top:.6rem">Too many wrong codes today — release only with the head's approval.</p>{% endif %}
   </div></div>
@@ -99,7 +99,7 @@
 {% if today_releases %}
 <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Collected today</h3></div>
   <div style="overflow-x:auto"><table class="tbl"><tbody>{% for r in today_releases %}
-    <tr><td style="white-space:nowrap">{{ r.released_at|time:"H:i" }}</td><td><b>{{ r.student.full_name }}</b></td><td>{{ r.collector_name }} <span class="hint">· {{ r.get_checked_by_display|lower }}</span></td><td>{% if r.early %}<span class="chip amber">early</span>{% endif %}</td></tr>
+    <tr><td style="white-space:nowrap">{{ r.released_at|time:"g:i A" }}</td><td><b>{{ r.student.full_name }}</b></td><td>{{ r.collector_name }} <span class="hint">· {{ r.get_checked_by_display|lower }}</span></td><td>{% if r.early %}<span class="chip amber">early</span>{% endif %}</td></tr>
   {% endfor %}</tbody></table></div></div>
 {% endif %}
 {% endblock %}

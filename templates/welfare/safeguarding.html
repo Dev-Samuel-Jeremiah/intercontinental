@@ -9,7 +9,7 @@
 {% include "welfare/_nav.html" %}
 <div class="fin-grid">
   <div class="panel"><div class="panel-h"><h3>{% if lead %}All concerns{% else %}Concerns you raised{% endif %}</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-    {% for c in items %}<tr><td class="name">{% if lead %}<a href="{% url 'welfare:concern' c.pk %}">{{ c.student.full_name }}</a>{% else %}{{ c.student.full_name }}{% endif %}<br><small class="hint">{{ c.raised_at|date:"j M Y H:i" }} · {{ c.get_category_display }}{% if lead and c.lead %} · lead {{ c.lead.full_name }}{% endif %}</small></td><td>{% if c.immediate_danger %}<span class="chip red">Immediate danger</span> {% endif %}<span class="chip{% if c.status == 'NEW' %} gold{% elif c.status == 'CLOSED' %} ok{% endif %}">{{ c.get_status_display }}</span></td></tr>
+    {% for c in items %}<tr><td class="name">{% if lead %}<a href="{% url 'welfare:concern' c.pk %}">{{ c.student.full_name }}</a>{% else %}{{ c.student.full_name }}{% endif %}<br><small class="hint">{{ c.raised_at|date:"j M Y g:i A" }} · {{ c.get_category_display }}{% if lead and c.lead %} · lead {{ c.lead.full_name }}{% endif %}</small></td><td>{% if c.immediate_danger %}<span class="chip red">Immediate danger</span> {% endif %}<span class="chip{% if c.status == 'NEW' %} gold{% elif c.status == 'CLOSED' %} ok{% endif %}">{{ c.get_status_display }}</span></td></tr>
     {% empty %}<tr><td class="empty">None.</td></tr>{% endfor %}
   </tbody></table></div></div>
   <form method="post" class="panel fin-form" style="padding:1.2rem;border-color:var(--red-border)">{% csrf_token %}

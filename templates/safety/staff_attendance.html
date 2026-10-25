@@ -99,7 +99,7 @@
     <div class="sa-eyebrow">Staff &middot; Attendance register</div>
     <h1 class="sa-title">Staff <em>attendance</em></h1>
     <div class="sa-sub">
-      <span>{{ day|date:"l j F Y" }} &middot; {% if off_kind %}{{ off_kind|lower }}{% else %}late after {{ late_after|time:"H:i" }} &middot; closing {{ cfg.staff_ends_at|time:"H:i" }}{% endif %}</span>
+      <span>{{ day|date:"l j F Y" }} &middot; {% if off_kind %}{{ off_kind|lower }}{% else %}late after {{ late_after|time:"g:i A" }} &middot; closing {{ cfg.staff_ends_at|time:"g:i A" }}{% endif %}</span>
       {% if is_today %}<span class="sa-live">Live &middot; updates every minute</span>{% endif %}
     </div>
   </div>
@@ -127,8 +127,8 @@
   {% else %}
   <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-exclamation-triangle"></i> Didn't clock out</small><b>{{ counts.no_clock_out }}</b><span>no closing scan</span></div>
   {% endif %}
-  <div class="sa-stat" style="--c:var(--blue)"><small><i class="bi bi-box-arrow-right"></i> Clocked out</small><b>{{ counts.clocked_out }}</b><span>{% if counts.left_early %}{{ counts.left_early }} before {{ cfg.staff_ends_at|time:"H:i" }}{% else %}closing scan recorded{% endif %}</span></div>
-  <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-alarm"></i> Late</small><b>{{ counts.late|default:0 }}</b><span>after {{ late_after|time:"H:i" }}</span></div>
+  <div class="sa-stat" style="--c:var(--blue)"><small><i class="bi bi-box-arrow-right"></i> Clocked out</small><b>{{ counts.clocked_out }}</b><span>{% if counts.left_early %}{{ counts.left_early }} before {{ cfg.staff_ends_at|time:"g:i A" }}{% else %}closing scan recorded{% endif %}</span></div>
+  <div class="sa-stat" style="--c:var(--amber)"><small><i class="bi bi-alarm"></i> Late</small><b>{{ counts.late|default:0 }}</b><span>after {{ late_after|time:"g:i A" }}</span></div>
   <div class="sa-stat" style="--c:#60a5fa"><small><i class="bi bi-calendar2-x"></i> On leave</small><b>{{ counts.leave|default:0 }}</b><span>approved leave</span></div>
   <div class="sa-stat" style="--c:var(--red)"><small><i class="bi bi-person-x"></i> Absent</small><b>{{ counts.absent|default:0 }}</b><span>no scan, no leave</span></div>
 </div>
@@ -172,10 +172,10 @@
             {% else %}<span class="sa-muted">—</span>{% endif %}
           </td>
           <td data-label="Clock in">
-            {% if r.arrived %}<span class="sa-time">{{ r.arrived|time:"H:i" }}</span><span class="sa-meta">{{ r.method }}</span>{% else %}<span class="sa-muted">—</span>{% endif %}
+            {% if r.arrived %}<span class="sa-time">{{ r.arrived|time:"g:i A" }}</span><span class="sa-meta">{{ r.method }}</span>{% else %}<span class="sa-muted">—</span>{% endif %}
           </td>
           <td data-label="Clock out">
-            {% if r.left %}<span class="sa-time">{{ r.left|time:"H:i" }}</span>{% if r.left_early %}<span class="sa-meta" style="color:var(--amber)">left early</span>{% endif %}
+            {% if r.left %}<span class="sa-time">{{ r.left|time:"g:i A" }}</span>{% if r.left_early %}<span class="sa-meta" style="color:var(--amber)">left early</span>{% endif %}
             {% elif r.on_site %}<span class="sa-chip gold sa-onsite">On site</span>
             {% elif r.no_clock_out %}<span class="sa-chip amber"><i class="bi bi-exclamation-triangle"></i> Not clocked out</span>
             {% else %}<span class="sa-muted">—</span>{% endif %}

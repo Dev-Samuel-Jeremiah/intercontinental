@@ -51,7 +51,7 @@
       <div style="background:#f8fafc;border-radius:8px;padding:12px 16px;font-size:.82rem;color:#94a3b8;margin-top:10px;">
         Payment Method: {{ sp.get_method_display }}<br>
         Paid by: {{ sp.paid_by.get_full_name|default:sp.paid_by.username }}<br>
-        Date: {{ sp.paid_at|date:"d F Y H:i" }}<br>
+        Date: {{ sp.paid_at|date:"d F Y g:i A" }}<br>
         {{ sp.note }}
       </div>
     </div>

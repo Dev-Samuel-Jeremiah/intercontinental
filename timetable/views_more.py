@@ -200,7 +200,7 @@ def meeting_detail(request, pk):
             messages.success(request, 'Booking is open.' if ev.is_open else 'Booking is closed.')
         elif action == 'cancel':
             b = get_object_or_404(MeetingBooking, pk=_pk(request.POST.get('id')), evening=ev)
-            text = f'{b.start_time:%H:%M} with {b.teacher.full_name} cancelled; the parent is told.'
+            text = f'{b.start_time:%-I:%M %p} with {b.teacher.full_name} cancelled; the parent is told.'
             scheduling.cancel_booking(b)
             messages.success(request, text)
         elif action == 'delete':
@@ -260,7 +260,7 @@ def parent_meetings(request):
                     raise scheduling.SchedulingError('Pick a teacher and a time.')
                 b = scheduling.book_meeting(ev, teacher, child, start, request.user, request.POST.get('note'))
                 run_in_background(scheduling.notify_booking, b.pk, tenant=request.tenant)
-                messages.success(request, f'Booked: {teacher.full_name} at {start:%H:%M}.')
+                messages.success(request, f'Booked: {teacher.full_name} at {start:%-I:%M %p}.')
             except scheduling.SchedulingError as problem:
                 messages.error(request, str(problem))
         return redirect('timetable:parent_meetings')

@@ -36,7 +36,7 @@
   <div class="panel-b" style="overflow-x:auto">
   {% if result.days %}
   <table class="fg"><thead><tr><th></th>{% for c, l in result.days %}<th>{{ l }}</th>{% endfor %}</tr></thead><tbody>
-    {% for r in result.rows %}<tr><td class="pt">{{ r.period.name }}<div class="hint">{{ r.period.start_time|time:"H:i" }}–{{ r.period.end_time|time:"H:i" }}</div></td>
+    {% for r in result.rows %}<tr><td class="pt">{{ r.period.name }}<div class="hint">{{ r.period.start_time|time:"g:i A" }}–{{ r.period.end_time|time:"g:i A" }}</div></td>
       {% for c in r.cells %}{% if c.free %}<td class="free"><i class="bi bi-check2"></i> Free</td>{% else %}<td class="busy">{% for why in c.reasons %}<div>{{ why }}</div>{% endfor %}</td>{% endif %}{% endfor %}</tr>{% endfor %}
   </tbody></table>
   {% else %}<div class="empty"><p>The school is closed that day.</p></div>{% endif %}

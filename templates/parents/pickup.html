@@ -65,7 +65,7 @@
     {% for p in passes %}
     <div class="row">
       <div><b style="font-family:ui-monospace,monospace;letter-spacing:.15em;font-size:1.1rem">{% if p.status == 'ISSUED' %}{{ p.code }}{% else %}••••••{% endif %}</b> — {{ p.collector_name }}
-        <div class="hint">{{ p.student.full_name }} · {{ p.valid_on|date:"D j M" }}{% if p.status == 'ISSUED' %} · until {{ p.expires_at|time:"H:i" }}{% endif %}</div></div>
+        <div class="hint">{{ p.student.full_name }} · {{ p.valid_on|date:"D j M" }}{% if p.status == 'ISSUED' %} · until {{ p.expires_at|time:"g:i A" }}{% endif %}</div></div>
       {% if p.is_usable %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="pass_id" value="{{ p.id }}"><button type="submit" style="width:auto;margin:0;padding:.45rem .8rem;background:none;border:1px solid var(--rim2);color:var(--slate2);font-size:.8rem">Cancel</button></form>
       {% else %}<span class="chip {% if p.status == 'USED' %}APPROVED{% else %}REJECTED{% endif %}">{% if p.status == 'USED' %}Used{% elif p.status == 'CANCELLED' %}Cancelled{% else %}Expired{% endif %}</span>{% endif %}
     </div>
@@ -74,7 +74,7 @@
 
   <div class="card">
     <h2><i class="bi bi-clock-history" style="color:var(--champagne-lt)"></i> Recent collections</h2>
-    {% for r in releases %}<div class="row"><div><b>{{ r.student.full_name }}</b> — collected by {{ r.collector_name }}<div class="hint">{{ r.released_at|date:"D j M, H:i" }}{% if r.early %} · early{% if r.reason %}: {{ r.reason }}{% endif %}{% endif %}</div></div></div>
+    {% for r in releases %}<div class="row"><div><b>{{ r.student.full_name }}</b> — collected by {{ r.collector_name }}<div class="hint">{{ r.released_at|date:"D j M, g:i A" }}{% if r.early %} · early{% if r.reason %}: {{ r.reason }}{% endif %}{% endif %}</div></div></div>
     {% empty %}<p class="hint" style="margin:0">None recorded.</p>{% endfor %}
   </div>
 

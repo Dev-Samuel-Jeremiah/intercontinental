@@ -30,7 +30,7 @@
 </div></form>
 {% for r in rows %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-person-dash"></i> {{ r.teacher.full_name }}</h3>{% if r.leave %}<span class="chip amber">{{ r.leave.get_leave_type_display }} until {{ r.leave.end_date|date:"j M" }}</span>{% else %}<span class="chip">away</span>{% endif %}</div>
   {% for l in r.lessons %}<div class="cv">
-    <div><div class="t">{{ l.slot.time_slot.name }}</div><span class="hint">{{ l.slot.time_slot.start_time|time:"H:i" }}–{{ l.slot.time_slot.end_time|time:"H:i" }}</span></div>
+    <div><div class="t">{{ l.slot.time_slot.name }}</div><span class="hint">{{ l.slot.time_slot.start_time|time:"g:i A" }}–{{ l.slot.time_slot.end_time|time:"g:i A" }}</span></div>
     <div><b>{{ l.slot.subject.name }}</b><div class="hint">{{ l.slot.school_class.name }}</div></div>
     <div>{% if l.cover %}<div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><span class="chip green"><i class="bi bi-check2"></i> {{ l.cover.cover_teacher.full_name }}</span>
         {% if l.cover.notified_at %}<span class="hint">emailed</span>{% endif %}{% if l.cover.note %}<span class="hint">{{ l.cover.note }}</span>{% endif %}

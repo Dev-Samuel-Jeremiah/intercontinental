@@ -48,7 +48,7 @@ def _url(name, *args):
         return ''
 
 
-def _when(dt, fmt='%a %d %b, %H:%M'):
+def _when(dt, fmt='%a %d %b, %-I:%M %p'):
     from django.utils import timezone
     return timezone.localtime(dt).strftime(fmt) if dt else ''
 
@@ -331,6 +331,6 @@ def gate_scan(sender, instance, created, **kwargs):
     s = instance.student
     arrived = instance.direction == 'IN'
     svc.to_family(s, 'gate', f"{s.full_name} {'arrived at' if arrived else 'left'} school",
-                  body=f"Scanned at the gate at {_when(instance.scanned_at, '%H:%M on %a %d %b')}",
+                  body=f"Scanned at the gate at {_when(instance.scanned_at, '%-I:%M %p on %a %d %b')}",
                   icon='door-open-fill' if arrived else 'door-closed-fill', level='success' if arrived else 'info',
                   admin_feed=False)

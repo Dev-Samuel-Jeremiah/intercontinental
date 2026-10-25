@@ -384,7 +384,7 @@
           <span class="meta-sep">·</span>
           <span class="meta-chip">
             <i class="bi bi-clock"></i>
-            Lessons end <strong>{{ override.lessons_end_time|time:"H:i" }}</strong>
+            Lessons end <strong>{{ override.lessons_end_time|time:"g:i A" }}</strong>
           </span>
           <span class="meta-sep">·</span>
           {% if override.is_active %}
@@ -434,7 +434,7 @@
         <div class="preview-block-label regular">
           <i class="bi bi-book"></i> Regular Lessons
         </div>
-        <div class="preview-block-time">Until {{ override.lessons_end_time|time:"H:i" }}</div>
+        <div class="preview-block-time">Until {{ override.lessons_end_time|time:"g:i A" }}</div>
         <div class="preview-block-sub">Standard timetable applies</div>
       </div>
 
@@ -450,7 +450,7 @@
           {{ ss.get_slot_type_display }}
         </div>
         <div class="preview-block-name">{{ ss.name }}</div>
-        <div class="preview-block-sub">{{ ss.start_time|time:"H:i" }} – {{ ss.end_time|time:"H:i" }}</div>
+        <div class="preview-block-sub">{{ ss.start_time|time:"g:i A" }} – {{ ss.end_time|time:"g:i A" }}</div>
         {% if ss.venue %}
           <span class="preview-block-venue"><i class="bi bi-geo-alt"></i> {{ ss.venue }}</span>
         {% endif %}
@@ -522,7 +522,7 @@
           <td class="center">
             <span class="time-range">
               <i class="bi bi-clock"></i>
-              {{ ss.start_time|time:"H:i" }} – {{ ss.end_time|time:"H:i" }}
+              {{ ss.start_time|time:"g:i A" }} – {{ ss.end_time|time:"g:i A" }}
             </span>
           </td>
           <td class="center">

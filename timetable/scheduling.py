@@ -31,7 +31,7 @@ def _overlaps(a_start, a_end, b_start, b_end):
 
 
 def _fmt(t):
-    return t.strftime('%H:%M')
+    return t.strftime('%-I:%M %p')
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Security patrol</div>
   <h1 class="fin-title"><em>{{ p.name }}</em></h1>
-  <p class="fin-sub">{% if recent %}Last check-in {{ recent.0.at|date:"D H:i" }} by {{ recent.0.guard_name }}.{% else %}No check-ins yet.{% endif %}</p>
+  <p class="fin-sub">{% if recent %}Last check-in {{ recent.0.at|date:"D g:i A" }} by {{ recent.0.guard_name }}.{% else %}No check-ins yet.{% endif %}</p>
 </div></div>
 <form method="post" class="panel fin-form" style="padding:1.2rem;max-width:520px">{% csrf_token %}
   <button class="fin-btn fin-btn-gold" type="submit" name="all_clear" value="1" style="width:100%;padding:1rem;font-size:1.1rem"><i class="bi bi-check-circle"></i> All clear</button>

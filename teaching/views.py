@@ -402,7 +402,7 @@ def duties(request):
     if request.GET.get('export') in ('csv', 'xlsx') and request.admin:
         from analytics.export import respond
         return respond(request.GET['export'], 'Duty rota', ['Date', 'Duty', 'Time', 'Staff'],
-                       [[a.date.isoformat(), a.post.name, f'{a.post.start_time:%H:%M}-{a.post.end_time:%H:%M}',
+                       [[a.date.isoformat(), a.post.name, f'{a.post.start_time:%-I:%M %p}-{a.post.end_time:%-I:%M %p}',
                          a.staff.full_name] for a in rota], request.tenant.name)
     return render(request, 'teaching/duties.html', {
         'mine': DutyAssignment.objects.filter(staff=request.me, date__gte=today).select_related('post')[:20],

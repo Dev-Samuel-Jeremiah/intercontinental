@@ -328,12 +328,12 @@ def health(tenant=None):
         age = now - good.started_at
         hours = age.total_seconds() / 3600
         level = 'ok' if age <= DUE_AFTER + timedelta(hours=2) else ('warn' if hours < 72 else 'bad')
-        out.append(_check('Daily backup', level, f'Last good backup {timezone.localtime(good.started_at):%d %b %Y, %H:%M} '
+        out.append(_check('Daily backup', level, f'Last good backup {timezone.localtime(good.started_at):%d %b %Y, %-I:%M %p} '
                                                  f'({hours:.0f} hours ago, {_size(good.size)}).',
                           '' if level == 'ok' else 'Check the backup timer on the server.'))
         failed = SystemBackup.objects.filter(kind='DB', ok=False, started_at__gt=good.started_at).first()
         if failed:
-            out.append(_check('Latest backup run', 'bad', f'Failed at {timezone.localtime(failed.started_at):%d %b %H:%M}: '
+            out.append(_check('Latest backup run', 'bad', f'Failed at {timezone.localtime(failed.started_at):%d %b %-I:%M %p}: '
                                                           f'{failed.error[:160]}'))
     offsite = getattr(settings, 'BACKUP_OFFSITE_DIR', '') or getattr(settings, 'BACKUP_OFFSITE_COMMAND', '')
     out.append(_check('Off-site copies', 'ok' if offsite else 'warn',

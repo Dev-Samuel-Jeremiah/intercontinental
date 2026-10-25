@@ -22,7 +22,7 @@
 <div class="fin-grid" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
   <div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-camera-video"></i> Live classes</h3></div>
-      {% for l in upcoming %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, H:i" }} · {{ l.minutes }} min · {% if l.platform == 'JITSI' %}Jitsi{% else %}meeting link{% endif %}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
+      {% for l in upcoming %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, g:i A" }} · {{ l.minutes }} min · {% if l.platform == 'JITSI' %}Jitsi{% else %}meeting link{% endif %}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
           {% if not l.open and not is_teacher %}<div class="hint">{{ l.why }}</div>{% endif %}</div>
         <div style="display:flex;gap:.3rem;flex-wrap:wrap;justify-content:flex-end">
           {% if l.open or is_teacher %}<a class="fin-btn fin-btn-gold fin-btn-sm" href="{% url 'classroom:join_live' l.id %}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> {% if is_teacher %}Start{% else %}Join{% endif %}</a>{% endif %}
@@ -31,7 +31,7 @@
         </div></div>
       {% empty %}<div class="empty" style="padding:1.4rem"><p>No live classes coming up.</p></div>{% endfor %}
       {% if past %}<details style="padding:.6rem 1.2rem"><summary class="hint" style="cursor:pointer">Earlier live classes ({{ past|length }})</summary>
-        {% for l in past %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, H:i" }}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
+        {% for l in past %}<div class="lv"><div><b>{{ l.title }}</b><div class="hint">{{ l.starts_at|date:"D j M, g:i A" }}{% if is_teacher %} · {{ l.attended }} joined{% endif %}</div>
             {% if l.recording_url %}<a href="{{ l.recording_url }}" target="_blank" rel="noopener" style="color:var(--champagne-lt);font-size:.85rem"><i class="bi bi-play-circle"></i> Watch the recording</a>{% endif %}</div>
           <div>{% if is_teacher %}<a class="fin-btn fin-btn-sm" href="{% url 'classroom:live_attendance' l.id %}"><i class="bi bi-people"></i></a>
             <form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ l.id }}"><input name="recording_url" value="{{ l.recording_url }}" placeholder="Recording link"><button class="fin-btn fin-btn-sm" name="action" value="recording">Save</button></form>{% endif %}</div></div>{% endfor %}
@@ -39,7 +39,7 @@
     </div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-megaphone"></i> Announcements</h3></div>
       {% for a in announcements %}<div class="an{% if a.pinned %} pin{% endif %}"><div style="display:flex;justify-content:space-between;gap:.6rem"><b>{% if a.pinned %}<i class="bi bi-pin-angle-fill" style="color:var(--champagne-lt)"></i> {% endif %}{{ a.title }}</b>
-          <span class="hint">{{ a.created_at|date:"j M, H:i" }}{% if is_teacher %} <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ a.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete_announcement" style="padding:.15rem .4rem" onclick="return confirm('Remove?')"><i class="bi bi-x"></i></button></form>{% endif %}</span></div>
+          <span class="hint">{{ a.created_at|date:"j M, g:i A" }}{% if is_teacher %} <form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="id" value="{{ a.id }}"><button class="fin-btn fin-btn-sm" name="action" value="delete_announcement" style="padding:.15rem .4rem" onclick="return confirm('Remove?')"><i class="bi bi-x"></i></button></form>{% endif %}</span></div>
         <div style="margin-top:.35rem;color:var(--slate2)">{{ a.body|linebreaksbr }}</div></div>
       {% empty %}<div class="empty" style="padding:1.4rem"><p>No announcements yet.</p></div>{% endfor %}
     </div>

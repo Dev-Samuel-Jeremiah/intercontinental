@@ -19,11 +19,11 @@
       <button class="fin-btn fin-btn-gold" type="submit">Add</button>
     </form>
     <div class="panel"><div class="panel-h"><h3>My weekly times</h3></div><div class="panel-b">
-      <table class="tbl" data-no-export><tbody>{% for t in times %}<tr><td>{{ t.get_day_display }}</td><td>{{ t.start|time:"H:i" }}–{{ t.end|time:"H:i" }}</td><td>{{ t.slot_minutes }} min</td><td>{{ t.location }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></td></tr>{% empty %}<tr><td class="empty">None yet — parents cannot book you.</td></tr>{% endfor %}</tbody></table>
+      <table class="tbl" data-no-export><tbody>{% for t in times %}<tr><td>{{ t.get_day_display }}</td><td>{{ t.start|time:"g:i A" }}–{{ t.end|time:"g:i A" }}</td><td>{{ t.slot_minutes }} min</td><td>{{ t.location }}</td><td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="{{ t.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></td></tr>{% empty %}<tr><td class="empty">None yet — parents cannot book you.</td></tr>{% endfor %}</tbody></table>
     </div></div>
   </div>
   <div class="panel"><div class="panel-h"><h3>Coming up</h3></div><div class="panel-b">
-    <table class="tbl" data-no-export><tbody>{% for a in upcoming %}<tr><td class="name">{{ a.date|date:"D j M" }} {{ a.start|time:"H:i" }}</td><td>{{ a.student.full_name }}<br><small class="hint">{{ a.reason }}</small></td><td>{{ a.get_mode_display }}</td>
+    <table class="tbl" data-no-export><tbody>{% for a in upcoming %}<tr><td class="name">{{ a.date|date:"D j M" }} {{ a.start|time:"g:i A" }}</td><td>{{ a.student.full_name }}<br><small class="hint">{{ a.reason }}</small></td><td>{{ a.get_mode_display }}</td>
       <td style="white-space:nowrap"><form method="post" style="display:inline">{% csrf_token %}<input type="hidden" name="action" value="done"><input type="hidden" name="id" value="{{ a.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Held</button></form>
       <form method="post" style="display:inline" onsubmit="this.note.value=prompt('Tell the parent why (optional)')||''">{% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="id" value="{{ a.pk }}"><input type="hidden" name="note"><button class="fin-btn fin-btn-sm" type="submit">Cancel</button></form></td></tr>
     {% empty %}<tr><td class="empty">No appointments booked.</td></tr>{% endfor %}</tbody></table>

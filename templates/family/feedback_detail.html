@@ -3,8 +3,8 @@
   <h1>{{ t.subject }}</h1>
   <p class="sub">{{ t.reference }} · {{ t.get_kind_display }} · {{ t.get_category_display }} · <span class="chip{% if t.status == 'RESOLVED' or t.status == 'CLOSED' %} ok{% endif %}">{{ t.get_status_display }}</span></p>
   {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
-  <div class="card"><div class="hint">You wrote, {{ t.created_at|date:"j M Y H:i" }}</div><p>{{ t.body|linebreaksbr }}</p></div>
-  {% for m in msgs %}<div class="card" {% if m.author_id != t.parent_id %}style="border-color:rgba(244,210,31,.35)"{% endif %}><div class="hint">{% if m.author_id == t.parent_id %}You{% else %}The school{% endif %}, {{ m.created_at|date:"j M Y H:i" }}</div><p>{{ m.body|linebreaksbr }}</p></div>{% endfor %}
+  <div class="card"><div class="hint">You wrote, {{ t.created_at|date:"j M Y g:i A" }}</div><p>{{ t.body|linebreaksbr }}</p></div>
+  {% for m in msgs %}<div class="card" {% if m.author_id != t.parent_id %}style="border-color:rgba(244,210,31,.35)"{% endif %}><div class="hint">{% if m.author_id == t.parent_id %}You{% else %}The school{% endif %}, {{ m.created_at|date:"j M Y g:i A" }}</div><p>{{ m.body|linebreaksbr }}</p></div>{% endfor %}
   {% if t.status == 'RESOLVED' and not t.rating %}
   <div class="card"><h2>How did we handle this?</h2>
     <form method="post">{% csrf_token %}<input type="hidden" name="action" value="rate">

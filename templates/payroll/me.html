@@ -5,8 +5,8 @@
 {% include "finance/_fin_styles.html" %}
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Staff</div>
-  <h1 class="fin-title">My pay &amp; <em>leave</em></h1>
-  <p class="fin-sub">Your payslips, leave taken this year and the details the bursary pays you by.</p>
+  <h1 class="fin-title">My <em>payslips</em></h1>
+  <p class="fin-sub">Your payslips and the details the bursary pays you by, with the leave you have taken this year. Ask for leave under Staff Attendance → Staff Leave.</p>
 </div><a class="fin-btn" href="{% url 'safety:staff_leave' %}"><i class="bi bi-calendar-plus"></i> Ask for leave</a></div>
 {% if not pr %}<div class="panel"><div class="empty"><i class="bi bi-briefcase"></i><p>You are not on payroll yet. Please see the bursary.</p></div></div>
 {% else %}

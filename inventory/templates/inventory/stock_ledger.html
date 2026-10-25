@@ -38,7 +38,7 @@
         <tbody>
         {% for m in movements %}
         <tr>
-          <td data-label="Date" style="white-space:nowrap;font-size:.82rem;">{{ m.date|date:"M j, Y H:i" }}</td>
+          <td data-label="Date" style="white-space:nowrap;font-size:.82rem;">{{ m.date|date:"M j, Y g:i A" }}</td>
           <td data-label="Asset"><a href="{% url 'inventory:asset_detail' m.asset.id %}" style="font-weight:600;color:var(--inv-primary);">{{ m.asset.name }}</a></td>
           <td data-label="Category">{{ m.asset.category.name }}</td>
           <td data-label="Type">

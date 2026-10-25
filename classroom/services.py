@@ -120,7 +120,7 @@ def join_window(live, now=None):
     now = now or timezone.now()
     opens = live.starts_at - timedelta(minutes=JOIN_EARLY_MINUTES)
     if now < opens:
-        return False, f'You can join from {timezone.localtime(opens):%H:%M on %d %b}.'
+        return False, f'You can join from {timezone.localtime(opens):%-I:%M %p on %d %b}.'
     if now > live.ends_at:
         return False, 'This live class has ended.'
     return True, ''

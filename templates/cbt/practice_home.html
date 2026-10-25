@@ -147,7 +147,7 @@
   {% endif %}
 
   {% if sessions %}<div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> History</h3></div><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>When</th><th>Quiz</th><th>Score</th><th>Points</th><th></th></tr></thead><tbody>
-    {% for s in sessions %}<tr><td>{{ s.started_at|date:"j M, H:i" }}</td>
+    {% for s in sessions %}<tr><td>{{ s.started_at|date:"j M, g:i A" }}</td>
       <td>{{ s.get_mode_display }}<div class="hint">{% for x in s.subjects.all %}{{ x.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if s.topic %} · {{ s.topic }}{% endif %}{% if s.difficulty %} · {{ s.difficulty|title }}{% endif %}</div></td>
       <td>{% if s.finished %}<b>{{ s.score }}/{{ s.total }}</b> <span class="chip {% if s.percent >= 70 %}green{% elif s.percent >= 50 %}amber{% else %}red{% endif %}">{{ s.percent }}%</span>{% else %}<span class="chip">in progress</span>{% endif %}</td>
       <td>{% if s.finished %}<span style="color:var(--champagne-lt);font-weight:700">+{{ s.points }}</span>{% endif %}</td>

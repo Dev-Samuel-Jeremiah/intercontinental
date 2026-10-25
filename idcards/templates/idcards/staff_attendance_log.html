@@ -63,7 +63,7 @@
       <td class="sal-cell-name">{{ log.staff.full_name }}</td>
       <td data-label="Role">{{ log.staff.get_role_display }}</td>
       <td data-label="Status"><span class="badge {% if log.direction == 'IN' %}in{% else %}out{% endif %}">{{ log.get_direction_display }}</span></td>
-      <td data-label="Time">{{ log.scanned_at|date:"H:i" }}</td>
+      <td data-label="Time">{{ log.scanned_at|date:"g:i A" }}</td>
     </tr>
     {% empty %}
     <tr><td colspan="4" style="text-align:center; color:var(--slate); padding:30px;">No clock-ins for this date.</td></tr>

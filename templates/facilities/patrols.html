@@ -10,12 +10,12 @@
 <div class="fin-grid">
   <div style="display:grid;gap:1.2rem">
     <div class="panel"><div class="panel-h"><h3>Points</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-      {% for r in rows %}<tr><td class="name">{{ r.point.name }}<br><small class="hint">every {{ r.point.every_hours }} h</small></td><td>{% if r.last %}{{ r.last.at|date:"D H:i" }}{% if not r.last.all_clear %} <span class="chip red">Problem</span>{% endif %}{% else %}never{% endif %}</td><td>{% if r.late %}<span class="chip red">Late</span>{% else %}<span class="chip ok">OK</span>{% endif %}</td>
+      {% for r in rows %}<tr><td class="name">{{ r.point.name }}<br><small class="hint">every {{ r.point.every_hours }} h</small></td><td>{% if r.last %}{{ r.last.at|date:"D g:i A" }}{% if not r.last.all_clear %} <span class="chip red">Problem</span>{% endif %}{% else %}never{% endif %}</td><td>{% if r.late %}<span class="chip red">Late</span>{% else %}<span class="chip ok">OK</span>{% endif %}</td>
         <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="stop"><input type="hidden" name="id" value="{{ r.point.pk }}"><button class="fin-btn fin-btn-sm" type="submit">Remove</button></form></td></tr>
       {% empty %}<tr><td class="empty">No patrol points yet.</td></tr>{% endfor %}
     </tbody></table></div></div>
     <div class="panel"><div class="panel-h"><h3>Recent check-ins</h3></div><div class="panel-b"><table class="tbl" data-no-export><tbody>
-      {% for lg in logs %}<tr><td>{{ lg.at|date:"D j M H:i" }}</td><td class="name">{{ lg.point.name }}</td><td>{{ lg.guard_name }}</td><td>{% if lg.all_clear %}All clear{% else %}<span class="chip red">{{ lg.note|default:"Problem" }}</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
+      {% for lg in logs %}<tr><td>{{ lg.at|date:"D j M g:i A" }}</td><td class="name">{{ lg.point.name }}</td><td>{{ lg.guard_name }}</td><td>{% if lg.all_clear %}All clear{% else %}<span class="chip red">{{ lg.note|default:"Problem" }}</span>{% endif %}</td></tr>{% empty %}<tr><td class="empty">None yet.</td></tr>{% endfor %}
     </tbody></table></div></div>
   </div>
   <form method="post" class="panel fin-form" style="padding:1.2rem">{% csrf_token %}<input type="hidden" name="action" value="add">

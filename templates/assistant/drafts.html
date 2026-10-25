@@ -9,7 +9,7 @@
 </div><a class="fin-btn fin-btn-gold" href="{% url 'assistant:new_message' %}"><i class="bi bi-plus"></i> New message</a></div>
 <div class="panel"><div class="panel-h"><h3><i class="bi bi-hourglass-split"></i> Waiting for review ({{ pending|length }})</h3></div>
   {% if pending %}<table class="tbl"><thead><tr><th>To the parent of</th><th>About</th><th>Written by</th><th>When</th></tr></thead><tbody>
-  {% for d in pending %}<tr><td class="name"><a href="{% url 'assistant:draft' d.id %}" style="color:inherit">{{ d.student.full_name }}</a></td><td>{{ d.get_purpose_display }} · {{ d.get_channel_display }}</td><td>{{ d.created_by.get_full_name|default:d.created_by.username }}</td><td>{{ d.created_at|date:"j M H:i" }}</td></tr>{% endfor %}
+  {% for d in pending %}<tr><td class="name"><a href="{% url 'assistant:draft' d.id %}" style="color:inherit">{{ d.student.full_name }}</a></td><td>{{ d.get_purpose_display }} · {{ d.get_channel_display }}</td><td>{{ d.created_by.get_full_name|default:d.created_by.username }}</td><td>{{ d.created_at|date:"j M g:i A" }}</td></tr>{% endfor %}
   </tbody></table>{% else %}<div class="empty"><i class="bi bi-check2-circle"></i><p>Nothing waiting.</p></div>{% endif %}
 </div>
 <div class="panel"><div class="panel-h"><h3><i class="bi bi-archive"></i> Done</h3></div>

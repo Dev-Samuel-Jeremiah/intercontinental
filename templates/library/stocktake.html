@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Library · stock-take {{ st.started_at|date:"j M Y" }}{% if st.branch %} · {{ st.branch }}{% endif %}</div>
   <h1 class="fin-title"><em>{{ s.scanned }} of {{ s.expected }}</em> counted</h1>
-  <p class="fin-sub">{% if st.closed_at %}Closed {{ st.closed_at|date:"j M Y H:i" }}.{% else %}Scan each copy's barcode. Scanning several at once? Separate them with spaces or new lines.{% endif %}</p>
+  <p class="fin-sub">{% if st.closed_at %}Closed {{ st.closed_at|date:"j M Y g:i A" }}.{% else %}Scan each copy's barcode. Scanning several at once? Separate them with spaces or new lines.{% endif %}</p>
 </div></div>
 {% include "library/_nav.html" %}
 <div class="fin-grid">

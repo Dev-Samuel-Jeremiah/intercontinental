@@ -41,7 +41,7 @@
           <div><div class="hint" style="text-transform:uppercase;font-size:.66rem;letter-spacing:.8px;margin-bottom:.35rem">Registers not taken</div>
             {% for c in ins.attendance.unmarked|slice:":6" %}<span class="db-tag amber" style="margin:0 .25rem .3rem 0">{{ c.name }}</span>{% empty %}<span class="db-tag green"><i class="bi bi-check2"></i> All taken</span>{% endfor %}</div>
           <div><div class="hint" style="text-transform:uppercase;font-size:.66rem;letter-spacing:.8px;margin-bottom:.35rem">Lessons without a register</div>
-            {% for r in ins.lessons.missed %}<div style="font-size:.8rem;color:var(--white)">{{ r.slot.time_slot.start_time|time:"H:i" }} · {{ r.slot.school_class.name }} {{ r.slot.subject.name }} <span class="hint">({{ r.slot.teacher.full_name }})</span></div>
+            {% for r in ins.lessons.missed %}<div style="font-size:.8rem;color:var(--white)">{{ r.slot.time_slot.start_time|time:"g:i A" }} · {{ r.slot.school_class.name }} {{ r.slot.subject.name }} <span class="hint">({{ r.slot.teacher.full_name }})</span></div>
             {% empty %}<span class="db-tag green"><i class="bi bi-check2"></i> None missed</span>{% endfor %}</div>
         </div></div>
       {% if ins.welfare.sick_bay or ins.welfare.concerns %}<div class="db-card-b" style="border-top:1px solid var(--rim);display:flex;gap:.5rem;flex-wrap:wrap">
@@ -85,7 +85,7 @@
 
     {% if 'admin:events' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-calendar-event"></i> Coming up</h3><a href="{% url 'curriculum:calendar' %}">Calendar →</a></div>
-      {% for e in ins.events %}<div class="db-row"><span class="ico blue" style="flex-direction:column;line-height:1"><b style="font-size:.85rem">{{ e.start_date|date:"j" }}</b><small style="font-size:.55rem">{{ e.start_date|date:"M" }}</small></span><div class="t"><b>{{ e.title }}</b><span>{{ e.start_date|date:"l" }}{% if e.start_time %} · {{ e.start_time|time:"H:i" }}{% endif %}{% if e.venue %} · {{ e.venue }}{% endif %}</span></div></div>
+      {% for e in ins.events %}<div class="db-row"><span class="ico blue" style="flex-direction:column;line-height:1"><b style="font-size:.85rem">{{ e.start_date|date:"j" }}</b><small style="font-size:.55rem">{{ e.start_date|date:"M" }}</small></span><div class="t"><b>{{ e.title }}</b><span>{{ e.start_date|date:"l" }}{% if e.start_time %} · {{ e.start_time|time:"g:i A" }}{% endif %}{% if e.venue %} · {{ e.venue }}{% endif %}</span></div></div>
       {% empty %}<div class="db-empty"><i class="bi bi-calendar"></i>Nothing on the calendar for the next three weeks.</div>{% endfor %}</div>
     {% endif %}
 

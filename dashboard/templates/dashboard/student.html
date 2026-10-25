@@ -31,7 +31,7 @@
 
   <div class="db-grid">
     <div class="db-card c7"><div class="db-card-h"><h3><i class="bi bi-clock"></i> Today's lessons</h3></div>
-      {% if ins.lessons %}<div class="db-tl">{% for r in ins.lessons %}<div class="it {{ r.state }}"><span class="tm">{{ r.slot.time_slot.start_time|time:"H:i" }}</span><span class="dot"></span>
+      {% if ins.lessons %}<div class="db-tl">{% for r in ins.lessons %}<div class="it {{ r.state }}"><span class="tm">{{ r.slot.time_slot.start_time|time:"g:i A" }}</span><span class="dot"></span>
         <div><b>{{ r.slot.subject.name }}</b><span class="sub">{{ r.slot.teacher.full_name }}{% if r.slot.room %} · {{ r.slot.room.name }}{% endif %}</span></div>{% if r.state == 'now' %}<span class="db-tag acc">Now</span>{% else %}<span></span>{% endif %}</div>{% endfor %}</div>
       {% else %}<div class="db-empty"><i class="bi bi-sun"></i>No lessons on the timetable today.</div>{% endif %}</div>
 
@@ -42,13 +42,13 @@
     <div class="db-card c7"><div class="db-card-h"><h3><i class="bi bi-pencil-square"></i> My exams</h3><a href="{% url 'cbt:available_exams' %}">All →</a></div>
       {% for exam in exams %}<div class="db-row" style="flex-wrap:wrap">
         <span class="ico {% if exam.status == 'Open' %}green{% elif exam.status == 'Upcoming' %}blue{% endif %}"><i class="bi bi-{% if exam.status == 'Open' %}play-fill{% elif exam.status == 'Upcoming' %}clock{% else %}lock{% endif %}"></i></span>
-        <div class="t"><b>{{ exam.title }}</b><span>{{ exam.subject }} · {{ exam.start_time|date:"d M, H:i" }} → {{ exam.end_time|date:"d M, H:i" }}</span></div>
+        <div class="t"><b>{{ exam.title }}</b><span>{{ exam.subject }} · {{ exam.start_time|date:"d M, g:i A" }} → {{ exam.end_time|date:"d M, g:i A" }}</span></div>
         <div style="display:flex;gap:.35rem;flex-wrap:wrap;justify-content:flex-end">
           {% for part in exam.parts %}
             {% if part.is_completed %}
               {% if exam.allow_retake %}<a class="db-tag acc" href="{% url 'cbt:take_exam' exam.id part.part_type %}" style="text-decoration:none"><i class="bi bi-arrow-repeat"></i> Retake</a>{% else %}<span class="db-tag green"><i class="bi bi-check-circle-fill"></i> Done</span>{% endif %}
               {% if part.review.attempt %}<a class="db-tag acc" href="{% url 'cbt:review_answers' part.review.attempt %}" style="text-decoration:none"><i class="bi bi-lightbulb"></i> Review {{ part.part_type }} answers</a>
-              {% elif part.review.opens %}<span class="db-tag" title="Your teacher shows the answers after the exam closes"><i class="bi bi-lightbulb"></i> Review from {{ part.review.opens|date:"j M, H:i" }}</span>{% endif %}
+              {% elif part.review.opens %}<span class="db-tag" title="Your teacher shows the answers after the exam closes"><i class="bi bi-lightbulb"></i> Review from {{ part.review.opens|date:"j M, g:i A" }}</span>{% endif %}
             {% elif exam.status == "Open" %}<a class="db-tag green" href="{% url 'cbt:take_exam' exam.id part.part_type %}" style="text-decoration:none"><i class="bi bi-play-fill"></i> Start {{ part.part_type }}</a>
             {% else %}<span class="db-tag">{% if exam.status == "Upcoming" %}Opens in {{ exam.days_left }} day{{ exam.days_left|pluralize }}{% else %}Closed{% endif %}</span>{% endif %}
           {% endfor %}</div></div>

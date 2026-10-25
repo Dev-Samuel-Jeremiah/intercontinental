@@ -7,8 +7,8 @@
     <div class="fin-eyebrow">Visitor pass</div>
     <h1 class="fin-title" style="margin:.3rem 0">{{ v.name }}</h1>
     <p class="hint">{{ v.get_purpose_display }}{% if v.host %} · to see {{ v.host.full_name }}{% endif %}{% if v.organisation %} · {{ v.organisation }}{% endif %}</p>
-    <p style="margin:.8rem 0">{% if v.status == 'EXPECTED' %}{% if v.expected_on == today %}<span class="chip green">expected today{% if v.expected_time %} at {{ v.expected_time|time:"H:i" }}{% endif %}</span>{% else %}<span class="chip red">expected {{ v.expected_on|date:"j M" }} — not today</span>{% endif %}
-      {% elif v.status == 'ON_SITE' %}<span class="chip amber">on site since {{ v.checked_in_at|time:"H:i" }} · badge {{ v.badge_number }}</span>{% else %}<span class="chip red">{{ v.get_status_display }}</span>{% endif %}</p>
+    <p style="margin:.8rem 0">{% if v.status == 'EXPECTED' %}{% if v.expected_on == today %}<span class="chip green">expected today{% if v.expected_time %} at {{ v.expected_time|time:"g:i A" }}{% endif %}</span>{% else %}<span class="chip red">expected {{ v.expected_on|date:"j M" }} — not today</span>{% endif %}
+      {% elif v.status == 'ON_SITE' %}<span class="chip amber">on site since {{ v.checked_in_at|time:"g:i A" }} · badge {{ v.badge_number }}</span>{% else %}<span class="chip red">{{ v.get_status_display }}</span>{% endif %}</p>
     {% if v.status == 'EXPECTED' and v.expected_on == today %}
     <form method="post" action="{% url 'safety:visitor_desk' %}" class="fin-form" style="text-align:left" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="visit_id" value="{{ v.id }}">
       <div><label>ID shown</label><input name="id_type" maxlength="40"></div><div><label>ID number</label><input name="id_number" maxlength="40"></div>

@@ -9,6 +9,6 @@
 </div><div style="display:flex;gap:.4rem"><a class="fin-btn{% if show == 'open' %} fin-btn-gold{% endif %}" href="?show=open">Open</a><a class="fin-btn{% if show == 'all' %} fin-btn-gold{% endif %}" href="?show=all">All</a></div></div>
 {% include "studentlife/_staffnav.html" %}
 <div class="panel"><div class="panel-b"><table class="tbl"><thead><tr><th>Ref</th><th>Kind</th><th>Received</th><th>From</th><th>Status</th></tr></thead><tbody>
-{% for r in items %}<tr><td><a href="{% url 'studentlife:report_detail' r.pk %}">{{ r.reference }}</a>{% if r.urgent %} <span class="chip red">Urgent</span>{% endif %}</td><td>{{ r.get_kind_display }}</td><td>{{ r.created_at|date:"j M H:i" }}</td><td>{% if r.reporter %}{{ r.reporter.get_full_name|default:r.reporter.username }}{% else %}Anonymous{% endif %}</td><td>{{ r.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">No reports.</td></tr>{% endfor %}
+{% for r in items %}<tr><td><a href="{% url 'studentlife:report_detail' r.pk %}">{{ r.reference }}</a>{% if r.urgent %} <span class="chip red">Urgent</span>{% endif %}</td><td>{{ r.get_kind_display }}</td><td>{{ r.created_at|date:"j M g:i A" }}</td><td>{% if r.reporter %}{{ r.reporter.get_full_name|default:r.reporter.username }}{% else %}Anonymous{% endif %}</td><td>{{ r.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5" class="empty">No reports.</td></tr>{% endfor %}
 </tbody></table></div></div>
 {% endblock %}

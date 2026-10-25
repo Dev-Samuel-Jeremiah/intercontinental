@@ -91,7 +91,7 @@
     <thead><tr><th>Receipt</th><th>Customer</th><th>Items</th><th>Paid by</th><th style="text-align:right">Total</th><th></th></tr></thead>
     <tbody>{% for s in sales %}
       <tr{% if s.status == 'VOIDED' %} style="opacity:.55"{% endif %}>
-        <td style="white-space:nowrap"><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|date:"j M, H:i" }}</span></td>
+        <td style="white-space:nowrap"><a href="{% url 'finance:sale_receipt' s.id %}" style="color:var(--champagne-lt)">{{ s.number }}</a><br><span class="hint">{{ s.created_at|date:"j M, g:i A" }}</span></td>
         <td>{{ s.buyer }}{% if s.student %}<br><span class="hint">{{ s.student.admission_number }}</span>{% endif %}</td>
         <td class="hint" style="max-width:260px">{% for l in s.lines.all %}{{ l.name }} ×{{ l.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
         <td>{{ s.get_method_display }}{% if s.status == 'VOIDED' %}<br><span class="chip red">voided</span><br><span class="hint">{{ s.void_reason }}</span>{% endif %}</td>

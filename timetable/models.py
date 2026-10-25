@@ -30,7 +30,7 @@ class TimeSlot(TenantModelMixin, models.Model):
         ordering = ['order', 'start_time']
 
     def __str__(self):
-        return f"{self.name} ({self.start_time.strftime('%H:%M')}–{self.end_time.strftime('%H:%M')})"
+        return f"{self.name} ({self.start_time.strftime('%-I:%M %p')}–{self.end_time.strftime('%-I:%M %p')})"
 
 
 class TimetableConfiguration(TenantModelMixin, models.Model):
@@ -271,8 +271,8 @@ class SpecialSlot(TenantModelMixin, models.Model):
 
     def __str__(self):
         return (
-            f"{self.name} ({self.start_time.strftime('%H:%M')}–"
-            f"{self.end_time.strftime('%H:%M')})"
+            f"{self.name} ({self.start_time.strftime('%-I:%M %p')}–"
+            f"{self.end_time.strftime('%-I:%M %p')})"
         )
 
 # ---------------------------------------------------------------------------
@@ -383,7 +383,7 @@ class RoomBooking(TenantModelMixin, models.Model):
         ordering = ['date', 'start_time']
 
     def __str__(self):
-        return f"{self.room} {self.date} {self.start_time:%H:%M}–{self.end_time:%H:%M}: {self.purpose}"
+        return f"{self.room} {self.date} {self.start_time:%-I:%M %p}–{self.end_time:%-I:%M %p}: {self.purpose}"
 
 
 class MeetingEvening(TenantModelMixin, models.Model):
@@ -428,7 +428,7 @@ class MeetingBooking(TenantModelMixin, models.Model):
         unique_together = (('evening', 'teacher', 'start_time'), ('evening', 'teacher', 'student'))
 
     def __str__(self):
-        return f"{self.teacher.full_name} – {self.student.full_name} at {self.start_time:%H:%M}"
+        return f"{self.teacher.full_name} – {self.student.full_name} at {self.start_time:%-I:%M %p}"
 
 
 class TimetableVersion(TenantModelMixin, models.Model):

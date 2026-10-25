@@ -14,7 +14,7 @@
       <div class="panel-b">
       {% if tf %}
         <p>You enter a code from <b>{{ tf.get_method_display|lower }}</b>{% if tf.method == 'SMS' %} ({{ tf.phone|slice:"-4:" }}){% endif %} after your password. {{ backup_left }} backup code{{ backup_left|pluralize }} left.</p>
-        {% if tf.last_used_at %}<p class="hint">Last used {{ tf.last_used_at|date:"j M Y, H:i" }}</p>{% endif %}
+        {% if tf.last_used_at %}<p class="hint">Last used {{ tf.last_used_at|date:"j M Y, g:i A" }}</p>{% endif %}
         <form method="post" class="fin-form" style="margin-top:.8rem">{% csrf_token %}
           <div><label>Your password</label><input type="password" name="password" required autocomplete="current-password"></div>
           <div style="display:flex;gap:.5rem;flex-wrap:wrap">
@@ -38,7 +38,7 @@
       <table class="tbl">{% for s in sessions %}<tr><td class="name">{{ s.user_agent|default:"Unknown browser"|truncatechars:60 }}</td><td>{{ s.ip|default:"" }}</td><td>{% if s.session_key == current %}<span class="chip green">This device</span>{% else %}{{ s.last_seen|timesince }} ago{% endif %}</td></tr>{% empty %}<tr><td class="hint">No sessions recorded yet.</td></tr>{% endfor %}</table>
     </div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> Recent sign-in activity</h3></div>
-      <table class="tbl">{% for e in recent %}<tr><td>{{ e.at|date:"j M H:i" }}</td><td>{{ e.summary }}</td><td class="hint">{{ e.ip|default:"" }}</td></tr>{% empty %}<tr><td class="hint">Nothing yet.</td></tr>{% endfor %}</table>
+      <table class="tbl">{% for e in recent %}<tr><td>{{ e.at|date:"j M g:i A" }}</td><td>{{ e.summary }}</td><td class="hint">{{ e.ip|default:"" }}</td></tr>{% empty %}<tr><td class="hint">Nothing yet.</td></tr>{% endfor %}</table>
     </div>
   </div>
 </div>

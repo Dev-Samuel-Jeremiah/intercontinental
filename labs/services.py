@@ -255,7 +255,7 @@ def book(lab, user, data):
         for tech in lab.technicians.select_related('user'):
             if tech.user_id != user.pk:
                 notes.to_user(tech.user, 'lab', f'{lab.name} booked: {purpose}',
-                              body=f'{day:%a %d %b}, {start:%H:%M}–{end:%H:%M}' + (f' · {len(made)} weeks' if len(made) > 1 else '')
+                              body=f'{day:%a %d %b}, {start:%-I:%M %p}–{end:%-I:%M %p}' + (f' · {len(made)} weeks' if len(made) > 1 else '')
                                    + (f'. Prepare: {made[0].prep_notes[:120]}' if made[0].prep_notes else ''),
                               url=f'/labs/{lab.pk}/?week={day:%Y-%m-%d}', tenant=lab.tenant, admin_feed=False)
     return made, skipped
@@ -501,7 +501,7 @@ def report_incident(lab, user, data, student_ids=()):
     if kind != 'NEARMISS':
         for st in students:
             notes.to_family(st, 'lab', f'{st.full_name.split(" ")[0]} was involved in a lab incident',
-                            body=f'{inc.get_kind_display()} in the {lab.name} on {timezone.localtime(when):%d %b at %H:%M}. '
+                            body=f'{inc.get_kind_display()} in the {lab.name} on {timezone.localtime(when):%d %b at %-I:%M %p}. '
                                  f'{inc.get_severity_display()}.' + (f' First aid: {inc.first_aid[:120]}' if inc.first_aid else '')
                                  + ' The school will contact you if anything more is needed.',
                             level=level, admin_feed=False)

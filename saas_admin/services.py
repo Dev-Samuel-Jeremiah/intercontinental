@@ -300,7 +300,7 @@ def build_export(export):
                     w.writerow(['' if v is None else v for v in row])
                 z.writestr(f'{m._meta.app_label}/{m.__name__}.csv', s.getvalue())
                 counts[m._meta.label] = n
-            z.writestr('README.txt', f'Data export for {tenant.name}, {timezone.now():%d %B %Y %H:%M}.\n'
+            z.writestr('README.txt', f'Data export for {tenant.name}, {timezone.now():%d %B %Y %-I:%M %p}.\n'
                                      f'One CSV file per table. Passwords are not included.\n')
         export.file.save(f'export-{tenant.subdomain}.zip', ContentFile(buf.getvalue()), save=False)
         export.size, export.tables, export.status = len(buf.getvalue()), counts, 'READY'

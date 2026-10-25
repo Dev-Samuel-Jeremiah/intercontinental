@@ -35,7 +35,7 @@
       <div class="rr"><span class="rl">Description</span><span class="rv">{{ payment.description|default:"School Payment" }}</span></div>
       <div class="rr"><span class="rl">Method</span><span class="rv">{{ payment.get_method_display }}</span></div>
       <div class="rr"><span class="rl">Approved By</span><span class="rv">{{ payment.approved_by.get_full_name|default:payment.approved_by.username }}</span></div>
-      <div class="rr"><span class="rl">Date</span><span class="rv">{{ payment.approved_at|date:"d F Y H:i" }}</span></div>
+      <div class="rr"><span class="rl">Date</span><span class="rv">{{ payment.approved_at|date:"d F Y g:i A" }}</span></div>
       <div class="rr"><span class="rl">Reference</span><span class="rv" style="font-family:monospace;color:#2563eb;">{{ payment.reference }}</span></div>
     </div>
     <div class="rf">

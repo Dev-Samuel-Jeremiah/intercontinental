@@ -10,7 +10,7 @@
 <div class="fin-grid">
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-exclamation-octagon"></i> Breaches</h3></div>
     <table class="tbl"><thead><tr><th>Reference</th><th>What happened</th><th>Discovered</th><th>Status</th></tr></thead><tbody>
-    {% for b in rows %}<tr><td class="name"><a href="{% url 'security:breach' b.pk %}">{{ b.reference }}</a></td><td>{{ b.title }}<br><span class="hint">{{ b.people_affected }} people · {{ b.get_severity_display }}</span></td><td>{{ b.discovered_at|date:"j M Y H:i" }}</td>
+    {% for b in rows %}<tr><td class="name"><a href="{% url 'security:breach' b.pk %}">{{ b.reference }}</a></td><td>{{ b.title }}<br><span class="hint">{{ b.people_affected }} people · {{ b.get_severity_display }}</span></td><td>{{ b.discovered_at|date:"j M Y g:i A" }}</td>
       <td><span class="chip {% if b.status == 'CLOSED' %}green{% elif not b.reported_at and not b.not_reported_reason %}red{% else %}amber{% endif %}">{{ b.get_status_display }}</span>{% if b.status != 'CLOSED' and not b.reported_at and not b.not_reported_reason %}<br><span class="hint">{% if b.hours_left > 0 %}{{ b.hours_left }} h left{% else %}deadline passed{% endif %}</span>{% endif %}</td></tr>
     {% empty %}<tr><td colspan="4" class="empty"><i class="bi bi-shield-check"></i>No breaches recorded.</td></tr>{% endfor %}</tbody></table>
   </div>

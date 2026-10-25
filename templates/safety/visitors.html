@@ -31,7 +31,7 @@
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-person-walking"></i> On site now</h3></div><div class="panel-b" style="padding-top:.2rem">
       {% for v in on_site %}
       <div class="vrow"><div><b>#{{ v.badge_number }} {{ v.name }}</b>{% if v.organisation %} <span class="hint">· {{ v.organisation }}</span>{% endif %}
-        <div class="hint">in since {{ v.checked_in_at|time:"H:i" }} · {{ v.get_purpose_display }}{% if v.host %} · seeing {{ v.host.full_name }}{% endif %}{% if v.student %} · {{ v.student.full_name }}{% endif %}{% if v.vehicle %} · {{ v.vehicle }}{% endif %}</div></div>
+        <div class="hint">in since {{ v.checked_in_at|time:"g:i A" }} · {{ v.get_purpose_display }}{% if v.host %} · seeing {{ v.host.full_name }}{% endif %}{% if v.student %} · {{ v.student.full_name }}{% endif %}{% if v.vehicle %} · {{ v.vehicle }}{% endif %}</div></div>
         <div style="display:flex;gap:.3rem"><a class="fin-btn fin-btn-sm" href="{% url 'safety:visitor_badge' v.id %}"><i class="bi bi-printer"></i></a>
         <form method="post">{% csrf_token %}<input type="hidden" name="action" value="check_out"><input type="hidden" name="visit_id" value="{{ v.id }}"><button class="fin-btn fin-btn-sm fin-btn-gold" type="submit">Check out</button></form></div></div>
       {% empty %}<p class="hint">Nobody is signed in.</p>{% endfor %}
@@ -39,7 +39,7 @@
 
     <div class="panel" style="margin-top:1rem"><div class="panel-h"><h3><i class="bi bi-calendar-check"></i> Expected today</h3></div><div class="panel-b" style="padding-top:.2rem">
       {% for v in expected %}
-      <div class="vrow" style="flex-wrap:wrap"><div><b>{{ v.name }}</b>{% if v.expected_time %} <span class="hint">· {{ v.expected_time|time:"H:i" }}</span>{% endif %}
+      <div class="vrow" style="flex-wrap:wrap"><div><b>{{ v.name }}</b>{% if v.expected_time %} <span class="hint">· {{ v.expected_time|time:"g:i A" }}</span>{% endif %}
         <div class="hint">{{ v.get_purpose_display }}{% if v.host %} · seeing {{ v.host.full_name }}{% endif %}{% if v.purpose_note %} · {{ v.purpose_note }}{% endif %}</div></div>
         <form method="post" enctype="multipart/form-data" style="display:flex;gap:.3rem;flex-wrap:wrap;align-items:center">{% csrf_token %}<input type="hidden" name="visit_id" value="{{ v.id }}">
           <input name="id_number" placeholder="ID no." maxlength="40" style="width:100px;padding:.35rem .5rem;border-radius:8px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit;font-size:.78rem">
@@ -75,10 +75,10 @@
 
 <div class="fin-grid" style="margin-top:1rem">
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-calendar3"></i> Coming up</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
-    {% for v in upcoming %}<tr><td style="white-space:nowrap">{{ v.expected_on|date:"D j M" }}{% if v.expected_time %} {{ v.expected_time|time:"H:i" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_purpose_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}</span></td></tr>
+    {% for v in upcoming %}<tr><td style="white-space:nowrap">{{ v.expected_on|date:"D j M" }}{% if v.expected_time %} {{ v.expected_time|time:"g:i A" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_purpose_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}</span></td></tr>
     {% empty %}<tr><td class="hint" style="padding:1rem">Nobody booked.</td></tr>{% endfor %}</tbody></table></div></div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-clock-history"></i> {% if q %}Search results{% else %}Left today{% endif %}</h3></div><div style="overflow-x:auto"><table class="tbl"><tbody>
-    {% for v in history %}<tr><td style="white-space:nowrap">{% if v.checked_in_at %}{{ v.checked_in_at|date:"j M H:i" }}{% else %}{{ v.expected_on|date:"j M" }}{% endif %}{% if v.checked_out_at %}–{{ v.checked_out_at|time:"H:i" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_status_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}{% if v.note %} · {{ v.note }}{% endif %}</span></td></tr>
+    {% for v in history %}<tr><td style="white-space:nowrap">{% if v.checked_in_at %}{{ v.checked_in_at|date:"j M g:i A" }}{% else %}{{ v.expected_on|date:"j M" }}{% endif %}{% if v.checked_out_at %}–{{ v.checked_out_at|time:"g:i A" }}{% endif %}</td><td><b>{{ v.name }}</b><br><span class="hint">{{ v.get_status_display }}{% if v.host %} · {{ v.host.full_name }}{% endif %}{% if v.note %} · {{ v.note }}{% endif %}</span></td></tr>
     {% empty %}<tr><td class="hint" style="padding:1rem">{% if q %}No visitor found.{% else %}No one has left yet today.{% endif %}</td></tr>{% endfor %}</tbody></table></div></div>
 </div>
 <script>

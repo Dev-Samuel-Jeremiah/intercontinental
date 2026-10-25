@@ -57,7 +57,7 @@
     <h2><i class="bi bi-bookmark-check" style="color:var(--champagne-lt)"></i> Joined{% if due %} <span class="hint" style="margin-left:auto">₦{{ due|floatformat:2|intcomma }} to pay</span>{% endif %}</h2>
     {% for m in mine %}
     <div class="row" style="flex-wrap:wrap;align-items:center">
-      <div style="flex:1 1 200px"><b>{{ m.group.name }}</b><div class="hint">{{ m.student.full_name }} · {{ m.group.get_day_display }} {{ m.group.start_time|time:"H:i" }}–{{ m.group.end_time|time:"H:i" }}{% if m.group.room %} · {{ m.group.room.name }}{% endif %}</div></div>
+      <div style="flex:1 1 200px"><b>{{ m.group.name }}</b><div class="hint">{{ m.student.full_name }} · {{ m.group.get_day_display }} {{ m.group.start_time|time:"g:i A" }}–{{ m.group.end_time|time:"g:i A" }}{% if m.group.room %} · {{ m.group.room.name }}{% endif %}</div></div>
       <span class="chip {{ m.status }}">{{ m.get_status_display }}{% if m.status != 'WAIVED' %} · ₦{{ m.fee|floatformat:2|intcomma }}{% endif %}</span>
       {% if m.status == 'DUE' %}<form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ m.id }}">
         <button name="action" value="pay">Pay from wallet</button>
@@ -70,7 +70,7 @@
     <h2><i class="bi bi-collection" style="color:var(--champagne-lt)"></i> Groups you can join</h2>
     {% for o in offers %}
     <div class="row" style="flex-wrap:wrap;align-items:center">
-      <div style="flex:1 1 200px"><b>{{ o.g.name }}</b><div class="hint">{{ o.g.get_day_display }}s {{ o.g.start_time|time:"H:i" }}–{{ o.g.end_time|time:"H:i" }}{% if o.g.teacher %} · {{ o.g.teacher.full_name }}{% endif %}{% if o.g.room %} · {{ o.g.room.name }}{% endif %} · {% if o.g.fee %}₦{{ o.g.fee|floatformat:2|intcomma }} for the term{% else %}free{% endif %}{% if o.left is not None %} · {{ o.left }} place{{ o.left|pluralize }} left{% endif %}</div></div>
+      <div style="flex:1 1 200px"><b>{{ o.g.name }}</b><div class="hint">{{ o.g.get_day_display }}s {{ o.g.start_time|time:"g:i A" }}–{{ o.g.end_time|time:"g:i A" }}{% if o.g.teacher %} · {{ o.g.teacher.full_name }}{% endif %}{% if o.g.room %} · {{ o.g.room.name }}{% endif %} · {% if o.g.fee %}₦{{ o.g.fee|floatformat:2|intcomma }} for the term{% else %}free{% endif %}{% if o.left is not None %} · {{ o.left }} place{{ o.left|pluralize }} left{% endif %}</div></div>
       {% if o.left == 0 %}<span class="hint">Full</span>{% else %}
       <form method="post">{% csrf_token %}<input type="hidden" name="group" value="{{ o.g.id }}">
         {% if o.kids|length > 1 %}<select name="child" aria-label="Child">{% for c in o.kids %}<option value="{{ c.id }}">{{ c.full_name }}</option>{% endfor %}</select>{% else %}<input type="hidden" name="child" value="{{ o.kids.0.id }}">{% endif %}

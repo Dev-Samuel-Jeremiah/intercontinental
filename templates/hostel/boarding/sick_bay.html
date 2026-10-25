@@ -19,7 +19,7 @@
   </form>
   <div style="display:grid;gap:1.2rem">
     <div class="panel"><div class="panel-h"><h3>In the sick bay now ({{ inside|length }})</h3></div><div class="panel-b">
-      {% for v in inside %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ v.student.full_name }}</b> <small class="hint">{{ v.student.class_assigned.name|default:"" }} · since {{ v.admitted_at|date:"D H:i" }}{% if v.temperature %} · {{ v.temperature }}°C{% endif %}</small><div class="hint">{{ v.complaint }}</div>
+      {% for v in inside %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ v.student.full_name }}</b> <small class="hint">{{ v.student.class_assigned.name|default:"" }} · since {{ v.admitted_at|date:"D g:i A" }}{% if v.temperature %} · {{ v.temperature }}°C{% endif %}</small><div class="hint">{{ v.complaint }}</div>
         <form method="post" class="fin-form" style="display:flex;gap:.3rem;margin-top:.3rem;flex-wrap:wrap">{% csrf_token %}<input type="hidden" name="action" value="discharge"><input type="hidden" name="id" value="{{ v.pk }}"><select name="outcome" style="max-width:220px">{% for k, l in outcomes %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select><input name="treatment" placeholder="Note" style="flex:1;min-width:120px"><button class="fin-btn fin-btn-sm" type="submit">Discharge</button></form></div>
       {% empty %}<p class="empty">Nobody in the sick bay.</p>{% endfor %}
     </div></div>

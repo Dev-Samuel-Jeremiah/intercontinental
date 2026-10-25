@@ -767,7 +767,7 @@ body, .wallet-admin-wrap * { font-family: 'Outfit', sans-serif; color: var(--whi
         <tbody>
           {% for txn in txns %}
           <tr>
-            <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y H:i" }}</td>
+            <td style="white-space:nowrap;color:var(--slate);">{{ txn.created_at|date:"d M Y g:i A" }}</td>
             <td>
               {% if txn.txn_type == 'CREDIT' %}<span class="badge badge-green">Credit</span>
               {% else %}<span class="badge badge-red">Debit</span>{% endif %}

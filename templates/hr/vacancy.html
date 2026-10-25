@@ -13,7 +13,7 @@
 <div class="panel" style="margin-bottom:1rem"><div class="panel-h"><h3>{{ a.full_name }} <span class="chip{% if a.status == 'HIRED' or a.status == 'OFFERED' %} green{% elif a.status == 'REJECTED' %} red{% elif a.status != 'NEW' %} gold{% endif %}">{{ a.get_status_display }}</span></h3></div><div class="panel-b">
   <p><a href="mailto:{{ a.email }}">{{ a.email }}</a> · <a href="tel:{{ a.phone }}">{{ a.phone }}</a> · applied {{ a.created_at|date:"j M Y" }} · <a href="{% url 'hr:document' 'cv' a.pk %}" target="_blank"><i class="bi bi-file-earmark-pdf"></i> CV</a></p>
   {% if a.cover_letter %}<details><summary>Cover letter</summary><p>{{ a.cover_letter|linebreaksbr }}</p></details>{% endif %}
-  {% if a.interview_at %}<p><i class="bi bi-calendar-event"></i> Interview {{ a.interview_at|date:"l j F Y, H:i" }}{% if a.interview_venue %} at {{ a.interview_venue }}{% endif %}</p>{% endif %}
+  {% if a.interview_at %}<p><i class="bi bi-calendar-event"></i> Interview {{ a.interview_at|date:"l j F Y, g:i A" }}{% if a.interview_venue %} at {{ a.interview_venue }}{% endif %}</p>{% endif %}
   <div class="fin-grid" style="margin-top:.6rem">
     <form method="post" class="fin-form">{% csrf_token %}<input type="hidden" name="id" value="{{ a.pk }}"><input type="hidden" name="action" value="status">
       <div class="row2"><div><label>Status</label><select name="status">{% for k, l in statuses %}<option value="{{ k }}" {% if k == a.status %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>

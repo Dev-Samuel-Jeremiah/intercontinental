@@ -62,8 +62,8 @@
         {% else %}<span class="rp-chip blue">Submitted</span>{% endif %}</b></div>
       <div><span>Period</span><b>{{ report.period_start|date:"j M" }}{% if report.period == 'WEEKLY' %} – {{ report.period_end|date:"j M Y" }}{% else %} {{ report.period_start|date:"Y" }}{% endif %}</b></div>
       <div><span>Due by</span><b>{{ report.due|date:"D j M" }}</b></div>
-      {% if report.submitted_at %}<div><span>Submitted</span><b>{{ report.submitted_at|date:"D j M, H:i" }}</b></div>{% endif %}
-      {% if report.reviewed_at %}<div><span>Reviewed</span><b>{{ report.reviewed_at|date:"D j M, H:i" }}<br><small class="rp-muted">by {{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }}</small></b></div>{% endif %}
+      {% if report.submitted_at %}<div><span>Submitted</span><b>{{ report.submitted_at|date:"D j M, g:i A" }}</b></div>{% endif %}
+      {% if report.reviewed_at %}<div><span>Reviewed</span><b>{{ report.reviewed_at|date:"D j M, g:i A" }}<br><small class="rp-muted">by {{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }}</small></b></div>{% endif %}
     </div></div>
 
     {% if report.status == 'REVIEWED' %}

@@ -17,10 +17,10 @@
     <button class="fin-btn fin-btn-gold" type="submit">Publish</button>
   </form>
   {% if current %}<div class="panel"><div class="panel-h"><h3>{{ current.date|date:"l j F" }} — {{ bookings|length }} famil{{ bookings|length|pluralize:"y,ies" }}</h3></div><div class="panel-b">
-    <p class="hint">{% for s in slots %}{{ s.time|time:"H:i" }}: {{ s.left }} left{% if not forloop.last %} · {% endif %}{% endfor %}</p>
+    <p class="hint">{% for s in slots %}{{ s.time|time:"g:i A" }}: {{ s.left }} left{% if not forloop.last %} · {% endif %}{% endfor %}</p>
     <form method="post" style="margin-bottom:.6rem">{% csrf_token %}<input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="{{ current.pk }}"><button class="fin-btn fin-btn-sm" type="submit">{% if current.open %}Close bookings{% else %}Reopen bookings{% endif %}</button></form>
-    <table class="tbl"><tbody>{% for b in bookings %}<tr><td>{{ b.slot|time:"H:i" }}</td><td class="name">{{ b.boarder.student.full_name }}<br><small class="hint">{{ b.names }} ({{ b.visitors }})</small></td>
-      <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="arrived"><input type="hidden" name="id" value="{{ b.pk }}"><button class="fin-btn fin-btn-sm{% if b.arrived_at %} fin-btn-gold{% endif %}" type="submit">{% if b.arrived_at %}Arrived {{ b.arrived_at|time:"H:i" }}{% else %}Arrived{% endif %}</button></form></td></tr>{% empty %}<tr><td class="empty">No bookings yet.</td></tr>{% endfor %}</tbody></table>
+    <table class="tbl"><tbody>{% for b in bookings %}<tr><td>{{ b.slot|time:"g:i A" }}</td><td class="name">{{ b.boarder.student.full_name }}<br><small class="hint">{{ b.names }} ({{ b.visitors }})</small></td>
+      <td><form method="post">{% csrf_token %}<input type="hidden" name="action" value="arrived"><input type="hidden" name="id" value="{{ b.pk }}"><button class="fin-btn fin-btn-sm{% if b.arrived_at %} fin-btn-gold{% endif %}" type="submit">{% if b.arrived_at %}Arrived {{ b.arrived_at|time:"g:i A" }}{% else %}Arrived{% endif %}</button></form></td></tr>{% empty %}<tr><td class="empty">No bookings yet.</td></tr>{% endfor %}</tbody></table>
   </div></div>{% endif %}
 </div>
 {% endblock %}

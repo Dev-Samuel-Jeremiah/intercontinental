@@ -78,7 +78,7 @@ def grading(request):
             elif action == 'reopen':
                 lock = locks.lock_for(get_object_or_404(Term, pk=request.POST.get('term')))
                 locks.reopen(lock, request.user, request.POST.get('reason'), request.POST.get('hours') or 48)
-                messages.success(request, f'Score entry reopened until {timezone.localtime(lock.reopened_until):%d %b %H:%M}.')
+                messages.success(request, f'Score entry reopened until {timezone.localtime(lock.reopened_until):%d %b %-I:%M %p}.')
             elif action == 'close':
                 locks.close_now(locks.lock_for(get_object_or_404(Term, pk=request.POST.get('term'))))
                 messages.success(request, 'Score entry closed again.')

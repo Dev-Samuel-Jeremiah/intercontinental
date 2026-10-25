@@ -746,6 +746,9 @@
           <span class="ni-label">My ID Card</span>
         </a>{% endif %}
         {% endif %}
+        {% if user.staff %}{% if 'payroll:me' not in menu_hidden %}<a href="{% url 'payroll:me' %}" class="nav-item" data-tooltip="My Payslips">
+          <i class="bi bi-wallet-fill"></i><span class="ni-label">My Payslips</span>
+        </a>{% endif %}{% endif %}
       </div>
     </div>
     {% endif %}
@@ -927,6 +930,8 @@
         {% if 'curriculum:home' not in menu_hidden %}<a href="{% url 'curriculum:home' %}" class="nav-item" data-tooltip="Coverage">
           <i class="bi bi-bar-chart-steps"></i><span class="ni-label">Syllabus Coverage</span>
         </a>{% endif %}
+        {# Staff reach the rest from the tabs on the Syllabus Coverage page; administrators keep the full list #}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
         {% if 'curriculum:schemes' not in menu_hidden %}<a href="{% url 'curriculum:schemes' %}" class="nav-item" data-tooltip="Schemes">
           <i class="bi bi-journal-text"></i><span class="ni-label">Schemes of Work</span>
         </a>{% endif %}
@@ -970,6 +975,7 @@
         {% if 'curriculum:departments' not in menu_hidden %}<a href="{% url 'curriculum:departments' %}" class="nav-item" data-tooltip="Departments">
           <i class="bi bi-diagram-3-fill"></i><span class="ni-label">Departments</span>
         </a>{% endif %}
+        {% endif %}
       </div>
     </div>
     {% endif %}
@@ -1066,9 +1072,6 @@
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
-        {% if 'payroll:me' not in menu_hidden %}<a href="{% url 'payroll:me' %}" class="nav-item" data-tooltip="My Pay & Leave">
-          <i class="bi bi-wallet-fill"></i><span class="ni-label">My Pay &amp; Leave</span>
-        </a>{% endif %}
         {% if 'timetable:teacher_timetable' not in menu_hidden %}<a href="{% url 'timetable:teacher_timetable' %}" class="nav-item" data-tooltip="My Timetable">
           <i class="bi bi-calendar-week-fill"></i><span class="ni-label">My Timetable</span>
         </a>{% endif %}

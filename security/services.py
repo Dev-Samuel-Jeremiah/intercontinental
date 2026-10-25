@@ -440,7 +440,7 @@ def record_failure(request, identity):
             from users.models import User
             target = User.objects.filter(tenant=tenant, username__iexact=ident).exclude(email='').first() \
                 if tenant else None
-            when = timezone.localtime().strftime('%d %b %Y %H:%M')
+            when = timezone.localtime().strftime('%d %b %Y %-I:%M %p')
             if target:
                 _email(target.email, 'Your account was locked after failed sign-ins',
                        f'<p>There were {recent} failed attempts to sign in to your account ({escape(ident)}) on '
@@ -487,7 +487,7 @@ def check_device(request, user):
     staffish = user.is_superuser or getattr(user, 'is_staff_user', False)
     if had_devices and staffish and settings_for(getattr(user, 'tenant', None)).alert_new_device:
         log_event('NEW_DEVICE', f'{user.username} signed in from a new device: {dev.label}', request=request, user=user)
-        when = timezone.localtime().strftime('%d %b %Y at %H:%M')
+        when = timezone.localtime().strftime('%d %b %Y at %-I:%M %p')
         host = request.get_host()
         _email(user.email, 'New sign-in to your account',
                f'<p>Your account was just used to sign in from a new device:</p>'
@@ -1026,7 +1026,7 @@ def report_breach(tenant, data, user, request=None):
                f'<p><b>{escape(b.title)}</b> was recorded by {escape(user.get_full_name() or user.username)}.</p>'
                f'<p>{escape(description)}</p><p>If people are likely to be harmed, the Nigeria Data Protection '
                f'Commission must be told within 72 hours of discovery — by <b>'
-               f'{timezone.localtime(b.deadline):%d %B %Y %H:%M}</b>.</p>')
+               f'{timezone.localtime(b.deadline):%d %B %Y %-I:%M %p}</b>.</p>')
     return b
 
 
@@ -1079,7 +1079,7 @@ def ndpc_letter(b):
 Notification of a personal data breach — {t.name} ({b.reference})
 
 1. Data controller: {n.controller or t.name}, {t.address or '[address]'}. Data Protection Officer: {n.dpo_name or '[name]'}, {n.dpo_email or '[email]'}, {n.dpo_phone or '[phone]'}.
-2. When it happened: {timezone.localtime(b.occurred_at).strftime('%d %B %Y %H:%M') if b.occurred_at else 'not yet known'}. When we became aware: {timezone.localtime(b.discovered_at):%d %B %Y %H:%M}.
+2. When it happened: {timezone.localtime(b.occurred_at).strftime('%d %B %Y %-I:%M %p') if b.occurred_at else 'not yet known'}. When we became aware: {timezone.localtime(b.discovered_at):%d %B %Y %-I:%M %p}.
 3. What happened: {b.description}
 4. Personal data involved: {b.data_types or '[categories of data]'}.
 5. People affected: about {b.people_affected}{', including children' if b.children_involved else ''}.
@@ -1327,7 +1327,7 @@ def compliance(tenant, year):
         from saas_admin.models import Backup
         last = Backup.objects.filter(tenant=tenant).order_by('-created_at').first()
         sec('Backups', 'ok' if last and last.created_at > timezone.now() - timedelta(days=2) else 'warn',
-            [f'Last backup {timezone.localtime(last.created_at):%d %B %Y %H:%M}.' if last else 'No backups recorded.'])
+            [f'Last backup {timezone.localtime(last.created_at):%d %B %Y %-I:%M %p}.' if last else 'No backups recorded.'])
     except Exception:
         pass
     pupils = Student._base_manager.filter(tenant=tenant, status__in=ENROLLED_STATUSES).count()
@@ -1450,7 +1450,7 @@ def nightly():
                 for e in emails:
                     _email(e, f'Breach {b.reference}: decide on reporting',
                            f'<p>{escape(b.title)} — the 72-hour NDPC deadline '
-                           f'{"passed" if b.hours_left < 0 else "is"} {timezone.localtime(b.deadline):%d %B %H:%M}. '
+                           f'{"passed" if b.hours_left < 0 else "is"} {timezone.localtime(b.deadline):%d %B %-I:%M %p}. '
                            f'Report it or record why it does not need reporting.</p>')
         soon = timezone.localdate() + timedelta(days=5)
         for dr in DataRequest.objects.filter(tenant=t, status__in=('NEW', 'VERIFYING', 'IN_PROGRESS'), due_on__lte=soon):

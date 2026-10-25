@@ -78,7 +78,7 @@
       <td class="gsl-cell-name">{{ log.student.full_name }}</td>
       <td data-label="Class">{{ log.student.class_assigned.name|default:"—" }}</td>
       <td data-label="Status"><span class="badge {% if log.direction == 'IN' %}in{% else %}out{% endif %}">{{ log.get_direction_display }}</span></td>
-      <td data-label="Time">{{ log.scanned_at|date:"H:i" }}</td>
+      <td data-label="Time">{{ log.scanned_at|date:"g:i A" }}</td>
       <td data-label="Notified?">
         {% if log.parent_notified %}<span class="badge ok"><i class="bi bi-check-circle-fill"></i> Sent</span>
         {% else %}<span class="badge fail"><i class="bi bi-exclamation-triangle-fill"></i> {{ log.notify_error|default:"Failed" }}</span>{% endif %}

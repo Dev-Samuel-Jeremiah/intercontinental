@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Safeguarding · restricted</div>
   <h1 class="fin-title"><em>{{ c.student.full_name }}</em></h1>
-  <p class="fin-sub">{{ c.student.class_assigned|default:"" }} · {{ c.get_category_display }} · raised {{ c.raised_at|date:"j M Y H:i" }} by {{ c.raised_by.get_full_name|default:c.raised_by.username }} · {{ c.get_status_display }}{% if c.referred_to %} · referred to {{ c.referred_to }}{% endif %}</p>
+  <p class="fin-sub">{{ c.student.class_assigned|default:"" }} · {{ c.get_category_display }} · raised {{ c.raised_at|date:"j M Y g:i A" }} by {{ c.raised_by.get_full_name|default:c.raised_by.username }} · {{ c.get_status_display }}{% if c.referred_to %} · referred to {{ c.referred_to }}{% endif %}</p>
   {% if c.immediate_danger %}<span class="chip red">Immediate danger reported</span>{% endif %}
 </div></div>
 {% include "welfare/_nav.html" %}
@@ -12,7 +12,7 @@
   <div style="display:grid;gap:1.2rem">
     <div class="panel"><div class="panel-h"><h3>The concern</h3></div><div class="panel-b">{{ c.description|linebreaks }}</div></div>
     <div class="panel"><div class="panel-h"><h3>Chronology</h3></div><div class="panel-b">
-      {% for a in actions %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ a.at|date:"j M Y H:i" }}</b> <span class="hint">{{ a.by.get_full_name|default:a.by.username }}{% if a.status %} · status: {{ a.status|lower }}{% endif %}</span><div style="font-size:.9rem">{{ a.text|linebreaksbr }}</div></div>
+      {% for a in actions %}<div style="padding:.5rem 0;border-bottom:1px solid var(--rim)"><b>{{ a.at|date:"j M Y g:i A" }}</b> <span class="hint">{{ a.by.get_full_name|default:a.by.username }}{% if a.status %} · status: {{ a.status|lower }}{% endif %}</span><div style="font-size:.9rem">{{ a.text|linebreaksbr }}</div></div>
       {% empty %}<p class="empty">No action recorded yet.</p>{% endfor %}
     </div></div>
     {% if history %}<div class="panel"><div class="panel-h"><h3>Earlier concerns about this child</h3></div><div class="panel-b">{% for h in history %}<p style="margin:.2rem 0"><a href="{% url 'welfare:concern' h.pk %}">{{ h.raised_at|date:"j M Y" }} — {{ h.get_category_display }}</a> <span class="hint">{{ h.get_status_display }}</span></p>{% endfor %}</div></div>{% endif %}

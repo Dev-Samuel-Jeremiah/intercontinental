@@ -30,7 +30,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Gate &amp; safety · {{ roll.get_kind_display }}</div>
   <h1 class="fin-title">{{ roll.title }}</h1>
-  <p class="fin-sub">Started {{ roll.started_at|time:"H:i" }}{% if roll.assembly_point %} · assemble at {{ roll.assembly_point }}{% endif %} · <span id="rc-clock"></span>{% if not roll.is_open %} · ended {{ roll.ended_at|time:"H:i" }}{% endif %}</p>
+  <p class="fin-sub">Started {{ roll.started_at|time:"g:i A" }}{% if roll.assembly_point %} · assemble at {{ roll.assembly_point }}{% endif %} · <span id="rc-clock"></span>{% if not roll.is_open %} · ended {{ roll.ended_at|time:"g:i A" }}{% endif %}</p>
 </div>
 {% if roll.is_open %}<form method="post" onsubmit="return confirm('End the roll call? {{ counts.UNACCOUNTED }} still unaccounted for.')">{% csrf_token %}<input type="hidden" name="action" value="end">
   <input name="note" placeholder="Note (optional)" style="padding:.55rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">

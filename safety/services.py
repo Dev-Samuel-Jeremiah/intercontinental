@@ -96,7 +96,7 @@ def _sms_code(pass_id):
     p = PickupPass.objects.select_related('student', 'student__tenant').get(pk=pass_id)
     send_sms(p.collector_phone,
              f"{p.student.tenant.name}: your code to collect {p.student.full_name} is {p.code}, "
-             f"valid {p.valid_on:%d %b} until {timezone.localtime(p.expires_at):%H:%M}. "
+             f"valid {p.valid_on:%d %b} until {timezone.localtime(p.expires_at):%-I:%M %p}. "
              f"Bring ID and show this code at the gate.")
 
 
@@ -187,7 +187,7 @@ def release(student, user, *, collector='', code='', override_reason='', other_n
         pass_obj.status = PickupPass.USED
         pass_obj.save(update_fields=['status'])
     if early:
-        note = f'Left {timezone.localtime(now):%H:%M} with {name}' + (f' — {reason}' if reason else '')
+        note = f'Left {timezone.localtime(now):%-I:%M %p} with {name}' + (f' — {reason}' if reason else '')
         mark = Attendance.objects.filter(tenant_id=student.tenant_id, student=student,
                                          date=timezone.localdate(), subject__isnull=True).first()
         if mark:
@@ -205,7 +205,7 @@ def _notify_pickup(release_id):
     r = PickupRelease.objects.select_related('student', 'student__tenant').get(pk=release_id)
     when = timezone.localtime(r.released_at)
     text = (f"{r.student.tenant.name}: {r.student.full_name} was collected by {r.collector_name}"
-            f" at {when:%H:%M}" + (' (early' + (f': {r.reason}' if r.reason else '') + ')' if r.early else '')
+            f" at {when:%-I:%M %p}" + (' (early' + (f': {r.reason}' if r.reason else '') + ')' if r.early else '')
             + '. If this is unexpected, call the school now.')
     sent = False
     for _name, phone in contacts(r.student, 'SMS'):

@@ -181,7 +181,7 @@ def office_hours_text(tenant):
     cfg = settings_for(tenant)
     days = [d.strip().title() for d in cfg.office_days.split(',') if d.strip()]
     span = f'{days[0]}–{days[-1]}' if len(days) > 2 else ', '.join(days)
-    return f'{span}, {cfg.office_start:%H:%M}–{cfg.office_end:%H:%M}'
+    return f'{span}, {cfg.office_start:%-I:%M %p}–{cfg.office_end:%-I:%M %p}'
 
 
 def is_participant(conv, user):

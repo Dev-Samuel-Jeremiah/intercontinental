@@ -107,7 +107,7 @@ class BookingTests(Base):
         self.assertTrue(Notification.objects.filter(recipient=self.tech_user, title__startswith='Chemistry Lab booked').exists())
         made, skipped = svc.book(self.lab, self.admin, q(date=day, start_time='11:00', end_time='12:00', purpose='Clash'))
         self.assertEqual(made, [])
-        self.assertIn('Booked 10:00–11:20', skipped[0][1][0])
+        self.assertIn('Booked 10:00 AM–11:20 AM', skipped[0][1][0])
         with self.assertRaisesMessage(svc.LabError, 'holds 30'):
             svc.book(self.lab, self.admin, q(date=day, start_time='13:00', end_time='14:00', students=45))
         week = svc.week(self.lab, day)

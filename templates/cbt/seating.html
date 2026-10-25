@@ -23,7 +23,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">Seating plan</div>
   <h1 class="fin-title">{{ exam.title }}</h1>
-  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, H:i" }} · {{ candidates }} candidate{{ candidates|pluralize }}. Neighbours are kept from different classes wherever possible.</p>
+  <p class="fin-sub">{{ exam.subject.name }} · {{ exam.start_time|date:"D j M, g:i A" }} · {{ candidates }} candidate{{ candidates|pluralize }}. Neighbours are kept from different classes wherever possible.</p>
 </div><div style="display:flex;gap:.4rem">{% if data.total %}<button class="fin-btn fin-btn-gold" onclick="window.print()"><i class="bi bi-printer"></i> Print charts &amp; door list</button>{% endif %}<a class="fin-btn fin-btn-sm" href="{% url 'cbt:halls' %}"><i class="bi bi-building"></i> Halls</a></div></div>
 {% include "cbt/_bank_msgs.html" %}
 <div class="panel"><div class="panel-b">
@@ -35,7 +35,7 @@
   </form>{% else %}<p class="hint" style="margin:0">Add your exam halls first. <a href="{% url 'cbt:halls' %}" style="color:var(--champagne-lt)">Add halls</a></p>{% endif %}
 </div></div>
 {% if data.total %}<div class="sheets">
-  {% for p in data.plans %}<div class="sheet"><h2>{{ school.name }} — {{ p.hall.name }}</h2><div style="font-size:12px">{{ exam.title }} · {{ exam.subject.name }} · {{ exam.start_time|date:"l j F Y, H:i" }} · {{ p.count }} candidates</div>
+  {% for p in data.plans %}<div class="sheet"><h2>{{ school.name }} — {{ p.hall.name }}</h2><div style="font-size:12px">{{ exam.title }} · {{ exam.subject.name }} · {{ exam.start_time|date:"l j F Y, g:i A" }} · {{ p.count }} candidates</div>
     <div class="front">FRONT · INVIGILATOR</div>
     <div class="seats" style="grid-template-columns:repeat({{ p.hall.columns }},1fr)">{% for row in p.grid %}{% for s in row %}{% if s %}<div class="st"><span class="lb">{{ s.label }}</span><b>{{ s.student.full_name }}</b>{{ s.student.admission_number }}<br><span style="color:#78716c">{{ s.student.class_assigned.name }}</span></div>{% else %}<div class="st empty"></div>{% endif %}{% endfor %}{% endfor %}</div>
   </div>{% endfor %}

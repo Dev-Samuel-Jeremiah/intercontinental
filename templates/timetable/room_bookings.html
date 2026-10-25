@@ -39,14 +39,14 @@
     {% endif %}
     </div></div>
     <div class="panel"><div class="panel-h"><h3><i class="bi bi-bookmark-check"></i> My upcoming bookings</h3></div>
-      {% for b in mine %}<div class="rm"><div class="it"><span class="tm">{{ b.date|date:"D j M" }}</span><span><b style="color:var(--white)">{{ b.room.name }}</b> · {{ b.start_time|time:"H:i" }}–{{ b.end_time|time:"H:i" }} · {{ b.purpose }}</span>
+      {% for b in mine %}<div class="rm"><div class="it"><span class="tm">{{ b.date|date:"D j M" }}</span><span><b style="color:var(--white)">{{ b.room.name }}</b> · {{ b.start_time|time:"g:i A" }}–{{ b.end_time|time:"g:i A" }} · {{ b.purpose }}</span>
         <form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="id" value="{{ b.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="cancel" title="Cancel booking"><i class="bi bi-x-lg"></i></button></form></div></div>
       {% empty %}<div class="empty" style="padding:1.4rem"><p style="margin:0">No bookings coming up.</p></div>{% endfor %}
     </div>
   </div>
   <div class="panel"><div class="panel-h"><h3><i class="bi bi-building"></i> Rooms on {{ day|date:"l j M Y" }}</h3><span class="hint"><span class="chip">lesson</span> <span class="chip gold">booking</span></span></div>
     {% for r in plan %}<div class="rm"><h4><i class="bi bi-door-closed" style="color:var(--champagne-lt)"></i> {{ r.room.name }} <span class="hint">{{ r.room.get_kind_display }}</span></h4>
-      {% for i in r.items %}<div class="it"><span class="tm">{{ i.start|time:"H:i" }}–{{ i.end|time:"H:i" }}</span><span class="chip {% if i.kind == 'booking' %}gold{% endif %}">{{ i.what }}</span>
+      {% for i in r.items %}<div class="it"><span class="tm">{{ i.start|time:"g:i A" }}–{{ i.end|time:"g:i A" }}</span><span class="chip {% if i.kind == 'booking' %}gold{% endif %}">{{ i.what }}</span>
         {% if i.booking %}<span class="hint">{{ i.booking.booked_by.get_full_name|default:i.booking.booked_by.username }}</span>
           {% if is_admin or i.booking.booked_by_id == request.user.id %}<form method="post">{% csrf_token %}<input type="hidden" name="date" value="{{ day|date:'Y-m-d' }}"><input type="hidden" name="id" value="{{ i.booking.id }}"><button class="fin-btn fin-btn-sm fin-btn-danger" name="action" value="cancel" title="Cancel booking" onclick="return confirm('Cancel this booking?')"><i class="bi bi-x-lg"></i></button></form>{% endif %}{% endif %}</div>
       {% empty %}<div class="it" style="color:var(--green)"><i class="bi bi-check2-circle"></i> Free all day</div>{% endfor %}

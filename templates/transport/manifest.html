@@ -11,7 +11,7 @@
 <div class="panel"><div class="panel-b"><table class="tbl" data-no-export>
   <thead><tr><th>Stop / time</th><th>Student</th><th>Class</th><th>Parent phone</th><th>On</th><th>Off</th></tr></thead><tbody>
   {% for stop, time, riders in rows %}
-    {% for r in riders %}<tr>{% if forloop.first %}<td rowspan="{{ riders|length }}" class="name">{{ stop.name|default:"No stop set" }}<br><small class="hint">{{ time|time:"H:i"|default:"" }}</small></td>{% endif %}
+    {% for r in riders %}<tr>{% if forloop.first %}<td rowspan="{{ riders|length }}" class="name">{{ stop.name|default:"No stop set" }}<br><small class="hint">{{ time|time:"g:i A"|default:"" }}</small></td>{% endif %}
       <td>{{ r.student.full_name }}</td><td>{{ r.student.class_assigned|default:"" }}</td><td>{{ r.student.parent_phone|default:"" }}</td><td>☐</td><td>☐</td></tr>{% endfor %}
   {% empty %}<tr><td colspan="6" class="empty">No riders on this leg.</td></tr>{% endfor %}
 </tbody></table></div></div>

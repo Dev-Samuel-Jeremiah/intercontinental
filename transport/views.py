@@ -544,6 +544,6 @@ def family_position(request, trip_id):
         raise Http404
     return JsonResponse({'lat': float(trip.last_lat) if trip.last_lat is not None else None,
                          'lng': float(trip.last_lng) if trip.last_lng is not None else None,
-                         'seen': timezone.localtime(trip.last_seen).strftime('%H:%M') if trip.last_seen else None,
+                         'seen': timezone.localtime(trip.last_seen).strftime('%-I:%M %p') if trip.last_seen else None,
                          'ended': bool(trip.ended_at), 'delay': trip.delay_minutes})
 

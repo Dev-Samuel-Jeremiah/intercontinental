@@ -13,7 +13,7 @@
     <a class="fin-btn" href="{% url 'transport:run_trip' r.pk %}?leg=PM">Afternoon</a>
     <a class="fin-btn fin-btn-sm" href="{% url 'transport:manifest' r.pk %}">Manifest</a></div>
   {% empty %}<p class="empty">No routes.</p>{% endfor %}
-  {% for f in field %}<div class="panel" style="padding:1rem"><h3 style="margin:0 0 .3rem">{{ f.title }}</h3><p class="hint" style="margin:0 0 .6rem">Field trip to {{ f.destination }} · {{ f.depart|time:"H:i" }}</p>
+  {% for f in field %}<div class="panel" style="padding:1rem"><h3 style="margin:0 0 .3rem">{{ f.title }}</h3><p class="hint" style="margin:0 0 .6rem">Field trip to {{ f.destination }} · {{ f.depart|time:"g:i A" }}</p>
     <a class="fin-btn fin-btn-gold" href="{% url 'transport:run_field_trip' f.pk %}">Open trip</a></div>{% endfor %}
 </div>
 <p style="margin-top:1rem"><a href="{% url 'transport:incidents' %}"><i class="bi bi-exclamation-triangle"></i> Report an incident</a></p>
