@@ -1,0 +1,25 @@
+{# What is waiting for an administrator, most urgent first (dashboard.insights.attention) #}
+<style>
+  .att-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.7rem;padding:.9rem 1.1rem 1.1rem}
+  .att{display:flex;gap:.75rem;align-items:center;padding:.8rem .9rem;border-radius:14px;text-decoration:none;color:var(--white);
+    background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--rim);transition:transform .15s,box-shadow .15s}
+  .att:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px var(--rim3),0 10px 20px -12px rgba(0,0,0,.7)}
+  .att .n{font-family:var(--serif,'Cormorant Garamond',serif);font-size:1.7rem;font-weight:700;line-height:1;min-width:2ch;text-align:center}
+  .att .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex-shrink:0}
+  .att b{display:block;font-size:.84rem;line-height:1.3}
+  .att small{font-size:.72rem;color:var(--slate2)}
+  .att.red{box-shadow:inset 0 0 0 1px rgba(248,113,113,.45)} .att.red .ic{background:var(--red-dim);color:var(--red)} .att.red .n{color:var(--red)}
+  .att.amber .ic{background:var(--amber-dim);color:var(--amber)} .att.amber .n{color:var(--amber)}
+  .att.blue .ic{background:rgba(96,165,250,.14);color:#93c5fd} .att.blue .n{color:#93c5fd}
+  .att-sum{display:flex;gap:.4rem;flex-wrap:wrap}
+</style>
+<div class="db-card c12" id="attention">
+  <div class="db-card-h"><h3><i class="bi bi-bell"></i> Needs your attention</h3>
+    {% if items %}<div class="att-sum"><span class="db-tag">{{ items|length }} thing{{ items|length|pluralize }} waiting</span></div>{% endif %}</div>
+  {% if items %}
+  <div class="att-grid">
+    {% for a in items %}<a class="att {{ a.tone }}" href="{{ a.url }}"><span class="ic"><i class="bi bi-{{ a.icon }}"></i></span>
+      <span style="flex:1;min-width:0"><b>{{ a.label }}</b><small>{% if a.tone == 'red' %}Urgent · {% endif %}Open →</small></span><span class="n">{{ a.count }}</span></a>{% endfor %}
+  </div>
+  {% else %}<div class="db-empty"><i class="bi bi-check2-all"></i>All clear: nothing is waiting for you.</div>{% endif %}
+</div>

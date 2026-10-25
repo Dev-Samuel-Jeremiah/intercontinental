@@ -118,7 +118,47 @@ class InsightTests(Base):
             raise RuntimeError('db down')
         with self.assertLogs('dashboard.insights', 'ERROR'):
             self.assertEqual(insights.safe(boom, []), [])
-        with mock.patch.object(insights, 'approvals', side_effect=RuntimeError('db down')), \
+        with mock.patch.object(insights, 'attention_for', side_effect=RuntimeError('db down')), \
                 self.assertLogs('dashboard.insights', 'ERROR'):
             page = self.get(self.head, '/dashboard/admin/')
         self.assertEqual(page.status_code, 200)
+
+
+class AttentionCardTests(TenantTestCase):
+    """The admin's 'Needs your attention' card: everything waiting, urgent first, each with a working link."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school)
+        set_current_tenant(self.school)
+
+    def test_every_item_counts_and_links(self):
+        from django.urls import reverse
+        from dashboard.insights import _attention_items
+        for tone, label, how, page, icon in _attention_items():
+            self.assertIsInstance(how(self.school), int, label)          # no wrong field names hiding an item
+            reverse(page)
+
+    def test_waiting_things_show_urgent_first(self):
+        from safety.models import StaffLeave
+        from security.models import Breach, PasswordHelpRequest
+        from users.models import Staff
+        teacher = Staff.objects.get(user=make_teacher(self.school))
+        StaffLeave.objects.create(tenant=self.school, staff=teacher, leave_type='SICK', start_date=date(2026, 11, 2),
+                                  end_date=date(2026, 11, 3))
+        PasswordHelpRequest.objects.create(tenant=self.school, kind='STUDENT', identifier='A1', name='X')
+        Breach.objects.create(tenant=self.school, reference='BR-1', title='Laptop lost', description='Lost on a bus',
+                              discovered_at=timezone.now())
+        self.client.force_login(self.admin)
+        page = self.client.get('/dashboard/super-admin/', HTTP_HOST=self.host(self.school)).content.decode()
+        self.assertIn('Needs your attention', page)
+        breach, leave = page.index('Data breaches still open'), page.index('Leave requests')
+        self.assertLess(breach, leave)                                       # urgent first
+        self.assertIn('href="/safety/staff/leave/"', page)
+        self.assertIn('People asking for a new password', page)
+
+    def test_all_clear(self):
+        self.client.force_login(self.admin)
+        page = self.client.get('/dashboard/super-admin/', HTTP_HOST=self.host(self.school))
+        self.assertContains(page, 'All clear: nothing is waiting for you.')

@@ -33,6 +33,7 @@
   </div>
 
   <div class="db-grid">
+    {% include "dashboard/_attention.html" with items=ins.approvals %}
     <div class="db-card c8"><div class="db-card-h"><h3><i class="bi bi-heart-pulse"></i> System health</h3><a href="{% url 'security:platform' %}">Open →</a></div>
       <div class="db-card-b" style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap">
         <div class="db-ring" style="--p:{% if ins.health_counts %}{% widthratio ins.health_counts.ok ins.health|length 100 %}{% else %}0{% endif %};--c:{% if ins.health_counts.bad %}var(--red){% elif ins.health_counts.warn %}var(--amber){% else %}var(--green){% endif %}"><span><b>{{ ins.health_counts.ok|default:0 }}/{{ ins.health|length }}</b><small>checks fine</small></span></div>
@@ -50,9 +51,6 @@
       {% for e in ins.security.recent %}<div class="db-row"><span class="ico {% if e.action == 'DENIED' or e.action == 'DELETED' %}red{% elif e.category == 'MONEY' %}green{% else %}blue{% endif %}"><i class="bi bi-{% if e.action == 'DENIED' %}slash-circle{% elif e.action == 'DELETED' %}trash{% elif e.category == 'MONEY' %}cash{% elif e.category == 'RESULTS' %}journal-check{% else %}pencil-square{% endif %}"></i></span>
         <div class="t"><b>{{ e.summary|truncatechars:70 }}</b><span>{{ e.username|default:"System" }} · {{ e.at|timesince }} ago</span></div></div>{% empty %}<div class="db-empty">Nothing notable recorded.</div>{% endfor %}</div>
 
-    <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-inboxes"></i> Waiting for a decision</h3></div>
-      {% for a in ins.approvals %}<a class="db-row" href="{{ a.url }}"><span class="ico amber"><i class="bi bi-{{ a.icon }}"></i></span><div class="t"><b>{{ a.label }}</b></div><span class="badge">{{ a.count }}</span></a>
-      {% empty %}<div class="db-empty"><i class="bi bi-check2-all"></i>Nothing waiting. All clear.</div>{% endfor %}</div>
 
     <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-cpu"></i> School intelligence</h3><a href="{% url 'schoolai:dashboard' %}">Open →</a></div>
       <div class="db-card-b" style="display:flex;gap:1rem;align-items:center">

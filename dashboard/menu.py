@@ -32,7 +32,7 @@ CARDS = {
                 ('classes', 'My classes today'), ('form', 'My form class — who needs me'), ('exams', 'My exams'),
                 ('homework', 'Homework I set'), ('events', 'Coming up')],
     'admin': [('kpis', 'Numbers at the top'), ('today', 'Today (attendance and lessons)'),
-              ('waiting', 'Waiting for you'), ('results', 'Results'), ('support', 'Students to support'),
+              ('waiting', 'Needs your attention'), ('results', 'Results'), ('support', 'Students to support'),
               ('fees', 'Fees this term'), ('events', 'Coming up'), ('targets', 'School targets')],
     'proprietor': [('kpis', 'Numbers at the top'), ('money', 'Money this term'), ('debts', 'How long debts have waited'),
                    ('enrolment', 'Enrolment'), ('ai', 'School intelligence'), ('sections', 'Sections side by side'),

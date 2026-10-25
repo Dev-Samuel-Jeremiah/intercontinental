@@ -33,6 +33,7 @@
     {% endif %}
 
   <div class="db-grid">
+    {% if 'admin:waiting' not in menu_hidden %}{% include "dashboard/_attention.html" with items=ins.approvals %}{% endif %}
     {% if 'admin:today' not in menu_hidden %}
     <div class="db-card c8"><div class="db-card-h"><h3><i class="bi bi-sun"></i> Today</h3><a href="{% url 'users:attendance_home' %}">Registers →</a></div>
       <div class="db-card-b" style="display:flex;gap:1.3rem;align-items:center;flex-wrap:wrap">
@@ -50,11 +51,6 @@
     </div>
     {% endif %}
 
-    {% if 'admin:waiting' not in menu_hidden %}
-    <div class="db-card c4"><div class="db-card-h"><h3><i class="bi bi-inboxes"></i> Waiting for you</h3></div>
-      {% for a in ins.approvals %}<a class="db-row" href="{{ a.url }}"><span class="ico amber"><i class="bi bi-{{ a.icon }}"></i></span><div class="t"><b>{{ a.label }}</b></div><span class="badge">{{ a.count }}</span></a>
-      {% empty %}<div class="db-empty"><i class="bi bi-check2-all"></i>Nothing waiting for a decision.</div>{% endfor %}</div>
-    {% endif %}
 
     {% if 'admin:results' not in menu_hidden %}
     <div class="db-card c6"><div class="db-card-h"><h3><i class="bi bi-bar-chart"></i> Results{% if ins.results %} · {{ ins.results.term }}{% endif %}</h3><a href="{% url 'analytics:home' %}">Analytics →</a></div>

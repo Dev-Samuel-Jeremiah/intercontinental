@@ -142,6 +142,109 @@ def approvals(tenant):
     return out
 
 
+# Everything waiting for an administrator: (tone, label, how to count it, page, icon).
+# red = urgent (people's safety, legal deadlines), amber = a decision to make, blue = a job to do.
+def _attention_items():
+    from django.db.models import Q
+    today = timezone.localdate()
+
+    def count(model_path, **filters):
+        def run(t):
+            module, name = model_path.rsplit('.', 1)
+            model = getattr(__import__(module, fromlist=[name]), name)
+            return model._default_manager.filter(tenant=t, **filters).count()
+        return run
+
+    def data_requests_overdue(t):
+        from security.models import DataRequest
+        return DataRequest._default_manager.filter(tenant=t, status__in=('NEW', 'VERIFYING', 'IN_PROGRESS'),
+                                                   due_on__lt=today).count()
+
+    def registers_not_taken(t):
+        from analytics import metrics
+        return len((metrics.attendance_today(t) or {}).get('unmarked') or [])
+
+    def held_comments(t):
+        from moments.models import Comment
+        return Comment._default_manager.filter(post__tenant=t, status='HELD').count()
+
+    return [
+        ('red', 'Safeguarding concerns to look at', count('welfare.models.Concern', status='NEW'),
+         'welfare:safeguarding', 'shield-exclamation'),
+        ('red', 'Data breaches still open', count('security.models.Breach', status='OPEN'), 'security:breaches',
+         'exclamation-octagon'),
+        ('red', 'Data requests past their deadline', data_requests_overdue, 'security:requests', 'alarm'),
+        ('red', 'Staff complaints open', count('staffchat.models.ChatRoom', kind='COMPLAINT', status__in=('OPEN', 'REVIEW')),
+         'staffchat:home', 'chat-square-text'),
+        ('red', 'Lab safety incidents open', count('labs.models.SafetyIncident', closed=False), 'labs:home', 'bandaid'),
+        ('amber', 'Payments to confirm', count('finance.models.Payment', status='PENDING'), 'finance:admin_dashboard',
+         'cash-coin'),
+        ('amber', 'Wallet top-ups to confirm', count('finance.models.TopUpRequest', status='PENDING'),
+         'finance:admin_dashboard', 'wallet2'),
+        ('amber', 'Result sheets to approve', count('results.models.SubjectSheet', status='SUBMITTED'),
+         'results:approvals', 'journal-check'),
+        ('amber', 'Questions about results', count('results.models.ResultQuery', status='OPEN'), 'results:queries',
+         'patch-question'),
+        ('amber', 'Leave requests', count('safety.models.StaffLeave', status='PENDING'), 'safety:staff_leave',
+         'calendar2-x'),
+        ('amber', 'Lesson notes to review', count('curriculum.models.LessonNote', status='SUBMITTED'),
+         'curriculum:review', 'journal-richtext'),
+        ('amber', 'New admission applications', count('admissions.models.Application', status='NEW'),
+         'admissions:board', 'person-plus'),
+        ('amber', 'Corrections sent by parents', count('users.models.ProfileChangeRequest', status='PENDING'),
+         'users:change_requests', 'pencil-square'),
+        ('amber', 'People asking for a new password', count('security.models.PasswordHelpRequest', status='OPEN'),
+         'security:password_help', 'key'),
+        ('amber', 'Data protection requests', count('security.models.DataRequest', status__in=('NEW', 'VERIFYING')),
+         'security:requests', 'inbox'),
+        ('amber', 'Exeat requests', count('hostel.models.ExeatRequest', status='SCHOOL'), 'hostel:exeats', 'door-open'),
+        ('amber', 'Bus pickup changes', count('transport.models.PickupChange', status='PENDING'), 'transport:changes',
+         'bus-front'),
+        ('amber', 'Reported posts', count('moments.models.MomentReport', resolved=False), 'moments:review', 'flag'),
+        ('amber', 'Comments held for review', held_comments, 'moments:review', 'chat-square-dots'),
+        ('blue', 'Registers not taken today', registers_not_taken, 'users:attendance_home', 'clipboard-x'),
+        ('blue', 'Repairs reported', count('facilities.models.MaintenanceRequest', status='OPEN'),
+         'facilities:maintenance', 'tools'),
+        ('blue', 'Lost ID cards to reissue', count('safety.models.LostCardReport', status='REPORTED'),
+         'safety:lost_cards', 'person-vcard'),
+        ('blue', 'Questions the school AI could not answer', count('schoolai.models.AskedQuestion', status='UNSURE'),
+         'schoolai:questions', 'mortarboard'),
+    ]
+
+
+def attention_for(request):
+    """attention() for the person looking: administrators see everything; other staff on the office
+    dashboard (account officers, librarians) only what leads to a page they can open."""
+    from users.views_profile import can_manage, can_see_fees
+    items = attention(request.tenant)
+    if can_manage(request.user):
+        return items
+    from django.urls import resolve
+    from dashboard import menu
+    role = menu.restricted_role(request.user, request.tenant)
+    hidden = menu.not_shown(request)
+    open_pages = {i['name'] for g in menu.sections_for(role) for i in g['items'] if i['name'] not in hidden} if role else set()
+    if can_see_fees(request.user):
+        open_pages.add('finance:admin_dashboard')
+    return [a for a in items if resolve(a['url']).view_name in open_pages]
+
+
+def attention(tenant):
+    """What is waiting for an administrator, most urgent first: [{'label', 'count', 'url', 'icon', 'tone'}]."""
+    from django.urls import NoReverseMatch, reverse
+    order = {'red': 0, 'amber': 1, 'blue': 2}
+    out = []
+    for tone, label, how, page, icon in _attention_items():
+        try:
+            n = how(tenant)
+            url = reverse(page)
+        except (NoReverseMatch, Exception):
+            continue                                    # a module that is not set up must not hide the rest
+        if n:
+            out.append({'label': label, 'count': n, 'url': url, 'icon': icon, 'tone': tone})
+    return sorted(out, key=lambda a: (order[a['tone']], -a['count']))
+
+
 def staff_in_today(tenant):
     from idcards.models import StaffClockLog
     from users.models import Staff
@@ -200,7 +303,7 @@ def super_admin(request):
             'events_24h': AuditEvent.objects.filter(tenant=t, at__gte=now - timedelta(hours=24)).count(),
             'recent': list(AuditEvent.objects.filter(tenant=t).exclude(action__in=('LOGIN', 'LOGOUT'))[:6]),
         }, {}),
-        'approvals': safe(lambda: approvals(t), []),
+        'approvals': safe(lambda: attention(t), []),
         'ai': safe(lambda: ai_maturity(t)), 'risk': safe(lambda: ai_risk(t)),
         'activity': safe(lambda: metrics.activity(t, limit=10), []),
         'fees': safe(lambda: metrics.fee_position(t)),
@@ -243,7 +346,7 @@ def admin(request):
         'attendance_30': safe(lambda: metrics.attendance_rate(t)),
         'staff_in': safe(lambda: staff_in_today(t)),
         'lessons': safe(lessons),
-        'approvals': safe(lambda: approvals(t), []),
+        'approvals': safe(lambda: attention_for(request), []),
         'welfare': safe(welfare, {}),
         'results': safe(lambda: metrics.results_summary(t)),
         'risk': safe(lambda: ai_risk(t)),
