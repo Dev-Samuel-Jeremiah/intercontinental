@@ -840,47 +840,80 @@ def password_help(request):
 
 @admin_only
 def menu_access(request):
-    from dashboard import menu
+    """Module permissions: what each staff role, or one person, sees in the sidebar and on the dashboard,
+    and (for a person) their permission switches."""
+    from dashboard import access, menu
     from users.models import Staff
     from .models import MenuRule
     t = request.tenant
-    role = request.POST.get('role') or request.GET.get('role') or 'TEACHER'
-    if role not in dict(menu.ROLES):
+    roles = dict(menu.ROLES)
+    people = list(Staff.objects.filter(tenant=t, role__in=roles).select_related('user').order_by('role', 'full_name'))
+    person = None
+    if request.POST.get('staff') or request.GET.get('staff'):
+        person = get_object_or_404(Staff, pk=request.POST.get('staff') or request.GET.get('staff'), tenant=t,
+                                   role__in=roles)
+    role = person.role if person else (request.POST.get('role') or request.GET.get('role') or 'TEACHER')
+    if role not in roles:
         role = 'TEACHER'
-    role_label = dict(menu.ROLES)[role]
+    who = person.full_name if person else roles[role]
     sections = menu.sections_for(role)
     dash = menu.DASHBOARD_OF[role]
     cards = menu.CARDS[dash]
+    every = {i['name'] for g in sections for i in g['items']} | {f'{dash}:{k}' for k, _ in cards}
+    back = f"{request.path}?staff={person.pk}" if person else f"{request.path}?role={role}"
 
     if request.method == 'POST':
         action = request.POST.get('action', 'save')
-        before = menu.saved_hidden(t, role)
+        before = menu.saved_hidden(t, role, person)
         if action == 'reset':
-            MenuRule._default_manager.filter(tenant=t, role=role).delete()
-            after = menu.default_hidden(role)
-            messages.success(request, f'{role_label} are back to the recommended menu.')
+            if person:
+                MenuRule._default_manager.filter(tenant=t, staff=person).delete()
+                messages.success(request, f'{who} now follows the {roles[role].lower()} settings.')
+            else:
+                MenuRule._default_manager.filter(tenant=t, role=role, staff__isnull=True).delete()
+                messages.success(request, f'{who} are back to the recommended menu.')
         else:
-            shown = set(request.POST.getlist('show')) if action == 'save' else None
-            every = {i['name'] for g in sections for i in g['items']} | {f'{dash}:{k}' for k, _ in cards}
-            after = set(menu.save(t, role, [] if shown is None else every - shown, request.user))
-            messages.success(request, f'Saved. {role_label} now see {len(every - after)} of {len(every)} '
-                                      f'links and dashboard cards.' if shown is not None
-                             else f'{role_label} now see everything their role allows.')
-        if before != set(after):
-            svc.log_event('PERMISSIONS', f'Menu and dashboard changed for {role_label.lower()}', request=request,
+            shown = set(request.POST.getlist('show'))
+            after = set(menu.save(t, role, every - shown, request.user, staff=person))
+            note = f'{who} now see{"s" if person else ""} {len(every - after)} of {len(every)} links and dashboard cards.'
+            if person:
+                switches = {name: name in request.POST.getlist('switch') for name in access.SWITCH_LABEL}
+                changed = [access.SWITCH_LABEL[k] for k, v in switches.items() if getattr(person, k) != v]
+                if changed:
+                    for k, v in switches.items():
+                        setattr(person, k, v)
+                    person.save(update_fields=list(switches))
+                    svc.log_event('PERMISSIONS', f'Permission switches changed for {who}: {", ".join(changed)}',
+                                  request=request, obj=person)
+                    note += f' Switches changed: {", ".join(changed)}.'
+            messages.success(request, 'Saved. ' + note)
+        after = menu.saved_hidden(t, role, person)
+        if before != after:
+            svc.log_event('PERMISSIONS', f'Sidebar and dashboard changed for {who}', request=request,
                           changes={'hidden': [sorted(before), sorted(after)]})
-        return redirect(f"{request.path}?role={role}")
+        if person:
+            access.forget(person.user, t)
+        return redirect(back)
 
-    hidden = menu.saved_hidden(t, role)
+    hidden = menu.saved_hidden(t, role, person)
+    closed = access.closed_to(person.user, t, person) if person else set()
     for g in sections:
         for i in g['items']:
             i['on'] = i['name'] not in hidden
+            i['needs'] = access.needs(i['name'])
+            i['blocked'] = person is not None and i['on'] and i['name'] in closed
         g['shown'] = sum(1 for i in g['items'] if i['on'])
     card_rows = [{'key': f'{dash}:{k}', 'label': label, 'on': f'{dash}:{k}' not in hidden} for k, label in cards]
+    own = {r.staff_id for r in MenuRule._default_manager.filter(tenant=t, staff__isnull=False)}
     return render(request, 'security/menu_access.html', {
-        'roles': menu.ROLES, 'role': role, 'role_label': role_label, 'sections': sections, 'cards': card_rows,
+        'roles': menu.ROLES, 'role': role, 'role_label': roles[role], 'who': who, 'person': person,
+        'people': people, 'own_settings': [p for p in people if p.pk in own],
+        'person_has_own': bool(person and person.pk in own),
+        'sections': sections, 'cards': card_rows,
         'dash_label': {'teacher': 'Teacher dashboard', 'admin': 'Office dashboard',
                        'proprietor': 'Proprietor dashboard'}[dash],
-        'customised': MenuRule._default_manager.filter(tenant=t, role=role).exists(),
-        'staff_count': Staff.objects.filter(tenant=t, role=role).count(),
+        'customised': MenuRule._default_manager.filter(tenant=t, role=role, staff__isnull=True).exists(),
+        'staff_count': sum(1 for p in people if p.role == role),
+        'switches': [(group, [(name, label, getattr(person, name, False)) for name, label in rows])
+                     for group, rows in access.SWITCHES] if person else [],
     })

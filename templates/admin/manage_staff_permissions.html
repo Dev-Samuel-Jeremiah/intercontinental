@@ -651,9 +651,14 @@ document.addEventListener('DOMContentLoaded', () => {
         Permissions &amp; <em>Privileges</em>
       </h1>
     </div>
-    <div class="header-badge">
-      <i class="bi bi-people-fill"></i>
-      {{ staff_members|length }} Staff Member{{ staff_members|length|pluralize }}
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+      <a class="header-badge" href="{% url 'security:menu_access' %}" style="text-decoration:none">
+        <i class="bi bi-ui-checks-grid"></i> Module permissions: what each role or person sees
+      </a>
+      <div class="header-badge">
+        <i class="bi bi-people-fill"></i>
+        {{ staff_members|length }} Staff Member{{ staff_members|length|pluralize }}
+      </div>
     </div>
   </div>
 

@@ -110,3 +110,39 @@ def closed_to(user, tenant, staff):
 
 def forget(user, tenant):
     cache.delete(f'sidebar-closed:{tenant.pk}:{user.pk}')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Words for the Module Permissions page
+# ─────────────────────────────────────────────────────────────────────────────
+
+SWITCHES = [
+    ('Students', [('can_manage_students', 'Manage students (records, ID cards)'),
+                  ('can_generate_password', 'Make student and parent passwords'), ('can_create_staff', 'Create staff')]),
+    ('Attendance', [('can_mark_attendance', 'Mark attendance (gate, registers, pickup desk)')]),
+    ('Exams & results', [('can_manage_exams', 'Manage exams'), ('can_view_all_exams', 'See all exams'),
+                         ('can_enter_scores', 'Enter scores'), ('can_view_all_results', 'See all results'),
+                         ('can_publish_results', 'Publish results')]),
+    ('Money', [('can_access_finance', 'Finance'), ('can_approve_payments', 'Approve payments')]),
+    ('Boarding & stores', [('can_access_hostel', 'Hostel'), ('can_manage_boarders', 'Manage boarders'),
+                           ('can_access_inventory', 'Inventory')]),
+    ('Messages', [('can_send_messages', 'Send messages to parents')]),
+]
+SWITCH_LABEL = {name: label for _, rows in SWITCHES for name, label in rows}
+
+JOB_LABEL = {
+    _form_teacher: 'form teachers', _head_of_department: 'heads of department',
+    _broadsheet: 'form teachers, or “See all results”', _nurse: 'nurses (Health & Welfare settings)',
+    _librarian: 'librarians', _transport_manager: 'transport managers (Transport settings)',
+    _bus_crew: 'bus drivers and attendants', _store_keeper: 'store keepers (Facilities settings)',
+    _maintenance: 'the maintenance team (Facilities settings)',
+}
+
+
+def needs(name):
+    """What else a link needs besides being ticked, in words, or ''."""
+    if name in NEEDS_SWITCH:
+        return f'needs the “{SWITCH_LABEL.get(NEEDS_SWITCH[name], NEEDS_SWITCH[name])}” switch'
+    if name in NEEDS_JOB:
+        return f'only for {JOB_LABEL.get(NEEDS_JOB[name], "staff with that job")}'
+    return ''

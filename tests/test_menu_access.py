@@ -97,3 +97,70 @@ class MenuAccessTests(TenantTestCase):
         rule = MenuRule.objects.get(role='LIB')
         self.assertNotIn('not:a_link', rule.hidden)
         self.assertTrue(set(rule.hidden) <= set(self.every('LIB')))
+
+
+class PersonalMenuTests(TenantTestCase):
+    """One person can have their own modules and permission switches, apart from their role."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school)
+        self.ada_user = make_teacher(self.school, username='ada', full_name='Ada Obi')
+        self.ben_user = make_teacher(self.school, username='ben', full_name='Ben Eze')
+        set_current_tenant(self.school)
+        self.ada = Staff.objects.get(user=self.ada_user)
+
+    def page(self, user, path, **kw):
+        self.client.force_login(user)
+        return self.client.get(path, HTTP_HOST=self.host(self.school), **kw)
+
+    def post(self, data):
+        self.client.force_login(self.admin)
+        return self.client.post('/security/menu/', data, HTTP_HOST=self.host(self.school), follow=True)
+
+    def teacher_links(self):
+        return [i['name'] for g in menu.sections_for('TEACHER') for i in g['items']] + \
+               [f'teacher:{k}' for k, _ in menu.CARDS['teacher']]
+
+    def test_teachers_start_without_id_cards_and_admissions(self):
+        home = self.page(self.ben_user, '/dashboard/teacher/')
+        self.assertNotContains(home, 'id="grp-idcards-safety"')
+        self.assertNotContains(home, 'id="grp-admissions"')
+
+    def test_one_teacher_gets_admissions(self):
+        page = self.post({'staff': self.ada.pk, 'action': 'save', 'show': self.teacher_links(),
+                          'switch': ['can_manage_students']})
+        self.assertContains(page, 'Saved. Ada Obi now sees')
+        self.assertContains(page, 'Has their own settings')
+        board = reverse('admissions:board')
+        self.assertContains(self.page(self.ada_user, '/dashboard/teacher/'), f'href="{board}"')
+        self.assertEqual(self.page(self.ada_user, board).status_code, 200)
+        self.assertNotContains(self.page(self.ben_user, '/dashboard/teacher/'), f'href="{board}"')   # Ben follows the role
+        self.assertEqual(self.page(self.ben_user, board).status_code, 302)
+
+    def test_switches_are_saved_and_shape_the_menu(self):
+        shown = self.teacher_links()
+        self.post({'staff': self.ada.pk, 'action': 'save', 'show': shown, 'switch': ['can_mark_attendance']})
+        self.ada.refresh_from_db()
+        self.assertTrue(self.ada.can_mark_attendance)
+        self.assertFalse(self.ada.can_manage_students)               # unticked
+        home = self.page(self.ada_user, '/dashboard/teacher/')
+        self.assertContains(home, f'href="{reverse("idcards:gate_scan_log")}"')
+        self.assertNotContains(home, f'href="{reverse("idcards:id_card_directory")}"')
+        page = self.page(self.admin, f'/security/menu/?staff={self.ada.pk}')
+        self.assertContains(page, 'Ticked, but not shown')            # ID cards ticked, switch off
+
+    def test_back_to_the_role_and_role_reset_keeps_people(self):
+        self.post({'staff': self.ada.pk, 'action': 'save', 'show': self.teacher_links()})
+        self.post({'role': 'TEACHER', 'action': 'reset'})
+        self.assertTrue(MenuRule.objects.filter(staff=self.ada).exists())          # her own settings survive
+        self.post({'staff': self.ada.pk, 'action': 'reset'})
+        self.assertFalse(MenuRule.objects.filter(staff=self.ada).exists())
+        self.assertEqual(menu.saved_hidden(self.school, 'TEACHER', self.ada), menu.default_hidden('TEACHER'))
+
+    def test_only_this_schools_staff(self):
+        other = make_school('beta')
+        outsider = Staff.objects.get(user=make_teacher(other, username='out'))
+        set_current_tenant(self.school)
+        self.assertEqual(self.page(self.admin, f'/security/menu/?staff={outsider.pk}').status_code, 404)

@@ -860,6 +860,9 @@
         {% if 'users:manage_staff_permissions' not in menu_hidden %}<a href="{% url 'users:manage_staff_permissions' %}" class="nav-item" data-tooltip="Permissions">
           <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Staff Permissions</span>
         </a>{% endif %}
+        <a href="{% url 'security:menu_access' %}" class="nav-item" data-tooltip="Module Permissions">
+          <i class="bi bi-ui-checks-grid"></i><span class="ni-label">Module Permissions</span>
+        </a>
         {% if 'users:create_staff' not in menu_hidden %}<a href="{% url 'users:create_staff' %}" class="nav-item" data-tooltip="Create Staff">
           <i class="bi bi-person-plus-fill"></i><span class="ni-label">Create Staff</span>
         </a>{% endif %}
@@ -1388,9 +1391,6 @@
         {% if 'security:roles' not in menu_hidden %}<a href="{% url 'security:roles' %}" class="nav-item" data-tooltip="Roles &amp; Permissions">
           <i class="bi bi-person-badge-fill"></i><span class="ni-label">Roles &amp; Permissions</span>
         </a>{% endif %}
-        <a href="{% url 'security:menu_access' %}" class="nav-item" data-tooltip="Menu &amp; Dashboard">
-          <i class="bi bi-ui-checks-grid"></i><span class="ni-label">Menu &amp; Dashboard</span>
-        </a>
         {% if 'security:password_help' not in menu_hidden %}<a href="{% url 'security:password_help' %}" class="nav-item" data-tooltip="Password Help">
           <i class="bi bi-key-fill"></i><span class="ni-label">Password Help</span>
         </a>{% endif %}

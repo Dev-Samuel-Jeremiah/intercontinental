@@ -468,7 +468,10 @@ class PasswordHelpRequest(TenantModelMixin, models.Model):
 # ─────────────────────────────────────────────────────────────────────────────
 
 class MenuRule(TenantModelMixin, models.Model):
+    """One staff role's menu (staff empty), or one person's own menu, which replaces their role's."""
     role = models.CharField(max_length=20, help_text='Staff role: TEACHER, ACCOUNT, LIB or PROPRIETOR')
+    staff = models.ForeignKey('users.Staff', on_delete=models.CASCADE, null=True, blank=True, related_name='+',
+                              help_text='Set for one person\'s own settings')
     hidden = models.JSONField(default=list, blank=True,
                               help_text='Sidebar links (e.g. "admissions:board") and dashboard cards '
                                         '(e.g. "teacher:exams") this role does not see')
@@ -478,4 +481,9 @@ class MenuRule(TenantModelMixin, models.Model):
     objects = TenantManager()
 
     class Meta:
-        unique_together = ('tenant', 'role')
+        constraints = [
+            models.UniqueConstraint(fields=['tenant', 'role'], condition=models.Q(staff__isnull=True),
+                                    name='one_menu_rule_per_role'),
+            models.UniqueConstraint(fields=['tenant', 'staff'], condition=models.Q(staff__isnull=False),
+                                    name='one_menu_rule_per_person'),
+        ]

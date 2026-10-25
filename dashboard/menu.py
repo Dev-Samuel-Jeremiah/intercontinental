@@ -40,7 +40,7 @@ CARDS = {
 }
 
 # Hidden until an administrator says otherwise
-DEFAULT_HIDDEN_GROUPS = {'TEACHER': ['grp-admissions'], 'LIB': ['grp-admissions']}
+DEFAULT_HIDDEN_GROUPS = {'TEACHER': ['grp-admissions', 'grp-idcards-safety'], 'LIB': ['grp-admissions']}
 
 # Links that can never be hidden or closed
 LOCKED = {'dashboard:router'}
@@ -150,20 +150,37 @@ def default_hidden(role):
     return hidden
 
 
-def saved_hidden(tenant, role):
+def person_rule(tenant, staff):
+    """A person's own settings, or None when they follow their role's."""
     from security.models import MenuRule
-    rule = MenuRule._default_manager.filter(tenant=tenant, role=role).first() if tenant else None
+    if tenant is None or staff is None:
+        return None
+    return MenuRule._default_manager.filter(tenant=tenant, staff=staff).first()
+
+
+def saved_hidden(tenant, role, staff=None):
+    """What is hidden: the person's own settings if they have some, else their role's (or the recommended)."""
+    from security.models import MenuRule
+    own = person_rule(tenant, staff)
+    if own:
+        return set(own.hidden)
+    rule = MenuRule._default_manager.filter(tenant=tenant, role=role, staff__isnull=True).first() if tenant else None
     return set(rule.hidden) if rule else default_hidden(role)
 
 
-def save(tenant, role, hidden, user=None):
+def save(tenant, role, hidden, user=None, staff=None):
+    """Store a role's choices, or one person's (staff given), keeping only names that exist."""
     from security.models import MenuRule
     allowed = {i['name'] for g in sections_for(role) for i in g['items']}
     dash = DASHBOARD_OF.get(role)
     allowed |= {f'{dash}:{k}' for k, _ in CARDS.get(dash, [])}
     clean = sorted(h for h in set(hidden) if h in allowed)
-    MenuRule._default_manager.update_or_create(tenant=tenant, role=role,
-                                               defaults={'hidden': clean, 'updated_by': user})
+    if staff is not None:
+        MenuRule._default_manager.update_or_create(tenant=tenant, staff=staff,
+                                                   defaults={'role': role, 'hidden': clean, 'updated_by': user})
+    else:
+        MenuRule._default_manager.update_or_create(tenant=tenant, role=role, staff=None,
+                                                   defaults={'hidden': clean, 'updated_by': user})
     return clean
 
 
@@ -191,7 +208,7 @@ def hidden_for(request):
     if not hasattr(request, '_menu_hidden'):
         tenant = getattr(request, 'tenant', None)
         role = restricted_role(getattr(request, 'user', None), tenant)
-        request._menu_hidden = expand(role, saved_hidden(tenant, role)) if role else frozenset()
+        request._menu_hidden = expand(role, saved_hidden(tenant, role, request.user.staff)) if role else frozenset()
         request._menu_role = role
     return request._menu_hidden
 
