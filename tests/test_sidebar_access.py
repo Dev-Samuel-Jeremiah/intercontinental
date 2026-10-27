@@ -79,3 +79,32 @@ class SidebarAccessTests(TenantTestCase):
         self.assertIn(form_class, after)                               # now a form teacher
         self.assertIn(reverse('results:broadsheet'), after)
         self.assertEqual(self.refused(teacher, after), [])
+
+
+class PageTabsTests(SidebarAccessTests):
+    """The tab bars inside modules follow the same rules: no tab that would turn the person away."""
+    test_no_staff_sidebar_link_turns_them_away = None      # inherited helpers only, not the sidebar tests
+    test_admin_only_pages_are_not_listed = None
+    test_a_switch_or_a_job_brings_the_link_back = None
+
+    def page(self, user, name):
+        self.client.force_login(user)
+        return self.client.get(reverse(name), HTTP_HOST=self.host_name).content.decode()
+
+    def test_review_notes_tab_only_for_heads_of_department(self):
+        from curriculum.models import Department
+        teacher = self.person('TEACHER')
+        review = f'href="{reverse("curriculum:review")}"'
+        self.assertNotIn(review, self.page(teacher, 'curriculum:notes'))
+        head = self.person('TEACHER', can_enter_scores=True)
+        dept = Department.objects.create(tenant=self.school, name='Sciences', hod=Staff.objects.get(user=head))
+        from users.models import Subject
+        dept.subjects.add(Subject.objects.create(tenant=self.school, name='Physics'))
+        from django.core.cache import cache
+        cache.clear()
+        self.assertIn(review, self.page(head, 'curriculum:notes'))
+        self.assertIn(review, self.page(self.admin, 'curriculum:home'))
+
+    def test_my_form_class_tab_only_for_form_teachers(self):
+        teacher = self.person('TEACHER')
+        self.assertNotIn(f'href="{reverse("teaching:class_dashboard")}"', self.page(teacher, 'teaching:home'))

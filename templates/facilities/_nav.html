@@ -3,25 +3,25 @@
 .fnav{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem;align-items:center}.fnav small{color:var(--slate);font-size:.65rem;letter-spacing:1px;text-transform:uppercase;margin:0 .2rem 0 .5rem}
 .lines td{padding:.15rem .2rem}.lines input,.lines select{width:100%}</style>
 <div class="fnav no-print">
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:home' %}"><i class="bi bi-building-gear"></i> Overview</a>
+  {% if 'facilities:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:home' %}"><i class="bi bi-building-gear"></i> Overview</a>{% endif %}
   <small>Buying</small>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:requisitions' %}">Requisitions</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:orders' %}">Orders</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:vendors' %}">Vendors</a>
+  {% if 'facilities:requisitions' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:requisitions' %}">Requisitions</a>{% endif %}
+  {% if 'facilities:orders' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:orders' %}">Orders</a>{% endif %}
+  {% if 'facilities:vendors' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:vendors' %}">Vendors</a>{% endif %}
   <small>Assets</small>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:assets' %}">Register</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:disposals' %}">Disposals</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:counts' %}">Stock count</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:chemicals' %}">Lab chemicals</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:kitchen' %}">Kitchen</a>
+  {% if 'facilities:assets' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:assets' %}">Register</a>{% endif %}
+  {% if 'facilities:disposals' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:disposals' %}">Disposals</a>{% endif %}
+  {% if 'facilities:counts' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:counts' %}">Stock count</a>{% endif %}
+  {% if 'facilities:chemicals' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:chemicals' %}">Lab chemicals</a>{% endif %}
+  {% if 'facilities:kitchen' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:kitchen' %}">Kitchen</a>{% endif %}
   <small>Site</small>
-  <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'facilities:maintenance' %}"><i class="bi bi-tools"></i> Report a fault</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:preventive' %}">Servicing</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:generators' %}">Generators</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:utilities' %}">Utilities</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:spaces' %}">Spaces</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:cleaning' %}">Cleaning</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:patrols' %}">Patrols</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:hire' %}">Hall hire</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'facilities:settings' %}"><i class="bi bi-gear"></i></a>
+  {% if 'facilities:maintenance' not in menu_hidden %}<a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'facilities:maintenance' %}"><i class="bi bi-tools"></i> Report a fault</a>{% endif %}
+  {% if 'facilities:preventive' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:preventive' %}">Servicing</a>{% endif %}
+  {% if 'facilities:generators' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:generators' %}">Generators</a>{% endif %}
+  {% if 'facilities:utilities' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:utilities' %}">Utilities</a>{% endif %}
+  {% if 'facilities:spaces' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:spaces' %}">Spaces</a>{% endif %}
+  {% if 'facilities:cleaning' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:cleaning' %}">Cleaning</a>{% endif %}
+  {% if 'facilities:patrols' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:patrols' %}">Patrols</a>{% endif %}
+  {% if 'facilities:hire' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:hire' %}">Hall hire</a>{% endif %}
+  {% if 'facilities:settings' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'facilities:settings' %}"><i class="bi bi-gear"></i></a>{% endif %}
 </div>

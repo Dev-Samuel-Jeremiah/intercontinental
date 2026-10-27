@@ -15,18 +15,18 @@
   .msgs .warning{border-color:var(--amber-border);color:var(--amber);background:var(--amber-dim)}
 </style>
 <nav class="cur-tabs">
-  {% url 'curriculum:home' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Coverage</a>
-  {% url 'curriculum:schemes' as u %}<a href="{{ u }}" class="{% if request.path == u or '/schemes/' in request.path %}on{% endif %}">Schemes of work</a>
-  {% url 'curriculum:notes' as u %}<a href="{{ u }}" class="{% if '/notes/' in request.path and '/review/' not in request.path %}on{% endif %}">Lesson notes</a>
-  {% url 'curriculum:review' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Review notes</a>
-  {% url 'curriculum:homework' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Homework</a>
-  {% url 'curriculum:calendar' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Calendar</a>
-  {% url 'curriculum:allocation' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Who teaches what</a>
-  {% url 'curriculum:streams' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Streams</a>
-  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% url 'curriculum:promotion' as u %}<a href="{{ u }}" class="{% if '/promotion/' in request.path %}on{% endif %}">Promotion</a>{% endif %}
-  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% url 'curriculum:cover' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Cover</a>{% endif %}
-  {% url 'curriculum:observations' as u %}<a href="{{ u }}" class="{% if '/observations/' in request.path %}on{% endif %}">Observations</a>
-  {% url 'curriculum:clubs' as u %}<a href="{{ u }}" class="{% if '/clubs/' in request.path %}on{% endif %}">Clubs</a>
-  {% url 'curriculum:departments' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Departments</a>
+  {% if 'curriculum:home' not in menu_hidden %}{% url 'curriculum:home' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Coverage</a>{% endif %}
+  {% if 'curriculum:schemes' not in menu_hidden %}{% url 'curriculum:schemes' as u %}<a href="{{ u }}" class="{% if request.path == u or '/schemes/' in request.path %}on{% endif %}">Schemes of work</a>{% endif %}
+  {% if 'curriculum:notes' not in menu_hidden %}{% url 'curriculum:notes' as u %}<a href="{{ u }}" class="{% if '/notes/' in request.path and '/review/' not in request.path %}on{% endif %}">Lesson notes</a>{% endif %}
+  {% if 'curriculum:review' not in menu_hidden %}{% url 'curriculum:review' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Review notes</a>{% endif %}
+  {% if 'curriculum:homework' not in menu_hidden %}{% url 'curriculum:homework' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Homework</a>{% endif %}
+  {% if 'curriculum:calendar' not in menu_hidden %}{% url 'curriculum:calendar' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Calendar</a>{% endif %}
+  {% if 'curriculum:allocation' not in menu_hidden %}{% url 'curriculum:allocation' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Who teaches what</a>{% endif %}
+  {% if 'curriculum:streams' not in menu_hidden %}{% url 'curriculum:streams' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Streams</a>{% endif %}
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% if 'curriculum:promotion' not in menu_hidden %}{% url 'curriculum:promotion' as u %}<a href="{{ u }}" class="{% if '/promotion/' in request.path %}on{% endif %}">Promotion</a>{% endif %}{% endif %}
+  {% if request.user.is_superuser or request.user.staff.role == 'ADMIN' %}{% if 'curriculum:cover' not in menu_hidden %}{% url 'curriculum:cover' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Cover</a>{% endif %}{% endif %}
+  {% if 'curriculum:observations' not in menu_hidden %}{% url 'curriculum:observations' as u %}<a href="{{ u }}" class="{% if '/observations/' in request.path %}on{% endif %}">Observations</a>{% endif %}
+  {% if 'curriculum:clubs' not in menu_hidden %}{% url 'curriculum:clubs' as u %}<a href="{{ u }}" class="{% if '/clubs/' in request.path %}on{% endif %}">Clubs</a>{% endif %}
+  {% if 'curriculum:departments' not in menu_hidden %}{% url 'curriculum:departments' as u %}<a href="{{ u }}" class="{% if request.path == u %}on{% endif %}">Departments</a>{% endif %}
 </nav>
 {# Messages are shown by the main layout (dashboard/base.html). #}
