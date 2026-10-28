@@ -41,6 +41,20 @@
   .ma-own{display:flex;gap:.4rem;flex-wrap:wrap;padding:0 1.1rem 1rem}
   .ma-save{position:sticky;bottom:12px;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-top:1rem;padding:.8rem 1rem;border-radius:16px;
     background:rgba(8,26,58,.92);backdrop-filter:blur(8px);box-shadow:0 0 0 1px var(--rim2),0 12px 30px -12px rgba(0,0,0,.8);z-index:5}
+  .sp{position:relative}
+  .sp [hidden]{display:none!important}
+  .sp-btn{display:flex;align-items:center;gap:.6rem;min-width:300px;padding:.65rem .9rem;border-radius:12px;cursor:pointer;font:inherit;
+    background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);text-align:left}
+  .sp-btn span{flex:1}
+  .sp-btn[aria-expanded="true"]{border-color:var(--champagne)}
+  .sp-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:30;width:min(420px,90vw);padding:.6rem;border-radius:14px;
+    background:#0f244b;border:1px solid var(--rim2);box-shadow:0 18px 40px -12px rgba(0,0,0,.8)}
+  .sp-panel input{width:100%;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--rim2);color:var(--white);font:inherit;margin-bottom:.4rem}
+  .sp-list{max-height:320px;overflow-y:auto}
+  .sp-group{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--champagne);padding:.5rem .5rem .2rem}
+  .sp-item{display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;border-radius:8px;color:var(--slate2);text-decoration:none;font-size:.88rem}
+  .sp-item:hover,.sp-item.on{background:rgba(244,210,31,.1);color:var(--white)}
+  .sp-none{padding:.6rem;color:var(--slate2);font-size:.85rem}
 </style>
 
 <div class="ma-roles" role="tablist" aria-label="Whose permissions">
@@ -71,13 +85,24 @@
 {% endif %}
 
 {% if person %}
-<form method="get" class="ma-pick">
-  <label for="ma-staff" class="hint">Staff member</label>
-  <select id="ma-staff" name="staff" onchange="this.form.submit()">
-    {% regroup people by get_role_display as groups %}
-    {% for g in groups %}<optgroup label="{{ g.grouper }}">{% for p in g.list %}<option value="{{ p.pk }}"{% if p.pk == person.pk %} selected{% endif %}>{{ p.full_name }}</option>{% endfor %}</optgroup>{% endfor %}
-  </select>
-</form>
+<div class="ma-pick">
+  <span class="hint">Staff member</span>
+  <div class="sp" id="sp">
+    <button type="button" class="sp-btn" id="sp-btn" aria-haspopup="listbox" aria-expanded="false">
+      <i class="bi bi-person"></i><span>{{ person.full_name }} · {{ person.get_role_display }}</span><i class="bi bi-chevron-down"></i>
+    </button>
+    <div class="sp-panel" id="sp-panel" hidden>
+      <input type="search" id="sp-find" placeholder="Find a staff member…" autocomplete="off" aria-label="Find a staff member">
+      <div class="sp-list" role="listbox">
+        {% regroup people by get_role_display as groups %}
+        {% for g in groups %}<div class="sp-group">{{ g.grouper }}</div>
+          {% for p in g.list %}<a class="sp-item{% if p.pk == person.pk %} on{% endif %}" href="?staff={{ p.pk }}" role="option" data-name="{{ p.full_name|lower }} {{ p.user.username|lower }}">{{ p.full_name }}{% if p.user.restricted %} <span class="chip red">Restricted</span>{% endif %}</a>{% endfor %}
+        {% endfor %}
+        <div class="sp-none" hidden>No staff match.</div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="ma-who">
   <i class="bi bi-person-badge" style="font-size:1.5rem;color:var(--champagne)"></i>
   <div style="flex:1;min-width:220px"><b>{{ person.full_name }}</b> · {{ person.get_role_display }}{% if person.user.restricted %} · <span style="color:var(--red)">restricted</span>{% endif %}<br>
@@ -182,6 +207,30 @@
       document.querySelectorAll('.ma-sec').forEach(sync);
     });
   });
+})();
+</script>
+<script>
+(function () {
+  // Staff picker: a list that stays open until you choose someone or click elsewhere
+  var box = document.getElementById('sp'); if (!box) return;
+  var btn = document.getElementById('sp-btn'), panel = document.getElementById('sp-panel'), find = document.getElementById('sp-find');
+  function open(on) { panel.hidden = !on; btn.setAttribute('aria-expanded', on ? 'true' : 'false'); if (on) { find.value = ''; filter(); find.focus(); } }
+  function filter() {
+    var q = find.value.trim().toLowerCase(), any = false;
+    box.querySelectorAll('.sp-group').forEach(function (g) {
+      var el = g.nextElementSibling, groupAny = false;
+      while (el && el.classList.contains('sp-item')) { var hit = !q || el.dataset.name.indexOf(q) > -1; el.hidden = !hit; groupAny = groupAny || hit; el = el.nextElementSibling; }
+      g.hidden = !groupAny; any = any || groupAny;
+    });
+    box.querySelector('.sp-none').hidden = any;
+  }
+  btn.addEventListener('click', function () { open(panel.hidden); });
+  find.addEventListener('input', filter);
+  find.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { open(false); btn.focus(); }
+    if (e.key === 'Enter') { var first = box.querySelector('.sp-item:not([hidden])'); if (first) location.href = first.href; e.preventDefault(); }
+  });
+  document.addEventListener('click', function (e) { if (!box.contains(e.target)) open(false); });
 })();
 </script>
 {% endblock %}
