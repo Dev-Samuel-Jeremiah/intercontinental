@@ -702,12 +702,11 @@
   </div>
 
   <div class="nav-scroll">
-
-    <!-- ── Main ── -->
+    <!-- ── Home ── -->
     {% if 'grp-main' not in menu_hidden %}
     <div class="nav-group" id="grp-main">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-main')">
-        <span class="sec-label">Main</span>
+        <span class="sec-label">Home</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
@@ -755,71 +754,352 @@
     </div>
     {% endif %}
 
+    <!-- ── Teaching & Learning ── -->
     {% if user.is_superuser or user.is_staff_user %}
-
-    {% if user.is_superuser %}
-    <!-- ── School ── -->
-    {% if 'grp-school' not in menu_hidden %}
-    <div class="nav-group" id="grp-school">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-school')">
-        <span class="sec-label">School</span>
+    {% if 'grp-curriculum' not in menu_hidden %}
+    <div class="nav-group" id="grp-curriculum">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-curriculum')">
+        <span class="sec-label">Teaching &amp; Learning</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
-        <a href="/settings/" class="nav-item" data-tooltip="Settings">
-          <i class="bi bi-gear-fill"></i>
-          <span class="ni-label">Settings</span>
-        </a>
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.is_superuser %}
-    <!-- ── Academics ── -->
-    {% if 'grp-academics' not in menu_hidden %}
-    <div class="nav-group" id="grp-academics">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-academics')">
-        <span class="sec-label">Academics</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'academics:manage_sessions' not in menu_hidden %}<a href="{% url 'academics:manage_sessions' %}" class="nav-item" data-tooltip="Sessions">
-          <i class="bi bi-calendar3"></i><span class="ni-label">Manage Sessions</span>
+        {% if 'curriculum:home' not in menu_hidden %}<a href="{% url 'curriculum:home' %}" class="nav-item" data-tooltip="Coverage">
+          <i class="bi bi-bar-chart-steps"></i><span class="ni-label">Syllabus Coverage</span>
         </a>{% endif %}
-        {% if active_session %}
-        {% if 'academics:manage_terms' not in menu_hidden %}<a href="{% url 'academics:manage_terms' active_session.id %}" class="nav-item" data-tooltip="Terms">
-          <i class="bi bi-bookmark-fill"></i><span class="ni-label">Manage Terms</span>
+        {# Staff reach the rest from the tabs on the Syllabus Coverage page; administrators keep the full list #}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'curriculum:schemes' not in menu_hidden %}<a href="{% url 'curriculum:schemes' %}" class="nav-item" data-tooltip="Schemes">
+          <i class="bi bi-journal-text"></i><span class="ni-label">Schemes of Work</span>
+        </a>{% endif %}
+        {% if 'curriculum:notes' not in menu_hidden %}<a href="{% url 'curriculum:notes' %}" class="nav-item" data-tooltip="Lesson Notes">
+          <i class="bi bi-journal-richtext"></i><span class="ni-label">Lesson Notes</span>
+        </a>{% endif %}
+        {% if 'curriculum:review' not in menu_hidden %}<a href="{% url 'curriculum:review' %}" class="nav-item" data-tooltip="Review Notes">
+          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Review Lesson Notes</span>
+        </a>{% endif %}
+        {% if 'curriculum:homework' not in menu_hidden %}<a href="{% url 'curriculum:homework' %}" class="nav-item" data-tooltip="Homework">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Homework</span>
+        </a>{% endif %}
+        {% if 'curriculum:calendar' not in menu_hidden %}<a href="{% url 'curriculum:calendar' %}" class="nav-item" data-tooltip="Calendar">
+          <i class="bi bi-calendar3"></i><span class="ni-label">School Calendar</span>
+        </a>{% endif %}
+        {% if 'curriculum:allocation' not in menu_hidden %}<a href="{% url 'curriculum:allocation' %}" class="nav-item" data-tooltip="Who Teaches What">
+          <i class="bi bi-grid-3x3"></i><span class="ni-label">Who Teaches What</span>
+        </a>{% endif %}
+        {% if 'curriculum:streams' not in menu_hidden %}<a href="{% url 'curriculum:streams' %}" class="nav-item" data-tooltip="Streams">
+          <i class="bi bi-signpost-split-fill"></i><span class="ni-label">Subject Streams</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'curriculum:promotion' not in menu_hidden %}<a href="{% url 'curriculum:promotion' %}" class="nav-item" data-tooltip="Promotion">
+          <i class="bi bi-arrow-up-right-circle-fill"></i><span class="ni-label">Promotion &amp; Graduation</span>
+        </a>{% endif %}
+        {% if 'curriculum:graduation_certificates' not in menu_hidden %}<a href="{% url 'curriculum:graduation_certificates' %}" class="nav-item" data-tooltip="Certificates">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Graduation Certificates</span>
         </a>{% endif %}
         {% endif %}
-        {% if 'users:manage_classes' not in menu_hidden %}<a href="{% url 'users:manage_classes' %}" class="nav-item" data-tooltip="Classes">
-          <i class="bi bi-building"></i><span class="ni-label">Manage Classes</span>
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'curriculum:cover' not in menu_hidden %}<a href="{% url 'curriculum:cover' %}" class="nav-item" data-tooltip="Cover">
+          <i class="bi bi-person-raised-hand"></i><span class="ni-label">Cover for Absent Teachers</span>
         </a>{% endif %}
-        {% if 'users:class_arms' not in menu_hidden %}<a href="{% url 'users:class_arms' %}" class="nav-item" data-tooltip="Classes &amp; Arms">
-          <i class="bi bi-diagram-2-fill"></i><span class="ni-label">Classes &amp; Arms</span>
+        {% endif %}
+        {% if 'curriculum:observations' not in menu_hidden %}<a href="{% url 'curriculum:observations' %}" class="nav-item" data-tooltip="Observations">
+          <i class="bi bi-clipboard2-pulse-fill"></i><span class="ni-label">Lesson Observations</span>
         </a>{% endif %}
-        {% if 'users:assign_subjects' not in menu_hidden %}<a href="{% url 'users:assign_subjects' %}" class="nav-item" data-tooltip="Subjects">
-          <i class="bi bi-book-fill"></i><span class="ni-label">Assign Subjects</span>
+        {% if 'curriculum:clubs' not in menu_hidden %}<a href="{% url 'curriculum:clubs' %}" class="nav-item" data-tooltip="Clubs">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Clubs &amp; Societies</span>
         </a>{% endif %}
-        {% if 'users:student_subject_manager' not in menu_hidden %}<a href="{% url 'users:student_subject_manager' %}" class="nav-item" data-tooltip="Subject Manager">
-          <i class="bi bi-person-check-fill"></i><span class="ni-label">Subject Manager</span>
+        {% if 'curriculum:departments' not in menu_hidden %}<a href="{% url 'curriculum:departments' %}" class="nav-item" data-tooltip="Departments">
+          <i class="bi bi-diagram-3-fill"></i><span class="ni-label">Departments</span>
         </a>{% endif %}
-        {% if 'users:promote_students' not in menu_hidden %}<a href="{% url 'users:promote_students' %}" class="nav-item" data-tooltip="Promote">
-          <i class="bi bi-arrow-up-circle-fill"></i><span class="ni-label">Promote Students</span>
+        {% endif %}
+        {% if user.staff %}
+        {% if 'teaching:home' not in menu_hidden %}<a href="{% url 'teaching:home' %}" class="nav-item" data-tooltip="My Queue">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">My Queue</span>
         </a>{% endif %}
-        {% if 'academics:manage_public_holidays' not in menu_hidden %}<a href="{% url 'academics:manage_public_holidays' %}" class="nav-item" data-tooltip="Holidays">
-          <i class="bi bi-calendar-x-fill"></i><span class="ni-label">Public Holidays</span>
+        {% if 'labs:home' not in menu_hidden %}<a href="{% url 'labs:home' %}" class="nav-item" data-tooltip="Labs & Practicals">
+          <i class="bi bi-eyedropper"></i><span class="ni-label">Labs &amp; Practicals</span>
         </a>{% endif %}
-        {% if 'timetable:admin_index' not in menu_hidden %}<a href="{% url 'timetable:admin_index' %}" class="nav-item" data-tooltip="Timetable">
-          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Timetable</span>
+        {% if 'teaching:class_dashboard' not in menu_hidden %}<a href="{% url 'teaching:class_dashboard' %}" class="nav-item" data-tooltip="My Form Class">
+          <i class="bi bi-people-fill"></i><span class="ni-label">My Form Class</span>
+        </a>{% endif %}
+        {% if 'teaching:gradebooks' not in menu_hidden %}<a href="{% url 'teaching:gradebooks' %}" class="nav-item" data-tooltip="Gradebook">
+          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">Gradebook</span>
+        </a>{% endif %}
+        {% if 'teaching:behaviour' not in menu_hidden %}<a href="{% url 'teaching:behaviour' %}" class="nav-item" data-tooltip="Behaviour Points">
+          <i class="bi bi-hand-thumbs-up-fill"></i><span class="ni-label">Behaviour Points</span>
+        </a>{% endif %}
+        {% if 'teaching:comments' not in menu_hidden %}<a href="{% url 'teaching:comments' %}" class="nav-item" data-tooltip="Comment Bank">
+          <i class="bi bi-chat-quote-fill"></i><span class="ni-label">Comment Bank</span>
+        </a>{% endif %}
+        {% if 'teaching:resources' not in menu_hidden %}<a href="{% url 'teaching:resources' %}" class="nav-item" data-tooltip="Resources">
+          <i class="bi bi-folder-fill"></i><span class="ni-label">Resource Library</span>
+        </a>{% endif %}
+        {% if 'teaching:picker' not in menu_hidden %}<a href="{% url 'teaching:picker' %}" class="nav-item" data-tooltip="Name Picker">
+          <i class="bi bi-shuffle"></i><span class="ni-label">Name Picker &amp; Timer</span>
+        </a>{% endif %}
+        {% if 'teaching:tasks' not in menu_hidden %}<a href="{% url 'teaching:tasks' %}" class="nav-item" data-tooltip="Tasks">
+          <i class="bi bi-check2-square"></i><span class="ni-label">Tasks</span>
+        </a>{% endif %}
+        {% if 'teaching:duties' not in menu_hidden %}<a href="{% url 'teaching:duties' %}" class="nav-item" data-tooltip="Duty Roster">
+          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">Duty Roster</span>
+        </a>{% endif %}
+        {% if 'teaching:handovers' not in menu_hidden %}<a href="{% url 'teaching:handovers' %}" class="nav-item" data-tooltip="Handover Notes">
+          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Handover Notes</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'classroom:teacher_courses' not in menu_hidden %}<a href="{% url 'classroom:teacher_courses' %}" class="nav-item" data-tooltip="My Courses">
+          <i class="bi bi-collection-play-fill"></i><span class="ni-label">My Courses</span>
         </a>{% endif %}
       </div>
     </div>
     {% endif %}
     {% endif %}
 
+    <!-- ── Exams & Results ── -->
     {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-cbt' not in menu_hidden %}
+    <div class="nav-group" id="grp-cbt">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-cbt')">
+        <span class="sec-label">Exams &amp; Results</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'cbt:cbt_create_exam' not in menu_hidden %}<a href="{% url 'cbt:cbt_create_exam' %}" class="nav-item" data-tooltip="Create Exam">
+          <i class="bi bi-plus-circle-fill"></i><span class="ni-label">Create Exam</span>
+        </a>{% endif %}
+        {% if 'cbt:admin_exam_list' not in menu_hidden %}<a href="{% url 'cbt:admin_exam_list' %}" class="nav-item" data-tooltip="All Exams">
+          <i class="bi bi-journal-text"></i><span class="ni-label">All Exams</span>
+        </a>{% endif %}
+        {% if 'cbt:timetables' not in menu_hidden %}<a href="{% url 'cbt:timetables' %}" class="nav-item" data-tooltip="Exam Timetables">
+          <i class="bi bi-calendar3-week-fill"></i><span class="ni-label">Exam Timetables</span>
+        </a>{% endif %}
+        {% if 'cbt:halls' not in menu_hidden %}<a href="{% url 'cbt:halls' %}" class="nav-item" data-tooltip="Exam Halls">
+          <i class="bi bi-building-fill"></i><span class="ni-label">Exam Halls &amp; Seating</span>
+        </a>{% endif %}
+        {% if 'cbt:bank' not in menu_hidden %}<a href="{% url 'cbt:bank' %}" class="nav-item" data-tooltip="Question Bank">
+          <i class="bi bi-collection-fill"></i><span class="ni-label">Question Bank</span>
+        </a>{% endif %}
+        {% if 'cbt:mastery_class' not in menu_hidden %}<a href="{% url 'cbt:mastery_class' %}" class="nav-item" data-tooltip="Topic Mastery">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Topic Mastery</span>
+        </a>{% endif %}
+        {% if 'cbt:questions_overview' not in menu_hidden %}<a href="{% url 'cbt:questions_overview' %}" class="nav-item" data-tooltip="Questions">
+          <i class="bi bi-list-ol"></i><span class="ni-label">Questions Overview</span>
+        </a>{% endif %}
+        {% if user.is_superuser %}
+        {% if 'cbt:exam_access_control' not in menu_hidden %}<a href="{% url 'cbt:exam_access_control' %}" class="nav-item" data-tooltip="Access Control">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Access Control</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'cbt:exam_results' not in menu_hidden %}<a href="{% url 'cbt:exam_results' %}" class="nav-item" data-tooltip="Score Detail">
+          <i class="bi bi-bar-chart-line-fill"></i><span class="ni-label">Exam Score Detail</span>
+        </a>{% endif %}
+        {% if 'results:cbt_scores_reference' not in menu_hidden %}<a href="{% url 'results:cbt_scores_reference' %}" class="nav-item" data-tooltip="CBT Scores">
+          <i class="bi bi-cpu-fill"></i><span class="ni-label">CBT Scores Reference</span>
+        </a>{% endif %}
+        {% if 'results:manual_score_entry' not in menu_hidden %}<a href="{% url 'results:manual_score_entry' %}" class="nav-item" data-tooltip="Score Entry">
+          <i class="bi bi-pencil-square"></i><span class="ni-label">Manual Score Entry</span>
+        </a>{% endif %}
+        {% if 'results:term_results' not in menu_hidden %}<a href="{% url 'results:term_results' %}" class="nav-item" data-tooltip="Term Results">
+          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Term Results</span>
+        </a>{% endif %}
+        {% if 'results:approvals' not in menu_hidden %}<a href="{% url 'results:approvals' %}" class="nav-item" data-tooltip="Approvals">
+          <i class="bi bi-check2-square"></i><span class="ni-label">Result Approvals</span>
+        </a>{% endif %}
+        {% if 'results:broadsheet' not in menu_hidden %}<a href="{% url 'results:broadsheet' %}" class="nav-item" data-tooltip="Broadsheet">
+          <i class="bi bi-table"></i><span class="ni-label">Broadsheet &amp; Analysis</span>
+        </a>{% endif %}
+        {% if 'results:bundles' not in menu_hidden %}<a href="{% url 'results:bundles' %}" class="nav-item" data-tooltip="Class Report Cards">
+          <i class="bi bi-file-earmark-zip-fill"></i><span class="ni-label">Class Report Cards (ZIP)</span>
+        </a>{% endif %}
+        {% if 'results:queries' not in menu_hidden %}<a href="{% url 'results:queries' %}" class="nav-item" data-tooltip="Result Questions">
+          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Result Questions</span>
+        </a>{% endif %}
+        {% if 'results:batch_results' not in menu_hidden %}<a href="{% url 'results:batch_results' %}" class="nav-item" data-tooltip="Batch Results">
+          <i class="bi bi-journals"></i><span class="ni-label">Batch Results</span>
+        </a>{% endif %}
+        {% if user.is_superuser %}
+        {% if 'results:grading' not in menu_hidden %}<a href="{% url 'results:grading' %}" class="nav-item" data-tooltip="Grading">
+          <i class="bi bi-award-fill"></i><span class="ni-label">Grading &amp; Deadlines</span>
+        </a>{% endif %}
+        {% if 'results:assessment' not in menu_hidden %}<a href="{% url 'results:assessment' %}" class="nav-item" data-tooltip="CA Structure">
+          <i class="bi bi-ui-checks-grid"></i><span class="ni-label">Assessment Structure</span>
+        </a>{% endif %}
+        {% if 'results:release' not in menu_hidden %}<a href="{% url 'results:release' %}" class="nav-item" data-tooltip="Release Rules">
+          <i class="bi bi-shield-check"></i><span class="ni-label">Release Rules &amp; PINs</span>
+        </a>{% endif %}
+        {% if 'results:publish_results_page' not in menu_hidden %}<a href="{% url 'results:publish_results_page' %}" class="nav-item" data-tooltip="Publish">
+          <i class="bi bi-send-fill"></i><span class="ni-label">Publish Results</span>
+        </a>{% endif %}
+        {% if 'results:cumulative_results' not in menu_hidden %}<a href="{% url 'results:cumulative_results' %}" class="nav-item" data-tooltip="Session Results">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Session Results</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Attendance ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-attendance' not in menu_hidden %}
+    <div class="nav-group" id="grp-attendance">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-attendance')">
+        <span class="sec-label">Attendance</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'results:manual_term_attendance' not in menu_hidden %}<a href="{% url 'results:manual_term_attendance' %}" class="nav-item" data-tooltip="Manual Entry">
+          <i class="bi bi-calendar-check-fill"></i><span class="ni-label">Manual Attendance</span>
+        </a>{% endif %}
+        {% if 'users:attendance_home' not in menu_hidden %}<a href="{% url 'users:attendance_home' %}" class="nav-item" data-tooltip="View">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">View Attendance</span>
+        </a>{% endif %}
+        {% if 'users:attendance_summary' not in menu_hidden %}<a href="{% url 'users:attendance_summary' %}" class="nav-item" data-tooltip="Summary">
+          <i class="bi bi-graph-up"></i><span class="ni-label">Attendance Summary</span>
+        </a>{% endif %}
+        {% if 'timetable:my_lessons' not in menu_hidden %}<a href="{% url 'timetable:my_lessons' %}" class="nav-item" data-tooltip="My Lessons">
+          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">My Lesson Registers</span>
+        </a>{% endif %}
+        {% if 'timetable:lessons_overview' not in menu_hidden %}<a href="{% url 'timetable:lessons_overview' %}" class="nav-item" data-tooltip="Lesson Attendance">
+          <i class="bi bi-grid-1x2-fill"></i><span class="ni-label">Lesson Attendance</span>
+        </a>{% endif %}
+        {% if 'users:attendance_heatmap' not in menu_hidden %}<a href="{% url 'users:attendance_heatmap' %}" class="nav-item" data-tooltip="Heatmap">
+          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Attendance Heatmap</span>
+        </a>{% endif %}
+        {% if 'users:absence_reasons' not in menu_hidden %}<a href="{% url 'users:absence_reasons' %}" class="nav-item" data-tooltip="Absence Reasons">
+          <i class="bi bi-chat-square-text-fill"></i><span class="ni-label">Absence Reasons</span>
+        </a>{% endif %}
+        {% if 'users:lateness' not in menu_hidden %}<a href="{% url 'users:lateness' %}" class="nav-item" data-tooltip="Lateness">
+          <i class="bi bi-alarm-fill"></i><span class="ni-label">Late Arrivals</span>
+        </a>{% endif %}
+        {% if 'users:attendance_follow_up' not in menu_hidden %}<a href="{% url 'users:attendance_follow_up' %}" class="nav-item" data-tooltip="Follow-up">
+          <i class="bi bi-flag-fill"></i><span class="ni-label">Attendance Follow-up</span>
+        </a>{% endif %}
+        {% if 'idcards:gate_scan_log' not in menu_hidden %}<a href="{% url 'idcards:gate_scan_log' %}" class="nav-item" data-tooltip="Gate Log">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Gate Scan Log</span>
+        </a>{% endif %}
+        {% if 'safety:pickup_desk' not in menu_hidden %}<a href="{% url 'safety:pickup_desk' %}" class="nav-item" data-tooltip="Pickup Desk">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Pickup Desk</span>
+        </a>{% endif %}
+        {% if 'safety:pickup_log' not in menu_hidden %}<a href="{% url 'safety:pickup_log' %}" class="nav-item" data-tooltip="Pickup Log">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Pickup Log</span>
+        </a>{% endif %}
+        {% if 'users:attendance_settings' not in menu_hidden %}<a href="{% url 'users:attendance_settings' %}" class="nav-item" data-tooltip="Attendance Settings">
+          <i class="bi bi-sliders"></i><span class="ni-label">Attendance Settings</span>
+        </a>{% endif %}
+        {% if 'safety:staff_attendance' not in menu_hidden %}<a href="{% url 'safety:staff_attendance' %}" class="nav-item" data-tooltip="Staff Attendance">
+          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Attendance Register</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}{% if 'safety:staff_hours' not in menu_hidden %}<a href="{% url 'safety:staff_hours' %}" class="nav-item" data-tooltip="Times &amp; Working Days">
+          <i class="bi bi-clock-fill"></i><span class="ni-label">Times &amp; Working Days</span>
+        </a>{% endif %}{% endif %}
+        {% if 'idcards:reception_qr_page' not in menu_hidden %}<a href="{% url 'idcards:reception_qr_page' %}" class="nav-item" data-tooltip="Reception QR">
+          <i class="bi bi-qr-code"></i><span class="ni-label">Clock-in QR Poster</span>
+        </a>{% endif %}
+        {% if 'idcards:staff_attendance_log' not in menu_hidden %}<a href="{% url 'idcards:staff_attendance_log' %}" class="nav-item" data-tooltip="Staff Clock">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Clock In/Out Log</span>
+        </a>{% endif %}
+        {% if 'safety:phone_clock' not in menu_hidden %}<a href="{% url 'safety:phone_clock' %}" class="nav-item" data-tooltip="Clock In">
+          <i class="bi bi-fingerprint"></i><span class="ni-label">Clock In (Phone)</span>
+        </a>{% endif %}
+        {% if 'safety:staff_leave' not in menu_hidden %}<a href="{% url 'safety:staff_leave' %}" class="nav-item" data-tooltip="Staff Leave">
+          <i class="bi bi-calendar2-x-fill"></i><span class="ni-label">Staff Leave</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Timetable & Meetings ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-timetable' not in menu_hidden %}
+    <div class="nav-group" id="grp-timetable">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-timetable')">
+        <span class="sec-label">Timetable &amp; Meetings</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'timetable:teacher_timetable' not in menu_hidden %}<a href="{% url 'timetable:teacher_timetable' %}" class="nav-item" data-tooltip="My Timetable">
+          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">My Timetable</span>
+        </a>{% endif %}
+        {% if 'timetable:room_bookings' not in menu_hidden %}<a href="{% url 'timetable:room_bookings' %}" class="nav-item" data-tooltip="Room Booking">
+          <i class="bi bi-door-open-fill"></i><span class="ni-label">Room Booking</span>
+        </a>{% endif %}
+        {% if 'timetable:free_finder' not in menu_hidden %}<a href="{% url 'timetable:free_finder' %}" class="nav-item" data-tooltip="Free Periods">
+          <i class="bi bi-search"></i><span class="ni-label">Free Period Finder</span>
+        </a>{% endif %}
+        {% if 'timetable:extras' not in menu_hidden %}<a href="{% url 'timetable:extras' %}" class="nav-item" data-tooltip="After-school Lessons">
+          <i class="bi bi-moon-stars-fill"></i><span class="ni-label">After-school Lessons</span>
+        </a>{% endif %}
+        {% if 'timetable:my_meetings' not in menu_hidden %}<a href="{% url 'timetable:my_meetings' %}" class="nav-item" data-tooltip="My Parent Meetings">
+          <i class="bi bi-people"></i><span class="ni-label">My Parent Meetings</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'timetable:meetings' not in menu_hidden %}<a href="{% url 'timetable:meetings' %}" class="nav-item" data-tooltip="Parent Meetings">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Parent–Teacher Meetings</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'timetable:calendar_sync' not in menu_hidden %}<a href="{% url 'timetable:calendar_sync' %}" class="nav-item" data-tooltip="Calendar Sync">
+          <i class="bi bi-calendar-plus-fill"></i><span class="ni-label">Calendar Sync</span>
+        </a>{% endif %}
+        {% if 'timetable:bell_display' not in menu_hidden %}<a href="{% url 'timetable:bell_display' %}" class="nav-item" data-tooltip="Bell Display" target="_blank" rel="noopener">
+          <i class="bi bi-bell-fill"></i><span class="ni-label">Bell Display Screen</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── AI Tools ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-ai' not in menu_hidden %}
+    <div class="nav-group" id="grp-ai">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-ai')">
+        <span class="sec-label">AI Tools</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'schoolai:dashboard' not in menu_hidden %}<a href="{% url 'schoolai:dashboard' %}" class="nav-item" data-tooltip="School Intelligence">
+          <i class="bi bi-cpu-fill"></i><span class="ni-label">School Intelligence</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'assistant:home' not in menu_hidden %}<a href="{% url 'assistant:home' %}" class="nav-item" data-tooltip="AI Tools">
+          <i class="bi bi-stars"></i><span class="ni-label">AI Tools</span>
+        </a>{% endif %}
+        {% if 'assistant:questions' not in menu_hidden %}<a href="{% url 'assistant:questions' %}" class="nav-item" data-tooltip="Question Generator">
+          <i class="bi bi-patch-question-fill"></i><span class="ni-label">Question Generator</span>
+        </a>{% endif %}
+        {% if 'assistant:new_message' not in menu_hidden %}<a href="{% url 'assistant:new_message' %}" class="nav-item" data-tooltip="Message a Parent">
+          <i class="bi bi-envelope-paper-heart-fill"></i><span class="ni-label">Message a Parent</span>
+        </a>{% endif %}
+        {% if 'assistant:drafts' not in menu_hidden %}<a href="{% url 'assistant:drafts' %}" class="nav-item" data-tooltip="Review Queue">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">AI Review Queue</span>
+        </a>{% endif %}
+        {% if 'assistant:at_risk' not in menu_hidden %}<a href="{% url 'assistant:at_risk' %}" class="nav-item" data-tooltip="Early Warning">
+          <i class="bi bi-exclamation-diamond-fill"></i><span class="ni-label">Early Warning</span>
+        </a>{% endif %}
+        {% if 'assistant:safety' not in menu_hidden %}<a href="{% url 'assistant:safety' %}" class="nav-item" data-tooltip="Held Posts">
+          <i class="bi bi-shield-exclamation"></i><span class="ni-label">Held Posts</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
+        {% if 'assistant:ask' not in menu_hidden %}<a href="{% url 'assistant:ask' %}" class="nav-item" data-tooltip="Ask About Records">
+          <i class="bi bi-chat-square-quote-fill"></i><span class="ni-label">Ask About Records</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'assistant:settings' not in menu_hidden %}<a href="{% url 'assistant:settings' %}" class="nav-item" data-tooltip="AI Settings">
+          <i class="bi bi-sliders"></i><span class="ni-label">AI Settings &amp; Usage</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
     <!-- ── Admissions ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.is_superuser or user.is_staff_user %}
     {% if 'grp-admissions' not in menu_hidden %}
     <div class="nav-group" id="grp-admissions">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-admissions')">
@@ -849,13 +1129,15 @@
     </div>
     {% endif %}
     {% endif %}
+    {% endif %}
 
+    <!-- ── Students & Records ── -->
+    {% if user.is_superuser or user.is_staff_user %}
     {% if user.is_superuser %}
-    <!-- ── People ── -->
     {% if 'grp-people' not in menu_hidden %}
     <div class="nav-group" id="grp-people">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-people')">
-        <span class="sec-label">People</span>
+        <span class="sec-label">Students &amp; Records</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
@@ -920,701 +1202,15 @@
     </div>
     {% endif %}
     {% endif %}
-
-    <!-- ── Curriculum ── -->
-    {% if 'grp-curriculum' not in menu_hidden %}
-    <div class="nav-group" id="grp-curriculum">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-curriculum')">
-        <span class="sec-label">Curriculum</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'curriculum:home' not in menu_hidden %}<a href="{% url 'curriculum:home' %}" class="nav-item" data-tooltip="Coverage">
-          <i class="bi bi-bar-chart-steps"></i><span class="ni-label">Syllabus Coverage</span>
-        </a>{% endif %}
-        {# Staff reach the rest from the tabs on the Syllabus Coverage page; administrators keep the full list #}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'curriculum:schemes' not in menu_hidden %}<a href="{% url 'curriculum:schemes' %}" class="nav-item" data-tooltip="Schemes">
-          <i class="bi bi-journal-text"></i><span class="ni-label">Schemes of Work</span>
-        </a>{% endif %}
-        {% if 'curriculum:notes' not in menu_hidden %}<a href="{% url 'curriculum:notes' %}" class="nav-item" data-tooltip="Lesson Notes">
-          <i class="bi bi-journal-richtext"></i><span class="ni-label">Lesson Notes</span>
-        </a>{% endif %}
-        {% if 'curriculum:review' not in menu_hidden %}<a href="{% url 'curriculum:review' %}" class="nav-item" data-tooltip="Review Notes">
-          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Review Lesson Notes</span>
-        </a>{% endif %}
-        {% if 'curriculum:homework' not in menu_hidden %}<a href="{% url 'curriculum:homework' %}" class="nav-item" data-tooltip="Homework">
-          <i class="bi bi-journal-check"></i><span class="ni-label">Homework</span>
-        </a>{% endif %}
-        {% if 'curriculum:calendar' not in menu_hidden %}<a href="{% url 'curriculum:calendar' %}" class="nav-item" data-tooltip="Calendar">
-          <i class="bi bi-calendar3"></i><span class="ni-label">School Calendar</span>
-        </a>{% endif %}
-        {% if 'curriculum:allocation' not in menu_hidden %}<a href="{% url 'curriculum:allocation' %}" class="nav-item" data-tooltip="Who Teaches What">
-          <i class="bi bi-grid-3x3"></i><span class="ni-label">Who Teaches What</span>
-        </a>{% endif %}
-        {% if 'curriculum:streams' not in menu_hidden %}<a href="{% url 'curriculum:streams' %}" class="nav-item" data-tooltip="Streams">
-          <i class="bi bi-signpost-split-fill"></i><span class="ni-label">Subject Streams</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'curriculum:promotion' not in menu_hidden %}<a href="{% url 'curriculum:promotion' %}" class="nav-item" data-tooltip="Promotion">
-          <i class="bi bi-arrow-up-right-circle-fill"></i><span class="ni-label">Promotion &amp; Graduation</span>
-        </a>{% endif %}
-        {% if 'curriculum:graduation_certificates' not in menu_hidden %}<a href="{% url 'curriculum:graduation_certificates' %}" class="nav-item" data-tooltip="Certificates">
-          <i class="bi bi-award-fill"></i><span class="ni-label">Graduation Certificates</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'curriculum:cover' not in menu_hidden %}<a href="{% url 'curriculum:cover' %}" class="nav-item" data-tooltip="Cover">
-          <i class="bi bi-person-raised-hand"></i><span class="ni-label">Cover for Absent Teachers</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if 'curriculum:observations' not in menu_hidden %}<a href="{% url 'curriculum:observations' %}" class="nav-item" data-tooltip="Observations">
-          <i class="bi bi-clipboard2-pulse-fill"></i><span class="ni-label">Lesson Observations</span>
-        </a>{% endif %}
-        {% if 'curriculum:clubs' not in menu_hidden %}<a href="{% url 'curriculum:clubs' %}" class="nav-item" data-tooltip="Clubs">
-          <i class="bi bi-people-fill"></i><span class="ni-label">Clubs &amp; Societies</span>
-        </a>{% endif %}
-        {% if 'curriculum:departments' not in menu_hidden %}<a href="{% url 'curriculum:departments' %}" class="nav-item" data-tooltip="Departments">
-          <i class="bi bi-diagram-3-fill"></i><span class="ni-label">Departments</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
     {% endif %}
 
-    {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
-    <!-- ── Analytics ── -->
-    {% if 'grp-analytics' not in menu_hidden %}
-    <div class="nav-group" id="grp-analytics">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-analytics')">
-        <span class="sec-label">Analytics</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'analytics:home' not in menu_hidden %}<a href="{% url 'analytics:home' %}" class="nav-item" data-tooltip="School Today">
-          <i class="bi bi-speedometer2"></i><span class="ni-label">School Today</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ACCOUNT' or user.staff.role == 'ADMIN' %}
-        {% if 'analytics:fees' not in menu_hidden %}<a href="{% url 'analytics:fees' %}" class="nav-item" data-tooltip="Fee Collection">
-          <i class="bi bi-cash-stack"></i><span class="ni-label">Fee Collection</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if 'analytics:enrolment' not in menu_hidden %}<a href="{% url 'analytics:enrolment' %}" class="nav-item" data-tooltip="Enrolment">
-          <i class="bi bi-graph-up-arrow"></i><span class="ni-label">Enrolment &amp; Leavers</span>
-        </a>{% endif %}
-        {% if 'analytics:demographics' not in menu_hidden %}<a href="{% url 'analytics:demographics' %}" class="nav-item" data-tooltip="Gender & Age">
-          <i class="bi bi-people-fill"></i><span class="ni-label">Gender &amp; Age</span>
-        </a>{% endif %}
-        {% if 'analytics:cohort' not in menu_hidden %}<a href="{% url 'analytics:cohort' %}" class="nav-item" data-tooltip="Cohorts">
-          <i class="bi bi-layers-fill"></i><span class="ni-label">Cohort Comparison</span>
-        </a>{% endif %}
-        {% if 'analytics:kpis' not in menu_hidden %}<a href="{% url 'analytics:kpis' %}" class="nav-item" data-tooltip="Targets">
-          <i class="bi bi-bullseye"></i><span class="ni-label">Targets</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'analytics:board_pack' not in menu_hidden %}<a href="{% url 'analytics:board_pack' %}" class="nav-item" data-tooltip="Board Pack">
-          <i class="bi bi-file-earmark-richtext-fill"></i><span class="ni-label">Board Pack</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    <!-- ── AI assistants ── -->
-    {% if 'grp-ai' not in menu_hidden %}
-    <div class="nav-group" id="grp-ai">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-ai')">
-        <span class="sec-label">AI Assistants</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'schoolai:dashboard' not in menu_hidden %}<a href="{% url 'schoolai:dashboard' %}" class="nav-item" data-tooltip="School Intelligence">
-          <i class="bi bi-cpu-fill"></i><span class="ni-label">School Intelligence</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if 'assistant:home' not in menu_hidden %}<a href="{% url 'assistant:home' %}" class="nav-item" data-tooltip="AI Tools">
-          <i class="bi bi-stars"></i><span class="ni-label">AI Tools</span>
-        </a>{% endif %}
-        {% if 'assistant:questions' not in menu_hidden %}<a href="{% url 'assistant:questions' %}" class="nav-item" data-tooltip="Question Generator">
-          <i class="bi bi-patch-question-fill"></i><span class="ni-label">Question Generator</span>
-        </a>{% endif %}
-        {% if 'assistant:new_message' not in menu_hidden %}<a href="{% url 'assistant:new_message' %}" class="nav-item" data-tooltip="Message a Parent">
-          <i class="bi bi-envelope-paper-heart-fill"></i><span class="ni-label">Message a Parent</span>
-        </a>{% endif %}
-        {% if 'assistant:drafts' not in menu_hidden %}<a href="{% url 'assistant:drafts' %}" class="nav-item" data-tooltip="Review Queue">
-          <i class="bi bi-inbox-fill"></i><span class="ni-label">AI Review Queue</span>
-        </a>{% endif %}
-        {% if 'assistant:at_risk' not in menu_hidden %}<a href="{% url 'assistant:at_risk' %}" class="nav-item" data-tooltip="Early Warning">
-          <i class="bi bi-exclamation-diamond-fill"></i><span class="ni-label">Early Warning</span>
-        </a>{% endif %}
-        {% if 'assistant:safety' not in menu_hidden %}<a href="{% url 'assistant:safety' %}" class="nav-item" data-tooltip="Held Posts">
-          <i class="bi bi-shield-exclamation"></i><span class="ni-label">Held Posts</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
-        {% if 'assistant:ask' not in menu_hidden %}<a href="{% url 'assistant:ask' %}" class="nav-item" data-tooltip="Ask About Records">
-          <i class="bi bi-chat-square-quote-fill"></i><span class="ni-label">Ask About Records</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'assistant:settings' not in menu_hidden %}<a href="{% url 'assistant:settings' %}" class="nav-item" data-tooltip="AI Settings">
-          <i class="bi bi-sliders"></i><span class="ni-label">AI Settings &amp; Usage</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── Timetable & rooms ── -->
-    {% if 'grp-timetable' not in menu_hidden %}
-    <div class="nav-group" id="grp-timetable">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-timetable')">
-        <span class="sec-label">Timetable &amp; Rooms</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'timetable:teacher_timetable' not in menu_hidden %}<a href="{% url 'timetable:teacher_timetable' %}" class="nav-item" data-tooltip="My Timetable">
-          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">My Timetable</span>
-        </a>{% endif %}
-        {% if 'timetable:room_bookings' not in menu_hidden %}<a href="{% url 'timetable:room_bookings' %}" class="nav-item" data-tooltip="Room Booking">
-          <i class="bi bi-door-open-fill"></i><span class="ni-label">Room Booking</span>
-        </a>{% endif %}
-        {% if 'timetable:free_finder' not in menu_hidden %}<a href="{% url 'timetable:free_finder' %}" class="nav-item" data-tooltip="Free Periods">
-          <i class="bi bi-search"></i><span class="ni-label">Free Period Finder</span>
-        </a>{% endif %}
-        {% if 'timetable:extras' not in menu_hidden %}<a href="{% url 'timetable:extras' %}" class="nav-item" data-tooltip="After-school Lessons">
-          <i class="bi bi-moon-stars-fill"></i><span class="ni-label">After-school Lessons</span>
-        </a>{% endif %}
-        {% if 'timetable:my_meetings' not in menu_hidden %}<a href="{% url 'timetable:my_meetings' %}" class="nav-item" data-tooltip="My Parent Meetings">
-          <i class="bi bi-people"></i><span class="ni-label">My Parent Meetings</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'timetable:meetings' not in menu_hidden %}<a href="{% url 'timetable:meetings' %}" class="nav-item" data-tooltip="Parent Meetings">
-          <i class="bi bi-people-fill"></i><span class="ni-label">Parent–Teacher Meetings</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if 'timetable:calendar_sync' not in menu_hidden %}<a href="{% url 'timetable:calendar_sync' %}" class="nav-item" data-tooltip="Calendar Sync">
-          <i class="bi bi-calendar-plus-fill"></i><span class="ni-label">Calendar Sync</span>
-        </a>{% endif %}
-        {% if 'timetable:bell_display' not in menu_hidden %}<a href="{% url 'timetable:bell_display' %}" class="nav-item" data-tooltip="Bell Display" target="_blank" rel="noopener">
-          <i class="bi bi-bell-fill"></i><span class="ni-label">Bell Display Screen</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── CBT & Exams ── -->
-    {% if 'grp-cbt' not in menu_hidden %}
-    <div class="nav-group" id="grp-cbt">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-cbt')">
-        <span class="sec-label">CBT &amp; Exams</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'cbt:cbt_create_exam' not in menu_hidden %}<a href="{% url 'cbt:cbt_create_exam' %}" class="nav-item" data-tooltip="Create Exam">
-          <i class="bi bi-plus-circle-fill"></i><span class="ni-label">Create Exam</span>
-        </a>{% endif %}
-        {% if 'cbt:admin_exam_list' not in menu_hidden %}<a href="{% url 'cbt:admin_exam_list' %}" class="nav-item" data-tooltip="All Exams">
-          <i class="bi bi-journal-text"></i><span class="ni-label">All Exams</span>
-        </a>{% endif %}
-        {% if 'cbt:timetables' not in menu_hidden %}<a href="{% url 'cbt:timetables' %}" class="nav-item" data-tooltip="Exam Timetables">
-          <i class="bi bi-calendar3-week-fill"></i><span class="ni-label">Exam Timetables</span>
-        </a>{% endif %}
-        {% if 'cbt:halls' not in menu_hidden %}<a href="{% url 'cbt:halls' %}" class="nav-item" data-tooltip="Exam Halls">
-          <i class="bi bi-building-fill"></i><span class="ni-label">Exam Halls &amp; Seating</span>
-        </a>{% endif %}
-        {% if 'cbt:bank' not in menu_hidden %}<a href="{% url 'cbt:bank' %}" class="nav-item" data-tooltip="Question Bank">
-          <i class="bi bi-collection-fill"></i><span class="ni-label">Question Bank</span>
-        </a>{% endif %}
-        {% if 'cbt:mastery_class' not in menu_hidden %}<a href="{% url 'cbt:mastery_class' %}" class="nav-item" data-tooltip="Topic Mastery">
-          <i class="bi bi-bullseye"></i><span class="ni-label">Topic Mastery</span>
-        </a>{% endif %}
-        {% if 'cbt:questions_overview' not in menu_hidden %}<a href="{% url 'cbt:questions_overview' %}" class="nav-item" data-tooltip="Questions">
-          <i class="bi bi-list-ol"></i><span class="ni-label">Questions Overview</span>
-        </a>{% endif %}
-        {% if user.is_superuser %}
-        {% if 'cbt:exam_access_control' not in menu_hidden %}<a href="{% url 'cbt:exam_access_control' %}" class="nav-item" data-tooltip="Access Control">
-          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Access Control</span>
-        </a>{% endif %}
-        {% endif %}
-        {% if 'cbt:exam_results' not in menu_hidden %}<a href="{% url 'cbt:exam_results' %}" class="nav-item" data-tooltip="Score Detail">
-          <i class="bi bi-bar-chart-line-fill"></i><span class="ni-label">Exam Score Detail</span>
-        </a>{% endif %}
-        {% if 'results:cbt_scores_reference' not in menu_hidden %}<a href="{% url 'results:cbt_scores_reference' %}" class="nav-item" data-tooltip="CBT Scores">
-          <i class="bi bi-cpu-fill"></i><span class="ni-label">CBT Scores Reference</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── Results ── -->
-    {% if 'grp-results' not in menu_hidden %}
-    <div class="nav-group" id="grp-results">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-results')">
-        <span class="sec-label">Results</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'results:manual_score_entry' not in menu_hidden %}<a href="{% url 'results:manual_score_entry' %}" class="nav-item" data-tooltip="Score Entry">
-          <i class="bi bi-pencil-square"></i><span class="ni-label">Manual Score Entry</span>
-        </a>{% endif %}
-        {% if 'results:term_results' not in menu_hidden %}<a href="{% url 'results:term_results' %}" class="nav-item" data-tooltip="Term Results">
-          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Term Results</span>
-        </a>{% endif %}
-        {% if 'results:approvals' not in menu_hidden %}<a href="{% url 'results:approvals' %}" class="nav-item" data-tooltip="Approvals">
-          <i class="bi bi-check2-square"></i><span class="ni-label">Result Approvals</span>
-        </a>{% endif %}
-        {% if 'results:broadsheet' not in menu_hidden %}<a href="{% url 'results:broadsheet' %}" class="nav-item" data-tooltip="Broadsheet">
-          <i class="bi bi-table"></i><span class="ni-label">Broadsheet &amp; Analysis</span>
-        </a>{% endif %}
-        {% if 'results:bundles' not in menu_hidden %}<a href="{% url 'results:bundles' %}" class="nav-item" data-tooltip="Class Report Cards">
-          <i class="bi bi-file-earmark-zip-fill"></i><span class="ni-label">Class Report Cards (ZIP)</span>
-        </a>{% endif %}
-        {% if 'results:queries' not in menu_hidden %}<a href="{% url 'results:queries' %}" class="nav-item" data-tooltip="Result Questions">
-          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Result Questions</span>
-        </a>{% endif %}
-        {% if 'results:batch_results' not in menu_hidden %}<a href="{% url 'results:batch_results' %}" class="nav-item" data-tooltip="Batch Results">
-          <i class="bi bi-journals"></i><span class="ni-label">Batch Results</span>
-        </a>{% endif %}
-        {% if user.is_superuser %}
-        {% if 'results:grading' not in menu_hidden %}<a href="{% url 'results:grading' %}" class="nav-item" data-tooltip="Grading">
-          <i class="bi bi-award-fill"></i><span class="ni-label">Grading &amp; Deadlines</span>
-        </a>{% endif %}
-        {% if 'results:assessment' not in menu_hidden %}<a href="{% url 'results:assessment' %}" class="nav-item" data-tooltip="CA Structure">
-          <i class="bi bi-ui-checks-grid"></i><span class="ni-label">Assessment Structure</span>
-        </a>{% endif %}
-        {% if 'results:release' not in menu_hidden %}<a href="{% url 'results:release' %}" class="nav-item" data-tooltip="Release Rules">
-          <i class="bi bi-shield-check"></i><span class="ni-label">Release Rules &amp; PINs</span>
-        </a>{% endif %}
-        {% if 'results:publish_results_page' not in menu_hidden %}<a href="{% url 'results:publish_results_page' %}" class="nav-item" data-tooltip="Publish">
-          <i class="bi bi-send-fill"></i><span class="ni-label">Publish Results</span>
-        </a>{% endif %}
-        {% if 'results:cumulative_results' not in menu_hidden %}<a href="{% url 'results:cumulative_results' %}" class="nav-item" data-tooltip="Session Results">
-          <i class="bi bi-trophy-fill"></i><span class="ni-label">Session Results</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── Student Attendance ── -->
-    {% if 'grp-attendance' not in menu_hidden %}
-    <div class="nav-group" id="grp-attendance">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-attendance')">
-        <span class="sec-label">Student Attendance</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'results:manual_term_attendance' not in menu_hidden %}<a href="{% url 'results:manual_term_attendance' %}" class="nav-item" data-tooltip="Manual Entry">
-          <i class="bi bi-calendar-check-fill"></i><span class="ni-label">Manual Attendance</span>
-        </a>{% endif %}
-        {% if 'users:attendance_home' not in menu_hidden %}<a href="{% url 'users:attendance_home' %}" class="nav-item" data-tooltip="View">
-          <i class="bi bi-person-check-fill"></i><span class="ni-label">View Attendance</span>
-        </a>{% endif %}
-        {% if 'users:attendance_summary' not in menu_hidden %}<a href="{% url 'users:attendance_summary' %}" class="nav-item" data-tooltip="Summary">
-          <i class="bi bi-graph-up"></i><span class="ni-label">Attendance Summary</span>
-        </a>{% endif %}
-        {% if 'timetable:my_lessons' not in menu_hidden %}<a href="{% url 'timetable:my_lessons' %}" class="nav-item" data-tooltip="My Lessons">
-          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">My Lesson Registers</span>
-        </a>{% endif %}
-        {% if 'timetable:lessons_overview' not in menu_hidden %}<a href="{% url 'timetable:lessons_overview' %}" class="nav-item" data-tooltip="Lesson Attendance">
-          <i class="bi bi-grid-1x2-fill"></i><span class="ni-label">Lesson Attendance</span>
-        </a>{% endif %}
-        {% if 'users:attendance_heatmap' not in menu_hidden %}<a href="{% url 'users:attendance_heatmap' %}" class="nav-item" data-tooltip="Heatmap">
-          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Attendance Heatmap</span>
-        </a>{% endif %}
-        {% if 'users:absence_reasons' not in menu_hidden %}<a href="{% url 'users:absence_reasons' %}" class="nav-item" data-tooltip="Absence Reasons">
-          <i class="bi bi-chat-square-text-fill"></i><span class="ni-label">Absence Reasons</span>
-        </a>{% endif %}
-        {% if 'users:lateness' not in menu_hidden %}<a href="{% url 'users:lateness' %}" class="nav-item" data-tooltip="Lateness">
-          <i class="bi bi-alarm-fill"></i><span class="ni-label">Late Arrivals</span>
-        </a>{% endif %}
-        {% if 'users:attendance_follow_up' not in menu_hidden %}<a href="{% url 'users:attendance_follow_up' %}" class="nav-item" data-tooltip="Follow-up">
-          <i class="bi bi-flag-fill"></i><span class="ni-label">Attendance Follow-up</span>
-        </a>{% endif %}
-        {% if 'idcards:gate_scan_log' not in menu_hidden %}<a href="{% url 'idcards:gate_scan_log' %}" class="nav-item" data-tooltip="Gate Log">
-          <i class="bi bi-door-open-fill"></i><span class="ni-label">Gate Scan Log</span>
-        </a>{% endif %}
-        {% if 'safety:pickup_desk' not in menu_hidden %}<a href="{% url 'safety:pickup_desk' %}" class="nav-item" data-tooltip="Pickup Desk">
-          <i class="bi bi-door-open-fill"></i><span class="ni-label">Pickup Desk</span>
-        </a>{% endif %}
-        {% if 'safety:pickup_log' not in menu_hidden %}<a href="{% url 'safety:pickup_log' %}" class="nav-item" data-tooltip="Pickup Log">
-          <i class="bi bi-journal-check"></i><span class="ni-label">Pickup Log</span>
-        </a>{% endif %}
-        {% if 'users:attendance_settings' not in menu_hidden %}<a href="{% url 'users:attendance_settings' %}" class="nav-item" data-tooltip="Attendance Settings">
-          <i class="bi bi-sliders"></i><span class="ni-label">Attendance Settings</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── Staff Attendance ── -->
-    {% if 'grp-staff-attendance' not in menu_hidden %}
-    <div class="nav-group" id="grp-staff-attendance">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-staff-attendance')">
-        <span class="sec-label">Staff Attendance</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'safety:staff_attendance' not in menu_hidden %}<a href="{% url 'safety:staff_attendance' %}" class="nav-item" data-tooltip="Staff Attendance">
-          <i class="bi bi-clipboard-data-fill"></i><span class="ni-label">Attendance Register</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}{% if 'safety:staff_hours' not in menu_hidden %}<a href="{% url 'safety:staff_hours' %}" class="nav-item" data-tooltip="Times &amp; Working Days">
-          <i class="bi bi-clock-fill"></i><span class="ni-label">Times &amp; Working Days</span>
-        </a>{% endif %}{% endif %}
-        {% if 'idcards:reception_qr_page' not in menu_hidden %}<a href="{% url 'idcards:reception_qr_page' %}" class="nav-item" data-tooltip="Reception QR">
-          <i class="bi bi-qr-code"></i><span class="ni-label">Clock-in QR Poster</span>
-        </a>{% endif %}
-        {% if 'idcards:staff_attendance_log' not in menu_hidden %}<a href="{% url 'idcards:staff_attendance_log' %}" class="nav-item" data-tooltip="Staff Clock">
-          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Clock In/Out Log</span>
-        </a>{% endif %}
-        {% if 'safety:phone_clock' not in menu_hidden %}<a href="{% url 'safety:phone_clock' %}" class="nav-item" data-tooltip="Clock In">
-          <i class="bi bi-fingerprint"></i><span class="ni-label">Clock In (Phone)</span>
-        </a>{% endif %}
-        {% if 'safety:staff_leave' not in menu_hidden %}<a href="{% url 'safety:staff_leave' %}" class="nav-item" data-tooltip="Staff Leave">
-          <i class="bi bi-calendar2-x-fill"></i><span class="ni-label">Staff Leave</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── ID Cards & Safety ── -->
-    {% if 'grp-idcards-safety' not in menu_hidden %}
-    <div class="nav-group" id="grp-idcards-safety">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-idcards-safety')">
-        <span class="sec-label">ID Cards &amp; Safety</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'idcards:id_card_directory' not in menu_hidden %}<a href="{% url 'idcards:id_card_directory' %}" class="nav-item" data-tooltip="ID Cards">
-          <i class="bi bi-person-lines-fill"></i><span class="ni-label">ID Card Directory</span>
-        </a>{% endif %}
-        {% if 'idcards:bulk_print_cards' not in menu_hidden %}<a href="{% url 'idcards:bulk_print_cards' %}" class="nav-item" data-tooltip="ID Cards">
-          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Print ID Cards</span>
-        </a>{% endif %}
-        {% if 'safety:lost_cards' not in menu_hidden %}<a href="{% url 'safety:lost_cards' %}" class="nav-item" data-tooltip="Lost ID Cards">
-          <i class="bi bi-person-x-fill"></i><span class="ni-label">Lost ID Cards</span>
-        </a>{% endif %}
-        {% if 'safety:visitor_desk' not in menu_hidden %}<a href="{% url 'safety:visitor_desk' %}" class="nav-item" data-tooltip="Visitors">
-          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Visitor Desk</span>
-        </a>{% endif %}
-        {% if 'safety:roll_calls' not in menu_hidden %}<a href="{% url 'safety:roll_calls' %}" class="nav-item" data-tooltip="Emergency Roll Call">
-          <i class="bi bi-megaphone-fill"></i><span class="ni-label">Emergency Roll Call</span>
-        </a>{% endif %}
-        {% if 'safety:settings' not in menu_hidden %}<a href="{% url 'safety:settings' %}" class="nav-item" data-tooltip="Gate Settings">
-          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Gate &amp; Safety Settings</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- ── Courses ── -->
-    {% if 'grp-courses' not in menu_hidden %}
-    <div class="nav-group" id="grp-courses">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-courses')">
-        <span class="sec-label">Courses</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'classroom:teacher_courses' not in menu_hidden %}<a href="{% url 'classroom:teacher_courses' %}" class="nav-item" data-tooltip="My Courses">
-          <i class="bi bi-collection-play-fill"></i><span class="ni-label">My Courses</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-
+    <!-- ── Staff & HR ── -->
+    {% if user.is_superuser or user.is_staff_user %}
     {% if user.staff %}
-    <!-- ── Teaching ── -->
-    {% if 'grp-teaching' not in menu_hidden %}
-    <div class="nav-group" id="grp-teaching">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-teaching')">
-        <span class="sec-label">Teaching Tools</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'teaching:home' not in menu_hidden %}<a href="{% url 'teaching:home' %}" class="nav-item" data-tooltip="My Queue">
-          <i class="bi bi-inbox-fill"></i><span class="ni-label">My Queue</span>
-        </a>{% endif %}
-        {% if 'labs:home' not in menu_hidden %}<a href="{% url 'labs:home' %}" class="nav-item" data-tooltip="Labs & Practicals">
-          <i class="bi bi-eyedropper"></i><span class="ni-label">Labs &amp; Practicals</span>
-        </a>{% endif %}
-        {% if 'teaching:class_dashboard' not in menu_hidden %}<a href="{% url 'teaching:class_dashboard' %}" class="nav-item" data-tooltip="My Form Class">
-          <i class="bi bi-people-fill"></i><span class="ni-label">My Form Class</span>
-        </a>{% endif %}
-        {% if 'teaching:gradebooks' not in menu_hidden %}<a href="{% url 'teaching:gradebooks' %}" class="nav-item" data-tooltip="Gradebook">
-          <i class="bi bi-journal-bookmark-fill"></i><span class="ni-label">Gradebook</span>
-        </a>{% endif %}
-        {% if 'teaching:behaviour' not in menu_hidden %}<a href="{% url 'teaching:behaviour' %}" class="nav-item" data-tooltip="Behaviour Points">
-          <i class="bi bi-hand-thumbs-up-fill"></i><span class="ni-label">Behaviour Points</span>
-        </a>{% endif %}
-        {% if 'teaching:comments' not in menu_hidden %}<a href="{% url 'teaching:comments' %}" class="nav-item" data-tooltip="Comment Bank">
-          <i class="bi bi-chat-quote-fill"></i><span class="ni-label">Comment Bank</span>
-        </a>{% endif %}
-        {% if 'teaching:resources' not in menu_hidden %}<a href="{% url 'teaching:resources' %}" class="nav-item" data-tooltip="Resources">
-          <i class="bi bi-folder-fill"></i><span class="ni-label">Resource Library</span>
-        </a>{% endif %}
-        {% if 'teaching:picker' not in menu_hidden %}<a href="{% url 'teaching:picker' %}" class="nav-item" data-tooltip="Name Picker">
-          <i class="bi bi-shuffle"></i><span class="ni-label">Name Picker &amp; Timer</span>
-        </a>{% endif %}
-        {% if 'teaching:tasks' not in menu_hidden %}<a href="{% url 'teaching:tasks' %}" class="nav-item" data-tooltip="Tasks">
-          <i class="bi bi-check2-square"></i><span class="ni-label">Tasks</span>
-        </a>{% endif %}
-        {% if 'teaching:duties' not in menu_hidden %}<a href="{% url 'teaching:duties' %}" class="nav-item" data-tooltip="Duty Roster">
-          <i class="bi bi-calendar-week-fill"></i><span class="ni-label">Duty Roster</span>
-        </a>{% endif %}
-        {% if 'teaching:handovers' not in menu_hidden %}<a href="{% url 'teaching:handovers' %}" class="nav-item" data-tooltip="Handover Notes">
-          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Handover Notes</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff or user.is_superuser %}
-    <!-- ── Security & privacy ── -->
-    {% if 'grp-security' not in menu_hidden %}
-    <div class="nav-group" id="grp-security">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-security')">
-        <span class="sec-label">Security &amp; Privacy</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'security:me' not in menu_hidden %}<a href="{% url 'security:me' %}" class="nav-item" data-tooltip="Sign-in &amp; Security">
-          <i class="bi bi-person-lock"></i><span class="ni-label">My Sign-in &amp; Security</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'security:overview' not in menu_hidden %}<a href="{% url 'security:overview' %}" class="nav-item" data-tooltip="Security Overview">
-          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Security Overview</span>
-        </a>{% endif %}
-        {% if 'security:roles' not in menu_hidden %}<a href="{% url 'security:roles' %}" class="nav-item" data-tooltip="Roles &amp; Permissions">
-          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Roles &amp; Permissions</span>
-        </a>{% endif %}
-        {% if 'security:password_help' not in menu_hidden %}<a href="{% url 'security:password_help' %}" class="nav-item" data-tooltip="Password Help">
-          <i class="bi bi-key-fill"></i><span class="ni-label">Password Help</span>
-        </a>{% endif %}
-        {% if 'security:audit' not in menu_hidden %}<a href="{% url 'security:audit' %}" class="nav-item" data-tooltip="Audit Trail">
-          <i class="bi bi-journal-text"></i><span class="ni-label">Audit Trail</span>
-        </a>{% endif %}
-        {% if 'security:platform' not in menu_hidden %}<a href="{% url 'security:platform' %}" class="nav-item" data-tooltip="Backups & Health">
-          <i class="bi bi-hdd-stack-fill"></i><span class="ni-label">Backups &amp; Health</span>
-        </a>{% endif %}
-        {% if 'security:privacy' not in menu_hidden %}<a href="{% url 'security:privacy' %}" class="nav-item" data-tooltip="Privacy &amp; NDPA">
-          <i class="bi bi-file-earmark-lock2-fill"></i><span class="ni-label">Privacy &amp; NDPA</span>
-        </a>{% endif %}
-        {% if 'security:requests' not in menu_hidden %}<a href="{% url 'security:requests' %}" class="nav-item" data-tooltip="Data Requests">
-          <i class="bi bi-inbox-fill"></i><span class="ni-label">Data Requests</span>
-        </a>{% endif %}
-        {% if 'security:breaches' not in menu_hidden %}<a href="{% url 'security:breaches' %}" class="nav-item" data-tooltip="Data Breaches">
-          <i class="bi bi-exclamation-octagon-fill"></i><span class="ni-label">Data Breaches</span>
-        </a>{% endif %}
-        {% if 'security:compliance' not in menu_hidden %}<a href="{% url 'security:compliance' %}" class="nav-item" data-tooltip="Compliance Report">
-          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Compliance Report</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff or user.is_superuser %}
-    <!-- ── Administration & help ── -->
-    {% if 'grp-account' not in menu_hidden %}
-    <div class="nav-group" id="grp-account">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-account')">
-        <span class="sec-label">Administration &amp; Help</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'platform_school:help' not in menu_hidden %}<a href="{% url 'platform_school:help' %}" class="nav-item" data-tooltip="Help Centre">
-          <i class="bi bi-life-preserver"></i><span class="ni-label">Help Centre</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'platform_school:campuses' not in menu_hidden %}<a href="{% url 'platform_school:campuses' %}" class="nav-item" data-tooltip="Sections">
-          <i class="bi bi-buildings-fill"></i><span class="ni-label">Sections</span>
-        </a>{% endif %}
-        {% if 'platform_school:branding' not in menu_hidden %}<a href="{% url 'platform_school:branding' %}" class="nav-item" data-tooltip="Branding">
-          <i class="bi bi-palette-fill"></i><span class="ni-label">Branding</span>
-        </a>{% endif %}
-        {% if 'platform_school:data' not in menu_hidden %}<a href="{% url 'platform_school:data' %}" class="nav-item" data-tooltip="Data Export &amp; Backups">
-          <i class="bi bi-database-fill-down"></i><span class="ni-label">Data Export &amp; Backups</span>
-        </a>{% endif %}
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff %}
-    <!-- ── Facilities ── -->
-    {% if 'grp-facilities' not in menu_hidden %}
-    <div class="nav-group" id="grp-facilities">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-facilities')">
-        <span class="sec-label">Facilities &amp; Procurement</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'facilities:home' not in menu_hidden %}<a href="{% url 'facilities:home' %}" class="nav-item" data-tooltip="Facilities Overview">
-          <i class="bi bi-building-gear"></i><span class="ni-label">Facilities Overview</span>
-        </a>{% endif %}
-        {% if 'facilities:maintenance' not in menu_hidden %}<a href="{% url 'facilities:maintenance' %}" class="nav-item" data-tooltip="Report a Fault">
-          <i class="bi bi-tools"></i><span class="ni-label">Report a Fault</span>
-        </a>{% endif %}
-        {% if 'facilities:requisitions' not in menu_hidden %}<a href="{% url 'facilities:requisitions' %}" class="nav-item" data-tooltip="Requisitions">
-          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Requisitions</span>
-        </a>{% endif %}
-        {% if 'facilities:orders' not in menu_hidden %}<a href="{% url 'facilities:orders' %}" class="nav-item" data-tooltip="Purchase Orders">
-          <i class="bi bi-receipt"></i><span class="ni-label">Purchase Orders</span>
-        </a>{% endif %}
-        {% if 'facilities:assets' not in menu_hidden %}<a href="{% url 'facilities:assets' %}" class="nav-item" data-tooltip="Asset Register">
-          <i class="bi bi-qr-code"></i><span class="ni-label">Asset Register</span>
-        </a>{% endif %}
-        {% if 'facilities:generators' not in menu_hidden %}<a href="{% url 'facilities:generators' %}" class="nav-item" data-tooltip="Generators &amp; Diesel">
-          <i class="bi bi-lightning-charge-fill"></i><span class="ni-label">Generators &amp; Diesel</span>
-        </a>{% endif %}
-        {% if 'facilities:utilities' not in menu_hidden %}<a href="{% url 'facilities:utilities' %}" class="nav-item" data-tooltip="Utility Bills">
-          <i class="bi bi-plug-fill"></i><span class="ni-label">Utility Bills</span>
-        </a>{% endif %}
-        {% if 'facilities:cleaning' not in menu_hidden %}<a href="{% url 'facilities:cleaning' %}" class="nav-item" data-tooltip="Cleaning">
-          <i class="bi bi-stars"></i><span class="ni-label">Cleaning</span>
-        </a>{% endif %}
-        {% if 'facilities:hire' not in menu_hidden %}<a href="{% url 'facilities:hire' %}" class="nav-item" data-tooltip="Hall Hire">
-          <i class="bi bi-calendar2-event-fill"></i><span class="ni-label">Hall Hire</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff %}
-    <!-- ── Welfare ── -->
-    {% if 'grp-welfare' not in menu_hidden %}
-    <div class="nav-group" id="grp-welfare">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-welfare')">
-        <span class="sec-label">Health &amp; Welfare</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'welfare:home' not in menu_hidden %}<a href="{% url 'welfare:home' %}" class="nav-item" data-tooltip="Welfare Overview">
-          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Welfare Overview</span>
-        </a>{% endif %}
-        {% if 'welfare:sick_bay' not in menu_hidden %}<a href="{% url 'welfare:sick_bay' %}" class="nav-item" data-tooltip="Sick Bay">
-          <i class="bi bi-hospital-fill"></i><span class="ni-label">Sick Bay</span>
-        </a>{% endif %}
-        {% if 'welfare:emergency' not in menu_hidden %}<a href="{% url 'welfare:emergency' %}" class="nav-item" data-tooltip="Emergency Contacts">
-          <i class="bi bi-telephone-fill"></i><span class="ni-label">Emergency Contacts</span>
-        </a>{% endif %}
-        {% if 'welfare:incidents' not in menu_hidden %}<a href="{% url 'welfare:incidents' %}" class="nav-item" data-tooltip="Discipline Incidents">
-          <i class="bi bi-flag-fill"></i><span class="ni-label">Discipline Incidents</span>
-        </a>{% endif %}
-        {% if 'welfare:detentions' not in menu_hidden %}<a href="{% url 'welfare:detentions' %}" class="nav-item" data-tooltip="Detentions">
-          <i class="bi bi-hourglass-split"></i><span class="ni-label">Detentions</span>
-        </a>{% endif %}
-        {% if 'welfare:accidents' not in menu_hidden %}<a href="{% url 'welfare:accidents' %}" class="nav-item" data-tooltip="Accident Reports">
-          <i class="bi bi-bandaid-fill"></i><span class="ni-label">Accident Reports</span>
-        </a>{% endif %}
-        {% if 'welfare:safeguarding' not in menu_hidden %}<a href="{% url 'welfare:safeguarding' %}" class="nav-item" data-tooltip="Safeguarding">
-          <i class="bi bi-shield-fill-exclamation"></i><span class="ni-label">Safeguarding</span>
-        </a>{% endif %}
-        {% if 'welfare:support' not in menu_hidden %}<a href="{% url 'welfare:support' %}" class="nav-item" data-tooltip="Support Plans">
-          <i class="bi bi-person-heart"></i><span class="ni-label">Support Plans</span>
-        </a>{% endif %}
-        {% if 'welfare:sports' not in menu_hidden %}<a href="{% url 'welfare:sports' %}" class="nav-item" data-tooltip="Sports &amp; Fitness">
-          <i class="bi bi-trophy-fill"></i><span class="ni-label">Sports &amp; Fitness</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff %}
-    <!-- ── Library ── -->
-    {% if 'grp-library' not in menu_hidden %}
-    <div class="nav-group" id="grp-library">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-library')">
-        <span class="sec-label">Library</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'library:home' not in menu_hidden %}<a href="{% url 'library:home' %}" class="nav-item" data-tooltip="Library">
-          <i class="bi bi-book-half"></i><span class="ni-label">Library</span>
-        </a>{% endif %}
-        {% if 'library:desk' not in menu_hidden %}<a href="{% url 'library:desk' %}" class="nav-item" data-tooltip="Library Desk">
-          <i class="bi bi-upc-scan"></i><span class="ni-label">Library Desk</span>
-        </a>{% endif %}
-        {% if 'library:catalogue' not in menu_hidden %}<a href="{% url 'library:catalogue' %}" class="nav-item" data-tooltip="Catalogue">
-          <i class="bi bi-journals"></i><span class="ni-label">Catalogue</span>
-        </a>{% endif %}
-        {% if 'library:loans' not in menu_hidden %}<a href="{% url 'library:loans' %}" class="nav-item" data-tooltip="Loans &amp; Fines">
-          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Loans &amp; Fines</span>
-        </a>{% endif %}
-        {% if 'library:reading' not in menu_hidden %}<a href="{% url 'library:reading' %}" class="nav-item" data-tooltip="Reading Logs">
-          <i class="bi bi-journal-check"></i><span class="ni-label">Reading Logs</span>
-        </a>{% endif %}
-        {% if 'library:eresources' not in menu_hidden %}<a href="{% url 'library:eresources' %}" class="nav-item" data-tooltip="E-library">
-          <i class="bi bi-file-earmark-pdf-fill"></i><span class="ni-label">E-library</span>
-        </a>{% endif %}
-        {% if 'library:requests' not in menu_hidden %}<a href="{% url 'library:requests' %}" class="nav-item" data-tooltip="Book Requests">
-          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Book Requests</span>
-        </a>{% endif %}
-        {% if 'library:search' not in menu_hidden %}<a href="{% url 'library:search' %}" class="nav-item" data-tooltip="Find a Book">
-          <i class="bi bi-search"></i><span class="ni-label">Find a Book</span>
-        </a>{% endif %}
-        {% if 'library:mine' not in menu_hidden %}<a href="{% url 'library:mine' %}" class="nav-item" data-tooltip="My Library">
-          <i class="bi bi-person-lines-fill"></i><span class="ni-label">My Library</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff %}
-    <!-- ── Transport ── -->
-    {% if 'grp-transport' not in menu_hidden %}
-    <div class="nav-group" id="grp-transport">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-transport')">
-        <span class="sec-label">Transport</span>
-        <i class="bi bi-chevron-down sec-icon"></i>
-      </div>
-      <div class="group-items">
-        {% if 'transport:home' not in menu_hidden %}<a href="{% url 'transport:home' %}" class="nav-item" data-tooltip="Routes">
-          <i class="bi bi-bus-front-fill"></i><span class="ni-label">Routes</span>
-        </a>{% endif %}
-        {% if 'transport:my_trips' not in menu_hidden %}<a href="{% url 'transport:my_trips' %}" class="nav-item" data-tooltip="Bus Trips">
-          <i class="bi bi-geo-alt-fill"></i><span class="ni-label">Bus Trips</span>
-        </a>{% endif %}
-        {% if 'transport:fleet' not in menu_hidden %}<a href="{% url 'transport:fleet' %}" class="nav-item" data-tooltip="Vehicles">
-          <i class="bi bi-truck-front-fill"></i><span class="ni-label">Vehicles</span>
-        </a>{% endif %}
-        {% if 'transport:crew' not in menu_hidden %}<a href="{% url 'transport:crew' %}" class="nav-item" data-tooltip="Drivers">
-          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Drivers</span>
-        </a>{% endif %}
-        {% if 'transport:fees' not in menu_hidden %}<a href="{% url 'transport:fees' %}" class="nav-item" data-tooltip="Transport Fees">
-          <i class="bi bi-cash-coin"></i><span class="ni-label">Transport Fees</span>
-        </a>{% endif %}
-        {% if 'transport:field_trips' not in menu_hidden %}<a href="{% url 'transport:field_trips' %}" class="nav-item" data-tooltip="Field Trips">
-          <i class="bi bi-signpost-2-fill"></i><span class="ni-label">Field Trips</span>
-        </a>{% endif %}
-        {% if 'transport:changes' not in menu_hidden %}<a href="{% url 'transport:changes' %}" class="nav-item" data-tooltip="Pickup Changes">
-          <i class="bi bi-arrow-repeat"></i><span class="ni-label">Pickup Changes</span>
-        </a>{% endif %}
-        {% if 'transport:incidents' not in menu_hidden %}<a href="{% url 'transport:incidents' %}" class="nav-item" data-tooltip="Incidents">
-          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Incidents</span>
-        </a>{% endif %}
-        {% if 'transport:reports' not in menu_hidden %}<a href="{% url 'transport:reports' %}" class="nav-item" data-tooltip="Transport Reports">
-          <i class="bi bi-graph-up"></i><span class="ni-label">Transport Reports</span>
-        </a>{% endif %}
-      </div>
-    </div>
-    {% endif %}
-    {% endif %}
-
-    {% if user.staff %}
-    <!-- ── People & HR ── -->
     {% if 'grp-hr' not in menu_hidden %}
     <div class="nav-group" id="grp-hr">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-hr')">
-        <span class="sec-label">People &amp; HR</span>
+        <span class="sec-label">Staff &amp; HR</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
@@ -1657,9 +1253,164 @@
     </div>
     {% endif %}
     {% endif %}
+    {% endif %}
 
+    <!-- ── Health & Welfare ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.staff %}
+    {% if 'grp-welfare' not in menu_hidden %}
+    <div class="nav-group" id="grp-welfare">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-welfare')">
+        <span class="sec-label">Health &amp; Welfare</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'welfare:home' not in menu_hidden %}<a href="{% url 'welfare:home' %}" class="nav-item" data-tooltip="Welfare Overview">
+          <i class="bi bi-heart-pulse-fill"></i><span class="ni-label">Welfare Overview</span>
+        </a>{% endif %}
+        {% if 'welfare:sick_bay' not in menu_hidden %}<a href="{% url 'welfare:sick_bay' %}" class="nav-item" data-tooltip="Sick Bay">
+          <i class="bi bi-hospital-fill"></i><span class="ni-label">Sick Bay</span>
+        </a>{% endif %}
+        {% if 'welfare:emergency' not in menu_hidden %}<a href="{% url 'welfare:emergency' %}" class="nav-item" data-tooltip="Emergency Contacts">
+          <i class="bi bi-telephone-fill"></i><span class="ni-label">Emergency Contacts</span>
+        </a>{% endif %}
+        {% if 'welfare:incidents' not in menu_hidden %}<a href="{% url 'welfare:incidents' %}" class="nav-item" data-tooltip="Discipline Incidents">
+          <i class="bi bi-flag-fill"></i><span class="ni-label">Discipline Incidents</span>
+        </a>{% endif %}
+        {% if 'welfare:detentions' not in menu_hidden %}<a href="{% url 'welfare:detentions' %}" class="nav-item" data-tooltip="Detentions">
+          <i class="bi bi-hourglass-split"></i><span class="ni-label">Detentions</span>
+        </a>{% endif %}
+        {% if 'welfare:accidents' not in menu_hidden %}<a href="{% url 'welfare:accidents' %}" class="nav-item" data-tooltip="Accident Reports">
+          <i class="bi bi-bandaid-fill"></i><span class="ni-label">Accident Reports</span>
+        </a>{% endif %}
+        {% if 'welfare:safeguarding' not in menu_hidden %}<a href="{% url 'welfare:safeguarding' %}" class="nav-item" data-tooltip="Safeguarding">
+          <i class="bi bi-shield-fill-exclamation"></i><span class="ni-label">Safeguarding</span>
+        </a>{% endif %}
+        {% if 'welfare:support' not in menu_hidden %}<a href="{% url 'welfare:support' %}" class="nav-item" data-tooltip="Support Plans">
+          <i class="bi bi-person-heart"></i><span class="ni-label">Support Plans</span>
+        </a>{% endif %}
+        {% if 'welfare:sports' not in menu_hidden %}<a href="{% url 'welfare:sports' %}" class="nav-item" data-tooltip="Sports &amp; Fitness">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Sports &amp; Fitness</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Gate, Visitors & ID Cards ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-idcards-safety' not in menu_hidden %}
+    <div class="nav-group" id="grp-idcards-safety">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-idcards-safety')">
+        <span class="sec-label">Gate, Visitors &amp; ID Cards</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'idcards:id_card_directory' not in menu_hidden %}<a href="{% url 'idcards:id_card_directory' %}" class="nav-item" data-tooltip="ID Cards">
+          <i class="bi bi-person-lines-fill"></i><span class="ni-label">ID Card Directory</span>
+        </a>{% endif %}
+        {% if 'idcards:bulk_print_cards' not in menu_hidden %}<a href="{% url 'idcards:bulk_print_cards' %}" class="nav-item" data-tooltip="ID Cards">
+          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Print ID Cards</span>
+        </a>{% endif %}
+        {% if 'safety:lost_cards' not in menu_hidden %}<a href="{% url 'safety:lost_cards' %}" class="nav-item" data-tooltip="Lost ID Cards">
+          <i class="bi bi-person-x-fill"></i><span class="ni-label">Lost ID Cards</span>
+        </a>{% endif %}
+        {% if 'safety:visitor_desk' not in menu_hidden %}<a href="{% url 'safety:visitor_desk' %}" class="nav-item" data-tooltip="Visitors">
+          <i class="bi bi-person-vcard-fill"></i><span class="ni-label">Visitor Desk</span>
+        </a>{% endif %}
+        {% if 'safety:roll_calls' not in menu_hidden %}<a href="{% url 'safety:roll_calls' %}" class="nav-item" data-tooltip="Emergency Roll Call">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">Emergency Roll Call</span>
+        </a>{% endif %}
+        {% if 'safety:settings' not in menu_hidden %}<a href="{% url 'safety:settings' %}" class="nav-item" data-tooltip="Gate Settings">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Gate &amp; Safety Settings</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Messages & Notices ── -->
+    {% if user.is_superuser or user.is_staff_user %}
     {% if user.is_superuser %}
+    {% if 'grp-comms' not in menu_hidden %}
+    <div class="nav-group" id="grp-comms">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-comms')">
+        <span class="sec-label">Messages &amp; Notices</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'communications:dashboard' not in menu_hidden %}<a href="{% url 'communications:dashboard' %}" class="nav-item" data-tooltip="Comm Centre">
+          <i class="bi bi-broadcast"></i><span class="ni-label">Comm Centre</span>
+        </a>{% endif %}
+        {% if 'communications:campaign_create' not in menu_hidden %}<a href="{% url 'communications:campaign_create' %}" class="nav-item" data-tooltip="New Campaign">
+          <i class="bi bi-megaphone-fill"></i><span class="ni-label">New Campaign</span>
+        </a>{% endif %}
+        {% if 'communications:quick_message' not in menu_hidden %}<a href="{% url 'communications:quick_message' %}" class="nav-item" data-tooltip="Quick Message">
+          <i class="bi bi-chat-dots-fill"></i><span class="ni-label">Quick Message</span>
+        </a>{% endif %}
+        {% if 'communications:fee_reminders' not in menu_hidden %}<a href="{% url 'communications:fee_reminders' %}" class="nav-item" data-tooltip="Fee Reminders">
+          <i class="bi bi-cash-coin"></i><span class="ni-label">Fee Reminders</span>
+        </a>{% endif %}
+        {% if 'communications:hostel_reminders' not in menu_hidden %}<a href="{% url 'communications:hostel_reminders' %}" class="nav-item" data-tooltip="Hostel Reminders">
+          <i class="bi bi-house-fill"></i><span class="ni-label">Hostel Reminders</span>
+        </a>{% endif %}
+        {% if 'communications:result_notifications' not in menu_hidden %}<a href="{% url 'communications:result_notifications' %}" class="nav-item" data-tooltip="Results Notify">
+          <i class="bi bi-trophy-fill"></i><span class="ni-label">Result Notifications</span>
+        </a>{% endif %}
+        {% if 'communications:login_notifications' not in menu_hidden %}<a href="{% url 'communications:login_notifications' %}" class="nav-item" data-tooltip="Login Details">
+          <i class="bi bi-key-fill"></i><span class="ni-label">Login Details Notify</span>
+        </a>{% endif %}
+        {% if 'communications:contact_audit' not in menu_hidden %}<a href="{% url 'communications:contact_audit' %}" class="nav-item" data-tooltip="Contact Audit">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">Contact Audit</span>
+        </a>{% endif %}
+        {% if 'communications:template_list' not in menu_hidden %}<a href="{% url 'communications:template_list' %}" class="nav-item" data-tooltip="Templates">
+          <i class="bi bi-file-text-fill"></i><span class="ni-label">Message Templates</span>
+        </a>{% endif %}
+        {% if 'communications:test_email' not in menu_hidden %}<a href="{% url 'communications:test_email' %}" class="nav-item" data-tooltip="Email Config">
+          <i class="bi bi-gear-fill"></i><span class="ni-label">Email/SMS Config</span>
+        </a>{% endif %}
+        {% if 'announcements:announcement_list' not in menu_hidden %}<a href="{% url 'announcements:announcement_list' %}" class="nav-item" data-tooltip="Announcements">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Announcements</span>
+        </a>{% endif %}
+        {% if 'communications:calendar' not in menu_hidden %}<a href="{% url 'communications:calendar' %}" class="nav-item" data-tooltip="Messages Calendar">
+          <i class="bi bi-calendar3"></i><span class="ni-label">Messages Calendar</span>
+        </a>{% endif %}
+        {% if 'communications:surveys' not in menu_hidden %}<a href="{% url 'communications:surveys' %}" class="nav-item" data-tooltip="Surveys & Polls">
+          <i class="bi bi-ui-checks"></i><span class="ni-label">Surveys &amp; Polls</span>
+        </a>{% endif %}
+        {% if 'communications:consent_manage' not in menu_hidden %}<a href="{% url 'communications:consent_manage' %}" class="nav-item" data-tooltip="Consent Forms">
+          <i class="bi bi-pen-fill"></i><span class="ni-label">Consent Forms</span>
+        </a>{% endif %}
+        {% if 'communications:chat' not in menu_hidden %}<a href="{% url 'communications:chat' %}" class="nav-item" data-tooltip="Parent Chat">
+          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Parent Chat</span>
+        </a>{% endif %}
+        {% if 'communications:inbox' not in menu_hidden %}<a href="{% url 'communications:inbox' %}" class="nav-item" data-tooltip="Replies Inbox">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">Replies Inbox</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'communications:approvals' not in menu_hidden %}<a href="{% url 'communications:approvals' %}" class="nav-item" data-tooltip="Approvals">
+          <i class="bi bi-check2-circle"></i><span class="ni-label">Message Approvals</span>
+        </a>{% endif %}
+        {% if 'communications:emergency' not in menu_hidden %}<a href="{% url 'communications:emergency' %}" class="nav-item" data-tooltip="Emergency Broadcast">
+          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Emergency Broadcast</span>
+        </a>{% endif %}
+        {% if 'communications:chat_moderate' not in menu_hidden %}<a href="{% url 'communications:chat_moderate' %}" class="nav-item" data-tooltip="Chat Moderation">
+          <i class="bi bi-shield-check"></i><span class="ni-label">Chat Moderation</span>
+        </a>{% endif %}
+        {% if 'communications:settings' not in menu_hidden %}<a href="{% url 'communications:settings' %}" class="nav-item" data-tooltip="Birthdays & Notice Board">
+          <i class="bi bi-sliders"></i><span class="ni-label">Birthdays &amp; Notice Board</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
     <!-- ── Finance ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.is_superuser %}
     {% if 'grp-finance' not in menu_hidden %}
     <div class="nav-group" id="grp-finance">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-finance')">
@@ -1739,12 +1490,16 @@
       </div>
     </div>
     {% endif %}
+    {% endif %}
+    {% endif %}
 
-    <!-- ── Hostel ── -->
+    <!-- ── Boarding ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.is_superuser %}
     {% if 'grp-hostel' not in menu_hidden %}
     <div class="nav-group" id="grp-hostel">
       <div class="nav-section-hdr" onclick="toggleGroup('grp-hostel')">
-        <span class="sec-label">Hostel</span>
+        <span class="sec-label">Boarding</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
@@ -1799,89 +1554,134 @@
       </div>
     </div>
     {% endif %}
+    {% endif %}
+    {% endif %}
 
-    <!-- ── Communications ── -->
-    {% if 'grp-comms' not in menu_hidden %}
-    <div class="nav-group" id="grp-comms">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-comms')">
-        <span class="sec-label">Communications</span>
+    <!-- ── Transport ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.staff %}
+    {% if 'grp-transport' not in menu_hidden %}
+    <div class="nav-group" id="grp-transport">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-transport')">
+        <span class="sec-label">Transport</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
-        {% if 'communications:dashboard' not in menu_hidden %}<a href="{% url 'communications:dashboard' %}" class="nav-item" data-tooltip="Comm Centre">
-          <i class="bi bi-broadcast"></i><span class="ni-label">Comm Centre</span>
+        {% if 'transport:home' not in menu_hidden %}<a href="{% url 'transport:home' %}" class="nav-item" data-tooltip="Routes">
+          <i class="bi bi-bus-front-fill"></i><span class="ni-label">Routes</span>
         </a>{% endif %}
-        {% if 'communications:campaign_create' not in menu_hidden %}<a href="{% url 'communications:campaign_create' %}" class="nav-item" data-tooltip="New Campaign">
-          <i class="bi bi-megaphone-fill"></i><span class="ni-label">New Campaign</span>
+        {% if 'transport:my_trips' not in menu_hidden %}<a href="{% url 'transport:my_trips' %}" class="nav-item" data-tooltip="Bus Trips">
+          <i class="bi bi-geo-alt-fill"></i><span class="ni-label">Bus Trips</span>
         </a>{% endif %}
-        {% if 'communications:quick_message' not in menu_hidden %}<a href="{% url 'communications:quick_message' %}" class="nav-item" data-tooltip="Quick Message">
-          <i class="bi bi-chat-dots-fill"></i><span class="ni-label">Quick Message</span>
+        {% if 'transport:fleet' not in menu_hidden %}<a href="{% url 'transport:fleet' %}" class="nav-item" data-tooltip="Vehicles">
+          <i class="bi bi-truck-front-fill"></i><span class="ni-label">Vehicles</span>
         </a>{% endif %}
-        {% if 'communications:fee_reminders' not in menu_hidden %}<a href="{% url 'communications:fee_reminders' %}" class="nav-item" data-tooltip="Fee Reminders">
-          <i class="bi bi-cash-coin"></i><span class="ni-label">Fee Reminders</span>
+        {% if 'transport:crew' not in menu_hidden %}<a href="{% url 'transport:crew' %}" class="nav-item" data-tooltip="Drivers">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Drivers</span>
         </a>{% endif %}
-        {% if 'communications:hostel_reminders' not in menu_hidden %}<a href="{% url 'communications:hostel_reminders' %}" class="nav-item" data-tooltip="Hostel Reminders">
-          <i class="bi bi-house-fill"></i><span class="ni-label">Hostel Reminders</span>
+        {% if 'transport:fees' not in menu_hidden %}<a href="{% url 'transport:fees' %}" class="nav-item" data-tooltip="Transport Fees">
+          <i class="bi bi-cash-coin"></i><span class="ni-label">Transport Fees</span>
         </a>{% endif %}
-        {% if 'communications:result_notifications' not in menu_hidden %}<a href="{% url 'communications:result_notifications' %}" class="nav-item" data-tooltip="Results Notify">
-          <i class="bi bi-trophy-fill"></i><span class="ni-label">Result Notifications</span>
+        {% if 'transport:field_trips' not in menu_hidden %}<a href="{% url 'transport:field_trips' %}" class="nav-item" data-tooltip="Field Trips">
+          <i class="bi bi-signpost-2-fill"></i><span class="ni-label">Field Trips</span>
         </a>{% endif %}
-        {% if 'communications:login_notifications' not in menu_hidden %}<a href="{% url 'communications:login_notifications' %}" class="nav-item" data-tooltip="Login Details">
-          <i class="bi bi-key-fill"></i><span class="ni-label">Login Details Notify</span>
+        {% if 'transport:changes' not in menu_hidden %}<a href="{% url 'transport:changes' %}" class="nav-item" data-tooltip="Pickup Changes">
+          <i class="bi bi-arrow-repeat"></i><span class="ni-label">Pickup Changes</span>
         </a>{% endif %}
-        {% if 'communications:contact_audit' not in menu_hidden %}<a href="{% url 'communications:contact_audit' %}" class="nav-item" data-tooltip="Contact Audit">
-          <i class="bi bi-person-check-fill"></i><span class="ni-label">Contact Audit</span>
+        {% if 'transport:incidents' not in menu_hidden %}<a href="{% url 'transport:incidents' %}" class="nav-item" data-tooltip="Incidents">
+          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Incidents</span>
         </a>{% endif %}
-        {% if 'communications:template_list' not in menu_hidden %}<a href="{% url 'communications:template_list' %}" class="nav-item" data-tooltip="Templates">
-          <i class="bi bi-file-text-fill"></i><span class="ni-label">Message Templates</span>
+        {% if 'transport:reports' not in menu_hidden %}<a href="{% url 'transport:reports' %}" class="nav-item" data-tooltip="Transport Reports">
+          <i class="bi bi-graph-up"></i><span class="ni-label">Transport Reports</span>
         </a>{% endif %}
-        {% if 'communications:test_email' not in menu_hidden %}<a href="{% url 'communications:test_email' %}" class="nav-item" data-tooltip="Email Config">
-          <i class="bi bi-gear-fill"></i><span class="ni-label">Email/SMS Config</span>
-        </a>{% endif %}
-        {% if 'announcements:announcement_list' not in menu_hidden %}<a href="{% url 'announcements:announcement_list' %}" class="nav-item" data-tooltip="Announcements">
-          <i class="bi bi-bullseye"></i><span class="ni-label">Announcements</span>
-        </a>{% endif %}
-        {% if 'communications:calendar' not in menu_hidden %}<a href="{% url 'communications:calendar' %}" class="nav-item" data-tooltip="Messages Calendar">
-          <i class="bi bi-calendar3"></i><span class="ni-label">Messages Calendar</span>
-        </a>{% endif %}
-        {% if 'communications:surveys' not in menu_hidden %}<a href="{% url 'communications:surveys' %}" class="nav-item" data-tooltip="Surveys & Polls">
-          <i class="bi bi-ui-checks"></i><span class="ni-label">Surveys &amp; Polls</span>
-        </a>{% endif %}
-        {% if 'communications:consent_manage' not in menu_hidden %}<a href="{% url 'communications:consent_manage' %}" class="nav-item" data-tooltip="Consent Forms">
-          <i class="bi bi-pen-fill"></i><span class="ni-label">Consent Forms</span>
-        </a>{% endif %}
-        {% if 'communications:chat' not in menu_hidden %}<a href="{% url 'communications:chat' %}" class="nav-item" data-tooltip="Parent Chat">
-          <i class="bi bi-chat-left-text-fill"></i><span class="ni-label">Parent Chat</span>
-        </a>{% endif %}
-        {% if 'communications:inbox' not in menu_hidden %}<a href="{% url 'communications:inbox' %}" class="nav-item" data-tooltip="Replies Inbox">
-          <i class="bi bi-inbox-fill"></i><span class="ni-label">Replies Inbox</span>
-        </a>{% endif %}
-        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
-        {% if 'communications:approvals' not in menu_hidden %}<a href="{% url 'communications:approvals' %}" class="nav-item" data-tooltip="Approvals">
-          <i class="bi bi-check2-circle"></i><span class="ni-label">Message Approvals</span>
-        </a>{% endif %}
-        {% if 'communications:emergency' not in menu_hidden %}<a href="{% url 'communications:emergency' %}" class="nav-item" data-tooltip="Emergency Broadcast">
-          <i class="bi bi-exclamation-triangle-fill"></i><span class="ni-label">Emergency Broadcast</span>
-        </a>{% endif %}
-        {% if 'communications:chat_moderate' not in menu_hidden %}<a href="{% url 'communications:chat_moderate' %}" class="nav-item" data-tooltip="Chat Moderation">
-          <i class="bi bi-shield-check"></i><span class="ni-label">Chat Moderation</span>
-        </a>{% endif %}
-        {% if 'communications:settings' not in menu_hidden %}<a href="{% url 'communications:settings' %}" class="nav-item" data-tooltip="Birthdays & Notice Board">
-          <i class="bi bi-sliders"></i><span class="ni-label">Birthdays &amp; Notice Board</span>
-        </a>{% endif %}
-        {% endif %}
       </div>
     </div>
     {% endif %}
+    {% endif %}
+    {% endif %}
 
-    <!-- ── Inventory ── -->
-    {% if 'grp-inventory' not in menu_hidden %}
-    <div class="nav-group" id="grp-inventory">
-      <div class="nav-section-hdr" onclick="toggleGroup('grp-inventory')">
-        <span class="sec-label">Inventory</span>
+    <!-- ── Library ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.staff %}
+    {% if 'grp-library' not in menu_hidden %}
+    <div class="nav-group" id="grp-library">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-library')">
+        <span class="sec-label">Library</span>
         <i class="bi bi-chevron-down sec-icon"></i>
       </div>
       <div class="group-items">
+        {% if 'library:home' not in menu_hidden %}<a href="{% url 'library:home' %}" class="nav-item" data-tooltip="Library">
+          <i class="bi bi-book-half"></i><span class="ni-label">Library</span>
+        </a>{% endif %}
+        {% if 'library:desk' not in menu_hidden %}<a href="{% url 'library:desk' %}" class="nav-item" data-tooltip="Library Desk">
+          <i class="bi bi-upc-scan"></i><span class="ni-label">Library Desk</span>
+        </a>{% endif %}
+        {% if 'library:catalogue' not in menu_hidden %}<a href="{% url 'library:catalogue' %}" class="nav-item" data-tooltip="Catalogue">
+          <i class="bi bi-journals"></i><span class="ni-label">Catalogue</span>
+        </a>{% endif %}
+        {% if 'library:loans' not in menu_hidden %}<a href="{% url 'library:loans' %}" class="nav-item" data-tooltip="Loans &amp; Fines">
+          <i class="bi bi-arrow-left-right"></i><span class="ni-label">Loans &amp; Fines</span>
+        </a>{% endif %}
+        {% if 'library:reading' not in menu_hidden %}<a href="{% url 'library:reading' %}" class="nav-item" data-tooltip="Reading Logs">
+          <i class="bi bi-journal-check"></i><span class="ni-label">Reading Logs</span>
+        </a>{% endif %}
+        {% if 'library:eresources' not in menu_hidden %}<a href="{% url 'library:eresources' %}" class="nav-item" data-tooltip="E-library">
+          <i class="bi bi-file-earmark-pdf-fill"></i><span class="ni-label">E-library</span>
+        </a>{% endif %}
+        {% if 'library:requests' not in menu_hidden %}<a href="{% url 'library:requests' %}" class="nav-item" data-tooltip="Book Requests">
+          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Book Requests</span>
+        </a>{% endif %}
+        {% if 'library:search' not in menu_hidden %}<a href="{% url 'library:search' %}" class="nav-item" data-tooltip="Find a Book">
+          <i class="bi bi-search"></i><span class="ni-label">Find a Book</span>
+        </a>{% endif %}
+        {% if 'library:mine' not in menu_hidden %}<a href="{% url 'library:mine' %}" class="nav-item" data-tooltip="My Library">
+          <i class="bi bi-person-lines-fill"></i><span class="ni-label">My Library</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Facilities & Stores ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if 'grp-facilities' not in menu_hidden %}
+    <div class="nav-group" id="grp-facilities">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-facilities')">
+        <span class="sec-label">Facilities &amp; Stores</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if user.staff %}
+        {% if 'facilities:home' not in menu_hidden %}<a href="{% url 'facilities:home' %}" class="nav-item" data-tooltip="Facilities Overview">
+          <i class="bi bi-building-gear"></i><span class="ni-label">Facilities Overview</span>
+        </a>{% endif %}
+        {% if 'facilities:maintenance' not in menu_hidden %}<a href="{% url 'facilities:maintenance' %}" class="nav-item" data-tooltip="Report a Fault">
+          <i class="bi bi-tools"></i><span class="ni-label">Report a Fault</span>
+        </a>{% endif %}
+        {% if 'facilities:requisitions' not in menu_hidden %}<a href="{% url 'facilities:requisitions' %}" class="nav-item" data-tooltip="Requisitions">
+          <i class="bi bi-cart-plus-fill"></i><span class="ni-label">Requisitions</span>
+        </a>{% endif %}
+        {% if 'facilities:orders' not in menu_hidden %}<a href="{% url 'facilities:orders' %}" class="nav-item" data-tooltip="Purchase Orders">
+          <i class="bi bi-receipt"></i><span class="ni-label">Purchase Orders</span>
+        </a>{% endif %}
+        {% if 'facilities:assets' not in menu_hidden %}<a href="{% url 'facilities:assets' %}" class="nav-item" data-tooltip="Asset Register">
+          <i class="bi bi-qr-code"></i><span class="ni-label">Asset Register</span>
+        </a>{% endif %}
+        {% if 'facilities:generators' not in menu_hidden %}<a href="{% url 'facilities:generators' %}" class="nav-item" data-tooltip="Generators &amp; Diesel">
+          <i class="bi bi-lightning-charge-fill"></i><span class="ni-label">Generators &amp; Diesel</span>
+        </a>{% endif %}
+        {% if 'facilities:utilities' not in menu_hidden %}<a href="{% url 'facilities:utilities' %}" class="nav-item" data-tooltip="Utility Bills">
+          <i class="bi bi-plug-fill"></i><span class="ni-label">Utility Bills</span>
+        </a>{% endif %}
+        {% if 'facilities:cleaning' not in menu_hidden %}<a href="{% url 'facilities:cleaning' %}" class="nav-item" data-tooltip="Cleaning">
+          <i class="bi bi-stars"></i><span class="ni-label">Cleaning</span>
+        </a>{% endif %}
+        {% if 'facilities:hire' not in menu_hidden %}<a href="{% url 'facilities:hire' %}" class="nav-item" data-tooltip="Hall Hire">
+          <i class="bi bi-calendar2-event-fill"></i><span class="ni-label">Hall Hire</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if user.is_superuser %}
         {% if 'inventory:dashboard' not in menu_hidden %}<a href="{% url 'inventory:dashboard' %}" class="nav-item" data-tooltip="Inventory Dashboard">
           <i class="bi bi-box-seam-fill"></i><span class="ni-label">Inventory Dashboard</span>
         </a>{% endif %}
@@ -1915,14 +1715,181 @@
         {% if 'inventory:locations_page' not in menu_hidden %}<a href="{% url 'inventory:locations_page' %}" class="nav-item" data-tooltip="Locations">
           <i class="bi bi-geo-alt-fill"></i><span class="ni-label">Locations</span>
         </a>{% endif %}
+        {% endif %}
       </div>
     </div>
     {% endif %}
-    {% endif %}{# end is_superuser blocks #}
+    {% endif %}
 
-    {% endif %}{# end is_superuser or is_staff_user #}
+    <!-- ── Reports & Analytics ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.is_superuser or user.staff.role == 'ADMIN' or user.staff.role == 'ACCOUNT' %}
+    {% if 'grp-analytics' not in menu_hidden %}
+    <div class="nav-group" id="grp-analytics">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-analytics')">
+        <span class="sec-label">Reports &amp; Analytics</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'analytics:home' not in menu_hidden %}<a href="{% url 'analytics:home' %}" class="nav-item" data-tooltip="School Today">
+          <i class="bi bi-speedometer2"></i><span class="ni-label">School Today</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ACCOUNT' or user.staff.role == 'ADMIN' %}
+        {% if 'analytics:fees' not in menu_hidden %}<a href="{% url 'analytics:fees' %}" class="nav-item" data-tooltip="Fee Collection">
+          <i class="bi bi-cash-stack"></i><span class="ni-label">Fee Collection</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'analytics:enrolment' not in menu_hidden %}<a href="{% url 'analytics:enrolment' %}" class="nav-item" data-tooltip="Enrolment">
+          <i class="bi bi-graph-up-arrow"></i><span class="ni-label">Enrolment &amp; Leavers</span>
+        </a>{% endif %}
+        {% if 'analytics:demographics' not in menu_hidden %}<a href="{% url 'analytics:demographics' %}" class="nav-item" data-tooltip="Gender & Age">
+          <i class="bi bi-people-fill"></i><span class="ni-label">Gender &amp; Age</span>
+        </a>{% endif %}
+        {% if 'analytics:cohort' not in menu_hidden %}<a href="{% url 'analytics:cohort' %}" class="nav-item" data-tooltip="Cohorts">
+          <i class="bi bi-layers-fill"></i><span class="ni-label">Cohort Comparison</span>
+        </a>{% endif %}
+        {% if 'analytics:kpis' not in menu_hidden %}<a href="{% url 'analytics:kpis' %}" class="nav-item" data-tooltip="Targets">
+          <i class="bi bi-bullseye"></i><span class="ni-label">Targets</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'analytics:board_pack' not in menu_hidden %}<a href="{% url 'analytics:board_pack' %}" class="nav-item" data-tooltip="Board Pack">
+          <i class="bi bi-file-earmark-richtext-fill"></i><span class="ni-label">Board Pack</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
 
-    <!-- ── Student portal ── -->
+    <!-- ── School Setup ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.is_superuser %}
+    {% if 'grp-academics' not in menu_hidden %}
+    <div class="nav-group" id="grp-academics">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-academics')">
+        <span class="sec-label">School Setup</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        <a href="/settings/" class="nav-item" data-tooltip="Settings">
+          <i class="bi bi-gear-fill"></i>
+          <span class="ni-label">Settings</span>
+        </a>
+        {% if 'academics:manage_sessions' not in menu_hidden %}<a href="{% url 'academics:manage_sessions' %}" class="nav-item" data-tooltip="Sessions">
+          <i class="bi bi-calendar3"></i><span class="ni-label">Manage Sessions</span>
+        </a>{% endif %}
+        {% if active_session %}
+        {% if 'academics:manage_terms' not in menu_hidden %}<a href="{% url 'academics:manage_terms' active_session.id %}" class="nav-item" data-tooltip="Terms">
+          <i class="bi bi-bookmark-fill"></i><span class="ni-label">Manage Terms</span>
+        </a>{% endif %}
+        {% endif %}
+        {% if 'users:manage_classes' not in menu_hidden %}<a href="{% url 'users:manage_classes' %}" class="nav-item" data-tooltip="Classes">
+          <i class="bi bi-building"></i><span class="ni-label">Manage Classes</span>
+        </a>{% endif %}
+        {% if 'users:class_arms' not in menu_hidden %}<a href="{% url 'users:class_arms' %}" class="nav-item" data-tooltip="Classes &amp; Arms">
+          <i class="bi bi-diagram-2-fill"></i><span class="ni-label">Classes &amp; Arms</span>
+        </a>{% endif %}
+        {% if 'users:assign_subjects' not in menu_hidden %}<a href="{% url 'users:assign_subjects' %}" class="nav-item" data-tooltip="Subjects">
+          <i class="bi bi-book-fill"></i><span class="ni-label">Assign Subjects</span>
+        </a>{% endif %}
+        {% if 'users:student_subject_manager' not in menu_hidden %}<a href="{% url 'users:student_subject_manager' %}" class="nav-item" data-tooltip="Subject Manager">
+          <i class="bi bi-person-check-fill"></i><span class="ni-label">Subject Manager</span>
+        </a>{% endif %}
+        {% if 'users:promote_students' not in menu_hidden %}<a href="{% url 'users:promote_students' %}" class="nav-item" data-tooltip="Promote">
+          <i class="bi bi-arrow-up-circle-fill"></i><span class="ni-label">Promote Students</span>
+        </a>{% endif %}
+        {% if 'academics:manage_public_holidays' not in menu_hidden %}<a href="{% url 'academics:manage_public_holidays' %}" class="nav-item" data-tooltip="Holidays">
+          <i class="bi bi-calendar-x-fill"></i><span class="ni-label">Public Holidays</span>
+        </a>{% endif %}
+        {% if 'timetable:admin_index' not in menu_hidden %}<a href="{% url 'timetable:admin_index' %}" class="nav-item" data-tooltip="Timetable">
+          <i class="bi bi-grid-3x3-gap-fill"></i><span class="ni-label">Timetable</span>
+        </a>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Security & Privacy ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.staff or user.is_superuser %}
+    {% if 'grp-security' not in menu_hidden %}
+    <div class="nav-group" id="grp-security">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-security')">
+        <span class="sec-label">Security &amp; Privacy</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'security:me' not in menu_hidden %}<a href="{% url 'security:me' %}" class="nav-item" data-tooltip="Sign-in &amp; Security">
+          <i class="bi bi-person-lock"></i><span class="ni-label">My Sign-in &amp; Security</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'security:overview' not in menu_hidden %}<a href="{% url 'security:overview' %}" class="nav-item" data-tooltip="Security Overview">
+          <i class="bi bi-shield-lock-fill"></i><span class="ni-label">Security Overview</span>
+        </a>{% endif %}
+        {% if 'security:roles' not in menu_hidden %}<a href="{% url 'security:roles' %}" class="nav-item" data-tooltip="Roles &amp; Permissions">
+          <i class="bi bi-person-badge-fill"></i><span class="ni-label">Roles &amp; Permissions</span>
+        </a>{% endif %}
+        {% if 'security:password_help' not in menu_hidden %}<a href="{% url 'security:password_help' %}" class="nav-item" data-tooltip="Password Help">
+          <i class="bi bi-key-fill"></i><span class="ni-label">Password Help</span>
+        </a>{% endif %}
+        {% if 'security:audit' not in menu_hidden %}<a href="{% url 'security:audit' %}" class="nav-item" data-tooltip="Audit Trail">
+          <i class="bi bi-journal-text"></i><span class="ni-label">Audit Trail</span>
+        </a>{% endif %}
+        {% if 'security:platform' not in menu_hidden %}<a href="{% url 'security:platform' %}" class="nav-item" data-tooltip="Backups & Health">
+          <i class="bi bi-hdd-stack-fill"></i><span class="ni-label">Backups &amp; Health</span>
+        </a>{% endif %}
+        {% if 'security:privacy' not in menu_hidden %}<a href="{% url 'security:privacy' %}" class="nav-item" data-tooltip="Privacy &amp; NDPA">
+          <i class="bi bi-file-earmark-lock2-fill"></i><span class="ni-label">Privacy &amp; NDPA</span>
+        </a>{% endif %}
+        {% if 'security:requests' not in menu_hidden %}<a href="{% url 'security:requests' %}" class="nav-item" data-tooltip="Data Requests">
+          <i class="bi bi-inbox-fill"></i><span class="ni-label">Data Requests</span>
+        </a>{% endif %}
+        {% if 'security:breaches' not in menu_hidden %}<a href="{% url 'security:breaches' %}" class="nav-item" data-tooltip="Data Breaches">
+          <i class="bi bi-exclamation-octagon-fill"></i><span class="ni-label">Data Breaches</span>
+        </a>{% endif %}
+        {% if 'security:compliance' not in menu_hidden %}<a href="{% url 'security:compliance' %}" class="nav-item" data-tooltip="Compliance Report">
+          <i class="bi bi-clipboard-check-fill"></i><span class="ni-label">Compliance Report</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- ── Help & Administration ── -->
+    {% if user.is_superuser or user.is_staff_user %}
+    {% if user.staff or user.is_superuser %}
+    {% if 'grp-account' not in menu_hidden %}
+    <div class="nav-group" id="grp-account">
+      <div class="nav-section-hdr" onclick="toggleGroup('grp-account')">
+        <span class="sec-label">Help &amp; Administration</span>
+        <i class="bi bi-chevron-down sec-icon"></i>
+      </div>
+      <div class="group-items">
+        {% if 'platform_school:help' not in menu_hidden %}<a href="{% url 'platform_school:help' %}" class="nav-item" data-tooltip="Help Centre">
+          <i class="bi bi-life-preserver"></i><span class="ni-label">Help Centre</span>
+        </a>{% endif %}
+        {% if user.is_superuser or user.staff.role == 'ADMIN' %}
+        {% if 'platform_school:campuses' not in menu_hidden %}<a href="{% url 'platform_school:campuses' %}" class="nav-item" data-tooltip="Sections">
+          <i class="bi bi-buildings-fill"></i><span class="ni-label">Sections</span>
+        </a>{% endif %}
+        {% if 'platform_school:branding' not in menu_hidden %}<a href="{% url 'platform_school:branding' %}" class="nav-item" data-tooltip="Branding">
+          <i class="bi bi-palette-fill"></i><span class="ni-label">Branding</span>
+        </a>{% endif %}
+        {% if 'platform_school:data' not in menu_hidden %}<a href="{% url 'platform_school:data' %}" class="nav-item" data-tooltip="Data Export &amp; Backups">
+          <i class="bi bi-database-fill-down"></i><span class="ni-label">Data Export &amp; Backups</span>
+        </a>{% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+
+    <!-- ── My Learning ── -->
     {% if user.is_student %}
     {% if 'grp-student' not in menu_hidden %}
     <div class="nav-group" id="grp-student">
@@ -1984,7 +1951,7 @@
     {% endif %}
     {% endif %}
 
-    <!-- ── Parent portal ── -->
+    <!-- ── My Child ── -->
     {% if user.is_parent %}
     {% if 'grp-parent' not in menu_hidden %}
     <div class="nav-group" id="grp-parent">
