@@ -1,0 +1,196 @@
+{% extends "dashboard/base.html" %}
+{% block title %}My profile{% endblock %}
+{% block content %}
+{% include "dashboard/_dash.html" %}
+<style>
+  .pf{--acc:#f4d21f;--acc2:#ffe580;--accdim:rgba(244,210,31,.12);--accbd:rgba(244,210,31,.35)}
+  .pf-hero{display:flex;gap:1.6rem;align-items:center;flex-wrap:wrap}
+  .pf-photo{position:relative;width:132px;height:132px;flex-shrink:0}
+  .pf-photo [hidden]{display:none!important}
+  .pf-photo .pic{width:100%;height:100%;border-radius:32px;object-fit:cover;display:grid;place-items:center;
+    background:radial-gradient(120% 110% at 28% 18%,rgba(255,255,255,.6) 0,rgba(255,255,255,0) 42%),linear-gradient(150deg,#ffe580,#f4d21f 55%,#c9a800);
+    color:#0a1f44;font-family:var(--serif);font-size:3.4rem;font-weight:700;
+    box-shadow:inset 0 2px 1px rgba(255,255,255,.5),0 6px 0 #8a7300,0 22px 36px -14px rgba(0,0,0,.8)}
+  .pf-photo img.pic{box-shadow:0 0 0 4px rgba(244,210,31,.85),0 6px 0 #06132c,0 22px 36px -14px rgba(0,0,0,.8)}
+  .pf-photo label{position:absolute;right:-6px;bottom:-6px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;cursor:pointer;
+    background:#132b58;color:var(--white);font-size:1.1rem;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),0 4px 0 #06132c}
+  .pf-photo label:hover{color:var(--champagne-lt)}
+  .pf-name h1{margin:.2rem 0 .3rem;font-family:var(--serif);font-size:clamp(1.9rem,4vw,2.6rem);color:var(--white);line-height:1.1}
+  .pf-name .chips{display:flex;gap:.4rem;flex-wrap:wrap}
+  .pf-name .chip{display:inline-flex;gap:.35rem;align-items:center;padding:.28rem .7rem;border-radius:99px;font-size:.76rem;font-weight:600;
+    background:rgba(255,255,255,.06);border:1px solid var(--rim2);color:var(--slate2)}
+  .pf-name .chip.gold{background:var(--accdim);border-color:var(--accbd);color:var(--champagne-lt)}
+  .pf-new{display:none;margin-top:1rem;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .pf-new.on{display:flex}
+  .pf-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:1.25rem;margin-top:1.25rem;align-items:start}
+  @media(max-width:960px){.pf-grid{grid-template-columns:1fr}}
+  .pf-stack{display:grid;gap:1.25rem}
+  .pf-form{display:grid;gap:1rem;padding:1.1rem 1.2rem 1.3rem}
+  .pf-form label{display:block;font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--slate2);margin-bottom:.4rem}
+  .pf-in{position:relative}
+  .pf-in i.lead{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--slate)}
+  .pf-in input{width:100%;padding:.8rem .9rem .8rem 2.4rem;border-radius:12px;border:1px solid var(--rim2);background:rgba(0,0,0,.28);color:var(--white);font:inherit;font-size:.92rem;outline:none}
+  .pf-in input:focus{border-color:var(--champagne);box-shadow:0 0 0 3px rgba(244,210,31,.12)}
+  .pf-in input[readonly]{color:var(--slate2);background:rgba(255,255,255,.02)}
+  .pf-in .eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--slate);cursor:pointer;padding:.4rem;font-size:1rem}
+  .pf-row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:560px){.pf-row2{grid-template-columns:1fr}}
+  .pf-hint{font-size:.78rem;color:var(--slate2);margin:.35rem 0 0}
+  .pf-facts{display:grid;grid-template-columns:max-content 1fr;gap:.55rem 1.2rem;padding:1.1rem 1.2rem;font-size:.88rem}
+  .pf-facts dt{color:var(--slate2)}
+  .pf-facts dd{margin:0;color:var(--white);font-weight:500}
+  .pf-meter{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:.5rem}
+  .pf-meter i{display:block;height:100%;width:0;border-radius:99px;transition:width .25s,background .25s}
+  .pf-rules{display:grid;gap:.25rem;margin:.6rem 0 0;padding:0;list-style:none;font-size:.78rem;color:var(--slate2)}
+  .pf-rules li::before{content:"\F28A";font-family:bootstrap-icons;margin-right:.4rem;color:var(--slate)}
+  .pf-rules li.ok{color:var(--green)} .pf-rules li.ok::before{content:"\F26A";color:var(--green)}
+  .pf-link{display:flex;gap:.8rem;align-items:center;padding:.85rem 1.2rem;border-top:1px solid var(--rim);text-decoration:none;color:var(--white)}
+  .pf-link:first-of-type{border-top:0}
+  .pf-link:hover{background:rgba(255,255,255,.03)}
+  .pf-link .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--accdim);color:var(--acc2);flex-shrink:0}
+  .pf-link .txt{flex:1;min-width:0}.pf-link small{display:block;color:var(--slate2);font-size:.76rem}
+</style>
+
+<div class="db pf" id="top">
+  <section class="db-hero">
+    <div class="pf-hero">
+      <form method="post" enctype="multipart/form-data" id="photo-form">{% csrf_token %}<input type="hidden" name="action" value="photo">
+        <div class="pf-photo">
+          {% if user.avatar_url %}<img class="pic" id="pic" src="{{ user.avatar_url }}" alt="Your picture">
+          {% else %}<div class="pic" id="pic-letter">{{ user.display_name|slice:":1"|upper }}</div><img class="pic" id="pic" alt="" hidden>{% endif %}
+          <label for="photo-input" title="Change picture" aria-label="Change picture"><i class="bi bi-camera-fill"></i></label>
+          <input type="file" id="photo-input" name="photo" accept="image/jpeg,image/png,image/webp" hidden>
+        </div>
+        <div class="pf-new" id="pf-new">
+          <button class="db-btn pri" type="submit"><i class="bi bi-check2"></i> Save picture</button>
+          <button class="db-btn" type="button" id="pf-cancel">Cancel</button>
+        </div>
+      </form>
+      <div class="pf-name" style="flex:1;min-width:240px">
+        <div class="db-eyebrow">My profile</div>
+        <h1>{{ user.display_name }}</h1>
+        <div class="chips">
+          <span class="chip gold"><i class="bi bi-person-badge"></i> {{ role_label }}</span>
+          {% if tenant %}<span class="chip"><i class="bi bi-building"></i> {{ tenant.name }}</span>{% endif %}
+          <span class="chip"><i class="bi bi-at"></i> {{ user.username }}</span>
+        </div>
+        <p class="pf-hint" style="margin-top:.8rem">Your picture shows at the top of every page and to staff who look you up. JPG, PNG or WebP, under 5 MB; it is squared for you.</p>
+        {% if user.photo %}<form method="post" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="remove_photo">
+          <button class="db-btn" type="submit" style="font-size:.78rem;padding:.4rem .8rem"><i class="bi bi-trash3"></i> Remove picture</button></form>{% endif %}
+      </div>
+    </div>
+  </section>
+
+  <div class="pf-grid">
+    <div class="pf-stack">
+      <div class="db-card" id="details">
+        <div class="db-card-h"><h3><i class="bi bi-person-lines-fill"></i> Contact details</h3></div>
+        <form method="post" class="pf-form">{% csrf_token %}<input type="hidden" name="action" value="details">
+          <div>
+            <label for="name">Name</label>
+            <div class="pf-in"><i class="bi bi-person lead"></i><input id="name" value="{{ user.display_name }}" readonly></div>
+            <p class="pf-hint">This is the name on the school's records. {% if kind == 'parent' %}To correct a name, use <a href="{% url 'users:parent_dashboard' %}" style="color:var(--champagne-lt)">your child's page</a> or ask the school office.{% else %}Ask the school office if it needs correcting.{% endif %}</p>
+          </div>
+          <div class="pf-row2">
+            <div>
+              <label for="email">Email</label>
+              <div class="pf-in"><i class="bi bi-envelope lead"></i><input id="email" name="email" type="email" value="{{ user.email }}" autocomplete="email" placeholder="you@example.com"></div>
+              <p class="pf-hint">Used to reset your password if you forget it.</p>
+            </div>
+            <div>
+              <label for="phone">Phone</label>
+              <div class="pf-in"><i class="bi bi-telephone lead"></i><input id="phone" name="phone" type="tel" inputmode="tel" value="{{ user.phone }}" autocomplete="tel" placeholder="0803 123 4567"></div>
+            </div>
+          </div>
+          <div><button class="db-btn pri" type="submit"><i class="bi bi-check2-circle"></i> Save details</button></div>
+        </form>
+      </div>
+
+      <div class="db-card" id="password">
+        <div class="db-card-h"><h3><i class="bi bi-key"></i> Password</h3></div>
+        <form method="post" class="pf-form" id="pw-form" autocomplete="off">{% csrf_token %}<input type="hidden" name="action" value="password">
+          <div>
+            <label for="current">Current password</label>
+            <div class="pf-in"><i class="bi bi-lock lead"></i><input id="current" name="current_password" type="password" required autocomplete="current-password">
+              <button class="eye" type="button" aria-label="Show or hide"><i class="bi bi-eye"></i></button></div>
+          </div>
+          <div class="pf-row2">
+            <div>
+              <label for="new">New password</label>
+              <div class="pf-in"><i class="bi bi-shield-lock lead"></i><input id="new" name="new_password" type="password" required minlength="{{ min_length }}" autocomplete="new-password">
+                <button class="eye" type="button" aria-label="Show or hide"><i class="bi bi-eye"></i></button></div>
+              <div class="pf-meter" aria-hidden="true"><i id="meter"></i></div>
+            </div>
+            <div>
+              <label for="confirm">Type it again</label>
+              <div class="pf-in"><i class="bi bi-shield-check lead"></i><input id="confirm" name="confirm_password" type="password" required autocomplete="new-password">
+                <button class="eye" type="button" aria-label="Show or hide"><i class="bi bi-eye"></i></button></div>
+            </div>
+          </div>
+          <ul class="pf-rules" id="rules">
+            <li data-rule="len">At least {{ min_length }} characters</li>
+            {% if need_mix %}<li data-rule="mix">Letters and numbers</li>{% endif %}
+            {% if need_symbol %}<li data-rule="symbol">A symbol such as ! # or @</li>{% endif %}
+            <li data-rule="same">Both boxes match</li>
+          </ul>
+          {% if password_note %}<p class="pf-hint" style="margin:0"><i class="bi bi-info-circle"></i> {{ password_note }}</p>{% endif %}
+          <div><button class="db-btn pri" type="submit"><i class="bi bi-key-fill"></i> Change password</button></div>
+          <p class="pf-hint" style="margin:0">You stay signed in here. Other phones and computers will need the new password.</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="pf-stack">
+      <div class="db-card">
+        <div class="db-card-h"><h3><i class="bi bi-card-list"></i> On the school's records</h3></div>
+        <dl class="pf-facts">{% for label, value in facts %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endfor %}</dl>
+      </div>
+      <div class="db-card">
+        <div class="db-card-h"><h3><i class="bi bi-shield-lock"></i> Sign-in &amp; security</h3></div>
+        <a class="pf-link" href="{% url 'security:me' %}"><span class="ic"><i class="bi bi-shield-check"></i></span><span class="txt">Sign-in security<small>Recent sign-ins and how your account is protected</small></span><i class="bi bi-chevron-right"></i></a>
+        <a class="pf-link" href="{% url 'security:sessions' %}"><span class="ic"><i class="bi bi-laptop"></i></span><span class="txt">Where you are signed in<small>Sign out a lost phone or a shared computer</small></span><i class="bi bi-chevron-right"></i></a>
+        {% if kind == 'staff' or kind == 'admin' %}<a class="pf-link" href="{% url 'idcards:my_id_card' %}"><span class="ic"><i class="bi bi-person-vcard"></i></span><span class="txt">My ID card<small>Your staff card with its QR code</small></span><i class="bi bi-chevron-right"></i></a>{% endif %}
+        {% if kind == 'student' %}<a class="pf-link" href="{% url 'idcards:my_id_card' %}"><span class="ic"><i class="bi bi-person-vcard"></i></span><span class="txt">My ID card<small>Your student card</small></span><i class="bi bi-chevron-right"></i></a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // Picture: show the chosen picture before saving it
+  var input = document.getElementById('photo-input'), pic = document.getElementById('pic'),
+      letter = document.getElementById('pic-letter'), bar = document.getElementById('pf-new'), oldSrc = pic.getAttribute('src');
+  input.addEventListener('change', function () {
+    var f = input.files[0]; if (!f) return;
+    if (f.size > 5 * 1024 * 1024) { alert('That picture is too big. Use one under 5 MB.'); input.value = ''; return; }
+    pic.src = URL.createObjectURL(f); pic.hidden = false; if (letter) letter.hidden = true; bar.classList.add('on');
+  });
+  document.getElementById('pf-cancel').addEventListener('click', function () {
+    input.value = ''; bar.classList.remove('on');
+    if (oldSrc) { pic.src = oldSrc; } else { pic.hidden = true; if (letter) letter.hidden = false; }
+  });
+
+  // Password: show/hide, strength and the checklist
+  document.querySelectorAll('.pf-in .eye').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var i = b.parentNode.querySelector('input'), show = i.type === 'password';
+      i.type = show ? 'text' : 'password'; b.innerHTML = '<i class="bi bi-eye' + (show ? '-slash' : '') + '"></i>';
+    });
+  });
+  var nw = document.getElementById('new'), cf = document.getElementById('confirm'), meter = document.getElementById('meter'),
+      min = {{ min_length }};
+  function check() {
+    var v = nw.value, score = 0;
+    var rules = {len: v.length >= min, mix: /[a-z]/i.test(v) && /\d/.test(v), symbol: /[^A-Za-z0-9]/.test(v),
+                 same: v.length > 0 && v === cf.value};
+    Object.keys(rules).forEach(function (k) { var li = document.querySelector('[data-rule="' + k + '"]'); if (li) li.classList.toggle('ok', rules[k]); });
+    if (v.length >= min) score++; if (v.length >= min + 4) score++; if (/[a-z]/.test(v) && /[A-Z]/.test(v)) score++;
+    if (/\d/.test(v)) score++; if (/[^A-Za-z0-9]/.test(v)) score++;
+    meter.style.width = (score * 20) + '%';
+    meter.style.background = score >= 4 ? 'var(--green)' : score >= 2 ? 'var(--amber)' : 'var(--red)';
+  }
+  nw.addEventListener('input', check); cf.addEventListener('input', check);
+})();
+</script>
+{% endblock %}

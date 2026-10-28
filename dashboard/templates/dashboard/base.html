@@ -256,8 +256,10 @@
       display: flex; align-items: center; gap: .7rem;
       border-radius: 14px; background: rgba(255,255,255,.03); border: 1px solid var(--rim);
     }
+    .sb-avatar img, .topbar-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+    a.sb-avatar { text-decoration: none; overflow: hidden; }
     .sb-avatar, .topbar-avatar {
-      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; overflow: hidden;
       display: grid; place-items: center;
       background: linear-gradient(135deg, var(--champagne-lt), var(--champagne-dk));
       color: #0a1f44; font-family: var(--serif); font-size: 1rem; font-weight: 700;
@@ -2027,9 +2029,9 @@
   <div class="sb-empty" id="navEmpty">No menu items match.</div>
 
   <div class="sb-user">
-    <div class="sb-avatar">{{ user.username|slice:":1"|upper }}</div>
+    <a class="sb-avatar" href="{% url 'users:my_profile' %}" title="My profile">{% with av=user.avatar_url %}{% if av %}<img src="{{ av }}" alt="">{% else %}{{ user.display_name|slice:":1"|upper }}{% endif %}{% endwith %}</a>
     <div class="sb-user-info">
-      <div class="sb-user-name">{{ user.get_full_name|default:user.username }}</div>
+      <div class="sb-user-name">{{ user.display_name }}</div>
       <div class="sb-user-role">
         {% if user.is_superuser %}Super Admin
         {% elif user.is_staff_user %}Staff
@@ -2075,9 +2077,9 @@
       {% include "notifications/_bell.html" %}
       <div class="user-menu" id="userMenu">
         <button type="button" class="user-btn" id="userBtn" aria-haspopup="true" aria-expanded="false">
-          <div class="topbar-avatar">{{ user.username|slice:":1"|upper }}</div>
+          <div class="topbar-avatar">{% with av=user.avatar_url %}{% if av %}<img src="{{ av }}" alt="">{% else %}{{ user.display_name|slice:":1"|upper }}{% endif %}{% endwith %}</div>
           <span class="topbar-name-wrap">
-            <span class="topbar-name">{{ user.get_full_name|default:user.username }}</span>
+            <span class="topbar-name">{{ user.display_name }}</span>
             <span class="topbar-role">
               {% if user.is_superuser %}Super Admin{% elif user.is_staff_user %}Staff{% elif user.is_student %}Student{% elif user.is_parent %}Parent{% else %}User{% endif %}
             </span>
@@ -2086,9 +2088,10 @@
         </button>
         <div class="user-dropdown" role="menu">
           <div class="ud-head">
-            <b>{{ user.get_full_name|default:user.username }}</b>
+            <b>{{ user.display_name }}</b>
             <small>@{{ user.username }}</small>
           </div>
+          <a href="{% url 'users:my_profile' %}" class="ud-item" role="menuitem"><i class="bi bi-person-circle"></i> My profile</a>
           <a href="{% url 'dashboard:router' %}" class="ud-item" role="menuitem"><i class="bi bi-grid-1x2"></i> Dashboard</a>
           {% if user.is_staff_user or user.is_student %}
           <a href="{% url 'idcards:my_id_card' %}" class="ud-item" role="menuitem"><i class="bi bi-person-vcard"></i> My ID Card</a>

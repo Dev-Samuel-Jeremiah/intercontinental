@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_achievements, views_attendance, views_import, views_profile, views_records, views_roster
+from . import views, views_achievements, views_attendance, views_import, views_me, views_profile, views_records, views_roster
 from users.views import parent_login, parent_dashboard
 
 app_name = "users"
@@ -13,6 +13,7 @@ urlpatterns = [
     path('student/login/', views.student_login, name='student_login'),
     path('logout/', views.user_logout, name='user_logout'),
     path('change-password/', views.change_password, name='change_password'),
+    path('my-profile/', views_me.my_profile, name='my_profile'),
 
     # Staff Management
     path('staff/create/', views.create_staff, name='create_staff'),

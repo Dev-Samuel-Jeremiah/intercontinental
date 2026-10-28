@@ -6,7 +6,7 @@
 
   <section class="db-hero">
     <div class="db-hero-row">
-      <div class="db-hello"><span class="db-avatar">{% if student.passport %}<img src="{{ student.passport.url }}" alt="">{% else %}{{ student.full_name|slice:":1"|upper }}{% endif %}</span>
+      <div class="db-hello"><span class="db-avatar">{% if request.user.avatar_url %}<img src="{{ request.user.avatar_url }}" alt="">{% else %}{{ student.full_name|slice:":1"|upper }}{% endif %}</span>
         <div><div class="db-eyebrow">Student · My learning hub</div>
           <h1>{{ greeting }}, <em>{{ student.full_name }}</em></h1>
           <p>{{ student.class_assigned.name|default:"No class yet" }}{% if active_term %} · {{ active_term.name }}{% endif %}{% if next_open_exam %} · next exam <b style="color:var(--acc2)">{{ next_open_exam.title }}</b> {% if next_open_exam.days_left %}in {{ next_open_exam.days_left }} day{{ next_open_exam.days_left|pluralize }}{% else %}today{% endif %}{% endif %}</p></div></div>

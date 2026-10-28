@@ -21,7 +21,7 @@
 
   <section class="db-hero">
     <div class="db-hero-row">
-      <div class="db-hello"><span class="db-avatar"><i class="bi bi-house-heart-fill"></i></span>
+      <div class="db-hello"><span class="db-avatar">{% with av=request.user.avatar_url %}{% if av %}<img src="{{ av }}" alt="">{% else %}<i class="bi bi-house-heart-fill"></i>{% endif %}{% endwith %}</span>
         <div><div class="db-eyebrow">Parent · My children</div>
           <h1>{{ greeting }}{% if student.parent_name %}, <em>{{ student.parent_name }}</em>{% endif %}</h1>
           <p>{{ request.tenant.name }}{% if active_term %} · {{ active_term.name }}, {{ active_session.name }}{% endif %}{% if unread_announcements_count %} · <b style="color:var(--acc2)">{{ unread_announcements_count }} new announcement{{ unread_announcements_count|pluralize }}</b>{% endif %}</p></div></div>

@@ -6,7 +6,7 @@
 
   <section class="db-hero">
     <div class="db-hero-row">
-      <div class="db-hello"><span class="db-avatar">{{ staff.full_name|slice:":1"|upper }}</span>
+      <div class="db-hello"><span class="db-avatar">{% with av=request.user.avatar_url %}{% if av %}<img src="{{ av }}" alt="">{% else %}{{ staff.full_name|slice:":1"|upper }}{% endif %}{% endwith %}</span>
         <div><div class="db-eyebrow">Teacher · My teaching day</div>
           <h1>{{ greeting }}, <em>{{ staff.full_name|default:request.user.username }}</em></h1>
           <p>{% now "l j F Y" %}{% if ins.day.now %} · <b style="color:var(--acc2)">Now:</b> {{ ins.day.now.slot.school_class.name }} {{ ins.day.now.slot.subject.name }} until {{ ins.day.now.slot.time_slot.end_time|time:"g:i A" }}{% elif ins.day.next %} · <b style="color:var(--acc2)">Next:</b> {{ ins.day.next.slot.school_class.name }} {{ ins.day.next.slot.subject.name }} at {{ ins.day.next.slot.time_slot.start_time|time:"g:i A" }}{% endif %}</p></div></div>

@@ -6,7 +6,7 @@
 
   <section class="db-hero">
     <div class="db-hero-row">
-      <div class="db-hello"><span class="db-avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</span>
+      <div class="db-hello"><span class="db-avatar">{% with av=request.user.avatar_url %}{% if av %}<img src="{{ av }}" alt="">{% else %}{{ request.user.display_name|slice:":1"|upper }}{% endif %}{% endwith %}</span>
         <div><div class="db-eyebrow">Head of school · The school today</div>
           <h1>{{ greeting }}, <em>{{ request.user.first_name|default:request.user.username }}</em></h1>
           <p>{% now "l j F Y" %}{% if active_term %} · {{ active_term.name }}{% endif %}{% if active_session %}, {{ active_session.name }}{% endif %}</p></div></div>

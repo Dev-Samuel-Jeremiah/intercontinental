@@ -65,7 +65,7 @@ class DirectoryAndOnboardingTests(Base):
         self.client.force_login(self.h_user)
         page = self._get('/hr/directory/?q=214')
         self.assertContains(page, 'Mrs Ade')
-        self.assertNotContains(page, 'Mr Hod')
+        self.assertNotIn('Mr Hod', page.content.decode().split('id="content"', 1)[-1])   # not in the results
         self.assertEqual(self._get(f'/hr/staff/{self.teacher.pk}/').status_code, 302)
         self.client.force_login(self.admin)
         self.assertContains(self._get(f'/hr/staff/{self.teacher.pk}/'), 'Chemistry teacher')

@@ -84,6 +84,47 @@ class User(AbstractUser):
         return self.username
 
     @property
+    def account_profile_or_none(self):
+        """Their My-profile record (picture, phone), or None. Looked up once per object."""
+        if not hasattr(self, '_profile_cache'):
+            self._profile_cache = AccountProfile.objects.filter(user=self).first() if self.pk else None
+        return self._profile_cache
+
+    @property
+    def photo(self):
+        p = self.account_profile_or_none
+        return p.photo if p else None
+
+    @property
+    def phone(self):
+        p = self.account_profile_or_none
+        return p.phone if p else ''
+
+    @property
+    def avatar_url(self):
+        """The profile picture to show: their own photo, else a student's school passport; '' if none."""
+        try:
+            if self.photo:
+                return self.photo.url
+            if self.is_student:
+                student = self.student
+                if student and student.passport:
+                    return student.passport.url
+        except Exception:                       # a missing file must not break every page
+            pass
+        return ''
+
+    @property
+    def display_name(self):
+        """The name the school knows them by."""
+        if self.is_student and self.student:
+            return self.student.full_name
+        staff = self.staff if self.is_staff_user else None
+        if staff:
+            return staff.full_name
+        return self.get_full_name() or self.username
+
+    @property
     def staff(self):
         """Return this user's Staff profile for the current tenant."""
         from tenants.middleware import get_current_tenant
@@ -100,6 +141,19 @@ class User(AbstractUser):
         if tenant:
             return self.student_profiles.filter(tenant=tenant).first()
         return self.student_profiles.first()
+
+
+class AccountProfile(models.Model):
+    """What a person sets on My profile: their picture and phone. Kept beside the account rather than
+    on it, so the busy accounts table never needs changing for this."""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='account_profile')
+    photo = models.ImageField(upload_to='profile_photos/', storage=signed_storage, blank=True, null=True,
+                              help_text='Profile picture, squared and resized when uploaded.')
+    phone = models.CharField(max_length=20, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Profile of {self.user}'
 
 
 class Staff(TenantModelMixin, models.Model):
