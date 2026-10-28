@@ -267,6 +267,8 @@ class CommSettings(TenantModelMixin, models.Model):
     whatsapp_template = models.CharField(max_length=80, blank=True,
                                          help_text='Approved WhatsApp template with one body variable')
     whatsapp_language = models.CharField(max_length=10, default='en')
+    whatsapp_copy_email = models.BooleanField(
+        default=True, help_text='Also send every email notification to the person\'s WhatsApp')
     signage_token = models.CharField(max_length=40, blank=True)
     signage_seconds = models.PositiveSmallIntegerField(default=12, help_text='Seconds each slide stays up')
 

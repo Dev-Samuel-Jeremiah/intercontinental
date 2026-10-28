@@ -19,6 +19,7 @@
     <h3 style="margin:1rem 0 .3rem"><i class="bi bi-whatsapp"></i> WhatsApp</h3>
     {% if wa_ready %}
     <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="whatsapp_enabled" value="1" style="width:auto" {% if cfg.whatsapp_enabled %}checked{% endif %}> Send text messages by WhatsApp first; use SMS when WhatsApp fails</label>
+    <label style="display:flex;gap:.5rem;align-items:center"><input type="checkbox" name="whatsapp_copy_email" value="1" style="width:auto" {% if cfg.whatsapp_copy_email %}checked{% endif %}> Also send every email notification to WhatsApp (results, arrivals, fees, leave and more), for people who read WhatsApp rather than email</label>
     <div class="row2"><div><label>Approved template name</label><input name="whatsapp_template" value="{{ cfg.whatsapp_template }}" maxlength="80" placeholder="e.g. school_notice"></div>
       <div><label>Template language code</label><input name="whatsapp_language" value="{{ cfg.whatsapp_language }}" maxlength="10"></div></div>
     <p class="hint">WhatsApp only allows school-started messages through a template Meta has approved. Create a Utility template with one variable, e.g. <code>Message from your school: {% templatetag openvariable %}1{% templatetag closevariable %}</code> — the message text goes into the variable.</p>

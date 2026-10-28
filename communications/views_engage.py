@@ -101,6 +101,7 @@ def comm_settings(request):
             cfg.whatsapp_enabled = bool(request.POST.get('whatsapp_enabled'))
             cfg.whatsapp_template = (request.POST.get('whatsapp_template') or '').strip()[:80]
             cfg.whatsapp_language = (request.POST.get('whatsapp_language') or 'en').strip()[:10]
+            cfg.whatsapp_copy_email = bool(request.POST.get('whatsapp_copy_email'))
             if cfg.whatsapp_enabled and not cfg.whatsapp_template:
                 cfg.whatsapp_enabled = False
                 messages.error(request, 'Give the name of your approved WhatsApp template to switch WhatsApp on.')

@@ -541,8 +541,104 @@ def try_whatsapp(tenant, to, text):
     cfg = settings_for(tenant)
     if not (cfg.whatsapp_enabled and cfg.whatsapp_template):
         return False, ''
+    number = wa_number(to)
+    if already_on_whatsapp(number, 'sms', text):
+        return True, 'wa:same-news-already-sent'        # the email copy of this news reached them a moment ago
     ok, ref = send_whatsapp_template(to, cfg.whatsapp_template, cfg.whatsapp_language, text)
+    if ok:
+        remember_whatsapp(number, 'sms', text)
     return ok, (f'wa:{ref}' if ok else ref)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Email notifications copied to WhatsApp
+# Many families read WhatsApp, not email: every email the portal sends to a
+# person also goes to their WhatsApp when the school has WhatsApp on.
+# An event that sends both an SMS and an email (an absence, a fee reminder)
+# reaches WhatsApp once: whichever comes second within two minutes, with
+# mostly the same words, is skipped.
+# ─────────────────────────────────────────────────────────────────────────────
+
+SAME_NEWS_SECONDS = 120
+
+
+def _words(text):
+    return {w for w in re.findall(r'[a-z0-9]+', (text or '').lower()) if len(w) > 2}
+
+
+def already_on_whatsapp(number, kind, text):
+    """Did the other channel's message about the same news just go to this number?"""
+    from django.core.cache import cache
+    mine = _words(text)
+    for other_kind, words in cache.get(f'wa-recent:{number}', []):
+        if other_kind == kind or not words or not mine:
+            continue
+        short, long_ = (mine, set(words)) if len(mine) <= len(words) else (set(words), mine)
+        if len(short & long_) >= 0.7 * len(short):
+            return True
+    return False
+
+
+def remember_whatsapp(number, kind, text):
+    from django.core.cache import cache
+    key = f'wa-recent:{number}'
+    recent = cache.get(key, [])[-9:] + [(kind, sorted(_words(text)))]
+    cache.set(key, recent, SAME_NEWS_SECONDS)
+
+
+def phone_for_email(tenant, email, student=None):
+    """The WhatsApp number of whoever has this email: their own profile phone, a staff phone, or a parent's."""
+    from users.models import Guardian, Student, User
+    email = (email or '').strip().lower()
+    if not email:
+        return ''
+    if student is not None and (student.parent_email or '').lower() == email and student.parent_phone:
+        return student.parent_phone
+    user = User._default_manager.filter(tenant=tenant, email__iexact=email).first()
+    if user is not None:
+        if user.phone:
+            return user.phone
+        staff = user.staff_profiles.filter(tenant=tenant).first()
+        if staff is not None:
+            record = getattr(staff, 'record', None)
+            if record is not None and record.phone:
+                return record.phone
+        m = re.fullmatch(r'parent_(\d+)', user.username or '')
+        child = Student._default_manager.filter(pk=int(m.group(1)), tenant=tenant).first() if m else None
+        if child is not None and child.parent_phone:
+            return child.parent_phone
+    child = Student._default_manager.filter(tenant=tenant, parent_email__iexact=email).exclude(parent_phone='') \
+        .exclude(parent_phone__isnull=True).first()
+    if child is not None:
+        return child.parent_phone
+    guardian = Guardian._default_manager.filter(tenant=tenant, email__iexact=email).exclude(phone='').first()
+    return guardian.phone if guardian is not None else ''
+
+
+def copy_email_to_whatsapp(tenant, email, subject, html, student=None):
+    """Send an email notification's words to the person's WhatsApp too. (sent?, ref); never raises."""
+    try:
+        if not tenant or not wa_configured():
+            return False, ''
+        from django.utils.html import strip_tags
+        from .engage import settings_for
+        cfg = settings_for(tenant)
+        if not (cfg.whatsapp_enabled and cfg.whatsapp_template and cfg.whatsapp_copy_email):
+            return False, ''
+        phone = phone_for_email(tenant, email, student)
+        if not phone:
+            return False, 'no-phone'
+        body = re.sub(r'\s+', ' ', strip_tags(html or '')).strip()
+        text = f'{subject}: {body}' if subject else body
+        number = wa_number(phone)
+        if already_on_whatsapp(number, 'email', text):
+            return False, 'same-news-already-sent'
+        ok, ref = send_whatsapp_template(phone, cfg.whatsapp_template, cfg.whatsapp_language, text)
+        if ok:
+            remember_whatsapp(number, 'email', text)
+        return ok, ref
+    except Exception as problem:                     # a WhatsApp problem must never stop the email
+        return False, str(problem)[:200]
 
 
 def check_signature(body, header):

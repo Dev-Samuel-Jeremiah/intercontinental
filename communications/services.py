@@ -120,6 +120,11 @@ def send_email(to_email: str, subject: str, html_body: str,
     if not to_email or '@' not in to_email:
         return False, f"Invalid email address: {to_email}"
 
+    # The same news on WhatsApp, for families who read WhatsApp rather than email
+    from tenants.middleware import get_current_tenant
+    from communications import connect
+    connect.copy_email_to_whatsapp(get_current_tenant(), to_email, subject, html_body, student)
+
     try:
         from_email = getattr(settings, 'DEFAULT_FROM_EMAIL',
                              f'{_get_school_name()} <noreply@example.com>')
