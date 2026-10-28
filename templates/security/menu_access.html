@@ -55,6 +55,21 @@
   .sp-item{display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;border-radius:8px;color:var(--slate2);text-decoration:none;font-size:.88rem}
   .sp-item:hover,.sp-item.on{background:rgba(244,210,31,.1);color:var(--white)}
   .sp-none{padding:.6rem;color:var(--slate2);font-size:.85rem}
+  /* Phones: each person becomes a card, nothing hidden off the right edge */
+  @media (max-width: 760px) {
+    .ma-staff thead { display: none; }
+    .ma-staff, .ma-staff tbody { display: block; width: 100%; }
+    .ma-staff tr { display: grid; gap: .45rem; padding: .9rem 1rem; border-bottom: 1px solid var(--rim); }
+    .ma-staff td { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0 !important; border: 0 !important; font-size: .86rem; }
+    .ma-staff td[data-label]::before { content: attr(data-label); color: var(--slate2); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    .ma-staff td.name { display: block; font-size: .95rem; word-break: break-word; }
+    .ma-staff td.go { text-align: left !important; margin-top: .3rem; }
+    .ma-staff td.go a { width: 100%; justify-content: center; }
+    .ma-staff td.empty { display: block; }
+    .ma-pick { align-items: stretch; }
+    .ma-pick > input, .ma-pick > select, .sp, .sp-btn { min-width: 0 !important; width: 100%; }
+    .ma-who { padding: .8rem .9rem; }
+  }
 </style>
 
 <div class="ma-roles" role="tablist" aria-label="Whose permissions">
@@ -72,14 +87,14 @@
   <button class="fin-btn" type="submit"><i class="bi bi-search"></i> Find</button>
   <span class="hint">{{ counts.all }} staff{% if counts.restricted %} · {{ counts.restricted }} restricted{% endif %}</span>
 </form>
-<div class="panel"><table class="tbl"><thead><tr><th>Staff</th><th>Role</th><th>Account</th><th>Menu</th><th>Switches on</th><th></th></tr></thead><tbody>
+<div class="panel"><table class="tbl ma-staff"><thead><tr><th>Staff</th><th>Role</th><th>Account</th><th>Menu</th><th>Switches on</th><th></th></tr></thead><tbody>
   {% for r in rows %}<tr>
     <td class="name">{{ r.full_name }}<br><span class="hint">@{{ r.user.username }}{% if r.user.email %} · {{ r.user.email }}{% endif %}</span></td>
-    <td>{{ r.get_role_display }}</td>
-    <td>{% if r.user.restricted %}<span class="chip red">Restricted</span>{% elif not r.user.is_active %}<span class="chip">Closed</span>{% else %}<span class="chip green">Active</span>{% endif %}</td>
-    <td>{% if r.role == 'ADMIN' %}<span class="hint">Sees everything</span>{% elif r.own_settings %}<span class="chip amber">Own settings</span>{% else %}<span class="hint">Follows {{ r.get_role_display|lower }}s</span>{% endif %}</td>
-    <td>{% if r.role == 'ADMIN' %}<span class="hint">—</span>{% else %}<span class="hint" title="{{ r.switches_on|join:', ' }}">{{ r.switches_on|length }}</span>{% endif %}</td>
-    <td style="text-align:right"><a class="fin-btn fin-btn-sm fin-btn-gold" href="?staff={{ r.pk }}"><i class="bi bi-sliders"></i> Manage</a></td>
+    <td data-label="Role">{{ r.get_role_display }}</td>
+    <td data-label="Account">{% if r.user.restricted %}<span class="chip red">Restricted</span>{% elif not r.user.is_active %}<span class="chip">Closed</span>{% else %}<span class="chip green">Active</span>{% endif %}</td>
+    <td data-label="Menu">{% if r.role == 'ADMIN' %}<span class="hint">Sees everything</span>{% elif r.own_settings %}<span class="chip amber">Own settings</span>{% else %}<span class="hint">Follows their role</span>{% endif %}</td>
+    <td data-label="Switches on">{% if r.role == 'ADMIN' %}<span class="hint">—</span>{% else %}<span class="hint" title="{{ r.switches_on|join:', ' }}">{{ r.switches_on|length }}</span>{% endif %}</td>
+    <td class="go" style="text-align:right"><a class="fin-btn fin-btn-sm fin-btn-gold" href="?staff={{ r.pk }}"><i class="bi bi-sliders"></i> Manage</a></td>
   </tr>{% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-people"></i>No staff match.</td></tr>{% endfor %}
 </tbody></table></div>
 {% endif %}
