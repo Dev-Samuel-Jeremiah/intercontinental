@@ -395,15 +395,13 @@
       font-family: var(--sans); font-size: .66rem; font-weight: 600; color: var(--slate2);
       padding: .12rem .42rem; border-radius: 6px; background: rgba(255,255,255,.06); border: 1px solid var(--rim2);
     }
-    /* Scan button: a gold key beside the bell */
+    /* Scan button: plain, matching the notification bell beside it */
     .scan-btn {
-      width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 1.1rem; color: #0a1f44; flex-shrink: 0;
-      background: radial-gradient(120% 110% at 28% 18%, rgba(255,255,255,.62) 0, rgba(255,255,255,0) 42%), linear-gradient(150deg, var(--champagne-lt), var(--champagne) 55%, var(--champagne-dk));
-      box-shadow: inset 0 2px 1px rgba(255,255,255,.55), inset 0 -3px 5px rgba(0,0,0,.2), 0 3px 0 #8a7300, 0 8px 14px -6px rgba(0,0,0,.6);
-      transition: transform .12s ease, box-shadow .12s ease;
+      width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex-shrink: 0;
+      background: var(--surface2); border: 1px solid var(--rim2); color: var(--slate2); font-size: 1.05rem;
+      text-decoration: none; transition: color .18s, border-color .18s;
     }
-    .scan-btn:hover { transform: translateY(-1px); color: #0a1f44; }
-    .scan-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 1px rgba(255,255,255,.45), 0 1px 0 #8a7300; }
+    .scan-btn:hover { color: var(--champagne); border-color: var(--champagne-border, rgba(244,210,31,.3)); }
     .topbar-pill {
       display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap;
       padding: .42rem .9rem; border-radius: 99px;
