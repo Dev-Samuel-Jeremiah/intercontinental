@@ -1694,100 +1694,9 @@ def delete_attendance(request, class_id, student_id, date):
 
 @login_required
 def manage_staff_permissions(request):
-    """
-    View and manage staff permissions
-    Only accessible by superuser and admins
-    """
-    # Permission check
-    can_manage = request.user.is_superuser or (
-        request.user.staff is not None and request.user.staff.role == 'ADMIN'
-    )
-    
-    if not can_manage:
-        messages.error(request, "You do not have permission to manage staff.")
-        return redirect('dashboard:router')
-    
-    # Get all staff with their user info
-    from users.models import Staff
-    staff_members = Staff.objects.select_related('user').all()
-    
-    # Search functionality
-    query = request.GET.get('q')
-    if query:
-        staff_members = staff_members.filter(
-            Q(user__username__icontains=query) |
-            Q(user__first_name__icontains=query) |
-            Q(user__last_name__icontains=query) |
-            Q(user__email__icontains=query)
-        )
-    
-    # Filter by role
-    role_filter = request.GET.get('role')
-    if role_filter:
-        staff_members = staff_members.filter(role=role_filter)
-    
-    # Handle permission updates
-    if request.method == 'POST':
-        staff_id = request.POST.get('staff_id')
-        staff = get_object_or_404(Staff, id=staff_id)
-        
-        # Update role
-        new_role = request.POST.get('role')
-        if new_role and new_role in ('ADMIN', 'TEACHER', 'ACCOUNT', 'LIB'):
-            staff.role = new_role
-
-        # ── Update all permission flags ────────────────────────────────────
-        # Use actual fields that exist on the Staff model
-        p = request.POST
-        staff.can_create_staff      = 'can_create_staff'      in p
-        staff.can_manage_students   = 'can_manage_students'   in p
-        staff.can_generate_password = 'can_generate_password' in p
-        # Exams
-        staff.can_manage_exams      = 'can_manage_exams'      in p
-        staff.can_view_all_exams    = 'can_view_all_exams'    in p
-        # Results
-        staff.can_enter_scores      = 'can_enter_scores'      in p
-        staff.can_view_all_results  = 'can_view_all_results'  in p
-        staff.can_publish_results   = 'can_publish_results'   in p
-        # Finance
-        staff.can_access_finance    = 'can_access_finance'    in p
-        staff.can_approve_payments  = 'can_approve_payments'  in p
-        # Hostel
-        staff.can_access_hostel     = 'can_access_hostel'     in p
-        staff.can_manage_boarders   = 'can_manage_boarders'   in p
-        # Communications
-        staff.can_send_messages     = 'can_send_messages'     in p
-        # Attendance
-        staff.can_mark_attendance   = 'can_mark_attendance'   in p
-        # Inventory
-        staff.can_access_inventory  = 'can_access_inventory'  in p
-
-        # Also update user-level flags
-        staff.user.restricted = 'restricted' in p
-        staff.user.save(update_fields=['restricted'])
-
-        staff.save()
-        
-        messages.success(
-            request, 
-            f"Permissions updated for {staff.user.get_full_name() or staff.user.username}"
-        )
-        return redirect('users:manage_staff_permissions')
-    
-    # Define role choices manually (since it's not imported from models)
-    role_choices = [
-        ('ADMIN', 'Administrator'),
-        ('TEACHER', 'Teacher'),
-    ]
-    
-    context = {
-        'staff_members': staff_members,
-        'role_choices': role_choices,
-        'query': query,
-        'role_filter': role_filter,
-    }
-    
-    return render(request, 'admin/manage_staff_permissions.html', context)
+    """Moved: staff roles, accounts and permissions are all on Module permissions now."""
+    from django.urls import reverse
+    return redirect(reverse('security:menu_access') + '?view=staff')
 
 
 @login_required
@@ -1815,8 +1724,8 @@ def toggle_staff_restriction(request, staff_id):
         request,
         f"Account for {staff.user.get_full_name() or staff.user.username} has been {status}."
     )
-    
-    return redirect('users:manage_staff_permissions')
+    from django.urls import reverse
+    return redirect(reverse('security:menu_access') + f'?staff={staff.pk}')
 
 
 @login_required

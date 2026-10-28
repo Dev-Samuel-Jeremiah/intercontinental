@@ -164,3 +164,52 @@ class PersonalMenuTests(TenantTestCase):
         outsider = Staff.objects.get(user=make_teacher(other, username='out'))
         set_current_tenant(self.school)
         self.assertEqual(self.page(self.admin, f'/security/menu/?staff={outsider.pk}').status_code, 404)
+
+
+class OnePermissionsPageTests(TenantTestCase):
+    """Staff Permissions moved into Module Permissions: the staff list, roles and account restriction."""
+
+    def setUp(self):
+        super().setUp()
+        self.school = make_school('alpha')
+        self.admin = make_admin(self.school)
+        self.t_user = make_teacher(self.school, username='ada', full_name='Ada Obi')
+        set_current_tenant(self.school)
+        self.ada = Staff.objects.get(user=self.t_user)
+
+    def go(self, method, path, data=None):
+        self.client.force_login(self.admin)
+        return getattr(self.client, method)(path, data or {}, HTTP_HOST=self.host(self.school), follow=True)
+
+    def test_the_old_page_forwards_and_lists_everyone(self):
+        page = self.go('get', '/staff/permissions/')
+        self.assertContains(page, 'Ada Obi')
+        self.assertContains(page, 'All staff')
+        self.assertNotContains(self.go('get', '/security/menu/?view=staff&q=zzz'), 'Ada Obi')
+
+    def test_change_role_and_restrict(self):
+        self.go('post', '/security/menu/', {'staff': self.ada.pk, 'action': 'account', 'role': 'LIB', 'restricted': '1'})
+        self.ada.refresh_from_db()
+        self.t_user.refresh_from_db()
+        self.assertEqual(self.ada.role, 'LIB')
+        self.assertTrue(self.t_user.restricted)
+        self.go('post', '/security/menu/', {'staff': self.ada.pk, 'action': 'account', 'role': 'ADMIN'})
+        self.ada.refresh_from_db()
+        self.assertEqual(self.ada.role, 'ADMIN')                                  # main administrator may do this
+        page = self.go('get', f'/security/menu/?staff={self.ada.pk}')
+        self.assertContains(page, 'An administrator sees and can open everything')
+
+    def test_an_admin_role_cannot_make_admins_or_change_themselves(self):
+        office = make_teacher(self.school, username='office', full_name='Office')
+        o = Staff.objects.get(user=office)
+        o.role = 'ADMIN'
+        o.save()
+        self.client.force_login(office)
+        self.client.post('/security/menu/', {'staff': self.ada.pk, 'action': 'account', 'role': 'ADMIN'},
+                         HTTP_HOST=self.host(self.school))
+        self.ada.refresh_from_db()
+        self.assertEqual(self.ada.role, 'TEACHER')
+        self.client.post('/security/menu/', {'staff': o.pk, 'action': 'account', 'role': 'TEACHER'},
+                         HTTP_HOST=self.host(self.school))
+        o.refresh_from_db()
+        self.assertEqual(o.role, 'ADMIN')

@@ -23,7 +23,7 @@
 
   <div class="db-kpis">
     <a class="db-kpi" href="{% url 'users:all_students' %}"><span class="ic"><i class="bi bi-mortarboard-fill"></i></span><div class="v">{{ ins.people.students|default:total_students }}</div><div class="l">Students on roll</div><div class="s">{{ ins.people.classes|default:total_classes }} classes</div></a>
-    <a class="db-kpi" href="{% url 'users:manage_staff_permissions' %}"><span class="ic"><i class="bi bi-person-badge-fill"></i></span><div class="v">{{ ins.people.staff|default:total_staff }}</div><div class="l">Staff</div><div class="s">{{ total_teachers }} teachers</div></a>
+    <a class="db-kpi" href="{% url 'security:menu_access' %}?view=staff"><span class="ic"><i class="bi bi-person-badge-fill"></i></span><div class="v">{{ ins.people.staff|default:total_staff }}</div><div class="l">Staff</div><div class="s">{{ total_teachers }} teachers</div></a>
     <div class="db-kpi"><span class="ic"><i class="bi bi-people-fill"></i></span><div class="v">{{ ins.people.parents|default:0 }}</div><div class="l">Parent accounts</div><div class="s">{{ total_users }} sign-ins in all</div></div>
     <div class="db-kpi"><span class="ic"><i class="bi bi-broadcast"></i></span><div class="v">{{ ins.people.online|default:0 }}</div><div class="l">Online now</div><div class="s">active in the last 15 minutes</div></div>
     <div class="db-kpi"><span class="ic"><i class="bi bi-calendar-check-fill"></i></span><div class="v">{% if ins.attendance.rate is not None %}{{ ins.attendance.rate }}%{% else %}—{% endif %}</div><div class="l">Present today</div>

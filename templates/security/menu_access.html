@@ -4,7 +4,7 @@
 <div class="fin-head"><div>
   <div class="fin-eyebrow">People &amp; access</div>
   <h1 class="fin-title">Module <em>permissions</em></h1>
-  <p class="fin-sub">Decide what staff see and can open: for a whole role, or for one person. An unticked module or link disappears from their sidebar and its pages are closed to them. Administrators always see everything.</p>
+  <p class="fin-sub">One place for staff access: each person's role and account, the modules and dashboard cards each role or person sees, and their permission switches. An unticked module disappears from the sidebar and its pages are closed. Administrators always see everything.</p>
 </div></div>
 {% include "security/_nav.html" %}
 <style>
@@ -44,10 +44,31 @@
 </style>
 
 <div class="ma-roles" role="tablist" aria-label="Whose permissions">
-  {% for v, l in roles %}<a class="fin-btn{% if v == role and not person %} fin-btn-gold{% endif %}" href="?role={{ v }}">{{ l }}</a>{% endfor %}
+  <a class="fin-btn{% if overview %} fin-btn-gold{% endif %}" href="?view=staff"><i class="bi bi-people"></i> All staff</a>
+  <span class="sep" aria-hidden="true"></span>
+  {% for v, l in roles %}<a class="fin-btn{% if v == role and not person and not overview %} fin-btn-gold{% endif %}" href="?role={{ v }}">{{ l }}</a>{% endfor %}
   <span class="sep" aria-hidden="true"></span>
   <a class="fin-btn{% if person %} fin-btn-gold{% endif %}" href="?staff={% if person %}{{ person.pk }}{% elif people %}{{ people.0.pk }}{% endif %}"><i class="bi bi-person-gear"></i> One person</a>
 </div>
+
+{% if overview %}
+<form method="get" class="ma-pick"><input type="hidden" name="view" value="staff">
+  <input name="q" value="{{ q }}" placeholder="Find by name, username or email" style="min-width:260px;padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">
+  <select name="role_filter" onchange="this.form.submit()"><option value="">All roles</option>{% for v, l in role_choices %}<option value="{{ v }}"{% if v == role_filter %} selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+  <button class="fin-btn" type="submit"><i class="bi bi-search"></i> Find</button>
+  <span class="hint">{{ counts.all }} staff{% if counts.restricted %} · {{ counts.restricted }} restricted{% endif %}</span>
+</form>
+<div class="panel"><table class="tbl"><thead><tr><th>Staff</th><th>Role</th><th>Account</th><th>Menu</th><th>Switches on</th><th></th></tr></thead><tbody>
+  {% for r in rows %}<tr>
+    <td class="name">{{ r.full_name }}<br><span class="hint">@{{ r.user.username }}{% if r.user.email %} · {{ r.user.email }}{% endif %}</span></td>
+    <td>{{ r.get_role_display }}</td>
+    <td>{% if r.user.restricted %}<span class="chip red">Restricted</span>{% elif not r.user.is_active %}<span class="chip">Closed</span>{% else %}<span class="chip green">Active</span>{% endif %}</td>
+    <td>{% if r.role == 'ADMIN' %}<span class="hint">Sees everything</span>{% elif r.own_settings %}<span class="chip amber">Own settings</span>{% else %}<span class="hint">Follows {{ r.get_role_display|lower }}s</span>{% endif %}</td>
+    <td>{% if r.role == 'ADMIN' %}<span class="hint">—</span>{% else %}<span class="hint" title="{{ r.switches_on|join:', ' }}">{{ r.switches_on|length }}</span>{% endif %}</td>
+    <td style="text-align:right"><a class="fin-btn fin-btn-sm fin-btn-gold" href="?staff={{ r.pk }}"><i class="bi bi-sliders"></i> Manage</a></td>
+  </tr>{% empty %}<tr><td colspan="6" class="empty"><i class="bi bi-people"></i>No staff match.</td></tr>{% endfor %}
+</tbody></table></div>
+{% endif %}
 
 {% if person %}
 <form method="get" class="ma-pick">
@@ -59,11 +80,20 @@
 </form>
 <div class="ma-who">
   <i class="bi bi-person-badge" style="font-size:1.5rem;color:var(--champagne)"></i>
-  <div style="flex:1;min-width:220px"><b>{{ person.full_name }}</b> · {{ person.get_role_display }}<br>
-    <span class="hint">{% if person_has_own %}Has their own settings: changes to {{ role_label|lower }} do not affect them.{% else %}Follows the {{ role_label|lower }} settings. Saving here gives them their own.{% endif %}</span></div>
+  <div style="flex:1;min-width:220px"><b>{{ person.full_name }}</b> · {{ person.get_role_display }}{% if person.user.restricted %} · <span style="color:var(--red)">restricted</span>{% endif %}<br>
+    <span class="hint">{% if admin_person %}An administrator sees and can open everything. Change the role below to limit what they see.{% elif person_has_own %}Has their own settings: changes to {{ role_label|lower }} do not affect them.{% else %}Follows the {{ role_label|lower }} settings. Saving below gives them their own.{% endif %}</span></div>
 </div>
+<form method="post" class="panel" style="padding:1rem 1.1rem;margin-bottom:1.2rem;display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">{% csrf_token %}
+  <input type="hidden" name="staff" value="{{ person.pk }}"><input type="hidden" name="action" value="account">
+  <div><label class="hint" for="ma-role" style="display:block;margin-bottom:.3rem">Role</label>
+    <select id="ma-role" name="role" style="padding:.6rem .8rem;border-radius:10px;background:rgba(0,0,0,.28);border:1px solid var(--rim2);color:var(--white);font:inherit">{% for v, l in role_choices %}<option value="{{ v }}"{% if v == person.role %} selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+  <label class="ma-row" style="padding-bottom:.6rem"><input type="checkbox" name="restricted" value="1"{% if person.user.restricted %} checked{% endif %}><span>Restrict this account <small>They cannot sign in until you untick this. Nothing is deleted.</small></span></label>
+  <button class="fin-btn fin-btn-gold" type="submit" onclick="return confirm('Save role and account for {{ person.full_name|escapejs }}?')"><i class="bi bi-person-check"></i> Save account</button>
+  <span class="hint" style="flex-basis:100%">Changing the role starts them on the new role's menu.</span>
+</form>
 {% endif %}
 
+{% if not overview and not admin_person %}
 <form method="post" id="ma-form">{% csrf_token %}
 {% if person %}<input type="hidden" name="staff" value="{{ person.pk }}">{% else %}<input type="hidden" name="role" value="{{ role }}">{% endif %}
 <div class="ma-grid">
@@ -122,6 +152,7 @@
   <span class="hint">Applies the next time they open a page.</span>
 </div>
 </form>
+{% endif %}
 
 <script>
 (function () {
@@ -133,6 +164,7 @@
     sec.querySelector('.ma-n').textContent = on;
     sec.classList.toggle('off', on === 0);
   }
+  if (!document.getElementById('ma-form')) return;
   document.querySelectorAll('.ma-sec').forEach(function (sec) {
     var all = sec.querySelector('.ma-all');
     all.indeterminate = all.dataset.some === '1';

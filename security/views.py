@@ -847,11 +847,23 @@ def menu_access(request):
     from .models import MenuRule
     t = request.tenant
     roles = dict(menu.ROLES)
-    people = list(Staff.objects.filter(tenant=t, role__in=roles).select_related('user').order_by('role', 'full_name'))
+    people = list(Staff.objects.filter(tenant=t).select_related('user').order_by('role', 'full_name'))
     person = None
     if request.POST.get('staff') or request.GET.get('staff'):
-        person = get_object_or_404(Staff, pk=request.POST.get('staff') or request.GET.get('staff'), tenant=t,
-                                   role__in=roles)
+        person = get_object_or_404(Staff, pk=request.POST.get('staff') or request.GET.get('staff'), tenant=t)
+
+    # Account: role, and whether the account may sign in at all
+    if request.method == 'POST' and request.POST.get('action') == 'account' and person:
+        return _staff_account(request, person, roles)
+
+    # Everyone on the staff, with what they can do
+    if request.GET.get('view') == 'staff' or (not person and not request.GET.get('role') and request.method == 'GET'):
+        return _staff_overview(request, people, roles)
+
+    if person and person.role not in roles:                  # an administrator: nothing to limit
+        return render(request, 'security/menu_access.html', {
+            'roles': menu.ROLES, 'person': person, 'people': people, 'admin_person': True,
+            'who': person.full_name, 'role_choices': Staff.ROLE_CHOICES, 'role_label': person.get_role_display()})
     role = person.role if person else (request.POST.get('role') or request.GET.get('role') or 'TEACHER')
     if role not in roles:
         role = 'TEACHER'
@@ -916,4 +928,67 @@ def menu_access(request):
         'staff_count': sum(1 for p in people if p.role == role),
         'switches': [(group, [(name, label, getattr(person, name, False)) for name, label in rows])
                      for group, rows in access.SWITCHES] if person else [],
+        'role_choices': Staff.ROLE_CHOICES,
     })
+
+
+def _staff_account(request, person, roles):
+    """Change one person's role, or restrict / re-open their account."""
+    from dashboard import access
+    from .models import MenuRule
+    back = f"{request.path}?staff={person.pk}"
+    new_role = request.POST.get('role') or person.role
+    restricted = bool(request.POST.get('restricted'))
+    if person.user_id == request.user.pk and (new_role != person.role or restricted):
+        messages.error(request, 'You cannot change your own role or restrict your own account.')
+        return redirect(back)
+    if new_role not in dict(person.ROLE_CHOICES):
+        messages.error(request, 'Choose a role from the list.')
+        return redirect(back)
+    if new_role == 'ADMIN' and person.role != 'ADMIN' and not request.user.is_superuser:
+        messages.error(request, "Only the school's main administrator can make someone an administrator.")
+        return redirect(back)
+    notes = []
+    if new_role != person.role:
+        old = person.get_role_display()
+        person.role = new_role
+        person.save(update_fields=['role'])
+        MenuRule._default_manager.filter(tenant=request.tenant, staff=person).delete()   # start from the new role
+        notes.append(f'role changed from {old} to {person.get_role_display()}')
+        svc.log_event('ROLE', f'{person.full_name}: role changed from {old} to {person.get_role_display()}',
+                      request=request, obj=person)
+    if restricted != person.user.restricted:
+        person.user.restricted = restricted
+        person.user.save(update_fields=['restricted'])
+        notes.append('account restricted: they cannot sign in' if restricted else 'account active again')
+        svc.log_event('ACCOUNT', f'{person.full_name}: account {"restricted" if restricted else "re-opened"}',
+                      request=request, obj=person)
+    access.forget(person.user, request.tenant)
+    messages.success(request, f'{person.full_name}: ' + ('; '.join(notes) + '.' if notes else 'nothing changed.'))
+    return redirect(back)
+
+
+def _staff_overview(request, people, roles):
+    """Every member of staff: role, account state, own settings, switches; search and filter."""
+    from django.db.models import Q
+    from dashboard import access, menu
+    from users.models import Staff
+    from .models import MenuRule
+    q = (request.GET.get('q') or '').strip()
+    role = request.GET.get('role_filter') or ''
+    rows = Staff.objects.filter(tenant=request.tenant).select_related('user').order_by('full_name')
+    if q:
+        rows = rows.filter(Q(full_name__icontains=q) | Q(user__username__icontains=q) | Q(user__email__icontains=q))
+    if role:
+        rows = rows.filter(role=role)
+    own = set(MenuRule._default_manager.filter(tenant=request.tenant, staff__isnull=False).values_list('staff_id', flat=True))
+    rows = list(rows)
+    for r in rows:
+        r.own_settings = r.pk in own
+        r.switches_on = [access.SWITCH_LABEL[n] for n in access.SWITCH_LABEL if getattr(r, n, False)]
+    return render(request, 'security/menu_access.html', {
+        'roles': menu.ROLES, 'overview': True, 'rows': rows, 'people': people, 'q': q, 'role_filter': role,
+        'role_choices': Staff.ROLE_CHOICES,
+        'counts': {'all': len(people), 'restricted': sum(1 for p in people if p.user.restricted)},
+    })
+
