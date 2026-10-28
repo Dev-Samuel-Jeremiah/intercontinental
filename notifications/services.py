@@ -42,6 +42,11 @@ KINDS = {
     'report': ('Administration', 'file-earmark-text-fill'),
     'moment': ('School Moments', 'images'),
     'lab': ('Labs & practicals', 'eyedropper'),
+    'chat': ('Messages', 'chat-square-text-fill'),
+    'lessonnote': ('Academics', 'journal-richtext'),
+    'sheet': ('Academics', 'journal-check'),
+    'correction': ('Administration', 'pencil-square'),
+    'password': ('Administration', 'key-fill'),
 }
 CATEGORIES = sorted({c for c, _ in KINDS.values()})
 

@@ -334,3 +334,134 @@ def gate_scan(sender, instance, created, **kwargs):
                   body=f"Scanned at the gate at {_when(instance.scanned_at, '%-I:%M %p on %a %d %b')}",
                   icon='door-open-fill' if arrived else 'door-closed-fill', level='success' if arrived else 'info',
                   admin_feed=False)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Staff chat: a new message → the other people in the chat. Direct chats tell
+# every message; busy group chats at most once every half hour per person.
+# Complaints are handled in staffchat/chat.py.
+# ─────────────────────────────────────────────────────────────────────────────
+
+@receiver(post_save, sender='staffchat.Message')
+@safely
+def staff_chat_message(sender, instance, created, **kwargs):
+    import time
+    msg = instance
+    room = msg.room
+    if not created or msg.kind != 'TEXT' or room.kind == 'COMPLAINT' or not msg.sender_id:
+        return
+    who = getattr(msg.sender, 'display_name', '') or msg.sender.get_full_name() or msg.sender.username
+    snippet = ' '.join((msg.body or 'Sent an attachment').split())[:160]
+    url = _url('staffchat:room', room.pk)
+    bucket = int(time.time() // 1800)
+    for member in room.members.exclude(user_id=msg.sender_id).select_related('user'):
+        if room.kind == 'DIRECT':
+            svc.to_user(member.user, 'chat', f'Message from {who}', tenant=room.tenant, body=snippet, url=url,
+                        actor=msg.sender, admin_feed=False)
+        else:
+            svc.to_user(member.user, 'chat', f'New messages in {room.name or "a group chat"}', tenant=room.tenant,
+                        body=f'{who}: {snippet}', url=url, actor=msg.sender, admin_feed=False,
+                        dedupe=f'chat:{room.pk}:{member.user_id}:{bucket}')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Lesson notes: sent for review → the head of department (or the
+# administrators when the subject has none); approved / returned → the teacher
+# ─────────────────────────────────────────────────────────────────────────────
+
+@receiver(pre_save, sender='curriculum.LessonNote')
+@safely
+def _note_before(sender, instance, **kwargs):
+    _old(sender, instance, 'status')
+
+
+@receiver(post_save, sender='curriculum.LessonNote')
+@safely
+def lesson_note_saved(sender, instance, created, **kwargs):
+    from curriculum.models import Department
+    note = instance
+    before = getattr(note, '_notify_before', {}).get('status')
+    if note.status == before:
+        return
+    what = f'{note.subject.name} · {note.school_class.name} · week {note.week}: {note.title}'
+    if note.status == 'SUBMITTED':
+        heads = [d.hod for d in Department.objects.filter(tenant=note.tenant, subjects=note.subject, hod__isnull=False)
+                 .select_related('hod__user') if d.hod_id != note.teacher_id]
+        url = _url('curriculum:review')
+        if heads:
+            for head in heads:
+                svc.to_user(head.user, 'lessonnote', f'Lesson note to review: {note.teacher.full_name}', tenant=note.tenant,
+                            body=what, url=url, actor=note.teacher.user, dedupe=f'note:{note.pk}:sub:{head.pk}:{note.submitted_at}')
+        else:
+            svc.to_admins(note.tenant, 'lessonnote', f'Lesson note to review: {note.teacher.full_name}', body=what,
+                          url=url, actor=note.teacher.user, dedupe=f'note:{note.pk}:sub:{note.submitted_at}')
+    elif note.status in ('APPROVED', 'RETURNED'):
+        ok = note.status == 'APPROVED'
+        svc.to_user(note.teacher.user, 'lessonnote', f"Your lesson note was {'approved' if ok else 'returned'}",
+                    tenant=note.tenant, body=what + (f' · {note.review_comment}' if note.review_comment else ''),
+                    url=_url('curriculum:notes'), level='success' if ok else 'warning', admin_feed=False,
+                    actor=note.reviewed_by.user if note.reviewed_by_id else None,
+                    dedupe=f'note:{note.pk}:{note.status}:{note.reviewed_at}')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Result sheets: submitted → administrators and the head of department;
+# approved / returned → whoever submitted it
+# ─────────────────────────────────────────────────────────────────────────────
+
+@receiver(pre_save, sender='results.SubjectSheet')
+@safely
+def _sheet_before(sender, instance, **kwargs):
+    _old(sender, instance, 'status')
+
+
+@receiver(post_save, sender='results.SubjectSheet')
+@safely
+def result_sheet_saved(sender, instance, created, **kwargs):
+    from curriculum.models import Department
+    sheet = instance
+    before = getattr(sheet, '_notify_before', {}).get('status')
+    if sheet.status == before:
+        return
+    what = f'{sheet.subject.name} · {sheet.school_class.name} · {sheet.term}'
+    url = _url('results:approvals')
+    if sheet.status == 'SUBMITTED':
+        svc.to_admins(sheet.tenant, 'sheet', 'Result sheet to approve', body=what, url=url,
+                      actor=sheet.submitted_by, dedupe=f'sheet:{sheet.pk}:sub:{sheet.submitted_at}')
+        for d in Department.objects.filter(tenant=sheet.tenant, subjects=sheet.subject, hod__isnull=False).select_related('hod__user'):
+            if d.hod.user_id != sheet.submitted_by_id:
+                svc.to_user(d.hod.user, 'sheet', 'Result sheet to approve', tenant=sheet.tenant, body=what, url=url,
+                            actor=sheet.submitted_by, admin_feed=False, dedupe=f'sheet:{sheet.pk}:hod:{d.pk}:{sheet.submitted_at}')
+    elif sheet.status in ('APPROVED', 'RETURNED') and sheet.submitted_by_id:
+        ok = sheet.status == 'APPROVED'
+        svc.to_user(sheet.submitted_by, 'sheet', f"Your result sheet was {'approved' if ok else 'returned'}",
+                    tenant=sheet.tenant, body=what + (f' · {sheet.comment}' if sheet.comment else ''),
+                    url=_url('results:manual_score_entry'), level='success' if ok else 'warning', admin_feed=False,
+                    actor=sheet.reviewed_by, dedupe=f'sheet:{sheet.pk}:{sheet.status}:{sheet.reviewed_at}')
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Corrections parents send: new → administrators; decided → the family
+# ─────────────────────────────────────────────────────────────────────────────
+
+@receiver(pre_save, sender='users.ProfileChangeRequest')
+@safely
+def _correction_before(sender, instance, **kwargs):
+    _old(sender, instance, 'status')
+
+
+@receiver(post_save, sender='users.ProfileChangeRequest')
+@safely
+def correction_saved(sender, instance, created, **kwargs):
+    req = instance
+    what = f'{req.student.full_name}: {req.get_field_display()} → {req.new_value}'
+    if created:
+        svc.to_admins(req.tenant, 'correction', 'Correction sent by a parent', body=what,
+                      url=_url('users:change_requests'), actor=req.requested_by, dedupe=f'correction:{req.pk}:new')
+        return
+    before = getattr(req, '_notify_before', {}).get('status')
+    if req.status != before and req.status in ('APPROVED', 'REJECTED'):
+        ok = req.status == 'APPROVED'
+        svc.to_family(req.student, 'correction', f"Your correction was {'made' if ok else 'declined'}", body=what,
+                      level='success' if ok else 'warning', actor=req.reviewed_by, admin_feed=False,
+                      dedupe=f'correction:{req.pk}:{req.status}')
