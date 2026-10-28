@@ -666,7 +666,9 @@
   {% block extra_css %}{% endblock %}
 
 </head>
-<body>
+<body class="sb-collapsed">
+{# The sidebar starts folded; open it before the first paint for people who chose to keep it open #}
+<script>try { if (localStorage.getItem('sb_open_{{ tenant.subdomain|escapejs }}') === '1') document.body.classList.remove('sb-collapsed'); } catch (e) {}</script>
 {% include "saas_admin/_platform_bar.html" %}
 <div class="page-progress" id="pageProgress"></div>
 <div class="app">
@@ -2122,7 +2124,7 @@
   var overlay   = document.getElementById('overlay');
   var body      = document.body;
   var T         = '{{ tenant.subdomain }}';
-  var SKEY      = 'sb_collapsed_' + T;
+  var SKEY      = 'sb_open_' + T;          /* '1' = the person opened the sidebar; folded otherwise */
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 
@@ -2134,11 +2136,10 @@
     g.appendChild(inner);
   });
 
-  /* Sidebar collapse (desktop) */
-  if (get(SKEY) === '1') body.classList.add('sb-collapsed');
+  /* Sidebar collapse (desktop): folded by default; the toggle opens it and remembers that */
   if (toggleBtn) toggleBtn.addEventListener('click', function () {
     body.classList.toggle('sb-collapsed');
-    set(SKEY, body.classList.contains('sb-collapsed') ? '1' : '0');
+    set(SKEY, body.classList.contains('sb-collapsed') ? '0' : '1');
   });
 
   /* Mobile drawer */
