@@ -3,21 +3,21 @@
 .pill{display:inline-flex;gap:.35rem;align-items:center;margin:0 .6rem .3rem 0;font-size:.85rem}.pill input{width:auto}.mono{font-family:ui-monospace,Menlo,monospace}
 @media print{.no-print,.sidebar,.topbar,nav,.snav{display:none!important}}</style>
 <div class="snav no-print">
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:overview' %}"><i class="bi bi-shield-lock"></i> Overview</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:overview' %} fin-btn-gold{% endif %}" href="{% url 'security:overview' %}"><i class="bi bi-shield-lock"></i> Overview</a>
   <small>Sign-in</small>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:settings' %}">Rules</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:people' %}">People &amp; sessions</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:password_help' %}">Password help</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:roles' %}">Roles</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:menu_access' %}">Module permissions</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:audit' %}">Audit trail</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:settings' %} fin-btn-gold{% endif %}" href="{% url 'security:settings' %}">Rules</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:people' %} fin-btn-gold{% endif %}" href="{% url 'security:people' %}">People &amp; sessions</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:password_help' %} fin-btn-gold{% endif %}" href="{% url 'security:password_help' %}">Password help</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:roles' %} fin-btn-gold{% endif %}" href="{% url 'security:roles' %}">Roles</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:menu_access' %} fin-btn-gold{% endif %}" href="{% url 'security:menu_access' %}">Module permissions</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:audit' %} fin-btn-gold{% endif %}" href="{% url 'security:audit' %}">Audit trail</a>
   <small>Platform</small>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:platform' %}"><i class="bi bi-hdd-stack"></i> Backups &amp; health</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:platform' %} fin-btn-gold{% endif %}" href="{% url 'security:platform' %}"><i class="bi bi-hdd-stack"></i> Backups &amp; health</a>
   <small>Privacy</small>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:privacy' %}">Notice &amp; DPO</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:consents' %}">Consent</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:requests' %}">Requests</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:breaches' %}">Breaches</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'security:retention' %}">Retention</a>
-  <a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'security:compliance' %}"><i class="bi bi-clipboard-check"></i> Compliance report</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:privacy' %} fin-btn-gold{% endif %}" href="{% url 'security:privacy' %}">Notice &amp; DPO</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:consents' %} fin-btn-gold{% endif %}" href="{% url 'security:consents' %}">Consent</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:requests' %} fin-btn-gold{% endif %}" href="{% url 'security:requests' %}">Requests</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:breaches' %} fin-btn-gold{% endif %}" href="{% url 'security:breaches' %}">Breaches</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:retention' %} fin-btn-gold{% endif %}" href="{% url 'security:retention' %}">Retention</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'security:compliance' %} fin-btn-gold{% endif %}" href="{% url 'security:compliance' %}"><i class="bi bi-clipboard-check"></i> Compliance report</a>
 </div>

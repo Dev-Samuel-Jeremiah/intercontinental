@@ -135,3 +135,13 @@ class PasswordHelpTests(TenantTestCase):
         self.admin.refresh_from_db()
         self.assertTrue(self.admin.check_password('admin-pass-1'))
         self.assertTrue(Student.objects.filter(pk=self.ada.pk).exists())
+
+
+class SecurityTabsTests(TenantTestCase):
+    def test_the_open_page_is_the_gold_tab(self):
+        school = make_school('alpha')
+        admin = make_admin(school)
+        self.client.force_login(admin)
+        page = self.client.get('/security/password-help/', HTTP_HOST=self.host(school)).content.decode()
+        self.assertIn('fin-btn-gold" href="/security/password-help/"', page)
+        self.assertNotIn('fin-btn-gold" href="/security/compliance/"', page)

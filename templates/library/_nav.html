@@ -1,17 +1,17 @@
 {% include "finance/_fin_styles.html" %}
 <style>@media print{.no-print,.sidebar,.topbar,nav{display:none!important}}.pill{display:inline-flex;gap:.3rem;align-items:center;margin:0 .5rem .3rem 0;font-size:.85rem}.pill input{width:auto}</style>
 <div class="no-print" style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
-  {% if 'library:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:home' %}"><i class="bi bi-house"></i> Overview</a>{% endif %}
-  {% if 'library:desk' not in menu_hidden %}<a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'library:desk' %}"><i class="bi bi-upc-scan"></i> Desk</a>{% endif %}
-  {% if 'library:catalogue' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:catalogue' %}"><i class="bi bi-book"></i> Catalogue</a>{% endif %}
-  {% if 'library:loans' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:loans' %}"><i class="bi bi-arrow-left-right"></i> Loans</a>{% endif %}
-  {% if 'library:charges' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:charges' %}"><i class="bi bi-cash-coin"></i> Charges</a>{% endif %}
-  {% if 'library:reservations' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:reservations' %}"><i class="bi bi-bookmark"></i> Reservations</a>{% endif %}
-  {% if 'library:eresources' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:eresources' %}"><i class="bi bi-file-earmark-pdf"></i> E-library</a>{% endif %}
-  {% if 'library:reading' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:reading' %}"><i class="bi bi-journal-check"></i> Reading</a>{% endif %}
-  {% if 'library:stocktakes' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:stocktakes' %}"><i class="bi bi-clipboard-check"></i> Stock-take</a>{% endif %}
-  {% if 'library:requests' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:requests' %}"><i class="bi bi-cart-plus"></i> Requests</a>{% endif %}
-  {% if 'library:donations' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:donations' %}"><i class="bi bi-gift"></i> Donations</a>{% endif %}
-  {% if 'library:visits' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:visits' %}"><i class="bi bi-door-open"></i> Visits</a>{% endif %}
-  {% if 'library:reports' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'library:reports' %}"><i class="bi bi-graph-up"></i> Reports &amp; settings</a>{% endif %}
+  {% if 'library:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:home' %} fin-btn-gold{% endif %}" href="{% url 'library:home' %}"><i class="bi bi-house"></i> Overview</a>{% endif %}
+  {% if 'library:desk' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:desk' %} fin-btn-gold{% endif %}" href="{% url 'library:desk' %}"><i class="bi bi-upc-scan"></i> Desk</a>{% endif %}
+  {% if 'library:catalogue' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:catalogue' %} fin-btn-gold{% endif %}" href="{% url 'library:catalogue' %}"><i class="bi bi-book"></i> Catalogue</a>{% endif %}
+  {% if 'library:loans' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:loans' %} fin-btn-gold{% endif %}" href="{% url 'library:loans' %}"><i class="bi bi-arrow-left-right"></i> Loans</a>{% endif %}
+  {% if 'library:charges' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:charges' %} fin-btn-gold{% endif %}" href="{% url 'library:charges' %}"><i class="bi bi-cash-coin"></i> Charges</a>{% endif %}
+  {% if 'library:reservations' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:reservations' %} fin-btn-gold{% endif %}" href="{% url 'library:reservations' %}"><i class="bi bi-bookmark"></i> Reservations</a>{% endif %}
+  {% if 'library:eresources' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:eresources' %} fin-btn-gold{% endif %}" href="{% url 'library:eresources' %}"><i class="bi bi-file-earmark-pdf"></i> E-library</a>{% endif %}
+  {% if 'library:reading' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:reading' %} fin-btn-gold{% endif %}" href="{% url 'library:reading' %}"><i class="bi bi-journal-check"></i> Reading</a>{% endif %}
+  {% if 'library:stocktakes' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:stocktakes' %} fin-btn-gold{% endif %}" href="{% url 'library:stocktakes' %}"><i class="bi bi-clipboard-check"></i> Stock-take</a>{% endif %}
+  {% if 'library:requests' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:requests' %} fin-btn-gold{% endif %}" href="{% url 'library:requests' %}"><i class="bi bi-cart-plus"></i> Requests</a>{% endif %}
+  {% if 'library:donations' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:donations' %} fin-btn-gold{% endif %}" href="{% url 'library:donations' %}"><i class="bi bi-gift"></i> Donations</a>{% endif %}
+  {% if 'library:visits' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:visits' %} fin-btn-gold{% endif %}" href="{% url 'library:visits' %}"><i class="bi bi-door-open"></i> Visits</a>{% endif %}
+  {% if 'library:reports' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'library:reports' %} fin-btn-gold{% endif %}" href="{% url 'library:reports' %}"><i class="bi bi-graph-up"></i> Reports &amp; settings</a>{% endif %}
 </div>

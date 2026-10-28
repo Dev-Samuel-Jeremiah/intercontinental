@@ -5,14 +5,14 @@
   .tiny{width:70px;text-align:center}
 </style>
 <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
-  {% if 'teaching:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:home' %}"><i class="bi bi-inbox"></i> Marking queue</a>{% endif %}
-  {% if 'teaching:class_dashboard' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:class_dashboard' %}"><i class="bi bi-people"></i> My form class</a>{% endif %}
-  {% if 'teaching:gradebooks' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:gradebooks' %}"><i class="bi bi-journal-bookmark"></i> Gradebook</a>{% endif %}
-  {% if 'teaching:behaviour' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:behaviour' %}"><i class="bi bi-hand-thumbs-up"></i> Behaviour</a>{% endif %}
-  {% if 'teaching:comments' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:comments' %}"><i class="bi bi-chat-quote"></i> Comment bank</a>{% endif %}
-  {% if 'teaching:resources' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:resources' %}"><i class="bi bi-folder2-open"></i> Resources</a>{% endif %}
-  {% if 'teaching:picker' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:picker' %}"><i class="bi bi-shuffle"></i> Name picker</a>{% endif %}
-  {% if 'teaching:tasks' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:tasks' %}"><i class="bi bi-check2-square"></i> Tasks</a>{% endif %}
-  {% if 'teaching:duties' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:duties' %}"><i class="bi bi-calendar-week"></i> Duties</a>{% endif %}
-  {% if 'teaching:handovers' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'teaching:handovers' %}"><i class="bi bi-arrow-left-right"></i> Handovers</a>{% endif %}
+  {% if 'teaching:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:home' %} fin-btn-gold{% endif %}" href="{% url 'teaching:home' %}"><i class="bi bi-inbox"></i> Marking queue</a>{% endif %}
+  {% if 'teaching:class_dashboard' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:class_dashboard' %} fin-btn-gold{% endif %}" href="{% url 'teaching:class_dashboard' %}"><i class="bi bi-people"></i> My form class</a>{% endif %}
+  {% if 'teaching:gradebooks' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:gradebooks' %} fin-btn-gold{% endif %}" href="{% url 'teaching:gradebooks' %}"><i class="bi bi-journal-bookmark"></i> Gradebook</a>{% endif %}
+  {% if 'teaching:behaviour' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:behaviour' %} fin-btn-gold{% endif %}" href="{% url 'teaching:behaviour' %}"><i class="bi bi-hand-thumbs-up"></i> Behaviour</a>{% endif %}
+  {% if 'teaching:comments' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:comments' %} fin-btn-gold{% endif %}" href="{% url 'teaching:comments' %}"><i class="bi bi-chat-quote"></i> Comment bank</a>{% endif %}
+  {% if 'teaching:resources' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:resources' %} fin-btn-gold{% endif %}" href="{% url 'teaching:resources' %}"><i class="bi bi-folder2-open"></i> Resources</a>{% endif %}
+  {% if 'teaching:picker' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:picker' %} fin-btn-gold{% endif %}" href="{% url 'teaching:picker' %}"><i class="bi bi-shuffle"></i> Name picker</a>{% endif %}
+  {% if 'teaching:tasks' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:tasks' %} fin-btn-gold{% endif %}" href="{% url 'teaching:tasks' %}"><i class="bi bi-check2-square"></i> Tasks</a>{% endif %}
+  {% if 'teaching:duties' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:duties' %} fin-btn-gold{% endif %}" href="{% url 'teaching:duties' %}"><i class="bi bi-calendar-week"></i> Duties</a>{% endif %}
+  {% if 'teaching:handovers' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'teaching:handovers' %} fin-btn-gold{% endif %}" href="{% url 'teaching:handovers' %}"><i class="bi bi-arrow-left-right"></i> Handovers</a>{% endif %}
 </div>

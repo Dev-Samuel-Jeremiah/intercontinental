@@ -1,7 +1,7 @@
 <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem">
-  <a class="fin-btn fin-btn-sm" href="{% url 'hr:people' %}"><i class="bi bi-people"></i> People</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'hr:directory' %}"><i class="bi bi-person-lines-fill"></i> Directory</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'hr:appraisals' %}"><i class="bi bi-clipboard2-check"></i> Appraisals</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'hr:vacancies' %}"><i class="bi bi-megaphone"></i> Recruitment</a>
-  <a class="fin-btn fin-btn-sm" href="{% url 'hr:onboarding_tasks' %}"><i class="bi bi-list-check"></i> Onboarding checklist</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'hr:people' %} fin-btn-gold{% endif %}" href="{% url 'hr:people' %}"><i class="bi bi-people"></i> People</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'hr:directory' %} fin-btn-gold{% endif %}" href="{% url 'hr:directory' %}"><i class="bi bi-person-lines-fill"></i> Directory</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'hr:appraisals' %} fin-btn-gold{% endif %}" href="{% url 'hr:appraisals' %}"><i class="bi bi-clipboard2-check"></i> Appraisals</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'hr:vacancies' %} fin-btn-gold{% endif %}" href="{% url 'hr:vacancies' %}"><i class="bi bi-megaphone"></i> Recruitment</a>
+  <a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'hr:onboarding_tasks' %} fin-btn-gold{% endif %}" href="{% url 'hr:onboarding_tasks' %}"><i class="bi bi-list-check"></i> Onboarding checklist</a>
 </div>

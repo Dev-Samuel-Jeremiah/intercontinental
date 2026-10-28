@@ -3,26 +3,26 @@
 .wnav{display:flex;gap:.35rem;flex-wrap:wrap;margin:-.6rem 0 1.2rem;align-items:center}.wnav small{color:var(--slate);font-size:.65rem;letter-spacing:1px;text-transform:uppercase;margin:0 .2rem 0 .5rem}
 .alert-chip{display:inline-block;background:rgba(220,60,60,.15);color:var(--red);border:1px solid var(--red-border);border-radius:99px;padding:.05rem .5rem;font-size:.75rem;margin:.1rem .2rem .1rem 0}</style>
 <div class="wnav no-print">
-  {% if 'welfare:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:home' %}"><i class="bi bi-heart-pulse"></i> Overview</a>{% endif %}
+  {% if 'welfare:home' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:home' %} fin-btn-gold{% endif %}" href="{% url 'welfare:home' %}"><i class="bi bi-heart-pulse"></i> Overview</a>{% endif %}
   <small>Health</small>
-  {% if 'welfare:sick_bay' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:sick_bay' %}">Sick bay</a>{% endif %}
-  {% if 'welfare:medication' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:medication' %}">Medication</a>{% endif %}
-  {% if 'welfare:immunisations' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:immunisations' %}">Vaccinations</a>{% endif %}
-  {% if 'welfare:screening' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:screening' %}">Screening</a>{% endif %}
-  {% if 'welfare:health_plans' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:health_plans' %}">Health plans</a>{% endif %}
-  {% if 'welfare:accidents' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:accidents' %}">Accidents</a>{% endif %}
-  {% if 'welfare:emergency' not in menu_hidden %}<a class="fin-btn fin-btn-sm fin-btn-gold" href="{% url 'welfare:emergency' %}"><i class="bi bi-telephone"></i> Emergency contacts</a>{% endif %}
+  {% if 'welfare:sick_bay' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:sick_bay' %} fin-btn-gold{% endif %}" href="{% url 'welfare:sick_bay' %}">Sick bay</a>{% endif %}
+  {% if 'welfare:medication' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:medication' %} fin-btn-gold{% endif %}" href="{% url 'welfare:medication' %}">Medication</a>{% endif %}
+  {% if 'welfare:immunisations' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:immunisations' %} fin-btn-gold{% endif %}" href="{% url 'welfare:immunisations' %}">Vaccinations</a>{% endif %}
+  {% if 'welfare:screening' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:screening' %} fin-btn-gold{% endif %}" href="{% url 'welfare:screening' %}">Screening</a>{% endif %}
+  {% if 'welfare:health_plans' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:health_plans' %} fin-btn-gold{% endif %}" href="{% url 'welfare:health_plans' %}">Health plans</a>{% endif %}
+  {% if 'welfare:accidents' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:accidents' %} fin-btn-gold{% endif %}" href="{% url 'welfare:accidents' %}">Accidents</a>{% endif %}
+  {% if 'welfare:emergency' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:emergency' %} fin-btn-gold{% endif %}" href="{% url 'welfare:emergency' %}"><i class="bi bi-telephone"></i> Emergency contacts</a>{% endif %}
   <small>Conduct</small>
-  {% if 'welfare:incidents' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:incidents' %}">Incidents</a>{% endif %}
-  {% if 'welfare:points' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:points' %}">Merits</a>{% endif %}
-  {% if 'welfare:detentions' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:detentions' %}">Detentions</a>{% endif %}
-  {% if 'welfare:suspensions' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:suspensions' %}">Suspensions</a>{% endif %}
-  {% if 'welfare:restorative' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:restorative' %}">Restorative</a>{% endif %}
+  {% if 'welfare:incidents' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:incidents' %} fin-btn-gold{% endif %}" href="{% url 'welfare:incidents' %}">Incidents</a>{% endif %}
+  {% if 'welfare:points' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:points' %} fin-btn-gold{% endif %}" href="{% url 'welfare:points' %}">Merits</a>{% endif %}
+  {% if 'welfare:detentions' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:detentions' %} fin-btn-gold{% endif %}" href="{% url 'welfare:detentions' %}">Detentions</a>{% endif %}
+  {% if 'welfare:suspensions' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:suspensions' %} fin-btn-gold{% endif %}" href="{% url 'welfare:suspensions' %}">Suspensions</a>{% endif %}
+  {% if 'welfare:restorative' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:restorative' %} fin-btn-gold{% endif %}" href="{% url 'welfare:restorative' %}">Restorative</a>{% endif %}
   <small>Care</small>
-  {% if 'welfare:counselling' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:counselling' %}">Counselling</a>{% endif %}
-  {% if 'welfare:safeguarding' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:safeguarding' %}">Safeguarding</a>{% endif %}
-  {% if 'welfare:support' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:support' %}">Support plans</a>{% endif %}
-  {% if 'welfare:sports' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:sports' %}">Sports</a>{% endif %}
-  {% if 'welfare:resources' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:resources' %}">Resources</a>{% endif %}
-  {% if 'welfare:settings' not in menu_hidden %}<a class="fin-btn fin-btn-sm" href="{% url 'welfare:settings' %}"><i class="bi bi-gear"></i></a>{% endif %}
+  {% if 'welfare:counselling' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:counselling' %} fin-btn-gold{% endif %}" href="{% url 'welfare:counselling' %}">Counselling</a>{% endif %}
+  {% if 'welfare:safeguarding' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:safeguarding' %} fin-btn-gold{% endif %}" href="{% url 'welfare:safeguarding' %}">Safeguarding</a>{% endif %}
+  {% if 'welfare:support' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:support' %} fin-btn-gold{% endif %}" href="{% url 'welfare:support' %}">Support plans</a>{% endif %}
+  {% if 'welfare:sports' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:sports' %} fin-btn-gold{% endif %}" href="{% url 'welfare:sports' %}">Sports</a>{% endif %}
+  {% if 'welfare:resources' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:resources' %} fin-btn-gold{% endif %}" href="{% url 'welfare:resources' %}">Resources</a>{% endif %}
+  {% if 'welfare:settings' not in menu_hidden %}<a class="fin-btn fin-btn-sm{% if request.resolver_match.view_name == 'welfare:settings' %} fin-btn-gold{% endif %}" href="{% url 'welfare:settings' %}"><i class="bi bi-gear"></i></a>{% endif %}
 </div>
